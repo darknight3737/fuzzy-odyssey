@@ -9,10 +9,6 @@ interface Credentials {
   captchaToken?: string;
 }
 
-/**
- * @name useSignUpWithEmailAndPassword
- * @description Use Supabase to sign up a user with email and password in a React component
- */
 export function useSignUpWithEmailAndPassword() {
   const client = useSupabase();
   const mutationKey = ['auth', 'sign-up-with-email-password'];

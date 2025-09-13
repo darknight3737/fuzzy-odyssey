@@ -4,10 +4,6 @@ import { useMutation } from '@tanstack/react-query';
 
 import { useSupabase } from './use-supabase';
 
-/**
- * @name useSignInWithEmailPassword
- * @description Use Supabase to sign in a user with email and password in a React component
- */
 export function useSignInWithEmailPassword() {
   const client = useSupabase();
   const mutationKey = ['auth', 'sign-in-with-email-password'];

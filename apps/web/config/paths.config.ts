@@ -11,7 +11,15 @@ const PathsSchema = z.object({
   }),
   app: z.object({
     home: z.string().min(1),
-    profileSettings: z.string().min(1),
+    personalAccountSettings: z.string().min(1),
+    personalAccountBilling: z.string().min(1),
+    personalAccountBillingReturn: z.string().min(1),
+    accountHome: z.string().min(1),
+    accountSettings: z.string().min(1),
+    accountBilling: z.string().min(1),
+    accountMembers: z.string().min(1),
+    accountBillingReturn: z.string().min(1),
+    joinTeam: z.string().min(1),
   }),
 });
 
@@ -26,7 +34,15 @@ const pathsConfig = PathsSchema.parse({
   },
   app: {
     home: '/home',
-    profileSettings: '/home/settings',
+    personalAccountSettings: '/home/settings',
+    personalAccountBilling: '/home/billing',
+    personalAccountBillingReturn: '/home/billing/return',
+    accountHome: '/home/[account]',
+    accountSettings: `/home/[account]/settings`,
+    accountBilling: `/home/[account]/billing`,
+    accountMembers: `/home/[account]/members`,
+    accountBillingReturn: `/home/[account]/billing/return`,
+    joinTeam: '/join',
   },
 } satisfies z.infer<typeof PathsSchema>);
 

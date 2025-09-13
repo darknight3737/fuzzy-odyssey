@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 
+import { useRouter } from 'next/navigation';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { useMutation } from '@tanstack/react-query';
@@ -21,6 +23,7 @@ import {
   FormItem,
   FormMessage,
 } from '@kit/ui/form';
+import { Heading } from '@kit/ui/heading';
 import { If } from '@kit/ui/if';
 import {
   InputOTP,
@@ -40,9 +43,11 @@ export function MultiFactorChallengeContainer({
     redirectPath: string;
   };
 }>) {
+  const router = useRouter();
+
   const verifyMFAChallenge = useVerifyMFAChallenge({
     onSuccess: () => {
-      window.location.replace(paths.redirectPath);
+      router.replace(paths.redirectPath);
     },
   });
 
@@ -86,13 +91,15 @@ export function MultiFactorChallengeContainer({
           });
         })}
       >
-        <div className={'flex flex-col space-y-4'}>
-          <span className={'text-muted-foreground text-sm'}>
-            <Trans i18nKey={'account:verifyActivationCodeDescription'} />
-          </span>
+        <div className={'flex flex-col items-center gap-y-6'}>
+          <div className="flex flex-col items-center gap-y-4">
+            <Heading level={5}>
+              <Trans i18nKey={'auth:verifyCodeHeading'} />
+            </Heading>
+          </div>
 
-          <div className={'flex w-full flex-col space-y-2.5'}>
-            <div className={'flex flex-col space-y-4'}>
+          <div className={'flex w-full flex-col gap-y-2.5'}>
+            <div className={'flex flex-col gap-y-4'}>
               <If condition={verifyMFAChallenge.error}>
                 <Alert variant={'destructive'}>
                   <ExclamationTriangleIcon className={'h-5'} />
@@ -134,7 +141,7 @@ export function MultiFactorChallengeContainer({
                         </InputOTP>
                       </FormControl>
 
-                      <FormDescription>
+                      <FormDescription className="text-center">
                         <Trans
                           i18nKey={'account:verifyActivationCodeDescription'}
                         />
@@ -149,16 +156,33 @@ export function MultiFactorChallengeContainer({
           </div>
 
           <Button
+            className="w-full"
+            data-test={'submit-mfa-button'}
             disabled={
               verifyMFAChallenge.isPending ||
+              verifyMFAChallenge.isSuccess ||
               !verificationCodeForm.formState.isValid
             }
           >
-            {verifyMFAChallenge.isPending ? (
-              <Trans i18nKey={'account:verifyingCode'} />
-            ) : (
+            <If condition={verifyMFAChallenge.isPending}>
+              <span className={'animate-in fade-in slide-in-from-bottom-24'}>
+                <Trans i18nKey={'account:verifyingCode'} />
+              </span>
+            </If>
+
+            <If condition={verifyMFAChallenge.isSuccess}>
+              <span className={'animate-in fade-in slide-in-from-bottom-24'}>
+                <Trans i18nKey={'auth:redirecting'} />
+              </span>
+            </If>
+
+            <If
+              condition={
+                !verifyMFAChallenge.isPending && !verifyMFAChallenge.isSuccess
+              }
+            >
               <Trans i18nKey={'account:submitVerificationCode'} />
-            )}
+            </If>
           </Button>
         </div>
       </form>
@@ -226,7 +250,7 @@ function FactorsListContainer({
       <div className={'flex flex-col items-center space-y-4 py-8'}>
         <Spinner />
 
-        <div>
+        <div className={'text-sm'}>
           <Trans i18nKey={'account:loadingFactors'} />
         </div>
       </div>
@@ -254,7 +278,7 @@ function FactorsListContainer({
   const verifiedFactors = factors?.totp ?? [];
 
   return (
-    <div className={'flex flex-col space-y-4'}>
+    <div className={'animate-in fade-in flex flex-col space-y-4 duration-500'}>
       <div>
         <span className={'font-medium'}>
           <Trans i18nKey={'account:selectFactor'} />

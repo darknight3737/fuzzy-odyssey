@@ -7,6 +7,7 @@ import type { z } from 'zod';
 import { useSignInWithEmailPassword } from '@kit/supabase/hooks/use-sign-in-with-email-password';
 
 import { useCaptchaToken } from '../captcha/client';
+import { useLastAuthMethod } from '../hooks/use-last-auth-method';
 import type { PasswordSignInSchema } from '../schemas/password-sign-in.schema';
 import { AuthErrorAlert } from './auth-error-alert';
 import { PasswordSignInForm } from './password-sign-in-form';
@@ -18,7 +19,9 @@ export function PasswordSignInContainer({
 }) {
   const { captchaToken, resetCaptchaToken } = useCaptchaToken();
   const signInMutation = useSignInWithEmailPassword();
+  const { recordAuthMethod } = useLastAuthMethod();
   const isLoading = signInMutation.isPending;
+  const isRedirecting = signInMutation.isSuccess;
 
   const onSubmit = useCallback(
     async (credentials: z.infer<typeof PasswordSignInSchema>) => {
@@ -27,6 +30,9 @@ export function PasswordSignInContainer({
           ...credentials,
           options: { captchaToken },
         });
+
+        // Record successful password sign-in
+        recordAuthMethod('password', { email: credentials.email });
 
         if (onSignIn) {
           const userId = data?.user?.id;
@@ -39,14 +45,24 @@ export function PasswordSignInContainer({
         resetCaptchaToken();
       }
     },
-    [captchaToken, onSignIn, resetCaptchaToken, signInMutation],
+    [
+      captchaToken,
+      onSignIn,
+      resetCaptchaToken,
+      signInMutation,
+      recordAuthMethod,
+    ],
   );
 
   return (
     <>
       <AuthErrorAlert error={signInMutation.error} />
 
-      <PasswordSignInForm onSubmit={onSubmit} loading={isLoading} />
+      <PasswordSignInForm
+        onSubmit={onSubmit}
+        loading={isLoading}
+        redirecting={isRedirecting}
+      />
     </>
   );
 }

@@ -20,15 +20,18 @@ export function SiteFooter() {
       }
       sections={[
         {
-          heading: 'Get Started',
+          heading: <Trans i18nKey="marketing:about" />,
+          links: [
+            { href: '/blog', label: <Trans i18nKey="marketing:blog" /> },
+            { href: '/contact', label: <Trans i18nKey="marketing:contact" /> },
+          ],
+        },
+        {
+          heading: <Trans i18nKey="marketing:product" />,
           links: [
             {
-              href: '/auth/sign-in',
-              label: <Trans i18nKey="auth:signIn" />,
-            },
-            {
-              href: '/auth/sign-up',
-              label: <Trans i18nKey="auth:signUp" />,
+              href: '/docs',
+              label: <Trans i18nKey="marketing:documentation" />,
             },
           ],
         },

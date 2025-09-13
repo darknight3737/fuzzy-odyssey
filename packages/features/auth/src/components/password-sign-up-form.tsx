@@ -22,12 +22,7 @@ import { Trans } from '@kit/ui/trans';
 import { PasswordSignUpSchema } from '../schemas/password-sign-up.schema';
 import { TermsAndConditionsFormField } from './terms-and-conditions-form-field';
 
-export function PasswordSignUpForm({
-  defaultValues,
-  displayTermsCheckbox,
-  onSubmit,
-  loading,
-}: {
+interface PasswordSignUpFormProps {
   defaultValues?: {
     email: string;
   };
@@ -40,7 +35,14 @@ export function PasswordSignUpForm({
     repeatPassword: string;
   }) => unknown;
   loading: boolean;
-}) {
+}
+
+export function PasswordSignUpForm({
+  defaultValues,
+  displayTermsCheckbox,
+  onSubmit,
+  loading,
+}: PasswordSignUpFormProps) {
   const { t } = useTranslation();
 
   const form = useForm({
@@ -55,7 +57,7 @@ export function PasswordSignUpForm({
   return (
     <Form {...form}>
       <form
-        className={'w-full space-y-2.5'}
+        className={'flex w-full flex-col gap-y-4'}
         onSubmit={form.handleSubmit(onSubmit)}
       >
         <FormField
@@ -96,6 +98,7 @@ export function PasswordSignUpForm({
                   required
                   data-test={'password-input'}
                   type="password"
+                  autoComplete="new-password"
                   placeholder={''}
                   {...field}
                 />

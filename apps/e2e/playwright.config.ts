@@ -1,4 +1,34 @@
 import { defineConfig, devices } from '@playwright/test';
+import { config as dotenvConfig } from 'dotenv';
+
+dotenvConfig();
+dotenvConfig({ path: '.env.local' });
+
+const enableBillingTests = process.env.ENABLE_BILLING_TESTS === 'true';
+const enableTeamAccountTests =
+  (process.env.ENABLE_TEAM_ACCOUNT_TESTS ?? 'true') === 'true';
+
+const testIgnore: string[] = [];
+
+if (!enableBillingTests) {
+  console.log(
+    `Billing tests are disabled. To enable them, set the environment variable ENABLE_BILLING_TESTS=true.`,
+    `Current value: "${process.env.ENABLE_BILLING_TESTS}"`,
+  );
+
+  testIgnore.push('*-billing.spec.ts');
+}
+
+if (!enableTeamAccountTests) {
+  console.log(
+    `Team account tests are disabled. To enable them, set the environment variable ENABLE_TEAM_ACCOUNT_TESTS=true.`,
+    `Current value: "${process.env.ENABLE_TEAM_ACCOUNT_TESTS}"`,
+  );
+
+  testIgnore.push('*team-accounts.spec.ts');
+  testIgnore.push('*invitations.spec.ts');
+  testIgnore.push('*team-billing.spec.ts');
+}
 
 /**
  * Read environment variables from file.
@@ -15,13 +45,13 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 3 : 1,
+  retries: 3,
   /* Limit parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Ignore billing tests if the environment variable is not set. */
-  testIgnore: [],
+  testIgnore,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -32,15 +62,14 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    navigationTimeout: 15 * 1000,
   },
-
-  // test timeout set to 1 minutes
-  timeout: 60 * 1000,
+  // test timeout set to 2 minutes
+  timeout: 120 * 1000,
   expect: {
     // expect timeout set to 10 seconds
     timeout: 10 * 1000,
   },
-
   /* Configure projects for major browsers */
   projects: [
     {

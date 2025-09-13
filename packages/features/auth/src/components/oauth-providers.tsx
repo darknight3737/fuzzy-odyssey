@@ -2,13 +2,17 @@
 
 import { useCallback } from 'react';
 
-import type { Provider } from '@supabase/supabase-js';
+import type {
+  Provider,
+  SignInWithOAuthCredentials,
+} from '@supabase/supabase-js';
 
 import { useSignInWithProvider } from '@kit/supabase/hooks/use-sign-in-with-provider';
 import { If } from '@kit/ui/if';
 import { LoadingOverlay } from '@kit/ui/loading-overlay';
 import { Trans } from '@kit/ui/trans';
 
+import { useLastAuthMethod } from '../hooks/use-last-auth-method';
 import { AuthErrorAlert } from './auth-error-alert';
 import { AuthProviderButton } from './auth-provider-button';
 
@@ -23,19 +27,23 @@ import { AuthProviderButton } from './auth-provider-button';
  */
 const OAUTH_SCOPES: Partial<Record<Provider, string>> = {
   azure: 'email',
+  keycloak: 'openid',
   // add your OAuth providers here
 };
 
-export function OauthProviders(props: {
+export const OauthProviders: React.FC<{
+  inviteToken?: string;
   shouldCreateUser: boolean;
   enabledProviders: Provider[];
+  queryParams?: Record<string, string>;
 
   paths: {
     callback: string;
     returnPath: string;
   };
-}) {
+}> = (props) => {
   const signInWithProviderMutation = useSignInWithProvider();
+  const { recordAuthMethod } = useLastAuthMethod();
 
   // we make the UI "busy" until the next page is fully loaded
   const loading = signInWithProviderMutation.isPending;
@@ -45,7 +53,7 @@ export function OauthProviders(props: {
       const credential = await signInRequest();
 
       if (!credential) {
-        return Promise.reject(new Error('Failed to sign in with provider'));
+        return Promise.reject(new Error(`No credential returned`));
       }
     },
     [],
@@ -78,26 +86,36 @@ export function OauthProviders(props: {
                     queryParams.set('next', props.paths.returnPath);
                   }
 
+                  if (props.inviteToken) {
+                    queryParams.set('invite_token', props.inviteToken);
+                  }
+
                   const redirectPath = [
                     props.paths.callback,
                     queryParams.toString(),
                   ].join('?');
 
                   const redirectTo = [origin, redirectPath].join('');
-                  const scopesOpts = OAUTH_SCOPES[provider] ?? {};
+                  const scopes = OAUTH_SCOPES[provider] ?? undefined;
 
                   const credentials = {
                     provider,
                     options: {
-                      shouldCreateUser: props.shouldCreateUser,
                       redirectTo,
-                      ...scopesOpts,
+                      queryParams: props.queryParams,
+                      scopes,
                     },
-                  };
+                  } satisfies SignInWithOAuthCredentials;
 
-                  return onSignInWithProvider(() =>
-                    signInWithProviderMutation.mutateAsync(credentials),
-                  );
+                  return onSignInWithProvider(async () => {
+                    const result =
+                      await signInWithProviderMutation.mutateAsync(credentials);
+
+                    // Record successful OAuth sign-in
+                    recordAuthMethod('oauth', { provider });
+
+                    return result;
+                  });
                 }}
               >
                 <Trans
@@ -115,7 +133,7 @@ export function OauthProviders(props: {
       </div>
     </>
   );
-}
+};
 
 function getProviderName(providerId: string) {
   const capitalize = (value: string) =>

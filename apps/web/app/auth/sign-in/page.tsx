@@ -10,6 +10,13 @@ import pathsConfig from '~/config/paths.config';
 import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 import { withI18n } from '~/lib/i18n/with-i18n';
 
+interface SignInPageProps {
+  searchParams: Promise<{
+    invite_token?: string;
+    next?: string;
+  }>;
+}
+
 export const generateMetadata = async () => {
   const i18n = await createI18nServerInstance();
 
@@ -18,23 +25,40 @@ export const generateMetadata = async () => {
   };
 };
 
-const paths = {
-  callback: pathsConfig.auth.callback,
-  home: pathsConfig.app.home,
-};
+async function SignInPage({ searchParams }: SignInPageProps) {
+  const { invite_token: inviteToken, next } = await searchParams;
 
-function SignInPage() {
+  const signUpPath =
+    pathsConfig.auth.signUp +
+    (inviteToken ? `?invite_token=${inviteToken}` : '');
+
+  const paths = {
+    callback: pathsConfig.auth.callback,
+    returnPath: next || pathsConfig.app.home,
+    joinTeam: pathsConfig.app.joinTeam,
+  };
+
   return (
     <>
-      <Heading level={5} className={'tracking-tight'}>
-        <Trans i18nKey={'auth:signInHeading'} />
-      </Heading>
+      <div className={'flex flex-col items-center gap-1'}>
+        <Heading level={4} className={'tracking-tight'}>
+          <Trans i18nKey={'auth:signInHeading'} />
+        </Heading>
 
-      <SignInMethodsContainer paths={paths} providers={authConfig.providers} />
+        <p className={'text-muted-foreground text-sm'}>
+          <Trans i18nKey={'auth:signInSubheading'} />
+        </p>
+      </div>
+
+      <SignInMethodsContainer
+        inviteToken={inviteToken}
+        paths={paths}
+        providers={authConfig.providers}
+      />
 
       <div className={'flex justify-center'}>
         <Button asChild variant={'link'} size={'sm'}>
-          <Link href={pathsConfig.auth.signUp}>
+          <Link href={signUpPath} prefetch={true}>
             <Trans i18nKey={'auth:doNotHaveAccountYet'} />
           </Link>
         </Button>

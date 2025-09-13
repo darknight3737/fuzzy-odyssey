@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { ArrowRightIcon, LayoutDashboard } from 'lucide-react';
 
+import { PricingTable } from '@kit/billing-gateway/marketing';
 import {
   CtaButton,
   FeatureCard,
@@ -11,9 +12,13 @@ import {
   FeatureShowcaseIconContainer,
   Hero,
   Pill,
+  PillActionButton,
+  SecondaryHero,
 } from '@kit/ui/marketing';
 import { Trans } from '@kit/ui/trans';
 
+import billingConfig from '~/config/billing.config';
+import pathsConfig from '~/config/paths.config';
 import { withI18n } from '~/lib/i18n/with-i18n';
 
 function Home() {
@@ -23,7 +28,12 @@ function Home() {
         <Hero
           pill={
             <Pill label={'New'}>
-              <span>The leading SaaS Starter Kit for ambitious developers</span>
+              <span>The SaaS Starter Kit for ambitious developers</span>
+              <PillActionButton asChild>
+                <Link href={'/auth/sign-up'}>
+                  <ArrowRightIcon className={'h-4 w-4'} />
+                </Link>
+              </PillActionButton>
             </Pill>
           }
           title={
@@ -43,7 +53,7 @@ function Home() {
             <Image
               priority
               className={
-                'dark:border-primary/10 rounded-2xl border border-gray-200'
+                'dark:border-primary/10 rounded-xl border border-gray-200'
               }
               width={3558}
               height={2222}
@@ -61,11 +71,11 @@ function Home() {
           <FeatureShowcase
             heading={
               <>
-                <b className="font-semibold dark:text-white">
+                <b className="font-medium tracking-tighter dark:text-white">
                   The ultimate SaaS Starter Kit
                 </b>
                 .{' '}
-                <span className="text-muted-foreground font-normal">
+                <span className="text-muted-foreground font-normal tracking-tighter">
                   Unleash your creativity and build your SaaS faster than ever
                   with Makerkit.
                 </span>
@@ -80,32 +90,60 @@ function Home() {
           >
             <FeatureGrid>
               <FeatureCard
-                className={'relative col-span-2 overflow-hidden'}
+                className={'relative col-span-1 overflow-hidden'}
                 label={'Beautiful Dashboard'}
                 description={`Makerkit provides a beautiful dashboard to manage your SaaS business.`}
-              />
+              ></FeatureCard>
 
               <FeatureCard
-                className={
-                  'relative col-span-2 w-full overflow-hidden lg:col-span-1'
-                }
+                className={'relative col-span-1 w-full overflow-hidden'}
                 label={'Authentication'}
                 description={`Makerkit provides a variety of providers to allow your users to sign in.`}
-              />
+              ></FeatureCard>
 
               <FeatureCard
-                className={'relative col-span-2 overflow-hidden lg:col-span-1'}
+                className={'relative col-span-1 overflow-hidden'}
                 label={'Multi Tenancy'}
                 description={`Multi tenant memberships for your SaaS business.`}
               />
 
               <FeatureCard
-                className={'relative col-span-2 overflow-hidden'}
+                className={'relative col-span-1 overflow-hidden md:col-span-2'}
                 label={'Billing'}
                 description={`Makerkit supports multiple payment gateways to charge your customers.`}
               />
+
+              <FeatureCard
+                className={'relative col-span-1 overflow-hidden'}
+                label={'Plugins'}
+                description={`Extend your SaaS with plugins that you can install using the CLI.`}
+              />
             </FeatureGrid>
           </FeatureShowcase>
+        </div>
+      </div>
+
+      <div className={'container mx-auto'}>
+        <div
+          className={
+            'flex flex-col items-center justify-center space-y-16 py-16'
+          }
+        >
+          <SecondaryHero
+            pill={<Pill label="Start for free">No credit card required.</Pill>}
+            heading="Fair pricing for all types of businesses"
+            subheading="Get started on our free plan and upgrade when you are ready."
+          />
+
+          <div className={'w-full'}>
+            <PricingTable
+              config={billingConfig}
+              paths={{
+                signUp: pathsConfig.auth.signUp,
+                return: pathsConfig.app.home,
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

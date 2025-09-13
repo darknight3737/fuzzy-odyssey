@@ -1,5 +1,7 @@
 import { Inter as SansFont } from 'next/font/google';
 
+import { cn } from '@kit/ui/utils';
+
 /**
  * @sans
  * @description Define here the sans font.
@@ -21,3 +23,27 @@ const heading = sans;
 
 // we export these fonts into the root layout
 export { sans, heading };
+
+/**
+ * @name getFontsClassName
+ * @description Get the class name for the root layout.
+ * @param theme
+ */
+export function getFontsClassName(theme?: string) {
+  const dark = theme === 'dark';
+  const light = !dark;
+
+  const font = [sans.variable, heading.variable].reduce<string[]>(
+    (acc, curr) => {
+      if (acc.includes(curr)) return acc;
+
+      return [...acc, curr];
+    },
+    [],
+  );
+
+  return cn('bg-background min-h-screen antialiased', ...font, {
+    dark,
+    light,
+  });
+}

@@ -6,10 +6,6 @@ import { useSupabase } from './use-supabase';
 
 type Params = UserAttributes & { redirectTo: string };
 
-/**
- * @name useUpdateUser
- * @description Use Supabase to update the current user in a React component
- */
 export function useUpdateUser() {
   const client = useSupabase();
   const mutationKey = ['supabase:user'];

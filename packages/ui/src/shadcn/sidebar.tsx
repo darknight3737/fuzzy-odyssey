@@ -5,9 +5,9 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { Slot } from '@radix-ui/react-slot';
 import { VariantProps, cva } from 'class-variance-authority';
 import { ChevronDown, PanelLeft } from 'lucide-react';
+import { Slot } from 'radix-ui';
 import { useTranslation } from 'react-i18next';
 
 import { useIsMobile } from '../hooks/use-mobile';
@@ -149,26 +149,24 @@ const SidebarProvider: React.FC<
 
   return (
     <SidebarContext.Provider value={contextValue}>
-      <TooltipProvider delayDuration={0}>
-        <div
-          style={
-            {
-              '--sidebar-width': sidebarWidth,
-              '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
-              ...style,
-            } as React.CSSProperties
-          }
-          data-minimized={!open}
-          className={cn(
-            'group text-sidebar-foreground has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full',
-            className,
-          )}
-          ref={ref}
-          {...props}
-        >
-          {children}
-        </div>
-      </TooltipProvider>
+      <div
+        style={
+          {
+            '--sidebar-width': sidebarWidth,
+            '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
+            ...style,
+          } as React.CSSProperties
+        }
+        data-minimized={!open}
+        className={cn(
+          'group/sidebar text-sidebar-foreground has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full',
+          className,
+        )}
+        ref={ref}
+        {...props}
+      >
+        {children}
+      </div>
     </SidebarContext.Provider>
   );
 };
@@ -392,7 +390,10 @@ const SidebarHeader: React.FC<React.ComponentPropsWithRef<'div'>> = ({
   return (
     <div
       data-sidebar="header"
-      className={cn('flex flex-col gap-2 p-2', className)}
+      className={cn(
+        'flex flex-col gap-2 p-2 group-data-[state=collapsed]:group-data-[collapsible=offcanvas]:hidden',
+        className,
+      )}
       {...props}
     />
   );
@@ -461,7 +462,7 @@ SidebarGroup.displayName = 'SidebarGroup';
 const SidebarGroupLabel: React.FC<
   React.ComponentProps<'div'> & { asChild?: boolean }
 > = ({ className, asChild = false, ...props }) => {
-  const Comp = asChild ? Slot : 'div';
+  const Comp = asChild ? Slot.Root : 'div';
 
   return (
     <Comp
@@ -480,7 +481,7 @@ SidebarGroupLabel.displayName = 'SidebarGroupLabel';
 const SidebarGroupAction: React.FC<
   React.ComponentProps<'button'> & { asChild?: boolean }
 > = ({ className, asChild = false, ...props }) => {
-  const Comp = asChild ? Slot : 'button';
+  const Comp = asChild ? Slot.Root : 'button';
 
   return (
     <Comp
@@ -517,7 +518,7 @@ const SidebarMenu: React.FC<React.ComponentProps<'ul'>> = ({
   <ul
     data-sidebar="menu"
     className={cn(
-      'flex w-full min-w-0 flex-col gap-1 group-data-[minimized=true]:items-center',
+      'flex w-full min-w-0 flex-col gap-1 group-data-[minimized=true]/sidebar:items-center',
       className,
     )}
     {...props}
@@ -577,7 +578,7 @@ const SidebarMenuButton: React.FC<
   className,
   ...props
 }) => {
-  const Comp = asChild ? Slot : 'button';
+  const Comp = asChild ? Slot.Root : 'button';
   const { isMobile, open } = useSidebar();
   const { t } = useTranslation();
 
@@ -604,15 +605,17 @@ const SidebarMenuButton: React.FC<
   }
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent
-        side="right"
-        align="center"
-        hidden={isMobile || open}
-        {...tooltip}
-      />
-    </Tooltip>
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent
+          side="right"
+          align="center"
+          hidden={isMobile || open}
+          {...tooltip}
+        />
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
@@ -624,7 +627,7 @@ const SidebarMenuAction: React.FC<
     showOnHover?: boolean;
   }
 > = ({ className, asChild = false, showOnHover = false, ...props }) => {
-  const Comp = asChild ? Slot : 'button';
+  const Comp = asChild ? Slot.Root : 'button';
 
   return (
     <Comp
@@ -732,7 +735,7 @@ const SidebarMenuSubButton: React.FC<
     isActive?: boolean;
   }
 > = ({ asChild = false, size = 'md', isActive, className, ...props }) => {
-  const Comp = asChild ? Slot : 'a';
+  const Comp = asChild ? Slot.Root : 'a';
 
   return (
     <Comp
@@ -995,9 +998,11 @@ export function SidebarNavigation({
                                 </If>
                               </ContentContainer>
 
-                              <SidebarMenuAction>
-                                {child.renderAction}
-                              </SidebarMenuAction>
+                              <If condition={child.renderAction}>
+                                <SidebarMenuAction>
+                                  {child.renderAction}
+                                </SidebarMenuAction>
+                              </If>
                             </SidebarMenuItem>
                           </Container>
                         );

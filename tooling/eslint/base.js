@@ -14,9 +14,15 @@ export default tsEsLint.config(
         version: '19.0',
       },
     },
+    languageOptions: {
+      parserOptions: {
+        warnOnUnsupportedTypeScriptVersion: false,
+      },
+    },
   },
   {
     rules: {
+      '@typescript-eslint/triple-slash-reference': 'off',
       'react/react-in-jsx-scope': 'off',
       'import/no-anonymous-default-export': 'off',
       'import/named': 'off',
@@ -29,7 +35,6 @@ export default tsEsLint.config(
       'import/no-unused-modules': 'off',
       'import/no-deprecated': 'off',
       'turbo/no-undeclared-env-vars': 'off',
-      '@typescript-eslint/triple-slash-reference': 'off',
       '@typescript-eslint/array-type': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',

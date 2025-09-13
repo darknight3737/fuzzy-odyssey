@@ -13,36 +13,27 @@ import { Trans } from '@kit/ui/trans';
 
 import { SiteNavigationItem } from './site-navigation-item';
 
-/**
- * Add your navigation links here
- *
- * @example
- *
- * {
- *   FAQ: {
- *     label: 'marketing:faq',
- *     path: '/faq',
- *   },
- *   Pricing: {
- *     label: 'marketing:pricing',
- *     path: '/pricing',
- *   },
- * }
- */
-
-const links: Record<
-  string,
-  {
-    label: string;
-    path: string;
-  }
-> = {
-  /*
-    FAQ: {
-      label: 'marketing:faq',
-      path: '/faq',
-    },
-     */
+const links = {
+  Blog: {
+    label: 'marketing:blog',
+    path: '/blog',
+  },
+  Docs: {
+    label: 'marketing:documentation',
+    path: '/docs',
+  },
+  Pricing: {
+    label: 'marketing:pricing',
+    path: '/pricing',
+  },
+  FAQ: {
+    label: 'marketing:faq',
+    path: '/faq',
+  },
+  Contact: {
+    label: 'marketing:contact',
+    path: '/contact',
+  },
 };
 
 export function SiteNavigation() {
@@ -57,8 +48,8 @@ export function SiteNavigation() {
   return (
     <>
       <div className={'hidden items-center justify-center md:flex'}>
-        <NavigationMenu className={'px-4 py-2'}>
-          <NavigationMenuList className={'space-x-5'}>
+        <NavigationMenu>
+          <NavigationMenuList className={'gap-x-2.5'}>
             {NavItems}
           </NavigationMenuList>
         </NavigationMenu>

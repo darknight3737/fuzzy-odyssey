@@ -4,10 +4,6 @@ import { useMutation } from '@tanstack/react-query';
 
 import { useSupabase } from './use-supabase';
 
-/**
- * @name useVerifyOtp
- * @description Use Supabase to verify an OTP in a React component
- */
 export function useVerifyOtp() {
   const client = useSupabase();
 

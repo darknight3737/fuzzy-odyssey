@@ -18,27 +18,46 @@ export const generateMetadata = async () => {
   };
 };
 
+interface Props {
+  searchParams: Promise<{
+    invite_token?: string;
+  }>;
+}
+
 const paths = {
   callback: pathsConfig.auth.callback,
   appHome: pathsConfig.app.home,
 };
 
-function SignUpPage() {
+async function SignUpPage({ searchParams }: Props) {
+  const inviteToken = (await searchParams).invite_token;
+
+  const signInPath =
+    pathsConfig.auth.signIn +
+    (inviteToken ? `?invite_token=${inviteToken}` : '');
+
   return (
     <>
-      <Heading level={5} className={'tracking-tight'}>
-        <Trans i18nKey={'auth:signUpHeading'} />
-      </Heading>
+      <div className={'flex flex-col items-center gap-1'}>
+        <Heading level={4} className={'tracking-tight'}>
+          <Trans i18nKey={'auth:signUpHeading'} />
+        </Heading>
+
+        <p className={'text-muted-foreground text-sm'}>
+          <Trans i18nKey={'auth:signUpSubheading'} />
+        </p>
+      </div>
 
       <SignUpMethodsContainer
         providers={authConfig.providers}
         displayTermsCheckbox={authConfig.displayTermsCheckbox}
+        inviteToken={inviteToken}
         paths={paths}
       />
 
-      <div className={'justify-center flex'}>
+      <div className={'flex justify-center'}>
         <Button asChild variant={'link'} size={'sm'}>
-          <Link href={pathsConfig.auth.signIn}>
+          <Link href={signInPath} prefetch={true}>
             <Trans i18nKey={'auth:alreadyHaveAnAccount'} />
           </Link>
         </Button>

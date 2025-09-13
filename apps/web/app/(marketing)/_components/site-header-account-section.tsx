@@ -3,11 +3,9 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 
-import type { JwtPayload } from '@supabase/supabase-js';
-
 import { PersonalAccountDropdown } from '@kit/accounts/personal-account-dropdown';
 import { useSignOut } from '@kit/supabase/hooks/use-sign-out';
-import { useUser } from '@kit/supabase/hooks/use-user';
+import { JWTUserData } from '@kit/supabase/types';
 import { Button } from '@kit/ui/button';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
@@ -15,13 +13,18 @@ import { Trans } from '@kit/ui/trans';
 import featuresFlagConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
 
-const ModeToggle = dynamic(() =>
-  import('@kit/ui/mode-toggle').then((mod) => ({
-    default: mod.ModeToggle,
+const ModeToggle = dynamic(
+  () =>
+    import('@kit/ui/mode-toggle').then((mod) => ({
+      default: mod.ModeToggle,
+    })),
+  { ssr: false },
+);
+
+const MobileModeToggle = dynamic(() =>
+  import('@kit/ui/mobile-mode-toggle').then((mod) => ({
+    default: mod.MobileModeToggle,
   })),
-  {
-    ssr: false,
-  }
 );
 
 const paths = {
@@ -34,28 +37,18 @@ const features = {
 
 export function SiteHeaderAccountSection({
   user,
-}: React.PropsWithChildren<{
-  user: JwtPayload | null;
-}>) {
-  if (!user) {
-    return <AuthButtons />;
-  }
-
-  return <SuspendedPersonalAccountDropdown user={user} />;
-}
-
-function SuspendedPersonalAccountDropdown(props: { user: JwtPayload | null }) {
+}: {
+  user: JWTUserData | null;
+}) {
   const signOut = useSignOut();
-  const user = useUser(props.user);
-  const userData = user.data ?? props.user ?? null;
 
-  if (userData) {
+  if (user) {
     return (
       <PersonalAccountDropdown
         showProfileName={false}
         paths={paths}
         features={features}
-        user={userData}
+        user={user}
         signOutRequested={() => signOut.mutateAsync()}
       />
     );
@@ -66,24 +59,32 @@ function SuspendedPersonalAccountDropdown(props: { user: JwtPayload | null }) {
 
 function AuthButtons() {
   return (
-    <div className={'flex space-x-2'}>
-      <div className={'hidden space-x-0.5 md:flex'}>
+    <div className={'animate-in fade-in flex gap-x-2.5 duration-500'}>
+      <div className={'hidden md:flex'}>
         <If condition={features.enableThemeToggle}>
           <ModeToggle />
         </If>
+      </div>
 
-        <Button asChild variant={'ghost'}>
+      <div className={'md:hidden'}>
+        <If condition={features.enableThemeToggle}>
+          <MobileModeToggle />
+        </If>
+      </div>
+
+      <div className={'flex gap-x-2.5'}>
+        <Button className={'hidden md:block'} asChild variant={'ghost'}>
           <Link href={pathsConfig.auth.signIn}>
             <Trans i18nKey={'auth:signIn'} />
           </Link>
         </Button>
-      </div>
 
-      <Button asChild className="group" variant={'default'}>
-        <Link href={pathsConfig.auth.signUp}>
-          <Trans i18nKey={'auth:signUp'} />
-        </Link>
-      </Button>
+        <Button asChild className="text-xs md:text-sm" variant={'default'}>
+          <Link href={pathsConfig.auth.signUp}>
+            <Trans i18nKey={'auth:signUp'} />
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 }

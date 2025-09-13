@@ -1,6 +1,6 @@
 # A string used to distinguish different Supabase projects on the same host. Defaults to the working
 # directory name when running `supabase init`.
-project_id = "next-supabase-saas-kit-turbo-lite"
+project_id = "next-supabase-saas-kit-turbo"
 
 [api]
 # Port to use for the API URL.
@@ -48,6 +48,12 @@ additional_redirect_urls = ["http://localhost:3000", "http://localhost:3000/auth
 jwt_expiry = 3600
 # Allow/disallow new user signups to your project.
 enable_signup = true
+enable_manual_linking = true
+
+# Enable TOTP MFA
+[auth.mfa.totp]
+verify_enabled = true
+enroll_enabled = true
 
 [auth.email]
 # Allow/disallow new user signups via email to your project.
@@ -71,6 +77,9 @@ redirect_uri = ""
 # or any other third-party OIDC providers.
 url = ""
 
+[auth.rate_limit]
+email_sent = 1000
+
 [auth.email.template.invite]
 subject = "You are invited to Makerkit"
 content_path = "./supabase/templates/invite-user.html"
@@ -92,4 +101,14 @@ subject = "Sign in to Makerkit"
 content_path = "./supabase/templates/magic-link.html"
 
 [analytics]
-enabled = false
+enabled = true
+port = 54327
+backend = "postgres"
+
+[db.migrations]
+schema_paths = [
+  "./schemas/*.sql",
+]
+
+[db.seed]
+sql_paths = ['seed.sql', './seeds/*.sql']

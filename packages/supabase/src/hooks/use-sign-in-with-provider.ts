@@ -4,10 +4,6 @@ import { useMutation } from '@tanstack/react-query';
 
 import { useSupabase } from './use-supabase';
 
-/**
- * @name useSignInWithProvider
- * @description Use Supabase to sign in a user with a provider in a React component
- */
 export function useSignInWithProvider() {
   const client = useSupabase();
   const mutationKey = ['auth', 'sign-in-with-provider'];

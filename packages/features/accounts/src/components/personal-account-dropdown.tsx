@@ -4,10 +4,15 @@ import { useMemo } from 'react';
 
 import Link from 'next/link';
 
-import type { JwtPayload } from '@supabase/supabase-js';
+import {
+  ChevronsUpDown,
+  Home,
+  LogOut,
+  MessageCircleQuestion,
+  Shield,
+} from 'lucide-react';
 
-import { ChevronsUpDown, Home, LogOut } from 'lucide-react';
-
+import { JWTUserData } from '@kit/supabase/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +37,7 @@ export function PersonalAccountDropdown({
   features,
   account,
 }: {
-  user: JwtPayload;
+  user: JWTUserData;
 
   account?: {
     id: string | null;
@@ -54,7 +59,10 @@ export function PersonalAccountDropdown({
 
   className?: string;
 }) {
-  const personalAccountData = usePersonalAccountData(user.id, account);
+  const { data: personalAccountData } = usePersonalAccountData(
+    user.id,
+    account,
+  );
 
   const signedInAsLabel = useMemo(() => {
     const email = user?.email ?? undefined;
@@ -64,7 +72,14 @@ export function PersonalAccountDropdown({
   }, [user]);
 
   const displayName =
-    personalAccountData?.data?.name ?? account?.name ?? user?.email ?? '';
+    personalAccountData?.name ?? account?.name ?? user?.email ?? '';
+
+  const isSuperAdmin = useMemo(() => {
+    const hasAdminRole = user?.app_metadata.role === 'super-admin';
+    const isAal2 = user?.aal === 'aal2';
+
+    return hasAdminRole && isAal2;
+  }, [user]);
 
   return (
     <DropdownMenu>
@@ -72,25 +87,28 @@ export function PersonalAccountDropdown({
         aria-label="Open your profile menu"
         data-test={'account-dropdown-trigger'}
         className={cn(
-          'animate-in fade-in focus:outline-primary flex cursor-pointer items-center duration-500 group-data-[minimized=true]:px-0',
+          'animate-in group/trigger fade-in focus:outline-primary flex cursor-pointer items-center group-data-[minimized=true]/sidebar:px-0',
           className ?? '',
           {
-            ['active:bg-secondary/50 items-center gap-x-4 rounded-md' +
-            ' hover:bg-secondary p-2 transition-colors']: showProfileName,
+            ['active:bg-secondary/50 items-center gap-4 rounded-md' +
+            ' hover:bg-secondary border border-dashed p-2 transition-colors']:
+              showProfileName,
           },
         )}
       >
         <ProfileAvatar
-          className={'rounded-md'}
+          className={
+            'group-hover/trigger:border-background/50 rounded-md border border-transparent transition-colors'
+          }
           fallbackClassName={'rounded-md border'}
           displayName={displayName ?? user?.email ?? ''}
-          pictureUrl={personalAccountData?.data?.picture_url}
+          pictureUrl={personalAccountData?.picture_url}
         />
 
         <If condition={showProfileName}>
           <div
             className={
-              'fade-in animate-in flex w-full flex-col truncate text-left group-data-[minimized=true]:hidden'
+              'fade-in animate-in flex w-full flex-col truncate text-left group-data-[minimized=true]/sidebar:hidden'
             }
           >
             <span
@@ -110,14 +128,14 @@ export function PersonalAccountDropdown({
 
           <ChevronsUpDown
             className={
-              'text-muted-foreground mr-1 h-8 group-data-[minimized=true]:hidden'
+              'text-muted-foreground mr-1 h-8 group-data-[minimized=true]/sidebar:hidden'
             }
           />
         </If>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className={'xl:!min-w-[15rem]'}>
-        <DropdownMenuItem className={'!h-10 rounded-none'}>
+      <DropdownMenuContent className={'xl:min-w-[15rem]!'}>
+        <DropdownMenuItem className={'h-10! rounded-none'}>
           <div
             className={'flex flex-col justify-start truncate text-left text-xs'}
           >
@@ -145,6 +163,38 @@ export function PersonalAccountDropdown({
             </span>
           </Link>
         </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem asChild>
+          <Link
+            className={'s-full flex cursor-pointer items-center space-x-2'}
+            href={'/docs'}
+          >
+            <MessageCircleQuestion className={'h-5'} />
+
+            <span>
+              <Trans i18nKey={'common:documentation'} />
+            </span>
+          </Link>
+        </DropdownMenuItem>
+
+        <If condition={isSuperAdmin}>
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem asChild>
+            <Link
+              className={
+                's-full flex cursor-pointer items-center space-x-2 text-yellow-700 dark:text-yellow-500'
+              }
+              href={'/admin'}
+            >
+              <Shield className={'h-5'} />
+
+              <span>Super Admin</span>
+            </Link>
+          </DropdownMenuItem>
+        </If>
 
         <DropdownMenuSeparator />
 

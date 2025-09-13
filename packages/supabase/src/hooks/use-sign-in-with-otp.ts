@@ -4,10 +4,6 @@ import { useMutation } from '@tanstack/react-query';
 
 import { useSupabase } from './use-supabase';
 
-/**
- * @name useSignInWithOtp
- * @description Use Supabase to sign in a user with an OTP in a React component
- */
 export function useSignInWithOtp() {
   const client = useSupabase();
   const mutationKey = ['auth', 'sign-in-with-otp'];
@@ -35,6 +31,8 @@ export function useSignInWithOtp() {
     mutationKey,
   });
 }
+
+export default useSignInWithOtp;
 
 function shouldIgnoreError(error: string) {
   return isSmsProviderNotSetupError(error);

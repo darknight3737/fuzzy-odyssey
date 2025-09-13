@@ -13,16 +13,17 @@
     "./logger": "./src/logger/index.ts",
     "./utils": "./src/utils.ts",
     "./hooks": "./src/hooks/index.ts",
-    "./events": "./src/events/index.tsx"
+    "./events": "./src/events/index.tsx",
+    "./registry": "./src/registry/index.ts"
   },
   "devDependencies": {
     "@kit/eslint-config": "workspace:*",
     "@kit/prettier-config": "workspace:*",
     "@kit/tsconfig": "workspace:*",
-    "@types/react": "19.1.6"
+    "@types/react": "19.1.12"
   },
   "dependencies": {
-    "pino": "^9.9.5"
+    "pino": "^9.9.4"
   },
   "typesVersions": {
     "*": {

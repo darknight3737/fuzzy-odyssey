@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   const service = createAuthCallbackService(getSupabaseServerClient());
 
   const { nextPath } = await service.exchangeCodeForSession(request, {
+    joinTeamPath: pathsConfig.app.joinTeam,
     redirectPath: pathsConfig.app.home,
   });
 

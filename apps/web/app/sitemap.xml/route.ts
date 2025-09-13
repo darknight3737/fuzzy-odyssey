@@ -1,5 +1,7 @@
 import { getServerSideSitemap } from 'next-sitemap';
 
+import { createCmsClient } from '@kit/cms';
+
 import appConfig from '~/config/app.config';
 
 /**
@@ -13,18 +15,23 @@ const S_MAX_AGE = 3600;
 
 export async function GET() {
   const paths = getPaths();
+  const contentItems = await getContentItems();
 
   const headers = {
     'Cache-Control': `public, max-age=${MAX_AGE}, s-maxage=${S_MAX_AGE}`,
   };
 
-  return getServerSideSitemap([...paths], headers);
+  return getServerSideSitemap([...paths, ...contentItems], headers);
 }
 
 function getPaths() {
   const paths = [
     '/',
     '/faq',
+    '/blog',
+    '/docs',
+    '/pricing',
+    '/contact',
     '/cookie-policy',
     '/terms-of-service',
     '/privacy-policy',
@@ -37,4 +44,44 @@ function getPaths() {
       lastmod: new Date().toISOString(),
     };
   });
+}
+
+async function getContentItems() {
+  const client = await createCmsClient();
+
+  // do not paginate the content items
+  const limit = Infinity;
+  const posts = client
+    .getContentItems({
+      collection: 'posts',
+      content: false,
+      limit,
+    })
+    .then((response) => response.items)
+    .then((posts) =>
+      posts.map((post) => ({
+        loc: new URL(`/blog/${post.slug}`, appConfig.url).href,
+        lastmod: post.publishedAt
+          ? new Date(post.publishedAt).toISOString()
+          : new Date().toISOString(),
+      })),
+    );
+
+  const docs = client
+    .getContentItems({
+      collection: 'documentation',
+      content: false,
+      limit,
+    })
+    .then((response) => response.items)
+    .then((docs) =>
+      docs.map((doc) => ({
+        loc: new URL(`/docs/${doc.slug}`, appConfig.url).href,
+        lastmod: doc.publishedAt
+          ? new Date(doc.publishedAt).toISOString()
+          : new Date().toISOString(),
+      })),
+    );
+
+  return Promise.all([posts, docs]).then((items) => items.flat());
 }

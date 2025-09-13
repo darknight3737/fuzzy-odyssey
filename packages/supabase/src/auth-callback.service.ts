@@ -18,9 +18,6 @@ export function createAuthCallbackService(client: SupabaseClient) {
 /**
  * @name AuthCallbackService
  * @description Service for handling auth callbacks in Supabase
- *
- * This service handles a variety of situations and edge cases in Supabase Auth.
- *
  */
 class AuthCallbackService {
   constructor(private readonly client: SupabaseClient) {}
@@ -35,6 +32,7 @@ class AuthCallbackService {
   async verifyTokenHash(
     request: Request,
     params: {
+      joinTeamPath: string;
       redirectPath: string;
       errorPath?: string;
     },
@@ -44,11 +42,8 @@ class AuthCallbackService {
 
     const host = request.headers.get('host');
 
-    // set the host to the request host since outside of Vercel it gets set as "localhost"
-    if (url.host.includes('localhost:') && !host?.includes('localhost')) {
-      url.host = host as string;
-      url.port = '';
-    }
+    // set the host to the request host since outside of Vercel it gets set as "localhost" or "0.0.0.0"
+    this.adjustUrlHostForLocalDevelopment(url, host);
 
     url.pathname = params.redirectPath;
 
@@ -73,6 +68,7 @@ class AuthCallbackService {
       }
     }
 
+    const inviteToken = callbackUrl?.searchParams.get('invite_token');
     const errorPath = params.errorPath ?? '/auth/callback/error';
 
     // remove the query params from the url
@@ -83,6 +79,22 @@ class AuthCallbackService {
     // if we have a next path, we redirect to that path
     if (nextPath) {
       url.pathname = nextPath;
+    }
+
+    // if we have an invite token, we append it to the redirect url
+    if (inviteToken) {
+      // if we have an invite token, we redirect to the join team page
+      // instead of the default next url. This is because the user is trying
+      // to join a team and we want to make sure they are redirected to the
+      // correct page.
+      url.pathname = params.joinTeamPath;
+      searchParams.set('invite_token', inviteToken);
+
+      const emailParam = callbackUrl?.searchParams.get('email');
+
+      if (emailParam) {
+        searchParams.set('email', emailParam);
+      }
     }
 
     if (token_hash && type) {
@@ -122,6 +134,7 @@ class AuthCallbackService {
   async exchangeCodeForSession(
     request: Request,
     params: {
+      joinTeamPath: string;
       redirectPath: string;
       errorPath?: string;
     },
@@ -134,9 +147,25 @@ class AuthCallbackService {
     const authCode = searchParams.get('code');
     const error = searchParams.get('error');
     const nextUrlPathFromParams = searchParams.get('next');
+    const inviteToken = searchParams.get('invite_token');
     const errorPath = params.errorPath ?? '/auth/callback/error';
 
-    const nextUrl = nextUrlPathFromParams ?? params.redirectPath;
+    let nextUrl = nextUrlPathFromParams ?? params.redirectPath;
+
+    // if we have an invite token, we redirect to the join team page
+    // instead of the default next url. This is because the user is trying
+    // to join a team and we want to make sure they are redirected to the
+    // correct page.
+    if (inviteToken) {
+      const emailParam = searchParams.get('email');
+
+      const urlParams = new URLSearchParams({
+        invite_token: inviteToken,
+        email: emailParam ?? '',
+      });
+
+      nextUrl = `${params.joinTeamPath}?${urlParams.toString()}`;
+    }
 
     if (authCode) {
       try {
@@ -181,6 +210,25 @@ class AuthCallbackService {
       nextPath: nextUrl,
     };
   }
+
+  private adjustUrlHostForLocalDevelopment(url: URL, host: string | null) {
+    if (this.isLocalhost(url.host) && !this.isLocalhost(host)) {
+      url.host = host as string;
+      url.port = '';
+    }
+  }
+
+  private isLocalhost(host: string | null) {
+    if (!host) {
+      return false;
+    }
+
+    return (
+      host.includes('localhost:') ||
+      host.includes('0.0.0.0:') ||
+      host.includes('127.0.0.1:')
+    );
+  }
 }
 
 function onError({
@@ -196,7 +244,7 @@ function onError({
 
   console.error(
     {
-      error: JSON.stringify(error),
+      error: JSON.stringify(error).replace(/["\\]/g, '\\$&'),
       name: `auth.callback`,
     },
     `An error occurred while signing user in`,
@@ -225,11 +273,6 @@ function isVerifierError(error: string) {
   return error.includes('both auth code and code verifier should be non-empty');
 }
 
-/**
- * @name getAuthErrorMessage
- * @description Get the auth error message from the error code
- * @param params
- */
 function getAuthErrorMessage(params: { error: string; code?: string }) {
   // this error arises when the user tries to sign in with an expired email link
   if (params.code) {

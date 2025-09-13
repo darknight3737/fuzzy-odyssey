@@ -4,6 +4,8 @@ import Link from 'next/link';
 
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 
+import { useCaptureException } from '@kit/monitoring/hooks';
+import { useUser } from '@kit/supabase/hooks/use-user';
 import { Button } from '@kit/ui/button';
 import { Heading } from '@kit/ui/heading';
 import { Trans } from '@kit/ui/trans';
@@ -17,11 +19,13 @@ const ErrorPage = ({
   error: Error & { digest?: string };
   reset: () => void;
 }) => {
-  console.error(error);
+  useCaptureException(error);
+
+  const user = useUser();
 
   return (
     <div className={'flex h-screen flex-1 flex-col'}>
-      <SiteHeader />
+      <SiteHeader user={user.data} />
 
       <div
         className={
@@ -38,7 +42,7 @@ const ErrorPage = ({
           <div className={'flex flex-col items-center space-y-8'}>
             <div
               className={
-                'flex max-w-xl flex-col items-center space-y-1 text-center'
+                'flex max-w-xl flex-col items-center gap-y-2 text-center'
               }
             >
               <div>
