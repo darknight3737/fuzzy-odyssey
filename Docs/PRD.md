@@ -70,19 +70,17 @@ created_at: timestamp
 updated_at: timestamp
 ```
 
-**business_users** (Ownership & Team Management)
-```sql
-id: uuid (primary key)
-business_id: uuid (foreign key to businesses.id)
-user_id: uuid (foreign key to users.id)
-role: text (enum: ['owner', 'admin', 'editor', 'viewer'])
-is_primary_owner: boolean (default: false)
-invited_by: uuid (foreign key to users.id, nullable)
-invited_at: timestamp
-joined_at: timestamp
-status: text (default: 'active', enum: ['active', 'pending', 'suspended'])
-created_at: timestamp
-updated_at: timestamp
+Ownership & Team Management (via Accounts)
+```
+Businesses belong to an account via `businesses.account_id`.
+Team membership and permissions are provided by existing Makerkit tables:
+- `public.accounts_memberships` (who is in the team)
+- `public.roles` and `public.role_permissions` (RBAC)
+
+Authorization checks reuse existing helpers:
+- `public.has_role_on_account(account_id, role?)`
+- `public.has_permission(user_id, account_id, permission)`
+- `public.is_account_owner(account_id)`
 ```
 
 **business_categories**
@@ -263,10 +261,10 @@ updated_at: timestamp
 #### Ownership & Permission System
 
 **Business Ownership Model:**
-- **Primary Owner**: One user per business (first claimer)
-- **Team Members**: Multiple users with different roles
-- **Role-Based Access**: Owner > Admin > Editor > Viewer
-- **Invitation System**: Owners can invite team members
+- Businesses are attached to an `account_id`
+- The account's Primary Owner acts as the primary owner for its businesses
+- Team members inherit access via account roles and permissions
+- Invitations and role management are handled at the account level
 
 **Review System:**
 - **Anonymous Reviews**: No user_id required
@@ -316,28 +314,32 @@ const canEditPremiumContent = (business: Business): boolean => {
 
 **RLS Policies for Tier-Gated Content:**
 ```sql
--- Cover image access
-CREATE POLICY "Only highlight/spotlight can edit cover image" ON businesses
-  FOR UPDATE USING (
-    tier IN ('highlight', 'spotlight') AND
-    id IN (
-      SELECT business_id FROM business_users 
-      WHERE user_id = auth.uid() AND role IN ('owner', 'admin', 'editor')
-    )
-  );
+-- Cover image (businesses)
+CREATE POLICY businesses_update_premium ON public.businesses
+FOR UPDATE TO authenticated
+USING (
+  tier IN ('highlight','spotlight') AND (
+    public.has_permission((select auth.uid()), account_id, 'settings.manage'::public.app_permissions)
+    OR public.is_account_owner(account_id)
+    OR public.has_role_on_account(account_id, 'owner')
+  )
+);
 
--- Services management
-CREATE POLICY "Only highlight/spotlight can manage services" ON business_services
-  FOR ALL USING (
-    business_id IN (
-      SELECT id FROM businesses 
-      WHERE tier IN ('highlight', 'spotlight') AND
-      id IN (
-        SELECT business_id FROM business_users 
-        WHERE user_id = auth.uid() AND role IN ('owner', 'admin', 'editor')
+-- Services management (business_services)
+CREATE POLICY business_services_manage ON public.business_services
+FOR ALL TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.businesses b
+    WHERE b.id = business_id
+      AND b.tier IN ('highlight','spotlight')
+      AND (
+        public.has_permission((select auth.uid()), b.account_id, 'settings.manage'::public.app_permissions)
+        OR public.is_account_owner(b.account_id)
+        OR public.has_role_on_account(b.account_id, 'owner')
       )
-    )
-  );
+  )
+);
 ```
 
 **Business Profile Enhancement Strategy:**
@@ -349,24 +351,15 @@ CREATE POLICY "Only highlight/spotlight can manage services" ON business_service
 
 ---
 
-**Role-Based Permission Matrix:**
+**Permission Checks (via Account RBAC):**
 ```typescript
-type BusinessRole = 'owner' | 'admin' | 'editor' | 'viewer';
-
-const rolePermissions = {
-  owner: ['all'], // Full access
-  admin: ['edit_business', 'manage_reviews', 'manage_team', 'view_analytics'],
-  editor: ['edit_business', 'manage_reviews', 'view_analytics'],
-  viewer: ['view_analytics']
-};
-
-// Permission check function
-const canUserAction = (user: User, business: Business, action: string): boolean => {
-  const businessUser = business.users.find(bu => bu.user_id === user.id);
-  if (!businessUser) return false;
-  
-  return rolePermissions[businessUser.role].includes(action) || 
-         rolePermissions[businessUser.role].includes('all');
+// Example: can user manage a business?
+const canManageBusiness = (userId: string, business: { account_id: string }) => {
+  return (
+    hasPermission(userId, business.account_id, 'settings.manage') ||
+    isAccountOwner(business.account_id) ||
+    hasRoleOnAccount(business.account_id, 'owner')
+  );
 };
 ```
 
@@ -1220,20 +1213,23 @@ const canAccessDashboard = (user: User) => {
 #### RLS Policies
 ```sql
 -- Businesses table
-CREATE POLICY "Users can view all businesses" ON businesses
-  FOR SELECT USING (true);
+CREATE POLICY businesses_read_anon ON public.businesses FOR SELECT TO anon USING (true);
+CREATE POLICY businesses_read_auth ON public.businesses FOR SELECT TO authenticated USING (true);
 
-CREATE POLICY "Business owners can edit their business" ON businesses
-  FOR UPDATE USING (auth.uid() = claimed_by);
+CREATE POLICY businesses_update_self ON public.businesses FOR UPDATE TO authenticated
+USING (
+  public.has_permission((select auth.uid()), account_id, 'settings.manage'::public.app_permissions)
+  OR public.is_account_owner(account_id)
+  OR public.has_role_on_account(account_id, 'owner')
+);
 
 -- Reviews table
-CREATE POLICY "Users can view approved reviews" ON reviews
-  FOR SELECT USING (status = 'approved');
-
-CREATE POLICY "Business owners can view their reviews" ON reviews
-  FOR SELECT USING (business_id IN (
-    SELECT id FROM businesses WHERE claimed_by = auth.uid()
-  ));
+CREATE POLICY reviews_read_anon ON public.reviews FOR SELECT TO anon USING (status = 'approved');
+CREATE POLICY reviews_read_auth ON public.reviews FOR SELECT TO authenticated USING (
+  status = 'approved' OR EXISTS (
+    SELECT 1 FROM public.businesses b WHERE b.id = business_id AND public.has_role_on_account(b.account_id)
+  )
+);
 ```
 
 ### Error Handling & Validation

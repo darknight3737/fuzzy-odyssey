@@ -5,6 +5,29 @@ Building a B2B discovery platform with status-driven promotion tiers, focusing o
 
 **Reference**: PRD.md - Technical Architecture & Implementation, Milestones & Sequencing
 
+## 🎯 MVP Development Status Summary
+
+### ✅ **Already Built by Makerkit Boilerplate**
+- **Authentication System**: Complete email/password auth, verification, password reset
+- **Authorization System**: Full RBAC with roles, permissions, team management
+- **User Context Providers**: Personal and team workspace contexts with hooks
+- **Payment Infrastructure**: Complete Stripe integration, subscriptions, billing
+- **Database Foundation**: All core tables, RLS policies, helper functions
+
+### ❌ **MISSING for Selletive MVP (Critical)**
+1. **Business-User Association**: Link users to business profiles (business_users table)
+2. **Business Permission System**: Business-specific roles and permissions
+3. **Business Workspace Context**: Business dashboard context providers
+4. **Business Claiming Workflow**: Email domain verification for business ownership
+5. **Business Subscription Management**: Link subscriptions to businesses (not teams)
+6. **Tier-Specific Features**: Highlight ($19/mo) and Spotlight ($129/mo) configurations
+
+### 📋 **Implementation Priority**
+**Phase 1**: Business Association System (business_users table, permissions)
+**Phase 2**: Business Workspace Context (dashboard functionality)  
+**Phase 3**: Business Claiming Workflow (core MVP feature)
+**Phase 4**: Business Subscription Management (monetization)
+
 ---
 
 # [V] Phase 1: Foundation & Database Setup
@@ -89,34 +112,73 @@ Building a B2B discovery platform with status-driven promotion tiers, focusing o
 
 # [ ] Phase 2: Authentication & User Management
 
-## [ ] Existing Makerkit Auth System (Already Available)
+## [V] Existing Makerkit Auth System (Already Available)
 **Reference**: apps/web/supabase/migrations/20221215192558_schema.sql
 
-### [ ] Authentication Features
-- Supabase Auth integration with email/password
-- Email verification flow
-- Password reset functionality
-- User registration and management
-- Team account creation and management
+### [V] Authentication Features (Already Built)
+- ✅ Supabase Auth integration with email/password
+- ✅ Email verification flow
+- ✅ Password reset functionality
+- ✅ User registration and management
+- ✅ Team account creation and management
 
-### [ ] Authorization System
-- Role-based permission system (owner, admin, editor, viewer)
-- Account membership management
-- Team invitation system
-- Permission checking utilities
+### [V] Authorization System (Already Built)
+- ✅ Role-based permission system (owner, admin, editor, viewer)
+- ✅ Account membership management
+- ✅ Team invitation system
+- ✅ Permission checking utilities (`has_permission`, `has_role_on_account`, `is_account_owner`)
 
-### [ ] Selletive-Specific Auth Extensions
-#### [ ] Business Association
-- Link user accounts to business profiles
-- Implement business ownership validation
-- Add business team member management
-- Create business-specific permission checks
+### [V] User Context Providers (Already Built)
+- ✅ Personal workspace context (`useUserWorkspace` hook)
+- ✅ Team workspace context (`useTeamAccountWorkspace` hook)
+- ✅ Server-side workspace loaders (`loadUserWorkspace`, `loadTeamWorkspace`)
 
-#### [ ] User Context Providers
-- Extend existing user workspace context for business features
-- Add business-specific workspace context
-- Implement business permission checking utilities
-- Create business team management context
+## [ ] MISSING: Selletive-Specific Auth Extensions (Critical for MVP)
+
+### [V] Business Association System (MUST BUILD)
+**Priority**: HIGH - Required for business claiming and management
+
+#### [V] Business-User Linking
+- ✅ Use `businesses.account_id` to associate to an existing account
+- ✅ Reuse `accounts_memberships` for team membership
+- ✅ Ownership = account primary owner; team = account roles
+- ✅ Permission checks via `has_permission`/`has_role_on_account`/`is_account_owner`
+
+#### [V] Business Permission System
+- ✅ Reuse `public.app_permissions` and existing RBAC
+- ✅ No separate business-level permissions needed (DRY)
+- ✅ RLS already implemented for businesses, categories, locations, reviews, badges
+- ✅ Premium tables RLS tier-gated via account checks
+
+### [MISS] Business Workspace Context (MUST BUILD)
+**Priority**: HIGH - Required for business dashboard functionality
+
+#### [ ] Business Context Providers
+- ❌ Create `useBusinessWorkspace` hook for business context
+- ❌ Create `BusinessWorkspaceContextProvider` component
+- ❌ Implement `loadBusinessWorkspace` server function
+- ❌ Add business-specific workspace data loading
+
+#### [ ] Business Team Management
+- ❌ Create business invitation system (similar to team invitations)
+- ❌ Implement business role management interface
+- ❌ Add business member addition/removal functionality
+- ❌ Create business-specific team management context
+
+### [MISS] Business Claiming Workflow (MUST BUILD)
+**Priority**: HIGH - Core MVP functionality
+
+#### [ ] Email Domain Verification
+- ❌ Implement email domain validation against business website
+- ❌ Create business claiming form with domain verification
+- ❌ Add claiming status management (pending, verified, rejected)
+- ❌ Create business ownership transfer logic
+
+#### [ ] Business Onboarding
+- ❌ Create onboarding wizard for new business owners
+- ❌ Implement business profile completion tracking
+- ❌ Add business verification requirements checklist
+- ❌ Create business setup completion flow
 
 ---
 
@@ -292,28 +354,35 @@ Building a B2B discovery platform with status-driven promotion tiers, focusing o
 
 # Phase 8: Payment Integration
 
-## [ ] Existing Makerkit Payment System (Already Available)
+## [V] Existing Makerkit Payment System (Already Available)
 **Reference**: apps/web/supabase/migrations/20221215192558_schema.sql
 
-### [ ] Payment Infrastructure
-- Stripe payment gateway integration
-- Subscription management system
-- Billing customer management
-- Order and order items tracking
-- Payment status management
+### [V] Payment Infrastructure (Already Built)
+- ✅ Stripe payment gateway integration
+- ✅ Subscription management system
+- ✅ Billing customer management
+- ✅ Order and order items tracking
+- ✅ Payment status management
 
-### [ ] Selletive-Specific Payment Extensions
-#### [ ] Tier-Specific Subscriptions
-- Configure Highlight tier ($19/mo) in Stripe
-- Configure Spotlight tier ($129/mo) in Stripe
-- Link subscription tiers to business features
-- Implement tier upgrade/downgrade flows
+## [ ] MISSING: Selletive-Specific Payment Extensions (Critical for MVP)
 
-#### [ ] Business Subscription Management
-- Create business-specific subscription handling
-- Link subscriptions to business accounts
-- Implement tier-based feature gating
-- Add subscription analytics for businesses
+### [ ] Tier-Specific Subscriptions (MUST BUILD)
+**Priority**: HIGH - Required for monetization
+
+#### [ ] Selletive Tier Configuration
+- ❌ Configure Highlight tier ($19/mo) in Stripe
+- ❌ Configure Spotlight tier ($129/mo) in Stripe
+- ❌ Link subscription tiers to business features
+- ❌ Implement tier upgrade/downgrade flows
+
+### [ ] Business Subscription Management (MUST BUILD)
+**Priority**: HIGH - Required for business billing
+
+#### [ ] Business-Specific Billing
+- ❌ Create business-specific subscription handling
+- ❌ Link subscriptions to business accounts (not team accounts)
+- ❌ Implement tier-based feature gating for businesses
+- ❌ Add subscription analytics for businesses
 
 ### [ ] Tier Purchase Workflows
 **Reference**: PRD.md - Spotlight Tier Purchase Workflow (lines 2042-2088)
