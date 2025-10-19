@@ -64,14 +64,14 @@ const AppConfigSchema = z
   );
 
 const appConfig = AppConfigSchema.parse({
-  name: process.env.NEXT_PUBLIC_PRODUCT_NAME,
-  title: process.env.NEXT_PUBLIC_SITE_TITLE,
-  description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION,
-  url: process.env.NEXT_PUBLIC_SITE_URL,
-  locale: process.env.NEXT_PUBLIC_DEFAULT_LOCALE,
-  theme: process.env.NEXT_PUBLIC_DEFAULT_THEME_MODE,
-  themeColor: process.env.NEXT_PUBLIC_THEME_COLOR,
-  themeColorDark: process.env.NEXT_PUBLIC_THEME_COLOR_DARK,
+  name: process.env.NEXT_PUBLIC_PRODUCT_NAME || 'Selletive',
+  title: process.env.NEXT_PUBLIC_SITE_TITLE || 'Selletive - B2B Discovery Platform',
+  description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION || 'Find and connect with verified B2B service providers',
+  url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+  locale: process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'en',
+  theme: process.env.NEXT_PUBLIC_DEFAULT_THEME_MODE || 'light',
+  themeColor: process.env.NEXT_PUBLIC_THEME_COLOR || '#3b82f6',
+  themeColorDark: process.env.NEXT_PUBLIC_THEME_COLOR_DARK || '#60a5fa',
   production,
 });
 

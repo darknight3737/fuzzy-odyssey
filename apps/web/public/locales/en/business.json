@@ -1,0 +1,19 @@
+{
+  "aboutTitle": "About",
+  "detailsTitle": "Details",
+  "servicesTitle": "Services",
+  "reviewsTitle": "Reviews ({{count}})",
+  "website": "Website:",
+  "phone": "Phone:",
+  "email": "Email:",
+  "categories": "Categories:",
+  "locations": "Locations:",
+  "employees": "Employees:",
+  "founded": "Founded:",
+  "worksRemotely": "Works Remotely",
+  "languages": "Languages:",
+  "priceRange": "Price:",
+  "deliveryTime": "Delivery:",
+  "noReviews": "No reviews yet. Be the first to review!"
+}
+

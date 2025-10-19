@@ -226,3 +226,6 @@ INSERT INTO public.business_categories (business_id, category_id, is_primary, di
 -- PhotoVision Studio: Photography (Primary), Product Photography (Secondary)
 ('cccccccc-cccc-cccc-cccc-cccccccc0010', '33333333-3333-3333-3333-333333333028', true, 1),  -- Photography
 ('cccccccc-cccc-cccc-cccc-cccccccc0010', '33333333-3333-3333-3333-333333333029', false, 2); -- Product Photography
+
+
+

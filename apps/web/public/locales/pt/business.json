@@ -1,0 +1,19 @@
+{
+  "aboutTitle": "Sobre",
+  "detailsTitle": "Detalhes",
+  "servicesTitle": "Serviços",
+  "reviewsTitle": "Avaliações ({{count}})",
+  "website": "Website:",
+  "phone": "Telefone:",
+  "email": "E-mail:",
+  "categories": "Categorias:",
+  "locations": "Localizações:",
+  "employees": "Funcionários:",
+  "founded": "Fundada em:",
+  "worksRemotely": "Trabalha Remotamente",
+  "languages": "Idiomas:",
+  "priceRange": "Preço:",
+  "deliveryTime": "Prazo:",
+  "noReviews": "Ainda não há avaliações. Seja o primeiro a avaliar!"
+}
+
