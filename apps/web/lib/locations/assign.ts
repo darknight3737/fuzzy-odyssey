@@ -54,7 +54,7 @@ export async function assignBusinessToLocation(
       const client = getSupabaseServerClient();
       const { data: existingState } = await client
         .from('locations')
-        .select('slug, name')
+        .select('id, slug, name')
         .eq('state_code', parsed.stateCode)
         .eq('country_code', parsed.countryCode)
         .eq('type', 'state')
