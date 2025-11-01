@@ -5,7 +5,7 @@ import { Button } from '@kit/ui/button';
 import { withI18n } from '~/lib/i18n/with-i18n';
 
 import { Star } from 'lucide-react';
-import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
+import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { TypeSelect } from './_components/type-select';
 
 type PageProps = {
@@ -17,7 +17,7 @@ async function Home({ searchParams }: PageProps) {
   const type = typeParam === 'software' ? 'software' : 'services';
 
   const parentSlug = type === 'software' ? 'development-product' : 'it-services';
-  const client = getSupabaseServerAdminClient();
+  const client = getSupabaseServerClient();
 
   const { data: parent } = await client
     .from('categories')
