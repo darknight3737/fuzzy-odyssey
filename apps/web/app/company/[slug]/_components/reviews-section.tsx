@@ -7,6 +7,7 @@ type Review = {
   rating: number;
   title: string;
   content: string;
+  status: 'pending' | 'approved' | 'rejected';
   created_at: string;
 };
 
@@ -17,7 +18,7 @@ type ReviewsSectionProps = {
 
 export function ReviewsSection({ reviews }: ReviewsSectionProps) {
   const approvedReviews = reviews.filter(
-    (review) => (review as { status?: string }).status === 'approved',
+    (review) => review.status === 'approved',
   );
 
   return (
@@ -84,6 +85,3 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
     </div>
   );
 }
-
-
-
