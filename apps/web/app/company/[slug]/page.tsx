@@ -84,3 +84,5 @@ async function BusinessProfilePage({ params }: Props) {
 
 export default withI18n(BusinessProfilePage);
 
+
+

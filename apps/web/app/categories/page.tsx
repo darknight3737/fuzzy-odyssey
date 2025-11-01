@@ -37,3 +37,5 @@ async function CategoriesPage() {
 
 export default withI18n(CategoriesPage);
 
+
+

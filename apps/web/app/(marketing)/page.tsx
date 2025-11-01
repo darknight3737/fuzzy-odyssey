@@ -2,16 +2,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { Button } from '@kit/ui/button';
-import { Input } from '@kit/ui/input';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@kit/ui/navigation-menu';
 import { withI18n } from '~/lib/i18n/with-i18n';
 
-import { Search, Star, UserRound } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 import { TypeSelect } from './_components/type-select';
 
@@ -45,49 +38,6 @@ async function Home({ searchParams }: PageProps) {
   }
   return (
     <div className={'flex flex-col'}>
-      {/* Main Menu Bar */}
-      <header className={'border-b'}>
-        <div className={'container mx-auto flex items-center justify-between py-4'}>
-          {/* Logo */}
-          <Link href={'/'} className={'font-bold lowercase'}>
-            <span className={'text-2xl'}>selletive</span>
-          </Link>
-
-          {/* Center Navigation */}
-          <div className={'hidden md:flex'}>
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Find providers</NavigationMenuTrigger>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Get clients</NavigationMenuTrigger>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Resources</NavigationMenuTrigger>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-          </div>
-
-          {/* Right controls */}
-          <div className={'flex items-center space-x-3'}>
-            <div className={'relative hidden md:block'}>
-              <Input placeholder={"What service?"} className={'pr-9 w-[260px]'} />
-              <Search className={'text-muted-foreground absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2'} />
-            </div>
-
-            <Button asChild>
-              <Link href={'/contact'}>Post a project</Link>
-            </Button>
-
-            <button aria-label={'Profile'} className={'rounded-full p-2 hover:bg-accent'}>
-              <UserRound className={'h-5 w-5'} />
-            </button>
-          </div>
-        </div>
-      </header>
-
       {/* Menu Sub Bar */}
       <div className={'border-b'}>
         <nav className={'container mx-auto flex items-center justify-between gap-6 overflow-x-auto py-3 text-sm'}>

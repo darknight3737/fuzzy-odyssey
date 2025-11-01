@@ -93,3 +93,5 @@ async function CategoryLocationPage({ params }: Props) {
 
 export default withI18n(CategoryLocationPage);
 
+
+

@@ -24,3 +24,5 @@ async function CategoryLocationLayout(props: React.PropsWithChildren) {
 
 export default withI18n(CategoryLocationLayout);
 
+
+

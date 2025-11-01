@@ -24,3 +24,5 @@ async function SearchLayout(props: React.PropsWithChildren) {
 
 export default withI18n(SearchLayout);
 
+
+

@@ -64,3 +64,5 @@ async function SearchPage({ searchParams }: Props) {
 
 export default withI18n(SearchPage);
 
+
+

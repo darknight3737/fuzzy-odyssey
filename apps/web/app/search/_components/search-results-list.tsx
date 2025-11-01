@@ -86,3 +86,5 @@ export function SearchResultsList({ businesses }: SearchResultsListProps) {
   );
 }
 
+
+

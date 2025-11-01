@@ -196,3 +196,5 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
   );
 }
 
+
+

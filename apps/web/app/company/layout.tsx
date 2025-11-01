@@ -24,3 +24,5 @@ async function CompanyLayout(props: React.PropsWithChildren) {
 
 export default withI18n(CompanyLayout);
 
+
+
