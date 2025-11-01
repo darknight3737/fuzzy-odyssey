@@ -4,22 +4,32 @@ import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import { withI18n } from '~/lib/i18n/with-i18n';
 
-import { BusinessGrid } from './_components/business-grid';
+import { getAllLocationsForFilter } from '~/lib/locations/search';
+
 import { CategoryHeader } from './_components/category-header';
+import { BusinessGridWrapper } from './_components/business-grid-wrapper';
+import { FilterBar } from './_components/category-filters/filter-bar';
+import { getCategoryBySlug } from './_lib/server/get-category';
+import { getFilteredBusinesses } from './_lib/server/get-filtered-businesses';
 
 type Props = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{
+    location?: string;
+    minRating?: string;
+    languages?: string;
+    teamSize?: string;
+    worksRemotely?: string;
+    foundedYear?: string;
+    sort?: string;
+  }>;
 };
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const client = getSupabaseServerClient();
-
-  const { data: category } = await client
-    .from('categories')
-    .select('name, description')
-    .eq('slug', slug)
-    .single();
+  
+  // Use cached category fetch to avoid duplicate query
+  const category = await getCategoryBySlug(slug);
 
   if (!category) return { title: 'Category Not Found' };
 
@@ -29,45 +39,46 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-async function CategoryPage({ params }: Props) {
+async function CategoryPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const client = getSupabaseServerClient();
+  const filters = await searchParams;
+  // Fetch category and locations in parallel
+  // Locations include both DB entries and common suggestions for better UX
+  const [category, locations] = await Promise.all([
+    getCategoryBySlug(slug),
+    getAllLocationsForFilter(),
+  ]);
 
-  const { data: category, error } = await client
-    .from('categories')
-    .select('id, name, slug, description')
-    .eq('slug', slug)
-    .single();
-
-  if (error) {
-    console.error('Error fetching category:', error);
+  if (!category) {
     notFound();
   }
 
-  if (!category) notFound();
+  // Parse filter parameters
+  const languages = filters.languages
+    ? filters.languages.split(',')
+    : undefined;
 
-  const { data: businesses } = await client
-    .from('businesses')
-    .select(
-      `
-      id,
-      name,
-      slug,
-      description,
-      logo_url,
-      tier,
-      business_categories!inner(category_id)
-    `,
-    )
-    .eq('business_categories.category_id', category.id)
-    .in('tier', ['verified', 'highlight', 'spotlight'])
-    .order('tier', { ascending: false })
-    .limit(50);
+  const businesses = await getFilteredBusinesses({
+    categoryId: category.id,
+    location: filters.location,
+    minRating: filters.minRating ? Number(filters.minRating) : undefined,
+    languages,
+    teamSize: filters.teamSize,
+    worksRemotely:
+      filters.worksRemotely === 'true' ? true : undefined,
+    foundedYear: filters.foundedYear,
+    sort: (filters.sort as 'relevancy' | 'rating' | 'name') || 'relevancy',
+  });
 
   return (
     <div className={'container mx-auto py-8'}>
       <CategoryHeader category={category} />
-      <BusinessGrid businesses={businesses ?? []} />
+      <FilterBar
+        businessCount={businesses.length}
+        locations={locations}
+        currentSort={filters.sort || 'relevancy'}
+      />
+      <BusinessGridWrapper businesses={businesses} />
     </div>
   );
 }

@@ -1,8 +1,12 @@
 import Link from 'next/link';
 
+import { MapPin, Verified } from 'lucide-react';
+
 import { Badge } from '@kit/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
 import { Trans } from '@kit/ui/trans';
+
+import { BusinessRating } from './business-rating';
 
 type Business = {
   id: string;
@@ -11,6 +15,14 @@ type Business = {
   description: string | null;
   logo_url: string | null;
   tier: string;
+  average_rating: number | null;
+  review_count: number;
+  business_locations?: Array<{
+    locations: {
+      name: string;
+      slug: string;
+    } | null;
+  }>;
 };
 
 type BusinessGridProps = {
@@ -33,37 +45,68 @@ export function BusinessGrid({ businesses }: BusinessGridProps) {
 
   return (
     <div className={'grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'}>
-      {businesses.map((business) => (
-        <Link key={business.id} href={`/company/${business.slug}`}>
-          <Card className={'h-full transition-shadow hover:shadow-lg'}>
-            <CardHeader>
-              <div className={'mb-2 flex items-start justify-between'}>
-                {business.logo_url && (
-                  <img
-                    src={business.logo_url}
-                    alt={business.name}
-                    className={'h-12 w-12 rounded object-cover'}
-                  />
-                )}
+      {businesses.map((business) => {
+        const primaryLocation = business.business_locations?.find(
+          (bl) => bl.locations,
+        )?.locations;
 
-                {business.tier !== 'unclaimed' && business.tier !== 'claimed' && (
-                  <Badge variant={'secondary'}>{business.tier}</Badge>
-                )}
-              </div>
+        return (
+          <Link key={business.id} href={`/company/${business.slug}`}>
+            <Card className={'h-full transition-shadow hover:shadow-lg'}>
+              <CardHeader>
+                <div className={'mb-3 flex items-start justify-between'}>
+                  <div className={'flex items-start gap-3'}>
+                    {business.logo_url && (
+                      <img
+                        src={business.logo_url}
+                        alt={business.name}
+                        className={'h-12 w-12 rounded object-cover'}
+                      />
+                    )}
+                    <div className={'flex-1'}>
+                      <div className={'mb-1 flex items-center gap-2'}>
+                        <CardTitle className={'text-lg'}>{business.name}</CardTitle>
+                        {business.tier === 'verified' && (
+                          <Verified className={'h-4 w-4 text-blue-500'} />
+                        )}
+                        {business.tier === 'highlight' && (
+                          <Badge variant={'secondary'} className={'text-xs'}>
+                            Highlight
+                          </Badge>
+                        )}
+                        {business.tier === 'spotlight' && (
+                          <Badge variant={'default'} className={'text-xs'}>
+                            Spotlight
+                          </Badge>
+                        )}
+                      </div>
+                      {primaryLocation && (
+                        <div className={'mb-2 flex items-center gap-1 text-sm text-muted-foreground'}>
+                          <MapPin className={'h-3 w-3'} />
+                          <span>Located in {primaryLocation.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-              <CardTitle>{business.name}</CardTitle>
-            </CardHeader>
+                <BusinessRating
+                  rating={business.average_rating}
+                  reviewCount={business.review_count}
+                />
+              </CardHeader>
 
-            {business.description && (
-              <CardContent>
-                <p className={'line-clamp-3 text-sm text-muted-foreground'}>
-                  {business.description}
-                </p>
-              </CardContent>
-            )}
-          </Card>
-        </Link>
-      ))}
+              {business.description && (
+                <CardContent>
+                  <p className={'line-clamp-3 text-sm text-muted-foreground'}>
+                    {business.description}
+                  </p>
+                </CardContent>
+              )}
+            </Card>
+          </Link>
+        );
+      })}
     </div>
   );
 }
