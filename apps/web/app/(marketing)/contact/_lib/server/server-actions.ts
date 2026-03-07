@@ -1,6 +1,6 @@
 'use server';
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { getMailer } from '@kit/mailers';
 import { enhanceAction } from '@kit/next/actions';
@@ -9,16 +9,14 @@ import { ContactEmailSchema } from '../contact-email.schema';
 
 const contactEmail = z
   .string({
-    description: `The email where you want to receive the contact form submissions.`,
-    required_error:
+    error:
       'Contact email is required. Please use the environment variable CONTACT_EMAIL.',
   })
   .parse(process.env.CONTACT_EMAIL);
 
 const emailFrom = z
   .string({
-    description: `The email sending address.`,
-    required_error:
+    error:
       'Sender email is required. Please use the environment variable EMAIL_SENDER.',
   })
   .parse(process.env.EMAIL_SENDER);

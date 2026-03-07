@@ -4,7 +4,7 @@ import { cache } from 'react';
 
 import { cookies, headers } from 'next/headers';
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 import {
   initializeServerI18n,

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 const PathsSchema = z.object({
   auth: z.object({
@@ -44,6 +44,6 @@ const pathsConfig = PathsSchema.parse({
     accountBillingReturn: `/home/[account]/billing/return`,
     joinTeam: '/join',
   },
-} satisfies z.infer<typeof PathsSchema>);
+} satisfies z.output<typeof PathsSchema>);
 
 export default pathsConfig;

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { useAppEvents } from '@kit/shared/events';
 import { useSignInWithOtp } from '@kit/supabase/hooks/use-sign-in-with-otp';

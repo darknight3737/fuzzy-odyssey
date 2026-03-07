@@ -2,7 +2,7 @@ import 'server-only';
 
 import { SupabaseClient } from '@supabase/supabase-js';
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { LineItemSchema } from '@kit/billing';
 import { getBillingGatewayProvider } from '@kit/billing-gateway';
@@ -35,7 +35,7 @@ class TeamBillingService {
    * @name createCheckout
    * @description Creates a checkout session for a Team account
    */
-  async createCheckout(params: z.infer<typeof TeamCheckoutSchema>) {
+  async createCheckout(params: z.output<typeof TeamCheckoutSchema>) {
     // we require the user to be authenticated
     const { data: user } = await requireUser(this.client);
 
@@ -242,7 +242,7 @@ class TeamBillingService {
    * Retrieves variant quantities for line items.
    */
   private async getVariantQuantities(
-    lineItems: z.infer<typeof LineItemSchema>[],
+    lineItems: z.output<typeof LineItemSchema>[],
     accountId: string,
   ) {
     const variantQuantities: Array<{

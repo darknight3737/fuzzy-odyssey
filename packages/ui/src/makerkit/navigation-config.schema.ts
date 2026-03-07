@@ -1,9 +1,6 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
-const RouteMatchingEnd = z
-  .union([z.boolean(), z.function().args(z.string()).returns(z.boolean())])
-  .default(false)
-  .optional();
+const RouteMatchingEnd = z.boolean().default(false).optional();
 
 const Divider = z.object({
   divider: z.literal(true),

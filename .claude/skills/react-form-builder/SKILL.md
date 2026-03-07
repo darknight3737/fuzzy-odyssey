@@ -126,7 +126,7 @@ export function CreateEntityForm() {
     reValidateMode: 'onChange',
   });
 
-  const onSubmit = (data: z.infer<typeof CreateEntitySchema>) => {
+  const onSubmit = (data: z.output<typeof CreateEntitySchema>) => {
     setError(false);
 
     startTransition(async () => {

@@ -3,14 +3,14 @@
 import { useMemo } from 'react';
 
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import type { LineItemSchema } from '@kit/billing';
 import { formatCurrency } from '@kit/shared/utils';
 import { Trans } from '@kit/ui/trans';
 
 type PlanCostDisplayProps = {
-  primaryLineItem: z.infer<typeof LineItemSchema>;
+  primaryLineItem: z.output<typeof LineItemSchema>;
   currencyCode: string;
   interval?: string;
   alwaysDisplayMonthlyPrice?: boolean;

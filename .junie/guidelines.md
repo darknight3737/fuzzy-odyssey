@@ -920,7 +920,7 @@ Zod schemas should be defined in the `schema` folder and exported, so we can reu
 
 ```tsx
 // _lib/schema/create-note.schema.ts
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const CreateNoteSchema = z.object({
   title: z.string().min(1),
@@ -935,7 +935,7 @@ Server Actions [server-actions.mdc](mdc:.cursor/rules/server-actions.mdc) can he
 ```tsx
 'use server';
 
-import { z } from 'zod';
+import * as z from 'zod';
 import { enhanceAction } from '@kit/next/actions';
 import { CreateNoteSchema } from '../schema/create-note.schema';
 
@@ -965,7 +965,7 @@ Then create a client component to handle the form submission:
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import * as z from 'zod';
 import { Textarea } from '@kit/ui/textarea';
 import { Input } from '@kit/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@kit/ui/form';
@@ -1436,7 +1436,7 @@ You always must use `(security_invoker = true)` for views.
 ```tsx
 'use server';
 
-import { z } from 'zod';
+import * as z from 'zod';
 import { enhanceAction } from '@kit/next/actions';
 import { EntitySchema } from '../entity.schema.ts`;
 
@@ -1463,7 +1463,7 @@ export const myServerAction = enhanceAction(
 - To create API routes (route.ts), always use the `enhanceRouteHandler` function from the "@kit/supabase/routes" package. [index.ts](mdc:packages/next/src/routes/index.ts)
 
 ```tsx
-import { z } from 'zod';
+import * as z from 'zod';
 import { enhanceRouteHandler } from '@kit/next/routes';
 import { NextResponse } from 'next/server';
 

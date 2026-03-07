@@ -199,7 +199,7 @@ export function MyForm() {
     mode: 'onChange',
   });
 
-  const onSubmit = (data: z.infer<typeof MySchema>) => {
+  const onSubmit = (data: z.output<typeof MySchema>) => {
     setError(false);
 
     startTransition(async () => {

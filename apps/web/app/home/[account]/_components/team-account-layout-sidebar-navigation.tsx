@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { NavigationConfigSchema } from '@kit/ui/navigation-schema';
 import { SidebarNavigation } from '@kit/ui/shadcn-sidebar';
@@ -6,7 +6,7 @@ import { SidebarNavigation } from '@kit/ui/shadcn-sidebar';
 export function TeamAccountLayoutSidebarNavigation({
   config,
 }: React.PropsWithChildren<{
-  config: z.infer<typeof NavigationConfigSchema>;
+  config: z.output<typeof NavigationConfigSchema>;
 }>) {
   return <SidebarNavigation config={config} />;
 }

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { enhanceAction } from '@kit/next/actions';
 import { getLogger } from '@kit/shared/logger';
@@ -247,7 +247,7 @@ function revalidateMemberPage() {
  * @param accountId - The account ID (already fetched to avoid duplicate queries).
  */
 async function evaluateInvitationsPolicies(
-  params: z.infer<typeof InviteMembersSchema> & { accountSlug: string },
+  params: z.output<typeof InviteMembersSchema> & { accountSlug: string },
   user: JWTUserData,
   accountId: string,
 ) {
@@ -282,7 +282,7 @@ async function evaluateInvitationsPolicies(
 async function checkInvitationPermissions(
   accountId: string,
   userId: string,
-  invitations: z.infer<typeof InviteMembersSchema>['invitations'],
+  invitations: z.output<typeof InviteMembersSchema>['invitations'],
 ): Promise<{
   allowed: boolean;
   reason?: string;

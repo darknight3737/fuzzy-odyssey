@@ -1,6 +1,6 @@
 'use server';
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { enhanceAction } from '@kit/next/actions';
 import { getLogger } from '@kit/shared/logger';
@@ -26,7 +26,7 @@ const SendOtpEmailSchema = z.object({
  * Server action to generate an OTP and send it via email
  */
 export const sendOtpEmailAction = enhanceAction(
-  async function (data: z.infer<typeof SendOtpEmailSchema>, user) {
+  async function (data: z.output<typeof SendOtpEmailSchema>, user) {
     const logger = await getLogger();
     const ctx = { name: 'send-otp-email', userId: user.id };
     const email = user.email;

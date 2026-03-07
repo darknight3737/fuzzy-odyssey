@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeftIcon } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { useSupabase } from '@kit/supabase/hooks/use-supabase';
 import { useFactorsMutationKey } from '@kit/supabase/hooks/use-user-factors-mutation-key';

@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, CheckCircle } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import {
   BillingConfig,
@@ -408,7 +408,7 @@ function PlanDetails({
   selectedInterval: string;
 
   selectedPlan: {
-    lineItems: z.infer<typeof LineItemSchema>[];
+    lineItems: z.output<typeof LineItemSchema>[];
     paymentType: string;
   };
 }) {

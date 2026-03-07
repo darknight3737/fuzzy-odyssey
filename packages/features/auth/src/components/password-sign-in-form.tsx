@@ -33,7 +33,7 @@ export function PasswordSignInForm({
   loading = false,
   redirecting = false,
 }: {
-  onSubmit: (params: z.infer<typeof PasswordSignInSchema>) => unknown;
+  onSubmit: (params: z.output<typeof PasswordSignInSchema>) => unknown;
   captchaLoading: boolean;
   loading: boolean;
   redirecting: boolean;

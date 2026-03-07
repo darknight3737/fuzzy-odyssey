@@ -38,9 +38,9 @@ export class BillingPageObject {
     // wait a bit for the webhook to be processed
     await this.page.waitForTimeout(1000);
 
-    return this.page
-      .locator('[data-test="checkout-success-back-link"]')
-      .click();
+    await this.page.locator('[data-test="checkout-success-back-link"]').click();
+
+    await this.page.waitForURL('**/billing');
   }
 
   proceedToCheckout() {

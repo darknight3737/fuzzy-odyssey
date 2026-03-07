@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { useRequestResetPassword } from '@kit/supabase/hooks/use-request-reset-password';
 import { Alert, AlertDescription } from '@kit/ui/alert';

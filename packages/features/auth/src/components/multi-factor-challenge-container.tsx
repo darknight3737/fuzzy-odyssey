@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { useMutation } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { useFetchAuthFactors } from '@kit/supabase/hooks/use-fetch-mfa-factors';
 import { useSignOut } from '@kit/supabase/hooks/use-sign-out';

@@ -2,7 +2,7 @@
 
 import { PlusSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import type { LineItemSchema } from '@kit/billing';
 import { formatCurrency } from '@kit/shared/utils';
@@ -14,7 +14,7 @@ const className = 'flex text-secondary-foreground items-center text-sm';
 
 export function LineItemDetails(
   props: React.PropsWithChildren<{
-    lineItems: z.infer<typeof LineItemSchema>[];
+    lineItems: z.output<typeof LineItemSchema>[];
     currency: string;
     selectedInterval?: string | undefined;
     alwaysDisplayMonthlyPrice?: boolean;
@@ -268,8 +268,8 @@ function Tiers({
   unit,
 }: {
   currency: string;
-  item: z.infer<typeof LineItemSchema>;
   unit?: string;
+  item: z.output<typeof LineItemSchema>;
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;

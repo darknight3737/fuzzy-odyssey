@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * Password requirements
@@ -41,8 +41,6 @@ export function refineRepeatPassword(
       code: 'custom',
     });
   }
-
-  return true;
 }
 
 function validatePassword(password: string, ctx: z.RefinementCtx) {
@@ -77,6 +75,4 @@ function validatePassword(password: string, ctx: z.RefinementCtx) {
       });
     }
   }
-
-  return true;
 }

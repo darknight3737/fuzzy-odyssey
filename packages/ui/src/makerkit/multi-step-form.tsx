@@ -14,14 +14,14 @@ import React, {
 import { useMutation } from '@tanstack/react-query';
 import { Slot } from 'radix-ui';
 import { Path, UseFormReturn } from 'react-hook-form';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { cn } from '../lib/utils';
 
 interface MultiStepFormProps<T extends z.ZodType> {
   schema: T;
-  form: UseFormReturn<z.infer<T>>;
-  onSubmit: (data: z.infer<T>) => void;
+  form: UseFormReturn<z.ZodType<T>>;
+  onSubmit: (data: z.ZodType<T>) => void;
   useStepTransition?: boolean;
   className?: string;
 }
@@ -169,9 +169,9 @@ export function useMultiStepFormContext<Schema extends z.ZodType>() {
  */
 export function useMultiStepForm<Schema extends z.ZodType>(
   schema: Schema,
-  form: UseFormReturn<z.infer<Schema>>,
+  form: UseFormReturn<z.ZodType<Schema>>,
   stepNames: string[],
-  onSubmit: (data: z.infer<Schema>) => void,
+  onSubmit: (data: z.ZodType<Schema>) => void,
 ) {
   const [state, setState] = useState({
     currentStepIndex: 0,
@@ -180,11 +180,13 @@ export function useMultiStepForm<Schema extends z.ZodType>(
 
   const isStepValid = useCallback(() => {
     const currentStepName = stepNames[state.currentStepIndex] as Path<
-      z.TypeOf<Schema>
+      z.ZodType<Schema>
     >;
 
     if (schema instanceof z.ZodObject) {
-      const currentStepSchema = schema.shape[currentStepName] as z.ZodType;
+      const currentStepSchema = schema.shape[
+        currentStepName
+      ] as z.ZodType<Schema>;
 
       // the user may not want to validate the current step
       // or the step doesn't contain any form field
@@ -226,7 +228,7 @@ export function useMultiStepForm<Schema extends z.ZodType>(
 
             // trigger validation for all fields in the current step
             for (const key of keys) {
-              void form.trigger(key as Path<z.TypeOf<Schema>>);
+              void form.trigger(key as Path<z.ZodType<Schema>>);
             }
 
             return;
