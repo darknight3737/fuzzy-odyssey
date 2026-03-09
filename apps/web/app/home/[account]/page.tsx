@@ -1,11 +1,10 @@
 import { use } from 'react';
 
+import { getTranslations } from 'next-intl/server';
+
 import { AppBreadcrumbs } from '@kit/ui/app-breadcrumbs';
 import { PageBody } from '@kit/ui/page';
 import { Trans } from '@kit/ui/trans';
-
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 import { DashboardDemo } from './_components/dashboard-demo';
 import { TeamAccountLayoutPageHeader } from './_components/team-account-layout-page-header';
@@ -15,8 +14,8 @@ interface TeamAccountHomePageProps {
 }
 
 export const generateMetadata = async () => {
-  const i18n = await createI18nServerInstance();
-  const title = i18n.t('teams:home.pageTitle');
+  const t = await getTranslations('teams');
+  const title = t('home.pageTitle');
 
   return {
     title,
@@ -30,7 +29,7 @@ function TeamAccountHomePage({ params }: TeamAccountHomePageProps) {
     <>
       <TeamAccountLayoutPageHeader
         account={account}
-        title={<Trans i18nKey={'common:routes.dashboard'} />}
+        title={<Trans i18nKey={'common.routes.dashboard'} />}
         description={<AppBreadcrumbs />}
       />
 
@@ -41,4 +40,4 @@ function TeamAccountHomePage({ params }: TeamAccountHomePageProps) {
   );
 }
 
-export default withI18n(TeamAccountHomePage);
+export default TeamAccountHomePage;

@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { TriangleAlert } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
@@ -124,7 +124,7 @@ export function VerifyOtpForm({
             <div className="flex flex-col gap-y-2">
               <p className="text-muted-foreground text-sm">
                 <Trans
-                  i18nKey="common:otp.requestVerificationCodeDescription"
+                  i18nKey="common.otp.requestVerificationCodeDescription"
                   values={{ email }}
                 />
               </p>
@@ -132,10 +132,10 @@ export function VerifyOtpForm({
 
             <If condition={Boolean(error)}>
               <Alert variant="destructive">
-                <ExclamationTriangleIcon className="h-4 w-4" />
+                <TriangleAlert className="h-4 w-4" />
 
                 <AlertTitle>
-                  <Trans i18nKey="common:otp.errorSendingCode" />
+                  <Trans i18nKey="common.otp.errorSendingCode" />
                 </AlertTitle>
 
                 <AlertDescription>{error}</AlertDescription>
@@ -153,10 +153,10 @@ export function VerifyOtpForm({
                 {isPending ? (
                   <>
                     <Spinner className="mr-2 h-4 w-4" />
-                    <Trans i18nKey="common:otp.sendingCode" />
+                    <Trans i18nKey="common.otp.sendingCode" />
                   </>
                 ) : (
-                  <Trans i18nKey="common:otp.sendVerificationCode" />
+                  <Trans i18nKey="common.otp.sendVerificationCode" />
                 )}
               </Button>
             </div>
@@ -166,7 +166,7 @@ export function VerifyOtpForm({
         <Form {...otpForm}>
           <div className="flex w-full flex-col items-center gap-y-8">
             <div className="text-muted-foreground text-sm">
-              <Trans i18nKey="common:otp.codeSentToEmail" values={{ email }} />
+              <Trans i18nKey="common.otp.codeSentToEmail" values={{ email }} />
             </div>
 
             <form
@@ -175,10 +175,10 @@ export function VerifyOtpForm({
             >
               <If condition={Boolean(error)}>
                 <Alert variant="destructive">
-                  <ExclamationTriangleIcon className="h-4 w-4" />
+                  <TriangleAlert className="h-4 w-4" />
 
                   <AlertTitle>
-                    <Trans i18nKey="common:error" />
+                    <Trans i18nKey="common.error" />
                   </AlertTitle>
 
                   <AlertDescription>{error}</AlertDescription>
@@ -212,7 +212,7 @@ export function VerifyOtpForm({
                     </FormControl>
 
                     <FormDescription>
-                      <Trans i18nKey="common:otp.enterCodeFromEmail" />
+                      <Trans i18nKey="common.otp.enterCodeFromEmail" />
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -229,7 +229,7 @@ export function VerifyOtpForm({
                     disabled={isPending}
                     onClick={() => setStep('email')}
                   >
-                    <Trans i18nKey="common:otp.requestNewCode" />
+                    <Trans i18nKey="common.otp.requestNewCode" />
                   </Button>
 
                   <Button
@@ -240,10 +240,10 @@ export function VerifyOtpForm({
                     {isPending ? (
                       <>
                         <Spinner className="mr-2 h-4 w-4" />
-                        <Trans i18nKey="common:otp.verifying" />
+                        <Trans i18nKey="common.otp.verifying" />
                       </>
                     ) : (
-                      <Trans i18nKey="common:otp.verifyCode" />
+                      <Trans i18nKey="common.otp.verifyCode" />
                     )}
                   </Button>
                 </div>

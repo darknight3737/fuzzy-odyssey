@@ -1,28 +1,25 @@
+import { getTranslations } from 'next-intl/server';
+
 import { Heading } from '@kit/ui/heading';
 import { Trans } from '@kit/ui/trans';
 
 import { SitePageHeader } from '~/(marketing)/_components/site-page-header';
 import { ContactForm } from '~/(marketing)/contact/_components/contact-form';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 export async function generateMetadata() {
-  const { t } = await createI18nServerInstance();
+  const t = await getTranslations('marketing');
 
   return {
-    title: t('marketing:contact'),
+    title: t('contact'),
   };
 }
 
 async function ContactPage() {
-  const { t } = await createI18nServerInstance();
+  const t = await getTranslations('marketing');
 
   return (
     <div>
-      <SitePageHeader
-        title={t(`marketing:contact`)}
-        subtitle={t(`marketing:contactDescription`)}
-      />
+      <SitePageHeader title={t(`contact`)} subtitle={t(`contactDescription`)} />
 
       <div className={'container mx-auto'}>
         <div
@@ -35,11 +32,11 @@ async function ContactPage() {
           >
             <div>
               <Heading level={3}>
-                <Trans i18nKey={'marketing:contactHeading'} />
+                <Trans i18nKey={'marketing.contactHeading'} />
               </Heading>
 
               <p className={'text-muted-foreground'}>
-                <Trans i18nKey={'marketing:contactSubheading'} />
+                <Trans i18nKey={'marketing.contactSubheading'} />
               </p>
             </div>
 
@@ -51,4 +48,4 @@ async function ContactPage() {
   );
 }
 
-export default withI18n(ContactPage);
+export default ContactPage;

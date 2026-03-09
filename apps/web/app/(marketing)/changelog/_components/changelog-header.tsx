@@ -22,7 +22,7 @@ export function ChangelogHeader({ entry }: { entry: Cms.ContentItem }) {
             className="text-muted-foreground hover:text-primary flex items-center gap-1.5 text-sm font-medium transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            <Trans i18nKey="marketing:changelog" />
+            <Trans i18nKey="marketing.changelog" />
           </Link>
         </div>
       </div>

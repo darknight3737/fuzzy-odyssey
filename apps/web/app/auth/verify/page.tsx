@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation';
 
+import { getTranslations } from 'next-intl/server';
+
 import { MultiFactorChallengeContainer } from '@kit/auth/mfa';
 import { getSafeRedirectPath } from '@kit/shared/utils';
 import { checkRequiresMultiFactorAuthentication } from '@kit/supabase/check-requires-mfa';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import pathsConfig from '~/config/paths.config';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 interface Props {
   searchParams: Promise<{
@@ -16,10 +16,10 @@ interface Props {
 }
 
 export const generateMetadata = async () => {
-  const i18n = await createI18nServerInstance();
+  const t = await getTranslations('auth');
 
   return {
-    title: i18n.t('auth:signIn'),
+    title: t('signIn'),
   };
 };
 
@@ -51,4 +51,4 @@ async function VerifyPage(props: Props) {
   );
 }
 
-export default withI18n(VerifyPage);
+export default VerifyPage;

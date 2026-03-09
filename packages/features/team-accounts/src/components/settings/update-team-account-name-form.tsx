@@ -6,8 +6,8 @@ import { isRedirectError } from 'next/dist/client/components/redirect-error';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Building, Link } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
 
 import { Button } from '@kit/ui/button';
 import {
@@ -41,7 +41,7 @@ export const UpdateTeamAccountNameForm = (props: {
   path: string;
 }) => {
   const [pending, startTransition] = useTransition();
-  const { t } = useTranslation('teams');
+  const t = useTranslations('teams');
 
   const form = useForm({
     resolver: zodResolver(TeamNameFormSchema),
@@ -105,7 +105,7 @@ export const UpdateTeamAccountNameForm = (props: {
               return (
                 <FormItem>
                   <FormLabel>
-                    <Trans i18nKey={'teams:teamNameLabel'} />
+                    <Trans i18nKey={'teams.teamNameLabel'} />
                   </FormLabel>
 
                   <FormControl>
@@ -117,7 +117,7 @@ export const UpdateTeamAccountNameForm = (props: {
                       <InputGroupInput
                         data-test={'team-name-input'}
                         required
-                        placeholder={t('teams:teamNameInputLabel')}
+                        placeholder={t('teamNameInputLabel')}
                         {...field}
                       />
                     </InputGroup>
@@ -136,7 +136,7 @@ export const UpdateTeamAccountNameForm = (props: {
                 return (
                   <FormItem>
                     <FormLabel>
-                      <Trans i18nKey={'teams:teamSlugLabel'} />
+                      <Trans i18nKey={'teams.teamSlugLabel'} />
                     </FormLabel>
 
                     <FormControl>
@@ -155,7 +155,7 @@ export const UpdateTeamAccountNameForm = (props: {
                     </FormControl>
 
                     <FormDescription>
-                      <Trans i18nKey={'teams:teamSlugDescription'} />
+                      <Trans i18nKey={'teams.teamSlugDescription'} />
                     </FormDescription>
 
                     <FormMessage />
@@ -167,11 +167,12 @@ export const UpdateTeamAccountNameForm = (props: {
 
           <div>
             <Button
+              type="submit"
               className={'w-full md:w-auto'}
               data-test={'update-team-submit-button'}
               disabled={pending}
             >
-              <Trans i18nKey={'teams:updateTeamSubmitLabel'} />
+              <Trans i18nKey={'teams.updateTeamSubmitLabel'} />
             </Button>
           </div>
         </form>

@@ -4,8 +4,8 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarNavigation,
-} from '@kit/ui/shadcn-sidebar';
+} from '@kit/ui/sidebar';
+import { SidebarNavigation } from '@kit/ui/sidebar-navigation';
 import { cn } from '@kit/ui/utils';
 
 import { AppLogo } from '~/components/app-logo';
@@ -27,15 +27,15 @@ export function HomeSidebar(props: HomeSidebarProps) {
   const collapsible = personalAccountNavigationConfig.sidebarCollapsedStyle;
 
   return (
-    <Sidebar collapsible={collapsible}>
+    <Sidebar variant="floating" collapsible={collapsible}>
       <SidebarHeader className={'h-16 justify-center'}>
-        <div className={'flex items-center justify-between gap-x-3'}>
+        <div className={'flex items-center justify-between gap-x-0.5'}>
           <If
             condition={featuresFlagConfig.enableTeamAccounts}
             fallback={
               <AppLogo
                 className={cn(
-                  'p-2 group-data-[minimized=true]/sidebar:max-w-full group-data-[minimized=true]/sidebar:py-0',
+                  'p-2 group-data-[collapsible=icon]:max-w-full group-data-[collapsible=icon]:py-0',
                 )}
               />
             }
@@ -43,7 +43,7 @@ export function HomeSidebar(props: HomeSidebarProps) {
             <HomeAccountSelector userId={user.id} accounts={accounts} />
           </If>
 
-          <div className={'group-data-[minimized=true]/sidebar:hidden'}>
+          <div className={'group-data-[collapsible=icon]:hidden'}>
             <UserNotifications userId={user.id} />
           </div>
         </div>

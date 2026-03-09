@@ -7,11 +7,10 @@ import * as z from 'zod';
 
 import { TeamAccountWorkspaceContextProvider } from '@kit/team-accounts/components';
 import { Page, PageMobileNavigation, PageNavigation } from '@kit/ui/page';
-import { SidebarProvider } from '@kit/ui/shadcn-sidebar';
+import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
 import { getTeamAccountSidebarConfig } from '~/config/team-account-navigation.config';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 // local imports
 import { TeamAccountLayoutMobileNavigation } from './_components/team-account-layout-mobile-navigation';
@@ -95,30 +94,12 @@ function HeaderLayout({
 }>) {
   const data = use(loadTeamWorkspace(account));
 
-  const accounts = data.accounts.map(({ name, slug, picture_url }) => ({
-    label: name,
-    value: slug,
-    image: picture_url,
-  }));
-
   return (
     <TeamAccountWorkspaceContextProvider value={data}>
       <Page style={'header'}>
         <PageNavigation>
           <TeamAccountNavigationMenu workspace={data} />
         </PageNavigation>
-
-        <PageMobileNavigation className={'flex items-center justify-between'}>
-          <AppLogo />
-
-          <div className={'group-data-[mobile:hidden]'}>
-            <TeamAccountLayoutMobileNavigation
-              userId={data.user.id}
-              accounts={accounts}
-              account={account}
-            />
-          </div>
-        </PageMobileNavigation>
 
         {children}
       </Page>
@@ -134,13 +115,13 @@ async function getLayoutState(account: string) {
     .enum(['sidebar', 'header', 'custom'])
     .default(config.style);
 
-  const sidebarOpenCookie = cookieStore.get('sidebar:state');
+  const sidebarOpenCookie = cookieStore.get('sidebar_state');
   const layoutCookie = cookieStore.get('layout-style');
 
   const layoutStyle = LayoutStyleSchema.safeParse(layoutCookie?.value);
 
   const sidebarOpenCookieValue = sidebarOpenCookie
-    ? sidebarOpenCookie.value === 'false'
+    ? sidebarOpenCookie.value === 'true'
     : !config.sidebarCollapsed;
 
   const style = layoutStyle.success ? layoutStyle.data : config.style;
@@ -151,4 +132,4 @@ async function getLayoutState(account: string) {
   };
 }
 
-export default withI18n(TeamWorkspaceLayout);
+export default TeamWorkspaceLayout;

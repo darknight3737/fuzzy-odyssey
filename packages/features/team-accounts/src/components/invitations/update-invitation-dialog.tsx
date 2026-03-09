@@ -1,8 +1,8 @@
 import { useState, useTransition } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
 import { Button } from '@kit/ui/button';
@@ -50,11 +50,11 @@ export function UpdateInvitationDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            <Trans i18nKey={'teams:updateMemberRoleModalHeading'} />
+            <Trans i18nKey={'teams.updateMemberRoleModalHeading'} />
           </DialogTitle>
 
           <DialogDescription>
-            <Trans i18nKey={'teams:updateMemberRoleModalDescription'} />
+            <Trans i18nKey={'teams.updateMemberRoleModalDescription'} />
           </DialogDescription>
         </DialogHeader>
 
@@ -80,7 +80,7 @@ function UpdateInvitationForm({
   userRoleHierarchy: number;
   setIsOpen: (isOpen: boolean) => void;
 }>) {
-  const { t } = useTranslation('teams');
+  const t = useTranslations('teams');
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<boolean>();
 
@@ -135,7 +135,7 @@ function UpdateInvitationForm({
             return (
               <FormItem>
                 <FormLabel>
-                  <Trans i18nKey={'teams:roleLabel'} />
+                  <Trans i18nKey={'teams.roleLabel'} />
                 </FormLabel>
 
                 <FormControl>
@@ -145,16 +145,18 @@ function UpdateInvitationForm({
                         roles={roles}
                         currentUserRole={userRole}
                         value={field.value}
-                        onChange={(newRole) =>
-                          form.setValue(field.name, newRole)
-                        }
+                        onChange={(newRole) => {
+                          if (newRole) {
+                            form.setValue(field.name, newRole);
+                          }
+                        }}
                       />
                     )}
                   </RolesDataProvider>
                 </FormControl>
 
                 <FormDescription>
-                  <Trans i18nKey={'teams:updateRoleDescription'} />
+                  <Trans i18nKey={'teams.updateRoleDescription'} />
                 </FormDescription>
 
                 <FormMessage />
@@ -164,7 +166,7 @@ function UpdateInvitationForm({
         />
 
         <Button type={'submit'} disabled={pending}>
-          <Trans i18nKey={'teams:updateRoleSubmitLabel'} />
+          <Trans i18nKey={'teams.updateRoleSubmitLabel'} />
         </Button>
       </form>
     </Form>
@@ -175,11 +177,11 @@ function UpdateRoleErrorAlert() {
   return (
     <Alert variant={'destructive'}>
       <AlertTitle>
-        <Trans i18nKey={'teams:updateRoleErrorHeading'} />
+        <Trans i18nKey={'teams.updateRoleErrorHeading'} />
       </AlertTitle>
 
       <AlertDescription>
-        <Trans i18nKey={'teams:updateRoleErrorMessage'} />
+        <Trans i18nKey={'teams.updateRoleErrorMessage'} />
       </AlertDescription>
     </Alert>
   );

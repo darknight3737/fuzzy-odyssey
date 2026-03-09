@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 
-import { useTranslation } from 'react-i18next';
+import { useLocale } from 'next-intl';
 import * as z from 'zod';
 
 import type { LineItemSchema } from '@kit/billing';
@@ -30,7 +30,7 @@ export function PlanCostDisplay({
   alwaysDisplayMonthlyPrice = true,
   className,
 }: PlanCostDisplayProps) {
-  const { i18n } = useTranslation();
+  const locale = useLocale();
 
   const { shouldDisplayTier, lowestTier, tierTranslationKey, displayCost } =
     useMemo(() => {
@@ -62,8 +62,8 @@ export function PlanCostDisplay({
         isMultiTier,
         lowestTier,
         tierTranslationKey: isMultiTier
-          ? 'billing:startingAtPriceUnit'
-          : 'billing:priceUnit',
+          ? 'billing.startingAtPriceUnit'
+          : 'billing.priceUnit',
         displayCost: cost,
       };
     }, [primaryLineItem, interval, alwaysDisplayMonthlyPrice]);
@@ -72,7 +72,7 @@ export function PlanCostDisplay({
     const formattedCost = formatCurrency({
       currencyCode: currencyCode.toLowerCase(),
       value: lowestTier?.cost ?? 0,
-      locale: i18n.language,
+      locale: locale,
     });
 
     return (
@@ -91,7 +91,7 @@ export function PlanCostDisplay({
   const formattedCost = formatCurrency({
     currencyCode: currencyCode.toLowerCase(),
     value: displayCost,
-    locale: i18n.language,
+    locale: locale,
   });
 
   return <span className={className}>{formattedCost}</span>;

@@ -69,7 +69,7 @@ export function ContactForm() {
             return (
               <FormItem>
                 <FormLabel>
-                  <Trans i18nKey={'marketing:contactName'} />
+                  <Trans i18nKey={'marketing.contactName'} />
                 </FormLabel>
 
                 <FormControl>
@@ -88,7 +88,7 @@ export function ContactForm() {
             return (
               <FormItem>
                 <FormLabel>
-                  <Trans i18nKey={'marketing:contactEmail'} />
+                  <Trans i18nKey={'marketing.contactEmail'} />
                 </FormLabel>
 
                 <FormControl>
@@ -107,7 +107,7 @@ export function ContactForm() {
             return (
               <FormItem>
                 <FormLabel>
-                  <Trans i18nKey={'marketing:contactMessage'} />
+                  <Trans i18nKey={'marketing.contactMessage'} />
                 </FormLabel>
 
                 <FormControl>
@@ -125,7 +125,7 @@ export function ContactForm() {
         />
 
         <Button disabled={pending} type={'submit'}>
-          <Trans i18nKey={'marketing:sendMessage'} />
+          <Trans i18nKey={'marketing.sendMessage'} />
         </Button>
       </form>
     </Form>
@@ -136,11 +136,11 @@ function SuccessAlert() {
   return (
     <Alert variant={'success'}>
       <AlertTitle>
-        <Trans i18nKey={'marketing:contactSuccess'} />
+        <Trans i18nKey={'marketing.contactSuccess'} />
       </AlertTitle>
 
       <AlertDescription>
-        <Trans i18nKey={'marketing:contactSuccessDescription'} />
+        <Trans i18nKey={'marketing.contactSuccessDescription'} />
       </AlertDescription>
     </Alert>
   );
@@ -150,11 +150,11 @@ function ErrorAlert() {
   return (
     <Alert variant={'destructive'}>
       <AlertTitle>
-        <Trans i18nKey={'marketing:contactError'} />
+        <Trans i18nKey={'marketing.contactError'} />
       </AlertTitle>
 
       <AlertDescription>
-        <Trans i18nKey={'marketing:contactErrorDescription'} />
+        <Trans i18nKey={'marketing.contactErrorDescription'} />
       </AlertDescription>
     </Alert>
   );

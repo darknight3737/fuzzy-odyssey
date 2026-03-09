@@ -32,11 +32,12 @@ import { Input } from '@kit/ui/input';
 import { deleteAccountAction } from '../lib/server/admin-server-actions';
 import { DeleteAccountSchema } from '../lib/server/schema/admin-actions.schema';
 
-export function AdminDeleteAccountDialog(
-  props: React.PropsWithChildren<{
-    accountId: string;
-  }>,
-) {
+export function AdminDeleteAccountDialog(props: {
+  accountId: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children?: React.ReactNode;
+}) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<boolean>(false);
 
@@ -49,8 +50,20 @@ export function AdminDeleteAccountDialog(
   });
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>{props.children}</AlertDialogTrigger>
+    <AlertDialog
+      open={props.open}
+      onOpenChange={(open) => {
+        if (!open) {
+          form.reset();
+          setError(false);
+        }
+
+        props.onOpenChange?.(open);
+      }}
+    >
+      {props.children && (
+        <AlertDialogTrigger render={props.children as React.ReactElement} />
+      )}
 
       <AlertDialogContent>
         <AlertDialogHeader>

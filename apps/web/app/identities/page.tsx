@@ -2,6 +2,8 @@ import { Metadata } from 'next';
 
 import { redirect } from 'next/navigation';
 
+import { getTranslations } from 'next-intl/server';
+
 import { AuthLayoutShell } from '@kit/auth/shared';
 import { getSafeRedirectPath } from '@kit/shared/utils';
 import { requireUser } from '@kit/supabase/require-user';
@@ -12,16 +14,14 @@ import { Trans } from '@kit/ui/trans';
 import { AppLogo } from '~/components/app-logo';
 import authConfig from '~/config/auth.config';
 import pathsConfig from '~/config/paths.config';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 import { IdentitiesStepWrapper } from './_components/identities-step-wrapper';
 
 export const meta = async (): Promise<Metadata> => {
-  const i18n = await createI18nServerInstance();
+  const t = await getTranslations('auth');
 
   return {
-    title: i18n.t('auth:setupAccount'),
+    title: t('setupAccount'),
   };
 };
 
@@ -59,7 +59,7 @@ async function IdentitiesPage(props: IdentitiesPageProps) {
             className="text-center"
             data-test="identities-page-heading"
           >
-            <Trans i18nKey={'auth:linkAccountToSignIn'} />
+            <Trans i18nKey={'auth.linkAccountToSignIn'} />
           </Heading>
 
           <Heading
@@ -67,7 +67,7 @@ async function IdentitiesPage(props: IdentitiesPageProps) {
             className={'text-muted-foreground text-center text-sm'}
             data-test="identities-page-description"
           >
-            <Trans i18nKey={'auth:linkAccountToSignInDescription'} />
+            <Trans i18nKey={'auth.linkAccountToSignInDescription'} />
           </Heading>
         </div>
 
@@ -84,7 +84,7 @@ async function IdentitiesPage(props: IdentitiesPageProps) {
   );
 }
 
-export default withI18n(IdentitiesPage);
+export default IdentitiesPage;
 
 async function fetchData(props: IdentitiesPageProps) {
   const searchParams = await props.searchParams;

@@ -34,11 +34,12 @@ import { Input } from '@kit/ui/input';
 import { deleteUserAction } from '../lib/server/admin-server-actions';
 import { DeleteUserSchema } from '../lib/server/schema/admin-actions.schema';
 
-export function AdminDeleteUserDialog(
-  props: React.PropsWithChildren<{
-    userId: string;
-  }>,
-) {
+export function AdminDeleteUserDialog(props: {
+  userId: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children?: React.ReactNode;
+}) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<boolean>(false);
 
@@ -51,8 +52,20 @@ export function AdminDeleteUserDialog(
   });
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>{props.children}</AlertDialogTrigger>
+    <AlertDialog
+      open={props.open}
+      onOpenChange={(open) => {
+        if (!open) {
+          form.reset();
+          setError(false);
+        }
+
+        props.onOpenChange?.(open);
+      }}
+    >
+      {props.children && (
+        <AlertDialogTrigger render={props.children as React.ReactElement} />
+      )}
 
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -75,8 +88,8 @@ export function AdminDeleteUserDialog(
                   await deleteUserAction(data);
 
                   setError(false);
-                } catch {
-                  if (isRedirectError(error)) {
+                } catch (e) {
+                  if (isRedirectError(e)) {
                     // Do nothing
                   } else {
                     setError(true);

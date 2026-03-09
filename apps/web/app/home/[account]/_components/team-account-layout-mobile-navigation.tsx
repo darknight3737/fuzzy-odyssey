@@ -99,18 +99,20 @@ function DropdownLink(
   }>,
 ) {
   return (
-    <DropdownMenuItem asChild>
-      <Link
-        href={props.path}
-        className={'flex h-12 w-full items-center gap-x-3 px-3'}
-      >
-        {props.Icon}
+    <DropdownMenuItem
+      render={
+        <Link
+          href={props.path}
+          className={'flex h-12 w-full items-center gap-x-3 px-3'}
+        >
+          {props.Icon}
 
-        <span>
-          <Trans i18nKey={props.label} defaults={props.label} />
-        </span>
-      </Link>
-    </DropdownMenuItem>
+          <span>
+            <Trans i18nKey={props.label} defaults={props.label} />
+          </span>
+        </Link>
+      }
+    />
   );
 }
 
@@ -127,7 +129,7 @@ function SignOutDropdownItem(
       <LogOut className={'h-4'} />
 
       <span>
-        <Trans i18nKey={'common:signOut'} />
+        <Trans i18nKey={'common.signOut'} />
       </span>
     </DropdownMenuItem>
   );
@@ -142,23 +144,25 @@ function TeamAccountsModal(props: {
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <DropdownMenuItem
-          className={'flex h-12 w-full items-center space-x-2'}
-          onSelect={(e) => e.preventDefault()}
-        >
-          <Home className={'h-4'} />
+      <DialogTrigger
+        render={
+          <DropdownMenuItem
+            className={'flex h-12 w-full items-center space-x-2'}
+            onSelect={(e) => e.preventDefault()}
+          >
+            <Home className={'h-4'} />
 
-          <span>
-            <Trans i18nKey={'common:yourAccounts'} />
-          </span>
-        </DropdownMenuItem>
-      </DialogTrigger>
+            <span>
+              <Trans i18nKey={'common.yourAccounts'} />
+            </span>
+          </DropdownMenuItem>
+        }
+      />
 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            <Trans i18nKey={'common:yourAccounts'} />
+            <Trans i18nKey={'common.yourAccounts'} />
           </DialogTitle>
         </DialogHeader>
 

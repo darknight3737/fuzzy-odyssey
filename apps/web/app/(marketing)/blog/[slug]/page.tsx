@@ -6,8 +6,6 @@ import { notFound } from 'next/navigation';
 
 import { createCmsClient } from '@kit/cms';
 
-import { withI18n } from '~/lib/i18n/with-i18n';
-
 import { Post } from '../../blog/_components/post';
 
 interface BlogPageProps {
@@ -75,4 +73,4 @@ async function BlogPost({ params }: BlogPageProps) {
   );
 }
 
-export default withI18n(BlogPost);
+export default BlogPost;

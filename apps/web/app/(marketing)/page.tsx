@@ -20,7 +20,6 @@ import { Trans } from '@kit/ui/trans';
 
 import billingConfig from '~/config/billing.config';
 import pathsConfig from '~/config/paths.config';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 function Home() {
   return (
@@ -30,11 +29,13 @@ function Home() {
           pill={
             <Pill label={'New'}>
               <span>The SaaS Starter Kit for ambitious developers</span>
-              <PillActionButton asChild>
-                <Link href={'/auth/sign-up'}>
-                  <ArrowRightIcon className={'h-4 w-4'} />
-                </Link>
-              </PillActionButton>
+              <PillActionButton
+                render={
+                  <Link href={'/auth/sign-up'}>
+                    <ArrowRightIcon className={'h-4 w-4'} />
+                  </Link>
+                }
+              />
             </Pill>
           }
           title={
@@ -170,7 +171,7 @@ function Home() {
   );
 }
 
-export default withI18n(Home);
+export default Home;
 
 function MainCallToActionButton() {
   return (
@@ -179,7 +180,7 @@ function MainCallToActionButton() {
         <Link href={'/auth/sign-up'}>
           <span className={'flex items-center space-x-0.5'}>
             <span>
-              <Trans i18nKey={'common:getStarted'} />
+              <Trans i18nKey={'common.getStarted'} />
             </span>
 
             <ArrowRightIcon
@@ -194,7 +195,7 @@ function MainCallToActionButton() {
 
       <CtaButton variant={'link'} className="h-10 text-sm">
         <Link href={'/pricing'}>
-          <Trans i18nKey={'common:pricing'} />
+          <Trans i18nKey={'common.pricing'} />
         </Link>
       </CtaButton>
     </div>

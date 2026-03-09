@@ -1,13 +1,13 @@
 import { DevToolSidebar } from '@/components/app-sidebar';
 
-import { SidebarInset, SidebarProvider } from '@kit/ui/shadcn-sidebar';
+import { SidebarInset, SidebarProvider } from '@kit/ui/sidebar';
 
 export function DevToolLayout(props: React.PropsWithChildren) {
   return (
     <SidebarProvider>
       <DevToolSidebar />
 
-      <SidebarInset>{props.children}</SidebarInset>
+      <SidebarInset className="px-4">{props.children}</SidebarInset>
     </SidebarProvider>
   );
 }

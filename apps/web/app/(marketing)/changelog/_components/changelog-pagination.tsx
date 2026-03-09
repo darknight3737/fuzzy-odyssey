@@ -22,24 +22,29 @@ export function ChangelogPagination({
   return (
     <div className="flex justify-end gap-2">
       {canGoToPreviousPage && (
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/changelog?page=${previousPage}`}>
-            <ArrowLeft className="mr-2 h-3 w-3" />
-            <span>
-              <Trans i18nKey="marketing:changelogPaginationPrevious" />
-            </span>
-          </Link>
+        <Button
+          render={<Link href={`/changelog?page=${previousPage}`} />}
+          variant="outline"
+          size="sm"
+        >
+          <ArrowLeft className="mr-2 h-3 w-3" />
+
+          <span>
+            <Trans i18nKey="marketing.changelogPaginationPrevious" />
+          </span>
         </Button>
       )}
 
       {canGoToNextPage && (
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/changelog?page=${nextPage}`}>
-            <span>
-              <Trans i18nKey="marketing:changelogPaginationNext" />
-            </span>
-            <ArrowRight className="ml-2 h-3 w-3" />
-          </Link>
+        <Button
+          render={<Link href={`/changelog?page=${nextPage}`} />}
+          variant="outline"
+          size="sm"
+        >
+          <span>
+            <Trans i18nKey="marketing.changelogPaginationNext" />
+          </span>
+          <ArrowRight className="ml-2 h-3 w-3" />
         </Button>
       )}
     </div>

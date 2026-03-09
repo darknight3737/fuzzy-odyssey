@@ -35,11 +35,12 @@ import { LoadingOverlay } from '@kit/ui/loading-overlay';
 import { impersonateUserAction } from '../lib/server/admin-server-actions';
 import { ImpersonateUserSchema } from '../lib/server/schema/admin-actions.schema';
 
-export function AdminImpersonateUserDialog(
-  props: React.PropsWithChildren<{
-    userId: string;
-  }>,
-) {
+export function AdminImpersonateUserDialog(props: {
+  userId: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children?: React.ReactNode;
+}) {
   const form = useForm({
     resolver: zodResolver(ImpersonateUserSchema),
     defaultValues: {
@@ -57,18 +58,24 @@ export function AdminImpersonateUserDialog(
   const [error, setError] = useState<boolean | null>(null);
 
   if (tokens) {
-    return (
-      <>
-        <ImpersonateUserAuthSetter tokens={tokens} />
-
-        <LoadingOverlay>Setting up your session...</LoadingOverlay>
-      </>
-    );
+    return <ImpersonateUserAuthSetter tokens={tokens} />;
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>{props.children}</AlertDialogTrigger>
+    <AlertDialog
+      open={props.open}
+      onOpenChange={(open) => {
+        if (!open) {
+          form.reset();
+          setError(null);
+        }
+
+        props.onOpenChange?.(open);
+      }}
+    >
+      {props.children && (
+        <AlertDialogTrigger render={props.children as React.ReactElement} />
+      )}
 
       <AlertDialogContent>
         <AlertDialogHeader>

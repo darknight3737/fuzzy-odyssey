@@ -5,7 +5,6 @@ import { BillingSessionStatus } from '@kit/billing-gateway/components';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import billingConfig from '~/config/billing.config';
-import { withI18n } from '~/lib/i18n/with-i18n';
 import { requireUserInServerComponent } from '~/lib/server/require-user-in-server-component';
 
 import { EmbeddedCheckoutForm } from '../_components/embedded-checkout-form';
@@ -48,7 +47,7 @@ async function ReturnCheckoutSessionPage({ searchParams }: SessionPageProps) {
   );
 }
 
-export default withI18n(ReturnCheckoutSessionPage);
+export default ReturnCheckoutSessionPage;
 
 function BlurryBackdrop() {
   return (

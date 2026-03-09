@@ -44,12 +44,13 @@ function EmbeddedCheckoutPopup({
   onClose?: () => void;
 }>) {
   const [open, setOpen] = useState(true);
-  const className = `bg-white p-4 overflow-y-auto shadow-transparent border`;
+  const className = `bg-white p-4 overflow-y-auto shadow-transparent border w-full min-w-md max-w-4xl`;
 
   return (
     <Dialog
       defaultOpen
       open={open}
+      disablePointerDismissal
       onOpenChange={(open) => {
         if (!open && onClose) {
           onClose();
@@ -63,9 +64,6 @@ function EmbeddedCheckoutPopup({
           maxHeight: '98vh',
         }}
         className={className}
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogTitle className={'hidden'}>Checkout</DialogTitle>
         <div>{children}</div>

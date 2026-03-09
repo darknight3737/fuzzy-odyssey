@@ -31,13 +31,16 @@ export function HomeAccountsList() {
     <div className="flex flex-col">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {accounts.map((account) => (
-          <CardButton key={account.value} asChild>
-            <Link href={`/home/${account.value}`}>
-              <CardButtonHeader>
-                <CardButtonTitle>{account.label}</CardButtonTitle>
-              </CardButtonHeader>
-            </Link>
-          </CardButton>
+          <CardButton
+            key={account.value}
+            render={
+              <Link href={`/home/${account.value}`}>
+                <CardButtonHeader>
+                  <CardButtonTitle>{account.label}</CardButtonTitle>
+                </CardButtonHeader>
+              </Link>
+            }
+          />
         ))}
       </div>
     </div>
@@ -50,17 +53,21 @@ function HomeAccountsListEmptyState(props: {
   return (
     <div className={'flex flex-1'}>
       <EmptyState>
-        <EmptyStateButton asChild>
-          <HomeAddAccountButton
-            className={'mt-4'}
-            canCreateTeamAccount={props.canCreateTeamAccount}
-          />
-        </EmptyStateButton>
+        <EmptyStateButton
+          render={
+            <HomeAddAccountButton
+              className={'mt-4'}
+              canCreateTeamAccount={props.canCreateTeamAccount}
+            />
+          }
+        />
+
         <EmptyStateHeading>
-          <Trans i18nKey={'account:noTeamsYet'} />
+          <Trans i18nKey={'account.noTeamsYet'} />
         </EmptyStateHeading>
+
         <EmptyStateText>
-          <Trans i18nKey={'account:createTeam'} />
+          <Trans i18nKey={'account.createTeam'} />
         </EmptyStateText>
       </EmptyState>
     </div>

@@ -16,7 +16,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@kit/ui/alert-dialog';
 import { Button } from '@kit/ui/button';
 import { Form } from '@kit/ui/form';
@@ -27,30 +26,28 @@ import { TransferOwnershipConfirmationSchema } from '../../schema/transfer-owner
 import { transferOwnershipAction } from '../../server/actions/team-members-server-actions';
 
 export function TransferOwnershipDialog({
-  children,
+  open,
+  onOpenChange,
   targetDisplayName,
   accountId,
   userId,
 }: {
-  children: React.ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   accountId: string;
   userId: string;
   targetDisplayName: string;
 }) {
-  const [open, setOpen] = useState(false);
-
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            <Trans i18nKey="team:transferOwnership" />
+            <Trans i18nKey="teams.transferOwnership" />
           </AlertDialogTitle>
 
           <AlertDialogDescription>
-            <Trans i18nKey="team:transferOwnershipDescription" />
+            <Trans i18nKey="teams.transferOwnershipDescription" />
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -58,7 +55,7 @@ export function TransferOwnershipDialog({
           accountId={accountId}
           userId={userId}
           targetDisplayName={targetDisplayName}
-          onSuccess={() => setOpen(false)}
+          onSuccess={() => onOpenChange(false)}
         />
       </AlertDialogContent>
     </AlertDialog>
@@ -103,7 +100,7 @@ function TransferOrganizationOwnershipForm({
           }}
           CancelButton={
             <AlertDialogCancel>
-              <Trans i18nKey={'common:cancel'} />
+              <Trans i18nKey={'common.cancel'} />
             </AlertDialogCancel>
           }
           data-test="verify-otp-form"
@@ -135,7 +132,7 @@ function TransferOrganizationOwnershipForm({
         <div className="border-destructive rounded-md border p-4">
           <p className="text-destructive text-sm">
             <Trans
-              i18nKey={'teams:transferOwnershipDisclaimer'}
+              i18nKey={'teams.transferOwnershipDisclaimer'}
               values={{
                 member: targetDisplayName,
               }}
@@ -148,13 +145,13 @@ function TransferOrganizationOwnershipForm({
 
         <div>
           <p className={'text-muted-foreground'}>
-            <Trans i18nKey={'common:modalConfirmationQuestion'} />
+            <Trans i18nKey={'common.modalConfirmationQuestion'} />
           </p>
         </div>
 
         <AlertDialogFooter>
           <AlertDialogCancel>
-            <Trans i18nKey={'common:cancel'} />
+            <Trans i18nKey={'common.cancel'} />
           </AlertDialogCancel>
 
           <Button
@@ -165,9 +162,9 @@ function TransferOrganizationOwnershipForm({
           >
             <If
               condition={pending}
-              fallback={<Trans i18nKey={'teams:transferOwnership'} />}
+              fallback={<Trans i18nKey={'teams.transferOwnership'} />}
             >
-              <Trans i18nKey={'teams:transferringOwnership'} />
+              <Trans i18nKey={'teams.transferringOwnership'} />
             </If>
           </Button>
         </AlertDialogFooter>
@@ -180,11 +177,11 @@ function TransferOwnershipErrorAlert() {
   return (
     <Alert variant={'destructive'}>
       <AlertTitle>
-        <Trans i18nKey={'teams:transferTeamErrorHeading'} />
+        <Trans i18nKey={'teams.transferTeamErrorHeading'} />
       </AlertTitle>
 
       <AlertDescription>
-        <Trans i18nKey={'teams:transferTeamErrorMessage'} />
+        <Trans i18nKey={'teams.transferTeamErrorMessage'} />
       </AlertDescription>
     </Alert>
   );

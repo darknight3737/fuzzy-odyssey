@@ -40,7 +40,7 @@ export const updateTeamAccountName = enhanceAction(
       if (error.code === '23505') {
         return {
           success: false,
-          error: 'teams:duplicateSlugError',
+          error: 'teams.duplicateSlugError',
         };
       }
 

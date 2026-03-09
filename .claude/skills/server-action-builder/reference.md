@@ -69,7 +69,7 @@ export const GET = enhanceRouteHandler(
 ## Common Zod Patterns
 
 ```typescript
-import { z } from 'zod';
+import * as z from 'zod';
 
 // Basic schema
 export const CreateItemSchema = z.object({

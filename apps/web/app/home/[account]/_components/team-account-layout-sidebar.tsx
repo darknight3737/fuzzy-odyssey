@@ -4,7 +4,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-} from '@kit/ui/shadcn-sidebar';
+} from '@kit/ui/sidebar';
 
 import { ProfileAccountDropdownContainer } from '~/components//personal-account-dropdown-container';
 import { getTeamAccountSidebarConfig } from '~/config/team-account-navigation.config';
@@ -48,16 +48,16 @@ function SidebarContainer(props: {
   const collapsible = config.sidebarCollapsedStyle;
 
   return (
-    <Sidebar collapsible={collapsible}>
+    <Sidebar variant="floating" collapsible={collapsible}>
       <SidebarHeader className={'h-16 justify-center'}>
-        <div className={'flex items-center justify-between gap-x-3'}>
+        <div className={'flex items-center justify-between gap-x-0.5'}>
           <TeamAccountAccountsSelector
             userId={userId}
             selectedAccount={account}
             accounts={accounts}
           />
 
-          <div className={'group-data-[minimized=true]/sidebar:hidden'}>
+          <div className={'group-data-[collapsible=icon]:hidden'}>
             <TeamAccountNotifications
               userId={userId}
               accountId={props.accountId}
@@ -66,7 +66,7 @@ function SidebarContainer(props: {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className={`mt-5 h-[calc(100%-160px)] overflow-y-auto`}>
+      <SidebarContent className={`h-[calc(100%-160px)] overflow-y-auto`}>
         <TeamAccountLayoutSidebarNavigation config={config} />
       </SidebarContent>
 

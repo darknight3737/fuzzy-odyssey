@@ -56,7 +56,7 @@ export function HomeMobileNavigation(props: { workspace: UserWorkspace }) {
         <If condition={featuresFlagConfig.enableTeamAccounts}>
           <DropdownMenuGroup>
             <DropdownMenuLabel>
-              <Trans i18nKey={'common:yourAccounts'} />
+              <Trans i18nKey={'common.yourAccounts'} />
             </DropdownMenuLabel>
 
             <HomeAccountSelector
@@ -87,18 +87,21 @@ function DropdownLink(
   }>,
 ) {
   return (
-    <DropdownMenuItem asChild key={props.path}>
-      <Link
-        href={props.path}
-        className={'flex h-12 w-full items-center space-x-4'}
-      >
-        {props.Icon}
+    <DropdownMenuItem
+      render={
+        <Link
+          href={props.path}
+          className={'flex h-12 w-full items-center space-x-4'}
+        >
+          {props.Icon}
 
-        <span>
-          <Trans i18nKey={props.label} defaults={props.label} />
-        </span>
-      </Link>
-    </DropdownMenuItem>
+          <span>
+            <Trans i18nKey={props.label} defaults={props.label} />
+          </span>
+        </Link>
+      }
+      key={props.path}
+    />
   );
 }
 
@@ -115,7 +118,7 @@ function SignOutDropdownItem(
       <LogOut className={'h-6'} />
 
       <span>
-        <Trans i18nKey={'common:signOut'} defaults={'Sign out'} />
+        <Trans i18nKey={'common.signOut'} defaults={'Sign out'} />
       </span>
     </DropdownMenuItem>
   );

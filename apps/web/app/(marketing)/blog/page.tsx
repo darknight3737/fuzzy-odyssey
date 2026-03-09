@@ -2,13 +2,12 @@ import { cache } from 'react';
 
 import type { Metadata } from 'next';
 
+import { getLocale, getTranslations } from 'next-intl/server';
+
 import { createCmsClient } from '@kit/cms';
 import { getLogger } from '@kit/shared/logger';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
-
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 // local imports
 import { SitePageHeader } from '../_components/site-page-header';
@@ -24,7 +23,8 @@ const BLOG_POSTS_PER_PAGE = 10;
 export const generateMetadata = async (
   props: BlogPageProps,
 ): Promise<Metadata> => {
-  const { t, resolvedLanguage } = await createI18nServerInstance();
+  const t = await getTranslations('marketing');
+  const resolvedLanguage = await getLocale();
   const searchParams = await props.searchParams;
   const limit = BLOG_POSTS_PER_PAGE;
 
@@ -34,8 +34,8 @@ export const generateMetadata = async (
   const { total } = await getContentItems(resolvedLanguage, limit, offset);
 
   return {
-    title: t('marketing:blog'),
-    description: t('marketing:blogSubtitle'),
+    title: t('blog'),
+    description: t('blogSubtitle'),
     pagination: {
       previous: page > 0 ? `/blog?page=${page - 1}` : undefined,
       next: offset + limit < total ? `/blog?page=${page + 1}` : undefined,
@@ -67,7 +67,8 @@ const getContentItems = cache(
 );
 
 async function BlogPage(props: BlogPageProps) {
-  const { t, resolvedLanguage: language } = await createI18nServerInstance();
+  const t = await getTranslations('marketing');
+  const language = await getLocale();
   const searchParams = await props.searchParams;
 
   const limit = BLOG_POSTS_PER_PAGE;
@@ -82,15 +83,12 @@ async function BlogPage(props: BlogPageProps) {
 
   return (
     <>
-      <SitePageHeader
-        title={t('marketing:blog')}
-        subtitle={t('marketing:blogSubtitle')}
-      />
+      <SitePageHeader title={t('blog')} subtitle={t('blogSubtitle')} />
 
       <div className={'container flex flex-col space-y-6 py-8'}>
         <If
           condition={posts.length > 0}
-          fallback={<Trans i18nKey="marketing:noPosts" />}
+          fallback={<Trans i18nKey="marketing.noPosts" />}
         >
           <PostsGridList>
             {posts.map((post, idx) => {
@@ -111,7 +109,7 @@ async function BlogPage(props: BlogPageProps) {
   );
 }
 
-export default withI18n(BlogPage);
+export default BlogPage;
 
 function PostsGridList({ children }: React.PropsWithChildren) {
   return (

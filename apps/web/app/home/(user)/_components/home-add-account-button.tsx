@@ -32,7 +32,7 @@ export function HomeAddAccountButton(props: HomeAddAccountButtonProps) {
       onClick={() => setIsAddingAccount(true)}
       disabled={!canCreate}
     >
-      <Trans i18nKey={'account:createTeamButtonLabel'} />
+      <Trans i18nKey={'account.createTeamButtonLabel'} />
     </Button>
   );
 
@@ -41,9 +41,10 @@ export function HomeAddAccountButton(props: HomeAddAccountButtonProps) {
       {!canCreate && reason ? (
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="cursor-not-allowed">{button}</span>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={<span className="cursor-not-allowed">{button}</span>}
+            />
+
             <TooltipContent>
               <Trans i18nKey={reason} defaults={reason} />
             </TooltipContent>

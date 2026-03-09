@@ -8,7 +8,6 @@ import { Button } from '@kit/ui/button';
 import { Trans } from '@kit/ui/trans';
 
 import pathsConfig from '~/config/paths.config';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 interface AuthCallbackErrorPageProps {
   searchParams: Promise<{
@@ -28,11 +27,11 @@ async function AuthCallbackErrorPage(props: AuthCallbackErrorPageProps) {
     <div className={'flex flex-col space-y-4 py-4'}>
       <Alert variant={'warning'}>
         <AlertTitle>
-          <Trans i18nKey={'auth:authenticationErrorAlertHeading'} />
+          <Trans i18nKey={'auth.authenticationErrorAlertHeading'} />
         </AlertTitle>
 
         <AlertDescription>
-          <Trans i18nKey={error ?? 'auth:authenticationErrorAlertBody'} />
+          <Trans i18nKey={error ?? 'auth.authenticationErrorAlertBody'} />
         </AlertDescription>
       </Alert>
 
@@ -53,6 +52,7 @@ function AuthCallbackForm(props: {
   switch (props.code) {
     case 'otp_expired':
       return <ResendAuthLinkForm redirectPath={props.redirectPath} />;
+
     default:
       return <SignInButton signInPath={props.signInPath} />;
   }
@@ -60,12 +60,15 @@ function AuthCallbackForm(props: {
 
 function SignInButton(props: { signInPath: string }) {
   return (
-    <Button className={'w-full'} asChild>
-      <Link href={props.signInPath}>
-        <Trans i18nKey={'auth:signIn'} />
-      </Link>
-    </Button>
+    <Button
+      className={'w-full'}
+      render={
+        <Link href={props.signInPath}>
+          <Trans i18nKey={'auth.signIn'} />
+        </Link>
+      }
+    />
   );
 }
 
-export default withI18n(AuthCallbackErrorPage);
+export default AuthCallbackErrorPage;

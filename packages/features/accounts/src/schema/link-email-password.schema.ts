@@ -8,5 +8,5 @@ export const LinkEmailPasswordSchema = z
   })
   .refine((values) => values.password === values.repeatPassword, {
     path: ['repeatPassword'],
-    message: `account:passwordNotMatching`,
+    message: `account.passwordNotMatching`,
   });

@@ -78,26 +78,28 @@ function AuthButtons() {
 
       <div className={'flex items-center gap-x-2'}>
         <Button
+          nativeButton={false}
           className={'hidden md:flex md:text-sm'}
-          asChild
+          render={
+            <Link href={pathsConfig.auth.signIn}>
+              <Trans i18nKey={'auth.signIn'} />
+            </Link>
+          }
           variant={'outline'}
           size={'sm'}
-        >
-          <Link href={pathsConfig.auth.signIn}>
-            <Trans i18nKey={'auth:signIn'} />
-          </Link>
-        </Button>
+        />
 
         <Button
-          asChild
+          nativeButton={false}
+          render={
+            <Link href={pathsConfig.auth.signUp}>
+              <Trans i18nKey={'auth.signUp'} />
+            </Link>
+          }
           className="text-xs md:text-sm"
           variant={'default'}
           size={'sm'}
-        >
-          <Link href={pathsConfig.auth.signUp}>
-            <Trans i18nKey={'auth:signUp'} />
-          </Link>
-        </Button>
+        />
       </div>
     </div>
   );

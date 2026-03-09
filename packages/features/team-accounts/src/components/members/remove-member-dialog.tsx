@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useTransition } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
@@ -9,7 +11,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@kit/ui/alert-dialog';
 import { Button } from '@kit/ui/button';
 import { If } from '@kit/ui/if';
@@ -18,29 +19,34 @@ import { Trans } from '@kit/ui/trans';
 import { removeMemberFromAccountAction } from '../../server/actions/team-members-server-actions';
 
 export function RemoveMemberDialog({
+  open,
+  onOpenChange,
   teamAccountId,
   userId,
-  children,
-}: React.PropsWithChildren<{
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   teamAccountId: string;
   userId: string;
-}>) {
+}) {
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            <Trans i18nKey="teamS:removeMemberModalHeading" />
+            <Trans i18nKey="teams.removeMemberModalHeading" />
           </AlertDialogTitle>
 
           <AlertDialogDescription>
-            <Trans i18nKey={'teams:removeMemberModalDescription'} />
+            <Trans i18nKey={'teams.removeMemberModalDescription'} />
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <RemoveMemberForm accountId={teamAccountId} userId={userId} />
+        <RemoveMemberForm
+          accountId={teamAccountId}
+          userId={userId}
+          onSuccess={() => onOpenChange(false)}
+        />
       </AlertDialogContent>
     </AlertDialog>
   );
@@ -49,17 +55,20 @@ export function RemoveMemberDialog({
 function RemoveMemberForm({
   accountId,
   userId,
+  onSuccess,
 }: {
   accountId: string;
   userId: string;
+  onSuccess: () => void;
 }) {
   const [isSubmitting, startTransition] = useTransition();
-  const [error, setError] = useState<boolean>();
+  const [error, setError] = useState(false);
 
   const onMemberRemoved = () => {
     startTransition(async () => {
       try {
         await removeMemberFromAccountAction({ accountId, userId });
+        onSuccess();
       } catch {
         setError(true);
       }
@@ -70,7 +79,7 @@ function RemoveMemberForm({
     <form action={onMemberRemoved}>
       <div className={'flex flex-col space-y-6'}>
         <p className={'text-muted-foreground text-sm'}>
-          <Trans i18nKey={'common:modalConfirmationQuestion'} />
+          <Trans i18nKey={'common.modalConfirmationQuestion'} />
         </p>
 
         <If condition={error}>
@@ -79,7 +88,7 @@ function RemoveMemberForm({
 
         <AlertDialogFooter>
           <AlertDialogCancel>
-            <Trans i18nKey={'common:cancel'} />
+            <Trans i18nKey={'common.cancel'} />
           </AlertDialogCancel>
 
           <Button
@@ -87,7 +96,7 @@ function RemoveMemberForm({
             variant={'destructive'}
             disabled={isSubmitting}
           >
-            <Trans i18nKey={'teams:removeMemberSubmitLabel'} />
+            <Trans i18nKey={'teams.removeMemberSubmitLabel'} />
           </Button>
         </AlertDialogFooter>
       </div>
@@ -99,11 +108,11 @@ function RemoveMemberErrorAlert() {
   return (
     <Alert variant={'destructive'}>
       <AlertTitle>
-        <Trans i18nKey={'teams:removeMemberErrorHeading'} />
+        <Trans i18nKey={'teams.removeMemberErrorHeading'} />
       </AlertTitle>
 
       <AlertDescription>
-        <Trans i18nKey={'teams:removeMemberErrorMessage'} />
+        <Trans i18nKey={'teams.removeMemberErrorMessage'} />
       </AlertDescription>
     </Alert>
   );

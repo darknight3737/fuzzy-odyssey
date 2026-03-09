@@ -119,35 +119,43 @@ export function IdentitiesStepWrapper(props: IdentitiesStepWrapperProps) {
           onProviderLinked={() => setHasLinkedProvider(true)}
         />
 
-        <Button asChild data-test="continue-button">
-          <Link href={props.nextPath} onClick={handleContinueClick}>
-            <Trans i18nKey={'common:continueKey'} />
-          </Link>
-        </Button>
+        <Button
+          nativeButton={false}
+          render={
+            <Link href={props.nextPath} onClick={handleContinueClick}>
+              <Trans i18nKey={'common.continueKey'} />
+            </Link>
+          }
+          data-test="continue-button"
+        />
       </div>
 
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent data-test="no-auth-method-dialog">
           <AlertDialogHeader>
             <AlertDialogTitle data-test="no-auth-dialog-title">
-              <Trans i18nKey={'auth:noIdentityLinkedTitle'} />
+              <Trans i18nKey={'auth.noIdentityLinkedTitle'} />
             </AlertDialogTitle>
 
             <AlertDialogDescription data-test="no-auth-dialog-description">
-              <Trans i18nKey={'auth:noIdentityLinkedDescription'} />
+              <Trans i18nKey={'auth.noIdentityLinkedDescription'} />
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <AlertDialogFooter>
             <AlertDialogCancel data-test="no-auth-dialog-cancel">
-              <Trans i18nKey={'common:cancel'} />
+              <Trans i18nKey={'common.cancel'} />
             </AlertDialogCancel>
 
-            <AlertDialogAction asChild data-test="no-auth-dialog-continue">
-              <Link href={props.nextPath}>
-                <Trans i18nKey={'common:continueKey'} />
-              </Link>
-            </AlertDialogAction>
+            <AlertDialogAction
+              nativeButton={false}
+              render={
+                <Link href={props.nextPath}>
+                  <Trans i18nKey={'common.continueKey'} />
+                </Link>
+              }
+              data-test="no-auth-dialog-continue"
+            />
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

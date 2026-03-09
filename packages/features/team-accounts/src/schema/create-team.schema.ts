@@ -44,14 +44,14 @@ export const SlugSchema = z
   .min(2)
   .max(50)
   .regex(SLUG_REGEX, {
-    message: 'teams:invalidSlugError',
+    message: 'teams.invalidSlugError',
   })
   .refine(
     (slug) => {
       return !RESERVED_NAMES_ARRAY.includes(slug.toLowerCase());
     },
     {
-      message: 'teams:reservedNameError',
+      message: 'teams.reservedNameError',
     },
   );
 
@@ -68,7 +68,7 @@ export const TeamNameSchema = z
       return !SPECIAL_CHARACTERS_REGEX.test(name);
     },
     {
-      message: 'teams:specialCharactersError',
+      message: 'teams.specialCharactersError',
     },
   )
   .refine(
@@ -76,7 +76,7 @@ export const TeamNameSchema = z
       return !RESERVED_NAMES_ARRAY.includes(name.toLowerCase());
     },
     {
-      message: 'teams:reservedNameError',
+      message: 'teams.reservedNameError',
     },
   );
 
@@ -103,7 +103,7 @@ export const CreateTeamSchema = z
       return true;
     },
     {
-      message: 'teams:slugRequiredForNonLatinName',
+      message: 'teams.slugRequiredForNonLatinName',
       path: ['slug'],
     },
   );

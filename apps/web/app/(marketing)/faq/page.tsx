@@ -1,31 +1,30 @@
 import Link from 'next/link';
 
 import { ArrowRight, ChevronDown } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 import { Button } from '@kit/ui/button';
 import { Trans } from '@kit/ui/trans';
 
 import { SitePageHeader } from '~/(marketing)/_components/site-page-header';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 export const generateMetadata = async () => {
-  const { t } = await createI18nServerInstance();
+  const t = await getTranslations('marketing');
 
   return {
-    title: t('marketing:faq'),
+    title: t('faq'),
   };
 };
 
 async function FAQPage() {
-  const { t } = await createI18nServerInstance();
+  const t = await getTranslations('marketing');
 
   // replace this content with translations
   const faqItems = [
     {
-      // or: t('marketing:faq.question1')
+      // or: t('faq.question1')
       question: `Do you offer a free trial?`,
-      // or: t('marketing:faq.answer1')
+      // or: t('faq.answer1')
       answer: `Yes, we offer a 14-day free trial. You can cancel at any time during the trial period and you won't be charged.`,
     },
     {
@@ -74,10 +73,7 @@ async function FAQPage() {
       />
 
       <div className={'flex flex-col space-y-4 xl:space-y-8'}>
-        <SitePageHeader
-          title={t('marketing:faq')}
-          subtitle={t('marketing:faqSubtitle')}
-        />
+        <SitePageHeader title={t('faq')} subtitle={t('faqSubtitle')} />
 
         <div className={'container flex flex-col items-center space-y-8 pb-16'}>
           <div className="divide-border flex w-full max-w-xl flex-col divide-y divide-dashed rounded-md border">
@@ -87,14 +83,16 @@ async function FAQPage() {
           </div>
 
           <div>
-            <Button asChild variant={'outline'}>
-              <Link href={'/contact'}>
-                <span>
-                  <Trans i18nKey={'marketing:contactFaq'} />
-                </span>
+            <Button
+              nativeButton={false}
+              render={<Link href={'/contact'} />}
+              variant={'link'}
+            >
+              <span>
+                <Trans i18nKey={'marketing.contactFaq'} />
+              </span>
 
-                <ArrowRight className={'ml-2 w-4'} />
-              </Link>
+              <ArrowRight className={'ml-2 w-4'} />
             </Button>
           </div>
         </div>
@@ -103,7 +101,7 @@ async function FAQPage() {
   );
 }
 
-export default withI18n(FAQPage);
+export default FAQPage;
 
 function FaqItem({
   item,

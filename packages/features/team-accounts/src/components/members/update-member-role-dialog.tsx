@@ -1,10 +1,13 @@
+'use client';
+
 import { useState, useTransition } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
+import { AlertDialogCancel } from '@kit/ui/alert-dialog';
 import { Button } from '@kit/ui/button';
 import {
   Dialog,
@@ -12,7 +15,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@kit/ui/dialog';
 import {
   Form,
@@ -34,31 +36,30 @@ import { RolesDataProvider } from './roles-data-provider';
 type Role = string;
 
 export function UpdateMemberRoleDialog({
-  children,
+  open,
+  onOpenChange,
   userId,
   teamAccountId,
   userRole,
   userRoleHierarchy,
-}: React.PropsWithChildren<{
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   userId: string;
   teamAccountId: string;
   userRole: Role;
   userRoleHierarchy: number;
-}>) {
-  const [open, setOpen] = useState(false);
-
+}) {
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-
+    <Dialog open={open} onOpenChange={onOpenChange} disablePointerDismissal>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            <Trans i18nKey={'teams:updateMemberRoleModalHeading'} />
+            <Trans i18nKey={'teams.updateMemberRoleModalHeading'} />
           </DialogTitle>
 
           <DialogDescription>
-            <Trans i18nKey={'teams:updateMemberRoleModalDescription'} />
+            <Trans i18nKey={'teams.updateMemberRoleModalDescription'} />
           </DialogDescription>
         </DialogHeader>
 
@@ -69,7 +70,7 @@ export function UpdateMemberRoleDialog({
               teamAccountId={teamAccountId}
               userRole={userRole}
               roles={data}
-              onSuccess={() => setOpen(false)}
+              onSuccess={() => onOpenChange(false)}
             />
           )}
         </RolesDataProvider>
@@ -93,7 +94,7 @@ function UpdateMemberForm({
 }>) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<boolean>();
-  const { t } = useTranslation('teams');
+  const t = useTranslations('teams');
 
   const onSubmit = ({ role }: { role: Role }) => {
     startTransition(async () => {
@@ -135,7 +136,7 @@ function UpdateMemberForm({
       <form
         data-test={'update-member-role-form'}
         onSubmit={form.handleSubmit(onSubmit)}
-        className={'flex flex-col space-y-6'}
+        className={'flex w-full flex-col space-y-6'}
       >
         <If condition={error}>
           <UpdateRoleErrorAlert />
@@ -150,10 +151,15 @@ function UpdateMemberForm({
 
                 <FormControl>
                   <MembershipRoleSelector
+                    triggerClassName={'w-full'}
                     roles={roles}
                     currentUserRole={userRole}
                     value={field.value}
-                    onChange={(newRole) => form.setValue('role', newRole)}
+                    onChange={(newRole) => {
+                      if (newRole) {
+                        form.setValue('role', newRole);
+                      }
+                    }}
                   />
                 </FormControl>
 
@@ -165,9 +171,19 @@ function UpdateMemberForm({
           }}
         />
 
-        <Button data-test={'confirm-update-member-role'} disabled={pending}>
-          <Trans i18nKey={'teams:updateRoleSubmitLabel'} />
-        </Button>
+        <div className="flex justify-end gap-x-2">
+          <AlertDialogCancel>
+            <Trans i18nKey={'common.cancel'} />
+          </AlertDialogCancel>
+
+          <Button
+            type="submit"
+            data-test={'confirm-update-member-role'}
+            disabled={pending}
+          >
+            <Trans i18nKey={'teams.updateRoleSubmitLabel'} />
+          </Button>
+        </div>
       </form>
     </Form>
   );
@@ -177,11 +193,11 @@ function UpdateRoleErrorAlert() {
   return (
     <Alert variant={'destructive'}>
       <AlertTitle>
-        <Trans i18nKey={'teams:updateRoleErrorHeading'} />
+        <Trans i18nKey={'teams.updateRoleErrorHeading'} />
       </AlertTitle>
 
       <AlertDescription>
-        <Trans i18nKey={'teams:updateRoleErrorMessage'} />
+        <Trans i18nKey={'teams.updateRoleErrorMessage'} />
       </AlertDescription>
     </Alert>
   );

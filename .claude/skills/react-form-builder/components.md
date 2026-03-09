@@ -145,7 +145,7 @@ import { toast } from '@kit/ui/sonner';
 <If condition={error}>
   <Alert variant="destructive">
     <AlertDescription>
-      <Trans i18nKey="common:errors.generic" />
+      <Trans i18nKey="common.errors.generic" />
     </AlertDescription>
   </Alert>
 </If>
@@ -160,9 +160,9 @@ import { toast } from '@kit/ui/sonner';
   data-test="submit-button"
 >
   {pending ? (
-    <Trans i18nKey="common:submitting" />
+    <Trans i18nKey="common.submitting" />
   ) : (
-    <Trans i18nKey="common:submit" />
+    <Trans i18nKey="common.submit" />
   )}
 </Button>
 ```
@@ -220,7 +220,7 @@ export function MyForm() {
         <If condition={error}>
           <Alert variant="destructive">
             <AlertDescription>
-              <Trans i18nKey="common:errors.generic" />
+              <Trans i18nKey="common.errors.generic" />
             </AlertDescription>
           </Alert>
         </If>

@@ -15,7 +15,7 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-} from '@kit/ui/shadcn-sidebar';
+} from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
 import { ProfileAccountDropdownContainer } from '~/components/personal-account-dropdown-container';
@@ -35,25 +35,26 @@ export function AdminSidebar() {
 
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuButton isActive={path === '/admin'} asChild>
-                <Link className={'flex gap-2.5'} href={'/admin'}>
-                  <LayoutDashboard className={'h-4'} />
-                  <span>Dashboard</span>
-                </Link>
+              <SidebarMenuButton
+                isActive={path === '/admin'}
+                render={<Link className={'flex gap-2.5'} href={'/admin'} />}
+              >
+                <LayoutDashboard className={'h-4'} />
+                <span>Dashboard</span>
               </SidebarMenuButton>
 
               <SidebarMenuButton
                 isActive={path.includes('/admin/accounts')}
-                asChild
-              >
-                <Link
-                  className={'flex size-full gap-2.5'}
-                  href={'/admin/accounts'}
-                >
-                  <Users className={'h-4'} />
-                  <span>Accounts</span>
-                </Link>
-              </SidebarMenuButton>
+                render={
+                  <Link
+                    className={'flex size-full gap-2.5'}
+                    href={'/admin/accounts'}
+                  >
+                    <Users className={'h-4'} />
+                    <span>Accounts</span>
+                  </Link>
+                }
+              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
