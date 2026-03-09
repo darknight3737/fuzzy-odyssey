@@ -3,7 +3,7 @@
 import * as z from 'zod';
 
 import { getMailer } from '@kit/mailers';
-import { enhanceAction } from '@kit/next/actions';
+import { publicActionClient } from '@kit/next/safe-action';
 
 import { ContactEmailSchema } from '../contact-email.schema';
 
@@ -21,8 +21,9 @@ const emailFrom = z
   })
   .parse(process.env.EMAIL_SENDER);
 
-export const sendContactEmail = enhanceAction(
-  async (data) => {
+export const sendContactEmail = publicActionClient
+  .inputSchema(ContactEmailSchema)
+  .action(async ({ parsedInput: data }) => {
     const mailer = await getMailer();
 
     await mailer.sendEmail({
@@ -41,9 +42,4 @@ export const sendContactEmail = enhanceAction(
     });
 
     return {};
-  },
-  {
-    schema: ContactEmailSchema,
-    auth: false,
-  },
-);
+  });

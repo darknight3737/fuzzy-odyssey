@@ -1,9 +1,8 @@
 'use client';
 
-import { useFormStatus } from 'react-dom';
-
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TriangleAlert } from 'lucide-react';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { ErrorBoundary } from '@kit/monitoring/components';
@@ -79,6 +78,8 @@ function DeleteAccountModal() {
 }
 
 function DeleteAccountForm(props: { email: string }) {
+  const { execute, isPending } = useAction(deletePersonalAccountAction);
+
   const form = useForm({
     resolver: zodResolver(DeletePersonalAccountSchema),
     defaultValues: {
@@ -107,11 +108,12 @@ function DeleteAccountForm(props: { email: string }) {
     <Form {...form}>
       <form
         data-test={'delete-account-form'}
-        action={deletePersonalAccountAction}
+        onSubmit={(e) => {
+          e.preventDefault();
+          execute({ otp });
+        }}
         className={'flex flex-col space-y-4'}
       >
-        <input type="hidden" name="otp" value={otp} />
-
         <div className={'flex flex-col space-y-6'}>
           <div
             className={
@@ -135,30 +137,22 @@ function DeleteAccountForm(props: { email: string }) {
             <Trans i18nKey={'common.cancel'} />
           </AlertDialogCancel>
 
-          <DeleteAccountSubmitButton disabled={!form.formState.isValid} />
+          <Button
+            data-test={'confirm-delete-account-button'}
+            type={'submit'}
+            disabled={isPending || !form.formState.isValid}
+            name={'action'}
+            variant={'destructive'}
+          >
+            {isPending ? (
+              <Trans i18nKey={'account.deletingAccount'} />
+            ) : (
+              <Trans i18nKey={'account.deleteAccount'} />
+            )}
+          </Button>
         </AlertDialogFooter>
       </form>
     </Form>
-  );
-}
-
-function DeleteAccountSubmitButton(props: { disabled: boolean }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      data-test={'confirm-delete-account-button'}
-      type={'submit'}
-      disabled={pending || props.disabled}
-      name={'action'}
-      variant={'destructive'}
-    >
-      {pending ? (
-        <Trans i18nKey={'account.deletingAccount'} />
-      ) : (
-        <Trans i18nKey={'account.deleteAccount'} />
-      )}
-    </Button>
   );
 }
 

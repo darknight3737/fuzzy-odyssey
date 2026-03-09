@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { VerifyOtpForm } from '@kit/otp/components';
@@ -73,9 +72,14 @@ function TransferOrganizationOwnershipForm({
   targetDisplayName: string;
   onSuccess: () => unknown;
 }) {
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<boolean>();
   const { data: user } = useUser();
+
+  const { execute, isPending, hasErrored } = useAction(
+    transferOwnershipAction,
+    {
+      onSuccess: () => onSuccess(),
+    },
+  );
 
   const form = useForm({
     resolver: zodResolver(TransferOwnershipConfirmationSchema),
@@ -114,18 +118,10 @@ function TransferOrganizationOwnershipForm({
       <form
         className={'flex flex-col space-y-4 text-sm'}
         onSubmit={form.handleSubmit((data) => {
-          startTransition(async () => {
-            try {
-              await transferOwnershipAction(data);
-
-              onSuccess();
-            } catch {
-              setError(true);
-            }
-          });
+          execute(data);
         })}
       >
-        <If condition={error}>
+        <If condition={hasErrored}>
           <TransferOwnershipErrorAlert />
         </If>
 
@@ -158,10 +154,10 @@ function TransferOrganizationOwnershipForm({
             type={'submit'}
             data-test={'confirm-transfer-ownership-button'}
             variant={'destructive'}
-            disabled={pending}
+            disabled={isPending}
           >
             <If
-              condition={pending}
+              condition={isPending}
               fallback={<Trans i18nKey={'teams.transferOwnership'} />}
             >
               <Trans i18nKey={'teams.transferringOwnership'} />

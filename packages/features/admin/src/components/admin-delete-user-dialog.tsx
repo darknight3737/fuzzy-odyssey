@@ -1,10 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-
-import { isRedirectError } from 'next/dist/client/components/redirect-error';
-
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
@@ -34,38 +31,18 @@ import { Input } from '@kit/ui/input';
 import { deleteUserAction } from '../lib/server/admin-server-actions';
 import { DeleteUserSchema } from '../lib/server/schema/admin-actions.schema';
 
-export function AdminDeleteUserDialog(props: {
-  userId: string;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  children?: React.ReactNode;
-}) {
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<boolean>(false);
-
-  const form = useForm({
-    resolver: zodResolver(DeleteUserSchema),
-    defaultValues: {
-      userId: props.userId,
-      confirmation: '',
-    },
-  });
-
+export function AdminDeleteUserDialog(
+  props: React.PropsWithChildren<{
+    userId: string;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+  }>,
+) {
   return (
-    <AlertDialog
-      open={props.open}
-      onOpenChange={(open) => {
-        if (!open) {
-          form.reset();
-          setError(false);
-        }
-
-        props.onOpenChange?.(open);
-      }}
-    >
-      {props.children && (
+    <AlertDialog open={props.open} onOpenChange={props.onOpenChange}>
+      <If condition={props.children}>
         <AlertDialogTrigger render={props.children as React.ReactElement} />
-      )}
+      </If>
 
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -78,78 +55,75 @@ export function AdminDeleteUserDialog(props: {
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <Form {...form}>
-          <form
-            data-test={'admin-delete-user-form'}
-            className={'flex flex-col space-y-8'}
-            onSubmit={form.handleSubmit((data) => {
-              startTransition(async () => {
-                try {
-                  await deleteUserAction(data);
-
-                  setError(false);
-                } catch (e) {
-                  if (isRedirectError(e)) {
-                    // Do nothing
-                  } else {
-                    setError(true);
-                  }
-                }
-              });
-            })}
-          >
-            <If condition={error}>
-              <Alert variant={'destructive'}>
-                <AlertTitle>Error</AlertTitle>
-
-                <AlertDescription>
-                  There was an error deleting the user. Please check the server
-                  logs to see what went wrong.
-                </AlertDescription>
-              </Alert>
-            </If>
-
-            <FormField
-              name={'confirmation'}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Type <b>CONFIRM</b> to confirm
-                  </FormLabel>
-
-                  <FormControl>
-                    <Input
-                      required
-                      pattern={'CONFIRM'}
-                      placeholder={'Type CONFIRM to confirm'}
-                      {...field}
-                    />
-                  </FormControl>
-
-                  <FormDescription>
-                    Are you sure you want to do this? This action cannot be
-                    undone.
-                  </FormDescription>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-
-              <Button
-                disabled={pending}
-                type={'submit'}
-                variant={'destructive'}
-              >
-                {pending ? 'Deleting...' : 'Delete'}
-              </Button>
-            </AlertDialogFooter>
-          </form>
-        </Form>
+        <DeleteUserForm userId={props.userId} />
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+function DeleteUserForm(props: { userId: string }) {
+  const { execute, isPending, hasErrored } = useAction(deleteUserAction);
+
+  const form = useForm({
+    resolver: zodResolver(DeleteUserSchema),
+    defaultValues: {
+      userId: props.userId,
+      confirmation: '',
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form
+        data-test={'admin-delete-user-form'}
+        className={'flex flex-col space-y-8'}
+        onSubmit={form.handleSubmit((data) => execute(data))}
+      >
+        <If condition={hasErrored}>
+          <Alert variant={'destructive'}>
+            <AlertTitle>Error</AlertTitle>
+
+            <AlertDescription>
+              There was an error deleting the user. Please check the server logs
+              to see what went wrong.
+            </AlertDescription>
+          </Alert>
+        </If>
+
+        <FormField
+          name={'confirmation'}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Type <b>CONFIRM</b> to confirm
+              </FormLabel>
+
+              <FormControl>
+                <Input
+                  required
+                  pattern={'CONFIRM'}
+                  placeholder={'Type CONFIRM to confirm'}
+                  {...field}
+                />
+              </FormControl>
+
+              <FormDescription>
+                Are you sure you want to do this? This action cannot be undone.
+              </FormDescription>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+          <Button disabled={isPending} type={'submit'} variant={'destructive'}>
+            {isPending ? 'Deleting...' : 'Delete'}
+          </Button>
+        </AlertDialogFooter>
+      </form>
+    </Form>
   );
 }

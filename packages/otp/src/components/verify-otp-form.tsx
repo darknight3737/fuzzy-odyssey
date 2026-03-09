@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TriangleAlert } from 'lucide-react';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
@@ -61,12 +62,23 @@ export function VerifyOtpForm({
 }: VerifyOtpFormProps) {
   // Track the current step (email entry or OTP verification)
   const [step, setStep] = useState<'email' | 'otp'>('email');
-  const [isPending, startTransition] = useTransition();
 
   // Track errors
   const [error, setError] = useState<string | null>(null);
-  // Track verification success
-  const [, setVerificationSuccess] = useState(false);
+
+  const { execute: executeSendOtp, isPending } = useAction(sendOtpEmailAction, {
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        setStep('otp');
+        setError(null);
+      } else {
+        setError(data?.error || 'Failed to send OTP. Please try again.');
+      }
+    },
+    onError: () => {
+      setError('An unexpected error occurred. Please try again.');
+    },
+  });
 
   // Email form
   const emailForm = useForm({
@@ -88,28 +100,14 @@ export function VerifyOtpForm({
   const handleSendOtp = () => {
     setError(null);
 
-    startTransition(async () => {
-      try {
-        const result = await sendOtpEmailAction({
-          purpose,
-          email,
-        });
-
-        if (result.success) {
-          setStep('otp');
-        } else {
-          setError(result.error || 'Failed to send OTP. Please try again.');
-        }
-      } catch (err) {
-        setError('An unexpected error occurred. Please try again.');
-        console.error('Error sending OTP:', err);
-      }
+    executeSendOtp({
+      purpose,
+      email,
     });
   };
 
   // Handle OTP verification
   const handleVerifyOtp = (data: z.output<typeof VerifyOtpSchema>) => {
-    setVerificationSuccess(true);
     onSuccess(data.otp);
   };
 

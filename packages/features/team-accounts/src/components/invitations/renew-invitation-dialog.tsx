@@ -1,4 +1,6 @@
-import { useState, useTransition } from 'react';
+'use client';
+
+import { useAction } from 'next-safe-action/hooks';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
 import {
@@ -59,29 +61,23 @@ function RenewInvitationForm({
   invitationId: number;
   setIsOpen: (isOpen: boolean) => void;
 }) {
-  const [isSubmitting, startTransition] = useTransition();
-  const [error, setError] = useState<boolean>();
-
-  const inInvitationRenewed = () => {
-    startTransition(async () => {
-      try {
-        await renewInvitationAction({ invitationId });
-
-        setIsOpen(false);
-      } catch {
-        setError(true);
-      }
-    });
-  };
+  const { execute, isPending, hasErrored } = useAction(renewInvitationAction, {
+    onSuccess: () => setIsOpen(false),
+  });
 
   return (
-    <form action={inInvitationRenewed}>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        execute({ invitationId });
+      }}
+    >
       <div className={'flex flex-col space-y-6'}>
         <p className={'text-muted-foreground text-sm'}>
           <Trans i18nKey={'common.modalConfirmationQuestion'} />
         </p>
 
-        <If condition={error}>
+        <If condition={hasErrored}>
           <RenewInvitationErrorAlert />
         </If>
 
@@ -90,10 +86,7 @@ function RenewInvitationForm({
             <Trans i18nKey={'common.cancel'} />
           </AlertDialogCancel>
 
-          <Button
-            data-test={'confirm-renew-invitation'}
-            disabled={isSubmitting}
-          >
+          <Button data-test={'confirm-renew-invitation'} disabled={isPending}>
             <Trans i18nKey={'teams.renewInvitation'} />
           </Button>
         </AlertDialogFooter>

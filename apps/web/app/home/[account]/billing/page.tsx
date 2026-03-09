@@ -3,7 +3,6 @@ import { getTranslations } from 'next-intl/server';
 
 import { resolveProductPlan } from '@kit/billing-gateway';
 import {
-  BillingPortalCard,
   CurrentLifetimeOrderCard,
   CurrentSubscriptionCard,
 } from '@kit/billing-gateway/components';
@@ -21,7 +20,7 @@ import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-
 import { loadTeamAccountBillingPage } from '../_lib/server/team-account-billing-page.loader';
 import { loadTeamWorkspace } from '../_lib/server/team-account-workspace.loader';
 import { TeamAccountCheckoutForm } from './_components/team-account-checkout-form';
-import { createBillingPortalSession } from './_lib/server/server-actions';
+import { TeamBillingPortalForm } from './_components/team-billing-portal-form';
 
 interface TeamAccountBillingPageProps {
   params: Promise<{ account: string }>;
@@ -109,7 +108,7 @@ async function TeamAccountBillingPage({ params }: TeamAccountBillingPageProps) {
           </If>
 
           {shouldShowBillingPortal ? (
-            <BillingPortalForm accountId={accountId} account={account} />
+            <TeamBillingPortalForm accountId={accountId} slug={account} />
           ) : null}
         </div>
       </PageBody>
@@ -132,22 +131,5 @@ function CannotManageBillingAlert() {
         <Trans i18nKey={'billing.cannotManageBillingAlertDescription'} />
       </AlertDescription>
     </Alert>
-  );
-}
-
-function BillingPortalForm({
-  accountId,
-  account,
-}: {
-  accountId: string;
-  account: string;
-}) {
-  return (
-    <form action={createBillingPortalSession}>
-      <input type="hidden" name={'accountId'} value={accountId} />
-      <input type="hidden" name={'slug'} value={account} />
-
-      <BillingPortalCard />
-    </form>
   );
 }

@@ -1,8 +1,7 @@
 'use client';
 
-import { useFormStatus } from 'react-dom';
-
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
 
@@ -163,6 +162,8 @@ function DeleteTeamConfirmationForm({
 }) {
   const { data: user } = useUser();
 
+  const { execute, isPending } = useAction(deleteTeamAccountAction);
+
   const form = useForm({
     mode: 'onChange',
     reValidateMode: 'onChange',
@@ -203,7 +204,10 @@ function DeleteTeamConfirmationForm({
         <form
           data-test={'delete-team-form'}
           className={'flex flex-col space-y-4'}
-          action={deleteTeamAccountAction}
+          onSubmit={(e) => {
+            e.preventDefault();
+            execute({ accountId: id, otp });
+          }}
         >
           <div className={'flex flex-col space-y-2'}>
             <div
@@ -224,9 +228,6 @@ function DeleteTeamConfirmationForm({
                 <Trans i18nKey={'common.modalConfirmationQuestion'} />
               </div>
             </div>
-
-            <input type="hidden" value={id} name={'accountId'} />
-            <input type="hidden" value={otp} name={'otp'} />
           </div>
 
           <AlertDialogFooter>
@@ -234,26 +235,18 @@ function DeleteTeamConfirmationForm({
               <Trans i18nKey={'common.cancel'} />
             </AlertDialogCancel>
 
-            <DeleteTeamSubmitButton />
+            <Button
+              type="submit"
+              data-test={'delete-team-form-confirm-button'}
+              disabled={isPending}
+              variant={'destructive'}
+            >
+              <Trans i18nKey={'teams.deleteTeam'} />
+            </Button>
           </AlertDialogFooter>
         </form>
       </Form>
     </ErrorBoundary>
-  );
-}
-
-function DeleteTeamSubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      data-test={'delete-team-form-confirm-button'}
-      disabled={pending}
-      variant={'destructive'}
-    >
-      <Trans i18nKey={'teams.deleteTeam'} />
-    </Button>
   );
 }
 
@@ -263,6 +256,8 @@ function LeaveTeamContainer(props: {
     id: string;
   };
 }) {
+  const { execute, isPending } = useAction(leaveTeamAccountAction);
+
   const form = useForm({
     resolver: zodResolver(
       z.object({
@@ -316,14 +311,13 @@ function LeaveTeamContainer(props: {
             <Form {...form}>
               <form
                 className={'flex flex-col space-y-4'}
-                action={leaveTeamAccountAction}
+                onSubmit={form.handleSubmit((data) => {
+                  execute({
+                    accountId: props.account.id,
+                    confirmation: data.confirmation,
+                  });
+                })}
               >
-                <input
-                  type={'hidden'}
-                  value={props.account.id}
-                  name={'accountId'}
-                />
-
                 <FormField
                   name={'confirmation'}
                   render={({ field }) => {
@@ -361,7 +355,14 @@ function LeaveTeamContainer(props: {
                     <Trans i18nKey={'common.cancel'} />
                   </AlertDialogCancel>
 
-                  <LeaveTeamSubmitButton />
+                  <Button
+                    type="submit"
+                    data-test={'confirm-leave-organization-button'}
+                    disabled={isPending}
+                    variant={'destructive'}
+                  >
+                    <Trans i18nKey={'teams.leaveTeam'} />
+                  </Button>
                 </AlertDialogFooter>
               </form>
             </Form>
@@ -369,20 +370,6 @@ function LeaveTeamContainer(props: {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
-}
-
-function LeaveTeamSubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      data-test={'confirm-leave-organization-button'}
-      disabled={pending}
-      variant={'destructive'}
-    >
-      <Trans i18nKey={'teams.leaveTeam'} />
-    </Button>
   );
 }
 

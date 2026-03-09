@@ -89,10 +89,11 @@ export const CreateTeamSchema = z
   .object({
     name: TeamNameSchema,
     // Transform empty strings to undefined before validation
-    slug: z.preprocess(
-      (val) => (val === '' ? undefined : val),
-      SlugSchema.optional(),
-    ),
+    slug: z
+      .string()
+      .optional()
+      .transform((val) => (val === '' ? undefined : val))
+      .pipe(SlugSchema.optional()),
   })
   .refine(
     (data) => {

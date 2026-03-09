@@ -1,4 +1,6 @@
-import { useState, useTransition } from 'react';
+'use client';
+
+import { useAction } from 'next-safe-action/hooks';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
 import {
@@ -54,29 +56,24 @@ function DeleteInvitationForm({
   invitationId: number;
   setIsOpen: (isOpen: boolean) => void;
 }) {
-  const [isSubmitting, startTransition] = useTransition();
-  const [error, setError] = useState<boolean>();
-
-  const onInvitationRemoved = () => {
-    startTransition(async () => {
-      try {
-        await deleteInvitationAction({ invitationId });
-
-        setIsOpen(false);
-      } catch {
-        setError(true);
-      }
-    });
-  };
+  const { execute, isPending, hasErrored } = useAction(deleteInvitationAction, {
+    onSuccess: () => setIsOpen(false),
+  });
 
   return (
-    <form data-test={'delete-invitation-form'} action={onInvitationRemoved}>
+    <form
+      data-test={'delete-invitation-form'}
+      onSubmit={(e) => {
+        e.preventDefault();
+        execute({ invitationId });
+      }}
+    >
       <div className={'flex flex-col space-y-6'}>
         <p className={'text-muted-foreground text-sm'}>
           <Trans i18nKey={'common.modalConfirmationQuestion'} />
         </p>
 
-        <If condition={error}>
+        <If condition={hasErrored}>
           <RemoveInvitationErrorAlert />
         </If>
 
@@ -85,11 +82,7 @@ function DeleteInvitationForm({
             <Trans i18nKey={'common.cancel'} />
           </AlertDialogCancel>
 
-          <Button
-            type={'submit'}
-            variant={'destructive'}
-            disabled={isSubmitting}
-          >
+          <Button type={'submit'} variant={'destructive'} disabled={isPending}>
             <Trans i18nKey={'teams.deleteInvitation'} />
           </Button>
         </AlertDialogFooter>

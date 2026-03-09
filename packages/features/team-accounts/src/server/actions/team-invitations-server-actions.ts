@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 import * as z from 'zod';
 
-import { enhanceAction } from '@kit/next/actions';
+import { authActionClient } from '@kit/next/safe-action';
 import { getLogger } from '@kit/shared/logger';
 import { Database } from '@kit/supabase/database';
 import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
@@ -26,8 +26,15 @@ import { createAccountPerSeatBillingService } from '../services/account-per-seat
  * @name createInvitationsAction
  * @description Creates invitations for inviting members.
  */
-export const createInvitationsAction = enhanceAction(
-  async (params, user) => {
+export const createInvitationsAction = authActionClient
+  .inputSchema(
+    InviteMembersSchema.and(
+      z.object({
+        accountSlug: z.string().min(1),
+      }),
+    ),
+  )
+  .action(async ({ parsedInput: params, ctx: { user } }) => {
     const logger = await getLogger();
 
     logger.info(
@@ -116,22 +123,15 @@ export const createInvitationsAction = enhanceAction(
         success: false,
       };
     }
-  },
-  {
-    schema: InviteMembersSchema.and(
-      z.object({
-        accountSlug: z.string().min(1),
-      }),
-    ),
-  },
-);
+  });
 
 /**
  * @name deleteInvitationAction
  * @description Deletes an invitation specified by the invitation ID.
  */
-export const deleteInvitationAction = enhanceAction(
-  async (data) => {
+export const deleteInvitationAction = authActionClient
+  .inputSchema(DeleteInvitationSchema)
+  .action(async ({ parsedInput: data }) => {
     const client = getSupabaseServerClient();
     const service = createAccountInvitationsService(client);
 
@@ -143,18 +143,15 @@ export const deleteInvitationAction = enhanceAction(
     return {
       success: true,
     };
-  },
-  {
-    schema: DeleteInvitationSchema,
-  },
-);
+  });
 
 /**
  * @name updateInvitationAction
  * @description Updates an invitation.
  */
-export const updateInvitationAction = enhanceAction(
-  async (invitation) => {
+export const updateInvitationAction = authActionClient
+  .inputSchema(UpdateInvitationSchema)
+  .action(async ({ parsedInput: invitation }) => {
     const client = getSupabaseServerClient();
     const service = createAccountInvitationsService(client);
 
@@ -165,23 +162,18 @@ export const updateInvitationAction = enhanceAction(
     return {
       success: true,
     };
-  },
-  {
-    schema: UpdateInvitationSchema,
-  },
-);
+  });
 
 /**
  * @name acceptInvitationAction
  * @description Accepts an invitation to join a team.
  */
-export const acceptInvitationAction = enhanceAction(
-  async (data: FormData, user) => {
+export const acceptInvitationAction = authActionClient
+  .inputSchema(AcceptInvitationSchema)
+  .action(async ({ parsedInput: data, ctx: { user } }) => {
     const client = getSupabaseServerClient();
 
-    const { inviteToken, nextPath } = AcceptInvitationSchema.parse(
-      Object.fromEntries(data),
-    );
+    const { inviteToken, nextPath } = data;
 
     // create the services
     const perSeatBillingService = createAccountPerSeatBillingService(client);
@@ -205,19 +197,17 @@ export const acceptInvitationAction = enhanceAction(
     // Increase the seats for the account
     await perSeatBillingService.increaseSeats(accountId);
 
-    return redirect(nextPath);
-  },
-  {},
-);
+    redirect(nextPath);
+  });
 
 /**
  * @name renewInvitationAction
  * @description Renews an invitation.
  */
-export const renewInvitationAction = enhanceAction(
-  async (params) => {
+export const renewInvitationAction = authActionClient
+  .inputSchema(RenewInvitationSchema)
+  .action(async ({ parsedInput: { invitationId } }) => {
     const client = getSupabaseServerClient();
-    const { invitationId } = RenewInvitationSchema.parse(params);
 
     const service = createAccountInvitationsService(client);
 
@@ -229,11 +219,7 @@ export const renewInvitationAction = enhanceAction(
     return {
       success: true,
     };
-  },
-  {
-    schema: RenewInvitationSchema,
-  },
-);
+  });
 
 function revalidateMemberPage() {
   revalidatePath('/home/[account]/members', 'page');

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
 
 import { useSupabase } from '@kit/supabase/hooks/use-supabase';
@@ -35,27 +36,19 @@ import { LoadingOverlay } from '@kit/ui/loading-overlay';
 import { impersonateUserAction } from '../lib/server/admin-server-actions';
 import { ImpersonateUserSchema } from '../lib/server/schema/admin-actions.schema';
 
-export function AdminImpersonateUserDialog(props: {
-  userId: string;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  children?: React.ReactNode;
-}) {
-  const form = useForm({
-    resolver: zodResolver(ImpersonateUserSchema),
-    defaultValues: {
-      userId: props.userId,
-      confirmation: '',
-    },
-  });
+type Tokens = {
+  accessToken: string;
+  refreshToken: string;
+};
 
-  const [tokens, setTokens] = useState<{
-    accessToken: string;
-    refreshToken: string;
-  }>();
-
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<boolean | null>(null);
+export function AdminImpersonateUserDialog(
+  props: React.PropsWithChildren<{
+    userId: string;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+  }>,
+) {
+  const [tokens, setTokens] = useState<Tokens>();
 
   if (tokens) {
     return <ImpersonateUserAuthSetter tokens={tokens} />;
@@ -65,17 +58,12 @@ export function AdminImpersonateUserDialog(props: {
     <AlertDialog
       open={props.open}
       onOpenChange={(open) => {
-        if (!open) {
-          form.reset();
-          setError(null);
-        }
-
         props.onOpenChange?.(open);
       }}
     >
-      {props.children && (
+      <If condition={props.children}>
         <AlertDialogTrigger render={props.children as React.ReactElement} />
-      )}
+      </If>
 
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -94,70 +82,85 @@ export function AdminImpersonateUserDialog(props: {
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <Form {...form}>
-          <form
-            data-test={'admin-impersonate-user-form'}
-            className={'flex flex-col space-y-8'}
-            onSubmit={form.handleSubmit((data) => {
-              startTransition(async () => {
-                try {
-                  const result = await impersonateUserAction(data);
-
-                  setTokens(result);
-                } catch {
-                  setError(true);
-                }
-              });
-            })}
-          >
-            <If condition={error}>
-              <Alert variant={'destructive'}>
-                <AlertTitle>Error</AlertTitle>
-
-                <AlertDescription>
-                  Failed to impersonate user. Please check the logs to
-                  understand what went wrong.
-                </AlertDescription>
-              </Alert>
-            </If>
-
-            <FormField
-              name={'confirmation'}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Type <b>CONFIRM</b> to confirm
-                  </FormLabel>
-
-                  <FormControl>
-                    <Input
-                      required
-                      pattern={'CONFIRM'}
-                      placeholder={'Type CONFIRM to confirm'}
-                      {...field}
-                    />
-                  </FormControl>
-
-                  <FormDescription>
-                    Are you sure you want to impersonate this user?
-                  </FormDescription>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-
-              <Button disabled={isPending} type={'submit'}>
-                {isPending ? 'Impersonating...' : 'Impersonate User'}
-              </Button>
-            </AlertDialogFooter>
-          </form>
-        </Form>
+        <AdminImpersonateUserForm userId={props.userId} onSuccess={setTokens} />
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+function AdminImpersonateUserForm(props: {
+  userId: string;
+  onSuccess: (data: Tokens) => void;
+}) {
+  const form = useForm({
+    resolver: zodResolver(ImpersonateUserSchema),
+    defaultValues: {
+      userId: props.userId,
+      confirmation: '',
+    },
+  });
+
+  const { execute, isPending, hasErrored } = useAction(impersonateUserAction, {
+    onSuccess: ({ data }) => {
+      if (data) {
+        props.onSuccess(data);
+      }
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form
+        data-test={'admin-impersonate-user-form'}
+        className={'flex flex-col space-y-8'}
+        onSubmit={form.handleSubmit((data) => execute(data))}
+      >
+        <If condition={hasErrored}>
+          <Alert variant={'destructive'}>
+            <AlertTitle>Error</AlertTitle>
+
+            <AlertDescription>
+              Failed to impersonate user. Please check the logs to understand
+              what went wrong.
+            </AlertDescription>
+          </Alert>
+        </If>
+
+        <FormField
+          name={'confirmation'}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Type <b>CONFIRM</b> to confirm
+              </FormLabel>
+
+              <FormControl>
+                <Input
+                  required
+                  pattern={'CONFIRM'}
+                  placeholder={'Type CONFIRM to confirm'}
+                  {...field}
+                />
+              </FormControl>
+
+              <FormDescription>
+                Are you sure you want to impersonate this user?
+              </FormDescription>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+          <Button disabled={isPending} type={'submit'}>
+            {isPending ? 'Impersonating...' : 'Impersonate User'}
+          </Button>
+        </AlertDialogFooter>
+      </form>
+    </Form>
   );
 }
 
