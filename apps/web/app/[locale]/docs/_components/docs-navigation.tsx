@@ -1,7 +1,7 @@
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from "lucide-react";
 
-import { Cms } from '@kit/cms';
-import { CollapsibleContent, CollapsibleTrigger } from '@kit/ui/collapsible';
+import { Cms } from "@kit/cms";
+import { CollapsibleContent, CollapsibleTrigger } from "@kit/ui/collapsible";
 import {
   Sidebar,
   SidebarGroup,
@@ -10,11 +10,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
-} from '@kit/ui/sidebar';
+} from "@kit/ui/sidebar";
 
-import { DocsNavLink } from '../_components/docs-nav-link';
-import { DocsNavigationCollapsible } from '../_components/docs-navigation-collapsible';
-import { FloatingDocumentationNavigationButton } from './floating-docs-navigation-button';
+import { DocsNavLink } from "../_components/docs-nav-link";
+import { DocsNavigationCollapsible } from "../_components/docs-navigation-collapsible";
+
+import { FloatingDocumentationNavigationButton } from "./floating-docs-navigation-button";
 
 function Node({
   node,
@@ -126,17 +127,17 @@ function Tree({
 
 export function DocsNavigation({
   pages,
-  prefix = '/docs',
+  prefix = "/docs",
 }: {
   pages: Cms.ContentItem[];
   prefix?: string;
 }) {
   return (
     <>
-      <Sidebar variant={'floating'}>
+      <Sidebar variant={"floating"}>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className={'pb-48'}>
+            <SidebarMenu className={"pb-48"}>
               <Tree pages={pages} level={0} prefix={prefix} />
             </SidebarMenu>
           </SidebarGroupContent>

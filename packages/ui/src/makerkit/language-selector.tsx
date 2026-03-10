@@ -19,7 +19,7 @@ interface LanguageSelectorProps {
   onChange?: (locale: string) => unknown;
 }
 
-const DEFAULT_STRATEGY = 'cookie';
+const DEFAULT_STRATEGY = 'path';
 
 export function LanguageSelector({
   locales = [],

@@ -21,7 +21,7 @@ const enabled = featureFlagsConfig.enablePersonalAccountBilling;
  * @description Creates a checkout session for a personal account.
  */
 export const createPersonalAccountCheckoutSession = authActionClient
-  .inputSchema(PersonalAccountCheckoutSchema)
+  .schema(PersonalAccountCheckoutSchema)
   .action(async ({ parsedInput: data }) => {
     if (!enabled) {
       throw new Error('Personal account billing is not enabled');

@@ -7,8 +7,6 @@
  * 2. Multiple files: messages/${locale}/*.json (namespaces in separate files for lazy loading)
  *
  */
-import { cookies } from 'next/headers';
-
 import { getRequestConfig } from 'next-intl/server';
 
 import { routing } from '@kit/i18n/routing';
@@ -31,11 +29,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   // Validate that the locale is supported, fallback to default if not
   if (!locale || !routing.locales.includes(locale as never)) {
-    // TODO: remove when using middleware
-    const cookieStore = await cookies();
-    const lang = cookieStore.get('lang')?.value;
-
-    locale = lang || routing.defaultLocale;
+    locale = routing.defaultLocale;
   }
 
   // Load all namespace files and merge them
