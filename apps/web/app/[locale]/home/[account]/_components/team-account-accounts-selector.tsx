@@ -32,7 +32,16 @@ export function TeamAccountAccountsSelector(params: {
       userId={params.userId}
       collapsed={!ctx?.open}
       features={features}
+      showPersonalAccount={!featureFlagsConfig.enableTeamsOnly}
       onAccountChange={(value) => {
+        if (!value && featureFlagsConfig.enableTeamsOnly) {
+          return;
+        }
+
+        if (value) {
+          document.cookie = `last-selected-team=${encodeURIComponent(value)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+        }
+
         const path = value
           ? pathsConfig.app.accountHome.replace('[account]', value)
           : pathsConfig.app.home;

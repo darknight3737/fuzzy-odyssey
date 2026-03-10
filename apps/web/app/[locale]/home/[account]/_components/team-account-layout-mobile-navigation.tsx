@@ -169,12 +169,15 @@ function TeamAccountsModal(props: {
         <div className={'py-6'}>
           <AccountSelector
             className={'w-full max-w-full'}
-            collisionPadding={0}
             userId={props.userId}
             accounts={props.accounts}
             features={features}
             selectedAccount={props.account}
             onAccountChange={(value) => {
+              if (value) {
+                document.cookie = `last-selected-team=${encodeURIComponent(value)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+              }
+
               const path = value
                 ? pathsConfig.app.accountHome.replace('[account]', value)
                 : pathsConfig.app.home;

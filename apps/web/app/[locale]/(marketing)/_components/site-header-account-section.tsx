@@ -31,6 +31,7 @@ const MobileModeToggle = dynamic(
 
 const paths = {
   home: pathsConfig.app.home,
+  profileSettings: pathsConfig.app.personalAccountSettings,
 };
 
 const features = {

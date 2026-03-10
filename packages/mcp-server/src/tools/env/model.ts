@@ -376,6 +376,16 @@ export const envVariables: EnvVariableModel[] = [
     },
   },
   {
+    name: 'NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_ONLY',
+    displayName: 'Enable Team Accounts Only and disable persoanl accounts.',
+    description: 'Force disable personal accounts for pure B2B SaaS',
+    category: 'Features',
+    type: 'boolean',
+    validate: ({ value }) => {
+      return z.coerce.boolean().optional().safeParse(value);
+    },
+  },
+  {
     name: 'NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_CREATION',
     displayName: 'Enable Team Account Creation',
     description: 'Controls ability to create new team accounts.',

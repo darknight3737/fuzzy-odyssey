@@ -65,6 +65,7 @@ export function TeamAccountNavigationMenu(props: {
           <ProfileAccountDropdownContainer
             user={user}
             showProfileName={false}
+            accountSlug={account.slug}
           />
         </div>
       </div>

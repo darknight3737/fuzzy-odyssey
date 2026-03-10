@@ -38,6 +38,9 @@ const FeatureFlagsSchema = z.object({
   enableVersionUpdater: z.boolean({
     error: 'Provide the variable NEXT_PUBLIC_ENABLE_VERSION_UPDATER',
   }),
+  enableTeamsOnly: z.boolean({
+    error: 'Provide the variable NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_ONLY',
+  }),
 });
 
 const featuresFlagConfig = FeatureFlagsSchema.parse({
@@ -81,6 +84,10 @@ const featuresFlagConfig = FeatureFlagsSchema.parse({
   ),
   enableVersionUpdater: getBoolean(
     process.env.NEXT_PUBLIC_ENABLE_VERSION_UPDATER,
+    false,
+  ),
+  enableTeamsOnly: getBoolean(
+    process.env.NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_ONLY,
     false,
   ),
 } satisfies z.output<typeof FeatureFlagsSchema>);

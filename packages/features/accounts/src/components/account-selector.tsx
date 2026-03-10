@@ -39,7 +39,7 @@ interface AccountSelectorProps {
   selectedAccount?: string;
   collapsed?: boolean;
   className?: string;
-  collisionPadding?: number;
+  showPersonalAccount?: boolean;
 
   onAccountChange: (value: string | undefined) => void;
 }
@@ -56,7 +56,7 @@ export function AccountSelector({
     enableTeamCreation: true,
   },
   collapsed = false,
-  collisionPadding: _collisionPadding = 20,
+  showPersonalAccount = true,
 }: React.PropsWithChildren<AccountSelectorProps>) {
   const [open, setOpen] = useState<boolean>(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState<boolean>(false);
@@ -152,26 +152,30 @@ export function AccountSelector({
             <CommandInput placeholder={t('searchAccount')} className="h-9" />
 
             <CommandList>
-              <CommandGroup>
-                <CommandItem
-                  tabIndex={0}
-                  value={PERSONAL_ACCOUNT_SLUG}
-                  onSelect={() => onAccountChange(undefined)}
-                  className={cn('', {
-                    'bg-muted': value === PERSONAL_ACCOUNT_SLUG,
-                    'data-selected:hover:bg-muted/50 data-selected:bg-transparent':
-                      value !== PERSONAL_ACCOUNT_SLUG,
-                  })}
-                >
-                  <PersonalAccountAvatar />
+              {showPersonalAccount && (
+                <>
+                  <CommandGroup>
+                    <CommandItem
+                      tabIndex={0}
+                      value={PERSONAL_ACCOUNT_SLUG}
+                      onSelect={() => onAccountChange(undefined)}
+                      className={cn('', {
+                        'bg-muted': value === PERSONAL_ACCOUNT_SLUG,
+                        'data-selected:hover:bg-muted/50 data-selected:bg-transparent':
+                          value !== PERSONAL_ACCOUNT_SLUG,
+                      })}
+                    >
+                      <PersonalAccountAvatar />
 
-                  <span className={'ml-2'}>
-                    <Trans i18nKey={'teams.personalAccount'} />
-                  </span>
-                </CommandItem>
-              </CommandGroup>
+                      <span className={'ml-2'}>
+                        <Trans i18nKey={'teams.personalAccount'} />
+                      </span>
+                    </CommandItem>
+                  </CommandGroup>
 
-              <CommandSeparator />
+                  <CommandSeparator />
+                </>
+              )}
 
               <If condition={accounts.length > 0}>
                 <CommandGroup
