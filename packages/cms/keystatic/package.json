@@ -1,19 +1,23 @@
 {
   "name": "@kit/keystatic",
-  "private": true,
   "version": "0.1.0",
-  "scripts": {
-    "clean": "git clean -xdf .turbo node_modules",
-    "format": "prettier --check \"**/*.{ts,tsx}\"",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+  "private": true,
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
   },
-  "prettier": "@kit/prettier-config",
   "exports": {
     ".": "./src/index.ts",
     "./renderer": "./src/content-renderer.tsx",
     "./admin": "./src/keystatic-admin.tsx",
     "./route-handler": "./src/keystatic-route-handler.ts"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@keystatic/core": "0.5.48",
@@ -22,20 +26,11 @@
   },
   "devDependencies": {
     "@kit/cms-types": "workspace:*",
-    "@kit/eslint-config": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@kit/ui": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
     "zod": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "*": [
-        "src/*"
-      ]
-    }
   }
 }

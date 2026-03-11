@@ -1,8 +1,7 @@
 import 'server-only';
+import { DatabaseTool } from '@kit/mcp-server/database';
 
 import { relative } from 'path';
-
-import { DatabaseTool } from '@kit/mcp-server/database';
 
 export interface DatabaseTable {
   name: string;

@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import type {
   KitTranslationsAddLocaleInput,
   KitTranslationsAddLocaleSuccess,
@@ -14,6 +12,8 @@ import type {
   KitTranslationsUpdateInput,
   KitTranslationsUpdateSuccess,
 } from './schema';
+
+import path from 'node:path';
 
 export interface KitTranslationsDeps {
   rootPath: string;

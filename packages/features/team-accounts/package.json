@@ -1,12 +1,13 @@
 {
   "name": "@kit/team-accounts",
-  "private": true,
   "version": "0.1.0",
-  "scripts": {
-    "clean": "git clean -xdf .turbo node_modules",
-    "format": "prettier --check \"**/*.{ts,tsx}\"",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+  "private": true,
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
   },
   "exports": {
     "./api": "./src/server/api.ts",
@@ -16,6 +17,10 @@
     "./policies": "./src/server/policies/index.ts",
     "./services/account-invitations.service": "./src/server/services/account-invitations.service.ts"
   },
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "nanoid": "^5.1.6"
   },
@@ -24,13 +29,11 @@
     "@kit/accounts": "workspace:*",
     "@kit/billing-gateway": "workspace:*",
     "@kit/email-templates": "workspace:*",
-    "@kit/eslint-config": "workspace:*",
     "@kit/mailers": "workspace:*",
     "@kit/monitoring": "workspace:*",
     "@kit/next": "workspace:*",
     "@kit/otp": "workspace:*",
     "@kit/policies": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
     "@kit/shared": "workspace:*",
     "@kit/supabase": "workspace:*",
     "@kit/tsconfig": "workspace:*",
@@ -50,13 +53,5 @@
     "react-dom": "catalog:",
     "react-hook-form": "catalog:",
     "zod": "catalog:"
-  },
-  "prettier": "@kit/prettier-config",
-  "typesVersions": {
-    "*": {
-      "*": [
-        "src/*"
-      ]
-    }
   }
 }

@@ -1,5 +1,4 @@
 import 'server-only';
-
 import * as z from 'zod';
 
 export const SmtpConfigSchema = z.object({

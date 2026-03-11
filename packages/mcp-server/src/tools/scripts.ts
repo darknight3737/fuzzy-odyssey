@@ -1,7 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import * as z from 'zod/v3';
+
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import * as z from 'zod/v3';
 
 interface ScriptInfo {
   name: string;
@@ -93,7 +94,7 @@ export class ScriptsTool {
       lint: {
         category: 'linting',
         description:
-          'Run ESLint to check code quality and enforce coding standards',
+          'Run Oxlint to check code quality and enforce coding standards',
         usage:
           'CRITICAL: Run after writing code to ensure code quality. Must pass before commits.',
         importance: 'medium',
@@ -102,7 +103,7 @@ export class ScriptsTool {
       'lint:fix': {
         category: 'linting',
         description:
-          'Run ESLint with auto-fix to automatically resolve fixable issues',
+          'Run Oxlint with auto-fix to automatically resolve fixable issues',
         usage:
           'Use to automatically fix linting issues. Run before manual fixes.',
         importance: 'high',
@@ -110,14 +111,14 @@ export class ScriptsTool {
       },
       format: {
         category: 'linting',
-        description: 'Check code formatting with Prettier across all files',
+        description: 'Check code formatting with Oxfmt across all files',
         usage: 'Verify code follows consistent formatting standards.',
         importance: 'high',
       },
       'format:fix': {
         category: 'linting',
         description:
-          'Auto-format all code with Prettier to ensure consistent styling',
+          'Auto-format all code with Oxfmt to ensure consistent styling',
         usage: 'Use to automatically format code. Run before commits.',
         importance: 'high',
         healthcheck: true,

@@ -42,7 +42,11 @@ file_size_limit = "50MiB"
 # in emails.
 site_url = "http://localhost:3000"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["http://localhost:3000", "http://localhost:3000/auth/callback", "http://localhost:3000/update-password"]
+additional_redirect_urls = [
+  "http://localhost:3000",
+  "http://localhost:3000/auth/callback",
+  "http://localhost:3000/update-password",
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 seconds (one
 # week).
 jwt_expiry = 3600
@@ -106,9 +110,7 @@ port = 54327
 backend = "postgres"
 
 [db.migrations]
-schema_paths = [
-  "./schemas/*.sql",
-]
+schema_paths = ["./schemas/*.sql"]
 
 [db.seed]
 sql_paths = ['seed.sql', './seeds/*.sql']

@@ -1,5 +1,3 @@
-import { join } from 'node:path';
-
 import type {
   DbTool,
   KitDbMigrateInput,
@@ -9,6 +7,8 @@ import type {
   KitDbSeedOutput,
   KitDbStatusOutput,
 } from './schema';
+
+import { join } from 'node:path';
 
 type VariantFamily = 'supabase' | 'orm';
 

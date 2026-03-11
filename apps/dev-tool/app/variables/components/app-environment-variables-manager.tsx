@@ -5,9 +5,6 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { envVariables } from '@/app/variables/lib/env-variables-model';
-import { updateEnvironmentVariableAction } from '@/app/variables/lib/server-actions';
-import { EnvModeSelector } from '@/components/env-mode-selector';
 import {
   ChevronsUpDownIcon,
   Copy,
@@ -43,6 +40,10 @@ import { cn } from '@kit/ui/utils';
 
 import { AppEnvState, EnvVariableState } from '../lib/types';
 import { DynamicFormInput } from './dynamic-form-input';
+
+import { envVariables } from '@/app/variables/lib/env-variables-model';
+import { updateEnvironmentVariableAction } from '@/app/variables/lib/server-actions';
+import { EnvModeSelector } from '@/components/env-mode-selector';
 
 export function AppEnvironmentVariablesManager({
   state,

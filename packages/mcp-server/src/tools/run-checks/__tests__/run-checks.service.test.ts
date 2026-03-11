@@ -9,8 +9,6 @@ function createDeps(
   overrides: Partial<RunChecksDeps> = {},
   scripts: Record<string, string> = {
     typecheck: 'tsc --noEmit',
-    'lint:fix': 'eslint . --fix',
-    'format:fix': 'prettier . --write',
     test: 'vitest run',
   },
 ): RunChecksDeps {

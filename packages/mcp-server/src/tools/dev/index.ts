@@ -1,7 +1,4 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { access, readFile } from 'node:fs/promises';
-import { Socket } from 'node:net';
-import { join } from 'node:path';
 
 import {
   execFileAsync,
@@ -25,6 +22,10 @@ import {
   KitMailboxStatusInputSchema,
   KitMailboxStatusOutputSchema,
 } from './schema';
+
+import { access, readFile } from 'node:fs/promises';
+import { Socket } from 'node:net';
+import { join } from 'node:path';
 
 export function registerKitDevTools(server: McpServer, rootPath?: string) {
   const service = createKitDevService(createKitDevDeps(rootPath));

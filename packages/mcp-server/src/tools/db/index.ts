@@ -1,7 +1,4 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { access, readFile, readdir } from 'node:fs/promises';
-import { Socket } from 'node:net';
-import { join } from 'node:path';
 
 import { execFileAsync } from '../../lib/process-utils';
 import { type KitDbServiceDeps, createKitDbService } from './kit-db.service';
@@ -15,6 +12,10 @@ import {
   KitDbStatusInputSchema,
   KitDbStatusOutputSchema,
 } from './schema';
+
+import { access, readFile, readdir } from 'node:fs/promises';
+import { Socket } from 'node:net';
+import { join } from 'node:path';
 
 type TextContent = {
   type: 'text';

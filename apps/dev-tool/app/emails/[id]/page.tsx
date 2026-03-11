@@ -1,7 +1,3 @@
-import { EmailTesterForm } from '@/app/emails/[id]/components/email-tester-form';
-import { EnvModeSelector } from '@/components/env-mode-selector';
-import { IFrame } from '@/components/iframe';
-
 import {
   createKitEmailsDeps,
   createKitEmailsService,
@@ -16,6 +12,10 @@ import {
   DialogTrigger,
 } from '@kit/ui/dialog';
 import { Page, PageBody, PageHeader } from '@kit/ui/page';
+
+import { EmailTesterForm } from '@/app/emails/[id]/components/email-tester-form';
+import { EnvModeSelector } from '@/components/env-mode-selector';
+import { IFrame } from '@/components/iframe';
 
 type EnvMode = 'development' | 'production';
 

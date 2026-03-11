@@ -792,8 +792,7 @@ export function SwitchStory() {
             <h4 className="text-sm font-semibold">Keyboard Navigation</h4>
             <p className="text-muted-foreground text-sm">
               • Tab to focus the switch
-              <br />
-              • Space or Enter to toggle state
+              <br />• Space or Enter to toggle state
               <br />• Arrow keys when part of a radio group
             </p>
           </div>

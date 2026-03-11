@@ -1,19 +1,25 @@
 {
   "name": "@kit/admin",
-  "private": true,
   "version": "0.1.0",
+  "private": true,
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./components/*": "./src/components/*.tsx"
+  },
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",
-    "format": "prettier --check \"**/*.{ts,tsx}\"",
-    "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
-  "prettier": "@kit/prettier-config",
   "devDependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@kit/eslint-config": "workspace:*",
     "@kit/next": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
     "@kit/shared": "workspace:*",
     "@kit/supabase": "workspace:*",
     "@kit/tsconfig": "workspace:*",
@@ -31,16 +37,5 @@
     "react-dom": "catalog:",
     "react-hook-form": "catalog:",
     "zod": "catalog:"
-  },
-  "exports": {
-    ".": "./src/index.ts",
-    "./components/*": "./src/components/*.tsx"
-  },
-  "typesVersions": {
-    "*": {
-      "*": [
-        "src/*"
-      ]
-    }
   }
 }

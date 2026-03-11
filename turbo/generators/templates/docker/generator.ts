@@ -1,4 +1,5 @@
 import type { PlopTypes } from '@turbo/gen';
+
 import { execSync } from 'node:child_process';
 import * as os from 'node:os';
 
@@ -47,7 +48,7 @@ export function createDockerGenerator(plop: PlopTypes.NodePlopAPI) {
       async () => {
         execSync('pnpm i', {
           stdio: 'inherit',
-        })
+        });
 
         execSync('pnpm format:fix', {
           stdio: 'inherit',

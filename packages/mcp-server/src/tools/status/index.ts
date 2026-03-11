@@ -1,7 +1,4 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { access, readFile, stat } from 'node:fs/promises';
-import { Socket } from 'node:net';
-import { join } from 'node:path';
 
 import { execFileAsync } from '../../lib/process-utils';
 import {
@@ -9,6 +6,10 @@ import {
   createKitStatusService,
 } from './kit-status.service';
 import { KitStatusInputSchema, KitStatusOutputSchema } from './schema';
+
+import { access, readFile, stat } from 'node:fs/promises';
+import { Socket } from 'node:net';
+import { join } from 'node:path';
 
 export function registerKitStatusTool(server: McpServer, rootPath?: string) {
   return server.registerTool(

@@ -1,10 +1,11 @@
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
   type KitTranslationsDeps,
   createKitTranslationsService,
 } from '../kit-translations.service';
+
+import path from 'node:path';
 
 function createDeps(
   files: Record<string, string>,

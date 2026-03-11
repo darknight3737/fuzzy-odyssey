@@ -1,5 +1,4 @@
 import 'server-only';
-
 import { StripeServerEnvSchema } from '../schema/stripe-server-env.schema';
 
 const STRIPE_API_VERSION = '2026-02-25.clover';

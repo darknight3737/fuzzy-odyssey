@@ -1,4 +1,5 @@
 import type { PlopTypes } from '@turbo/gen';
+
 import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 
@@ -60,7 +61,7 @@ export function createSetupGenerator(plop: PlopTypes.NodePlopAPI) {
           setupPreCommit({ setupHealthCheck: answers.setupHealthCheck });
 
           return 'Project setup complete. Start developing your project!';
-        } catch (error) {
+        } catch (_error) {
           console.error('Project setup failed. Aborting package generation.');
           process.exit(1);
         }
@@ -76,7 +77,7 @@ function createMakerkitConfig(params: {
   const config = `{
   "projectName": "${params.projectName}",
   "username": "${params.username}"
-}`
+}`;
 
   writeFileSync('.makerkitrc', config, {
     encoding: 'utf-8',
@@ -105,7 +106,7 @@ function setupPreCommit(params: { setupHealthCheck: boolean }) {
     execSync(`chmod +x ${filePath}`, {
       stdio: 'inherit',
     });
-  } catch (error) {
+  } catch (_error) {
     console.error('Pre-commit hook setup failed. Aborting package generation.');
     process.exit(1);
   }

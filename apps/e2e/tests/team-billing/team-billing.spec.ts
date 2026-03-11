@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-import { AuthPageObject } from '../authentication/auth.po';
 import { TeamBillingPageObject } from './team-billing.po';
 
 test.describe('Team Billing', () => {

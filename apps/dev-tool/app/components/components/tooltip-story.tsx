@@ -871,8 +871,7 @@ function TooltipStory() {
             <h4 className="text-sm font-semibold">Keyboard Support</h4>
             <p className="text-muted-foreground text-sm">
               • Tooltips appear on focus and disappear on blur
-              <br />
-              • Escape key dismisses tooltips
+              <br />• Escape key dismisses tooltips
               <br />• Tooltips don't trap focus or interfere with navigation
             </p>
           </div>

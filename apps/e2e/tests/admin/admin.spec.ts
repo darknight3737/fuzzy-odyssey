@@ -351,5 +351,5 @@ async function selectAccount(page: Page, email: string) {
 
   await link.click();
 
-  await page.waitForURL(/\/admin\/accounts\/[^\/]+/);
+  await page.waitForURL(/\/admin\/accounts\/[^/]+/);
 }

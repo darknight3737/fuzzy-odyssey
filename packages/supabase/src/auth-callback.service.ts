@@ -1,5 +1,4 @@
 import 'server-only';
-
 import {
   AuthError,
   type EmailOtpType,

@@ -1,6 +1,4 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 
 import { execFileAsync } from '../../lib/process-utils';
 import {
@@ -8,6 +6,9 @@ import {
   createRunChecksService,
 } from './run-checks.service';
 import { RunChecksInputSchema, RunChecksOutputSchema } from './schema';
+
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 export function registerRunChecksTool(server: McpServer, rootPath?: string) {
   const service = createRunChecksService(createRunChecksDeps(rootPath));

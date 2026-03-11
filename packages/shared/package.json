@@ -1,14 +1,14 @@
 {
   "name": "@kit/shared",
-  "private": true,
   "version": "0.1.0",
-  "scripts": {
-    "clean": "git clean -xdf .turbo node_modules",
-    "format": "prettier --check \"**/*.{ts,tsx}\"",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+  "private": true,
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
   },
-  "prettier": "@kit/prettier-config",
   "exports": {
     "./logger": "./src/logger/index.ts",
     "./utils": "./src/utils.ts",
@@ -17,22 +17,17 @@
     "./registry": "./src/registry/index.ts",
     "./env": "./src/env/index.ts"
   },
-  "devDependencies": {
-    "@kit/eslint-config": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
-    "@kit/tsconfig": "workspace:*",
-    "@types/node": "catalog:",
-    "@types/react": "catalog:"
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next-runtime-env": "catalog:",
     "pino": "catalog:"
   },
-  "typesVersions": {
-    "*": {
-      "*": [
-        "src/*"
-      ]
-    }
+  "devDependencies": {
+    "@kit/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:"
   }
 }

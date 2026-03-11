@@ -1,9 +1,9 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-
 import { envVariables } from './model';
 import { getEnvState } from './scanner';
 import type { EnvMode, ScanFs } from './types';
+
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 export interface KitEnvDeps {
   rootPath: string;

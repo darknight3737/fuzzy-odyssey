@@ -1,8 +1,8 @@
-import path from 'node:path';
-
 import { EMAIL_TEMPLATE_RENDERERS } from '@kit/email-templates/registry';
 
 import type { KitEmailsListOutput, KitEmailsReadOutput } from './schema';
+
+import path from 'node:path';
 
 export interface KitEmailsDeps {
   rootPath: string;

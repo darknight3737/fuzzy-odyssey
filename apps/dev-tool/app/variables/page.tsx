@@ -1,7 +1,5 @@
 import { use } from 'react';
 
-import { EnvMode } from '@/app/variables/lib/types';
-
 import {
   createKitEnvDeps,
   createKitEnvService,
@@ -10,6 +8,8 @@ import {
 import { Page, PageBody, PageHeader } from '@kit/ui/page';
 
 import { AppEnvironmentVariablesManager } from './components/app-environment-variables-manager';
+
+import { EnvMode } from '@/app/variables/lib/types';
 
 type VariablesPageProps = {
   searchParams: Promise<{ mode?: EnvMode }>;
