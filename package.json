@@ -1,6 +1,6 @@
 {
   "name": "next-supabase-saas-kit-turbo",
-  "version": "3.0.0-6",
+  "version": "3.0.0-7",
   "private": true,
   "sideEffects": false,
   "engines": {
