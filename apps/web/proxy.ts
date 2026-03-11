@@ -1,7 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { CsrfError, createCsrfProtect } from '@edge-csrf/nextjs';
 import createNextIntlMiddleware from 'next-intl/middleware';
 
 import { isSuperAdmin } from '@kit/admin';
@@ -10,10 +9,8 @@ import { getSafeRedirectPath } from '@kit/shared/utils';
 import { checkRequiresMultiFactorAuthentication } from '@kit/supabase/check-requires-mfa';
 import { createMiddlewareClient } from '@kit/supabase/middleware-client';
 
-import appConfig from '~/config/app.config';
 import pathsConfig from '~/config/paths.config';
 
-const CSRF_SECRET_COOKIE = 'csrfSecret';
 const NEXT_ACTION_HEADER = 'next-action';
 
 export const config = {
@@ -40,15 +37,15 @@ export default async function proxy(request: NextRequest) {
   // this helps us log and trace requests
   setRequestId(request);
 
-  // apply CSRF protection for mutating requests
-  const csrfResponse = await withCsrfMiddleware(request, secureHeadersResponse);
-
   // handle patterns for specific routes
   const handlePattern = await matchUrlPattern(request.url);
 
   // if a pattern handler exists, call it
   if (handlePattern) {
-    const patternHandlerResponse = await handlePattern(request, csrfResponse);
+    const patternHandlerResponse = await handlePattern(
+      request,
+      secureHeadersResponse,
+    );
 
     // if a pattern handler returns a response, return it
     if (patternHandlerResponse) {
@@ -59,45 +56,15 @@ export default async function proxy(request: NextRequest) {
   // append the action path to the request headers
   // which is useful for knowing the action path in server actions
   if (isServerAction(request)) {
-    csrfResponse.headers.set('x-action-path', request.nextUrl.pathname);
+    secureHeadersResponse.headers.set(
+      'x-action-path',
+      request.nextUrl.pathname,
+    );
   }
 
   // if no pattern handler returned a response,
   // return the session response
-  return csrfResponse;
-}
-
-async function withCsrfMiddleware(
-  request: NextRequest,
-  response: NextResponse,
-) {
-  // set up CSRF protection
-  const csrfProtect = createCsrfProtect({
-    cookie: {
-      secure: appConfig.production,
-      name: CSRF_SECRET_COOKIE,
-    },
-    // ignore CSRF errors for server actions since protection is built-in
-    ignoreMethods: isServerAction(request)
-      ? ['POST']
-      : // always ignore GET, HEAD, and OPTIONS requests
-        ['GET', 'HEAD', 'OPTIONS'],
-  });
-
-  try {
-    await csrfProtect(request, response);
-
-    return response;
-  } catch (error) {
-    // if there is a CSRF error, return a 403 response
-    if (error instanceof CsrfError) {
-      return NextResponse.json('Invalid CSRF token', {
-        status: 403,
-      });
-    }
-
-    throw error;
-  }
+  return secureHeadersResponse;
 }
 
 function isServerAction(request: NextRequest) {
@@ -212,11 +179,8 @@ async function getPatterns() {
  * Match URL patterns to specific handlers.
  * @param url
  */
-let cachedPatterns: Awaited<ReturnType<typeof getPatterns>> | null = null;
-
 async function matchUrlPattern(url: string) {
-  cachedPatterns ??= await getPatterns();
-  const patterns = cachedPatterns;
+  const patterns = await getPatterns();
   const input = url.split('?')[0];
 
   for (const pattern of patterns) {

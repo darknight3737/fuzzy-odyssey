@@ -40,3 +40,9 @@ onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - '@sentry/cli'
   - supabase
+
+minimumReleaseAgeExclude:
+  - oxfmt
+  - '@oxfmt/*'
+  - oxlint
+  - '@oxlint/*'
