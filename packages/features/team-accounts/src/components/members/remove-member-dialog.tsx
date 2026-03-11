@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from '@kit/ui/alert-dialog';
 import { Button } from '@kit/ui/button';
+import { useAsyncDialog } from '@kit/ui/hooks/use-async-dialog';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
@@ -29,8 +30,16 @@ export function RemoveMemberDialog({
   teamAccountId: string;
   userId: string;
 }) {
+  const { dialogProps, isPending, setIsPending, setOpen } = useAsyncDialog({
+    open,
+    onOpenChange,
+  });
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog
+      open={dialogProps.open}
+      onOpenChange={dialogProps.onOpenChange}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -45,7 +54,12 @@ export function RemoveMemberDialog({
         <RemoveMemberForm
           accountId={teamAccountId}
           userId={userId}
-          onSuccess={() => onOpenChange(false)}
+          isPending={isPending}
+          setIsPending={setIsPending}
+          onSuccess={() => {
+            setIsPending(false);
+            setOpen(false);
+          }}
         />
       </AlertDialogContent>
     </AlertDialog>
@@ -55,18 +69,21 @@ export function RemoveMemberDialog({
 function RemoveMemberForm({
   accountId,
   userId,
+  isPending,
+  setIsPending,
   onSuccess,
 }: {
   accountId: string;
   userId: string;
+  isPending: boolean;
+  setIsPending: (pending: boolean) => void;
   onSuccess: () => void;
 }) {
-  const { execute, isPending, hasErrored } = useAction(
-    removeMemberFromAccountAction,
-    {
-      onSuccess: () => onSuccess(),
-    },
-  );
+  const { execute, hasErrored } = useAction(removeMemberFromAccountAction, {
+    onExecute: () => setIsPending(true),
+    onSuccess: () => onSuccess(),
+    onSettled: () => setIsPending(false),
+  });
 
   return (
     <form
@@ -85,11 +102,12 @@ function RemoveMemberForm({
         </If>
 
         <AlertDialogFooter>
-          <AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>
             <Trans i18nKey={'common.cancel'} />
           </AlertDialogCancel>
 
           <Button
+            type={'submit'}
             data-test={'confirm-remove-member'}
             variant={'destructive'}
             disabled={isPending}

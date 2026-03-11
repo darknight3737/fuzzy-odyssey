@@ -23,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@kit/ui/form';
+import { useAsyncDialog } from '@kit/ui/hooks/use-async-dialog';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
@@ -46,9 +47,14 @@ export function UpdateInvitationDialog({
   userRole: Role;
   userRoleHierarchy: number;
 }) {
+  const { dialogProps, isPending, setIsPending, setOpen } = useAsyncDialog({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+  });
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent>
+    <Dialog {...dialogProps}>
+      <DialogContent showCloseButton={!isPending}>
         <DialogHeader>
           <DialogTitle>
             <Trans i18nKey={'teams.updateMemberRoleModalHeading'} />
@@ -63,7 +69,12 @@ export function UpdateInvitationDialog({
           invitationId={invitationId}
           userRole={userRole}
           userRoleHierarchy={userRoleHierarchy}
-          setIsOpen={setIsOpen}
+          isPending={isPending}
+          setIsPending={setIsPending}
+          onSuccess={() => {
+            setIsPending(false);
+            setOpen(false);
+          }}
         />
       </DialogContent>
     </Dialog>
@@ -74,17 +85,23 @@ function UpdateInvitationForm({
   invitationId,
   userRole,
   userRoleHierarchy,
-  setIsOpen,
+  isPending,
+  setIsPending,
+  onSuccess,
 }: React.PropsWithChildren<{
   invitationId: number;
   userRole: Role;
   userRoleHierarchy: number;
-  setIsOpen: (isOpen: boolean) => void;
+  isPending: boolean;
+  setIsPending: (pending: boolean) => void;
+  onSuccess: () => void;
 }>) {
   const t = useTranslations('teams');
 
-  const { execute, isPending, hasErrored } = useAction(updateInvitationAction, {
-    onSuccess: () => setIsOpen(false),
+  const { execute, hasErrored } = useAction(updateInvitationAction, {
+    onExecute: () => setIsPending(true),
+    onSuccess: () => onSuccess(),
+    onSettled: () => setIsPending(false),
   });
 
   const form = useForm({

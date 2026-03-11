@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from '@kit/ui/alert-dialog';
 import { Button } from '@kit/ui/button';
+import { useAsyncDialog } from '@kit/ui/hooks/use-async-dialog';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
@@ -29,8 +30,16 @@ export function RenewInvitationDialog({
   invitationId: number;
   email: string;
 }) {
+  const { dialogProps, isPending, setIsPending, setOpen } = useAsyncDialog({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+  });
+
   return (
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+    <AlertDialog
+      open={dialogProps.open}
+      onOpenChange={dialogProps.onOpenChange}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -46,8 +55,13 @@ export function RenewInvitationDialog({
         </AlertDialogHeader>
 
         <RenewInvitationForm
-          setIsOpen={setIsOpen}
           invitationId={invitationId}
+          isPending={isPending}
+          setIsPending={setIsPending}
+          onSuccess={() => {
+            setIsPending(false);
+            setOpen(false);
+          }}
         />
       </AlertDialogContent>
     </AlertDialog>
@@ -56,13 +70,19 @@ export function RenewInvitationDialog({
 
 function RenewInvitationForm({
   invitationId,
-  setIsOpen,
+  isPending,
+  setIsPending,
+  onSuccess,
 }: {
   invitationId: number;
-  setIsOpen: (isOpen: boolean) => void;
+  isPending: boolean;
+  setIsPending: (pending: boolean) => void;
+  onSuccess: () => void;
 }) {
-  const { execute, isPending, hasErrored } = useAction(renewInvitationAction, {
-    onSuccess: () => setIsOpen(false),
+  const { execute, hasErrored } = useAction(renewInvitationAction, {
+    onExecute: () => setIsPending(true),
+    onSuccess: () => onSuccess(),
+    onSettled: () => setIsPending(false),
   });
 
   return (
@@ -82,11 +102,15 @@ function RenewInvitationForm({
         </If>
 
         <AlertDialogFooter>
-          <AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>
             <Trans i18nKey={'common.cancel'} />
           </AlertDialogCancel>
 
-          <Button data-test={'confirm-renew-invitation'} disabled={isPending}>
+          <Button
+            type={'submit'}
+            data-test={'confirm-renew-invitation'}
+            disabled={isPending}
+          >
             <Trans i18nKey={'teams.renewInvitation'} />
           </Button>
         </AlertDialogFooter>

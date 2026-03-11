@@ -1,7 +1,5 @@
 'use client';
 
-import { useRef, useState } from 'react';
-
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { Mail, Plus, X } from 'lucide-react';
@@ -26,6 +24,7 @@ import {
   FormItem,
   FormMessage,
 } from '@kit/ui/form';
+import { useAsyncDialog } from '@kit/ui/hooks/use-async-dialog';
 import { If } from '@kit/ui/if';
 import {
   InputGroup,
@@ -65,30 +64,24 @@ export function InviteMembersDialogContainer({
   accountSlug: string;
   userRoleHierarchy: number;
 }>) {
-  const [isOpen, setIsOpen] = useState(false);
+  const { dialogProps, isPending, setIsPending, setOpen } = useAsyncDialog();
   const t = useTranslations('teams');
-  const toastId = useRef<string | number>('');
 
-  const { execute, isPending } = useAction(createInvitationsAction, {
-    onExecute: () => {
-      toastId.current = toast.loading(t('invitingMembers'));
-    },
+  const { execute } = useAction(createInvitationsAction, {
+    onExecute: () => setIsPending(true),
     onSuccess: ({ data }) => {
       if (data?.success) {
-        toast.success(t('inviteMembersSuccessMessage'), {
-          id: toastId.current,
-        });
+        toast.success(t('inviteMembersSuccessMessage'));
       } else {
-        toast.error(t('inviteMembersErrorMessage'), {
-          id: toastId.current,
-        });
+        toast.error(t('inviteMembersErrorMessage'));
       }
-
-      setIsOpen(false);
     },
     onError: () => {
-      toast.error(t('inviteMembersErrorMessage'), { id: toastId.current });
-      setIsOpen(false);
+      toast.error(t('inviteMembersErrorMessage'));
+    },
+    onSettled: () => {
+      setIsPending(false);
+      setOpen(false);
     },
   });
 
@@ -97,13 +90,13 @@ export function InviteMembersDialogContainer({
     data: policiesResult,
     isLoading: isLoadingPolicies,
     error: policiesError,
-  } = useFetchInvitationsPolicies({ accountSlug, isOpen });
+  } = useFetchInvitationsPolicies({ accountSlug, isOpen: dialogProps.open });
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen} disablePointerDismissal>
+    <Dialog {...dialogProps}>
       <DialogTrigger render={children as React.ReactElement} />
 
-      <DialogContent>
+      <DialogContent showCloseButton={!isPending}>
         <DialogHeader>
           <DialogTitle>
             <Trans i18nKey={'teams.inviteMembersHeading'} />

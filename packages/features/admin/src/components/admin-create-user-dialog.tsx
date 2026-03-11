@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
@@ -28,6 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@kit/ui/form';
+import { useAsyncDialog } from '@kit/ui/hooks/use-async-dialog';
 import { If } from '@kit/ui/if';
 import { Input } from '@kit/ui/input';
 import { toast } from '@kit/ui/sonner';
@@ -39,7 +38,7 @@ import {
 } from '../lib/server/schema/create-user.schema';
 
 export function AdminCreateUserDialog(props: React.PropsWithChildren) {
-  const [open, setOpen] = useState(false);
+  const { dialogProps, isPending, setIsPending, setOpen } = useAsyncDialog();
 
   const form = useForm({
     resolver: zodResolver(CreateUserSchema),
@@ -51,18 +50,24 @@ export function AdminCreateUserDialog(props: React.PropsWithChildren) {
     mode: 'onChange',
   });
 
-  const { execute, isPending, result } = useAction(createUserAction, {
+  const { execute, result } = useAction(createUserAction, {
+    onExecute: () => setIsPending(true),
     onSuccess: () => {
       toast.success('User created successfully');
       form.reset();
+      setIsPending(false);
       setOpen(false);
     },
+    onSettled: () => setIsPending(false),
   });
 
   const error = result.serverError;
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog
+      open={dialogProps.open}
+      onOpenChange={dialogProps.onOpenChange}
+    >
       <AlertDialogTrigger render={props.children as React.ReactElement} />
 
       <AlertDialogContent>
@@ -156,7 +161,7 @@ export function AdminCreateUserDialog(props: React.PropsWithChildren) {
             />
 
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
 
               <Button disabled={isPending} type={'submit'}>
                 {isPending ? 'Creating...' : 'Create User'}

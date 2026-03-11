@@ -18,6 +18,7 @@ import {
 } from '@kit/ui/alert-dialog';
 import { Button } from '@kit/ui/button';
 import { Form } from '@kit/ui/form';
+import { useAsyncDialog } from '@kit/ui/hooks/use-async-dialog';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
@@ -37,8 +38,16 @@ export function TransferOwnershipDialog({
   userId: string;
   targetDisplayName: string;
 }) {
+  const { dialogProps, isPending, setIsPending, setOpen } = useAsyncDialog({
+    open,
+    onOpenChange,
+  });
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog
+      open={dialogProps.open}
+      onOpenChange={dialogProps.onOpenChange}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -54,7 +63,12 @@ export function TransferOwnershipDialog({
           accountId={accountId}
           userId={userId}
           targetDisplayName={targetDisplayName}
-          onSuccess={() => onOpenChange(false)}
+          isPending={isPending}
+          setIsPending={setIsPending}
+          onSuccess={() => {
+            setIsPending(false);
+            setOpen(false);
+          }}
         />
       </AlertDialogContent>
     </AlertDialog>
@@ -65,21 +79,24 @@ function TransferOrganizationOwnershipForm({
   accountId,
   userId,
   targetDisplayName,
+  isPending,
+  setIsPending,
   onSuccess,
 }: {
   userId: string;
   accountId: string;
   targetDisplayName: string;
+  isPending: boolean;
+  setIsPending: (pending: boolean) => void;
   onSuccess: () => unknown;
 }) {
   const { data: user } = useUser();
 
-  const { execute, isPending, hasErrored } = useAction(
-    transferOwnershipAction,
-    {
-      onSuccess: () => onSuccess(),
-    },
-  );
+  const { execute, hasErrored } = useAction(transferOwnershipAction, {
+    onExecute: () => setIsPending(true),
+    onSuccess: () => onSuccess(),
+    onSettled: () => setIsPending(false),
+  });
 
   const form = useForm({
     resolver: zodResolver(TransferOwnershipConfirmationSchema),
@@ -103,7 +120,7 @@ function TransferOrganizationOwnershipForm({
             form.setValue('otp', otpValue, { shouldValidate: true });
           }}
           CancelButton={
-            <AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>
               <Trans i18nKey={'common.cancel'} />
             </AlertDialogCancel>
           }
@@ -146,7 +163,7 @@ function TransferOrganizationOwnershipForm({
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>
             <Trans i18nKey={'common.cancel'} />
           </AlertDialogCancel>
 

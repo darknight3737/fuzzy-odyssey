@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
@@ -27,6 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@kit/ui/form';
+import { useAsyncDialog } from '@kit/ui/hooks/use-async-dialog';
 import { If } from '@kit/ui/if';
 import { Input } from '@kit/ui/input';
 
@@ -38,10 +37,13 @@ export function AdminBanUserDialog(
     userId: string;
   }>,
 ) {
-  const [open, setOpen] = useState(false);
+  const { dialogProps, isPending, setIsPending, setOpen } = useAsyncDialog();
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog
+      open={dialogProps.open}
+      onOpenChange={dialogProps.onOpenChange}
+    >
       <AlertDialogTrigger render={props.children as React.ReactElement} />
 
       <AlertDialogContent>
@@ -54,15 +56,30 @@ export function AdminBanUserDialog(
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <BanUserForm userId={props.userId} onSuccess={() => setOpen(false)} />
+        <BanUserForm
+          userId={props.userId}
+          isPending={isPending}
+          setIsPending={setIsPending}
+          onSuccess={() => {
+            setIsPending(false);
+            setOpen(false);
+          }}
+        />
       </AlertDialogContent>
     </AlertDialog>
   );
 }
 
-function BanUserForm(props: { userId: string; onSuccess: () => void }) {
-  const { execute, isPending, hasErrored } = useAction(banUserAction, {
+function BanUserForm(props: {
+  userId: string;
+  isPending: boolean;
+  setIsPending: (pending: boolean) => void;
+  onSuccess: () => void;
+}) {
+  const { execute, hasErrored } = useAction(banUserAction, {
+    onExecute: () => props.setIsPending(true),
     onSuccess: () => props.onSuccess(),
+    onSettled: () => props.setIsPending(false),
   });
 
   const form = useForm({
@@ -118,10 +135,16 @@ function BanUserForm(props: { userId: string; onSuccess: () => void }) {
         />
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={props.isPending}>
+            Cancel
+          </AlertDialogCancel>
 
-          <Button disabled={isPending} type={'submit'} variant={'destructive'}>
-            {isPending ? 'Banning...' : 'Ban User'}
+          <Button
+            disabled={props.isPending}
+            type={'submit'}
+            variant={'destructive'}
+          >
+            {props.isPending ? 'Banning...' : 'Ban User'}
           </Button>
         </AlertDialogFooter>
       </form>

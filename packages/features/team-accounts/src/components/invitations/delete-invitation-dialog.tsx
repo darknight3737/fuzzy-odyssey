@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from '@kit/ui/alert-dialog';
 import { Button } from '@kit/ui/button';
+import { useAsyncDialog } from '@kit/ui/hooks/use-async-dialog';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
@@ -27,8 +28,16 @@ export function DeleteInvitationDialog({
   setIsOpen: (isOpen: boolean) => void;
   invitationId: number;
 }) {
+  const { dialogProps, isPending, setIsPending, setOpen } = useAsyncDialog({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+  });
+
   return (
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+    <AlertDialog
+      open={dialogProps.open}
+      onOpenChange={dialogProps.onOpenChange}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -41,8 +50,13 @@ export function DeleteInvitationDialog({
         </AlertDialogHeader>
 
         <DeleteInvitationForm
-          setIsOpen={setIsOpen}
           invitationId={invitationId}
+          isPending={isPending}
+          setIsPending={setIsPending}
+          onSuccess={() => {
+            setIsPending(false);
+            setOpen(false);
+          }}
         />
       </AlertDialogContent>
     </AlertDialog>
@@ -51,13 +65,19 @@ export function DeleteInvitationDialog({
 
 function DeleteInvitationForm({
   invitationId,
-  setIsOpen,
+  isPending,
+  setIsPending,
+  onSuccess,
 }: {
   invitationId: number;
-  setIsOpen: (isOpen: boolean) => void;
+  isPending: boolean;
+  setIsPending: (pending: boolean) => void;
+  onSuccess: () => void;
 }) {
-  const { execute, isPending, hasErrored } = useAction(deleteInvitationAction, {
-    onSuccess: () => setIsOpen(false),
+  const { execute, hasErrored } = useAction(deleteInvitationAction, {
+    onExecute: () => setIsPending(true),
+    onSuccess: () => onSuccess(),
+    onSettled: () => setIsPending(false),
   });
 
   return (
@@ -78,7 +98,7 @@ function DeleteInvitationForm({
         </If>
 
         <AlertDialogFooter>
-          <AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>
             <Trans i18nKey={'common.cancel'} />
           </AlertDialogCancel>
 
