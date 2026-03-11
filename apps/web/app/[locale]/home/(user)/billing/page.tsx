@@ -54,53 +54,51 @@ async function PersonalAccountBillingPage() {
   const hasBillingData = subscription || order;
 
   return (
-    <>
+    <PageBody>
       <HomeLayoutPageHeader
         title={<Trans i18nKey={'common.routes.billing'} />}
         description={<AppBreadcrumbs />}
       />
 
-      <PageBody>
-        <div className={'flex max-w-2xl flex-col space-y-4'}>
-          <If
-            condition={hasBillingData}
-            fallback={
-              <>
-                <PersonalAccountCheckoutForm customerId={customerId} />
-              </>
-            }
-          >
-            <div className={'flex w-full flex-col space-y-6'}>
-              <If condition={subscription}>
-                {(subscription) => {
-                  return (
-                    <CurrentSubscriptionCard
-                      subscription={subscription}
-                      product={subscriptionProductPlan!.product}
-                      plan={subscriptionProductPlan!.plan}
-                    />
-                  );
-                }}
-              </If>
+      <div className={'flex max-w-2xl flex-col space-y-4'}>
+        <If
+          condition={hasBillingData}
+          fallback={
+            <>
+              <PersonalAccountCheckoutForm customerId={customerId} />
+            </>
+          }
+        >
+          <div className={'flex w-full flex-col space-y-6'}>
+            <If condition={subscription}>
+              {(subscription) => {
+                return (
+                  <CurrentSubscriptionCard
+                    subscription={subscription}
+                    product={subscriptionProductPlan!.product}
+                    plan={subscriptionProductPlan!.plan}
+                  />
+                );
+              }}
+            </If>
 
-              <If condition={order}>
-                {(order) => {
-                  return (
-                    <CurrentLifetimeOrderCard
-                      order={order}
-                      product={orderProductPlan!.product}
-                      plan={orderProductPlan!.plan}
-                    />
-                  );
-                }}
-              </If>
-            </div>
-          </If>
+            <If condition={order}>
+              {(order) => {
+                return (
+                  <CurrentLifetimeOrderCard
+                    order={order}
+                    product={orderProductPlan!.product}
+                    plan={orderProductPlan!.plan}
+                  />
+                );
+              }}
+            </If>
+          </div>
+        </If>
 
-          <If condition={customerId}>{() => <PersonalBillingPortalForm />}</If>
-        </div>
-      </PageBody>
-    </>
+        <If condition={customerId}>{() => <PersonalBillingPortalForm />}</If>
+      </div>
+    </PageBody>
   );
 }
 

@@ -28,7 +28,7 @@ async function AccountsPage(props: AdminAccountsPageProps) {
   const page = searchParams.page ? parseInt(searchParams.page) : 1;
 
   return (
-    <>
+    <PageBody>
       <PageHeader description={<AppBreadcrumbs />}>
         <div className="flex justify-end">
           <AdminCreateUserDialog>
@@ -37,42 +37,40 @@ async function AccountsPage(props: AdminAccountsPageProps) {
         </div>
       </PageHeader>
 
-      <PageBody>
-        <ServerDataLoader
-          table={'accounts'}
-          client={client}
-          page={page}
-          where={(queryBuilder) => {
-            const { account_type: type, query } = searchParams;
+      <ServerDataLoader
+        table={'accounts'}
+        client={client}
+        page={page}
+        where={(queryBuilder) => {
+          const { account_type: type, query } = searchParams;
 
-            if (type && type !== 'all') {
-              queryBuilder.eq('is_personal_account', type === 'personal');
-            }
+          if (type && type !== 'all') {
+            queryBuilder.eq('is_personal_account', type === 'personal');
+          }
 
-            if (query) {
-              queryBuilder.or(`name.ilike.%${query}%,email.ilike.%${query}%`);
-            }
+          if (query) {
+            queryBuilder.or(`name.ilike.%${query}%,email.ilike.%${query}%`);
+          }
 
-            return queryBuilder;
-          }}
-        >
-          {({ data, page, pageSize, pageCount }) => {
-            return (
-              <AdminAccountsTable
-                page={page}
-                pageSize={pageSize}
-                pageCount={pageCount}
-                data={data}
-                filters={{
-                  type: searchParams.account_type ?? 'all',
-                  query: searchParams.query ?? '',
-                }}
-              />
-            );
-          }}
-        </ServerDataLoader>
-      </PageBody>
-    </>
+          return queryBuilder;
+        }}
+      >
+        {({ data, page, pageSize, pageCount }) => {
+          return (
+            <AdminAccountsTable
+              page={page}
+              pageSize={pageSize}
+              pageCount={pageCount}
+              data={data}
+              filters={{
+                type: searchParams.account_type ?? 'all',
+                query: searchParams.query ?? '',
+              }}
+            />
+          );
+        }}
+      </ServerDataLoader>
+    </PageBody>
   );
 }
 

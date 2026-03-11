@@ -26,17 +26,15 @@ function TeamAccountHomePage({ params }: TeamAccountHomePageProps) {
   const account = use(params).account;
 
   return (
-    <>
+    <PageBody>
       <TeamAccountLayoutPageHeader
         account={account}
         title={<Trans i18nKey={'common.routes.dashboard'} />}
         description={<AppBreadcrumbs />}
       />
 
-      <PageBody>
-        <DashboardDemo />
-      </PageBody>
-    </>
+      <DashboardDemo />
+    </PageBody>
   );
 }
 

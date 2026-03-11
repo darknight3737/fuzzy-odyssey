@@ -3,7 +3,6 @@ import { use } from 'react';
 import { getTranslations } from 'next-intl/server';
 
 import { PersonalAccountSettingsContainer } from '@kit/accounts/personal-account-settings';
-import { PageBody } from '@kit/ui/page';
 
 import authConfig from '~/config/auth.config';
 import featureFlagsConfig from '~/config/feature-flags.config';
@@ -45,16 +44,14 @@ function PersonalAccountSettingsPage() {
   const user = use(requireUserInServerComponent());
 
   return (
-    <PageBody>
-      <div className={'flex w-full flex-1 flex-col lg:max-w-2xl'}>
-        <PersonalAccountSettingsContainer
-          userId={user.id}
-          features={features}
-          paths={paths}
-          providers={providers}
-        />
-      </div>
-    </PageBody>
+    <div className={'flex w-full flex-1 flex-col lg:max-w-2xl'}>
+      <PersonalAccountSettingsContainer
+        userId={user.id}
+        features={features}
+        paths={paths}
+        providers={providers}
+      />
+    </div>
   );
 }
 

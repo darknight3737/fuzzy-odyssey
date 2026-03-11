@@ -83,7 +83,7 @@ export function VerifyOtpForm({
   // Email form
   const emailForm = useForm({
     resolver: zodResolver(SendOtpSchema),
-    defaultValues: {
+    values: {
       email,
     },
   });

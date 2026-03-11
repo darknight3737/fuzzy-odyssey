@@ -60,9 +60,8 @@ async function PersonalAccountPage(props: { account: Account }) {
     userResult.data.user.banned_until !== 'none';
 
   return (
-    <>
+    <PageBody className="gap-y-4">
       <PageHeader
-        className="border-b"
         description={
           <AppBreadcrumbs
             values={{
@@ -123,41 +122,39 @@ async function PersonalAccountPage(props: { account: Account }) {
         </div>
       </PageHeader>
 
-      <PageBody className={'space-y-6 py-4'}>
-        <div className={'flex items-center justify-between'}>
-          <div className={'flex items-center gap-x-4'}>
-            <div className={'flex items-center gap-x-2.5'}>
-              <ProfileAvatar
-                pictureUrl={props.account.picture_url}
-                displayName={props.account.name}
-              />
+      <div className={'flex items-center justify-between'}>
+        <div className={'flex items-center gap-x-4'}>
+          <div className={'flex items-center gap-x-2.5'}>
+            <ProfileAvatar
+              pictureUrl={props.account.picture_url}
+              displayName={props.account.name}
+            />
 
-              <span className={'text-sm font-semibold capitalize'}>
-                {props.account.name}
-              </span>
-            </div>
+            <span className={'text-sm font-semibold capitalize'}>
+              {props.account.name}
+            </span>
+          </div>
 
-            <Badge variant={'outline'}>Personal Account</Badge>
+          <Badge variant={'outline'}>Personal Account</Badge>
 
-            <If condition={isBanned}>
-              <Badge variant={'destructive'}>Banned</Badge>
-            </If>
+          <If condition={isBanned}>
+            <Badge variant={'destructive'}>Banned</Badge>
+          </If>
+        </div>
+      </div>
+
+      <div className={'flex flex-col gap-y-8'}>
+        <SubscriptionsTable accountId={props.account.id} />
+
+        <div className={'divider-divider-x flex flex-col gap-y-2.5'}>
+          <Heading level={6}>Teams</Heading>
+
+          <div className={'rounded-lg border p-2'}>
+            <AdminMembershipsTable memberships={memberships} />
           </div>
         </div>
-
-        <div className={'flex flex-col gap-y-8'}>
-          <SubscriptionsTable accountId={props.account.id} />
-
-          <div className={'divider-divider-x flex flex-col gap-y-2.5'}>
-            <Heading level={6}>Teams</Heading>
-
-            <div className={'rounded-lg border p-2'}>
-              <AdminMembershipsTable memberships={memberships} />
-            </div>
-          </div>
-        </div>
-      </PageBody>
-    </>
+      </div>
+    </PageBody>
   );
 }
 
@@ -167,9 +164,8 @@ async function TeamAccountPage(props: {
   const members = await getMembers(props.account.slug ?? '');
 
   return (
-    <>
+    <PageBody className={'gap-y-6'}>
       <PageHeader
-        className="border-b"
         description={
           <AppBreadcrumbs
             values={{
@@ -191,39 +187,37 @@ async function TeamAccountPage(props: {
         </AdminDeleteAccountDialog>
       </PageHeader>
 
-      <PageBody className={'space-y-6 py-4'}>
-        <div className={'flex justify-between'}>
-          <div className={'flex items-center gap-x-4'}>
-            <div className={'flex items-center gap-x-2.5'}>
-              <ProfileAvatar
-                pictureUrl={props.account.picture_url}
-                displayName={props.account.name}
-              />
+      <div className={'flex justify-between'}>
+        <div className={'flex items-center gap-x-4'}>
+          <div className={'flex items-center gap-x-2.5'}>
+            <ProfileAvatar
+              pictureUrl={props.account.picture_url}
+              displayName={props.account.name}
+            />
 
-              <span className={'text-sm font-semibold capitalize'}>
-                {props.account.name}
-              </span>
-            </div>
-
-            <Badge variant={'outline'}>Team Account</Badge>
+            <span className={'text-sm font-semibold capitalize'}>
+              {props.account.name}
+            </span>
           </div>
+
+          <Badge variant={'outline'}>Team Account</Badge>
         </div>
+      </div>
 
-        <div>
-          <div className={'flex flex-col gap-y-8'}>
-            <SubscriptionsTable accountId={props.account.id} />
+      <div>
+        <div className={'flex flex-col gap-y-8'}>
+          <SubscriptionsTable accountId={props.account.id} />
 
-            <div className={'flex flex-col gap-y-2.5'}>
-              <Heading level={6}>Team Members</Heading>
+          <div className={'flex flex-col gap-y-2.5'}>
+            <Heading level={6}>Team Members</Heading>
 
-              <div className={'rounded-lg border p-2'}>
-                <AdminMembersTable members={members} />
-              </div>
+            <div className={'rounded-lg border p-2'}>
+              <AdminMembersTable members={members} />
             </div>
           </div>
         </div>
-      </PageBody>
-    </>
+      </div>
+    </PageBody>
   );
 }
 

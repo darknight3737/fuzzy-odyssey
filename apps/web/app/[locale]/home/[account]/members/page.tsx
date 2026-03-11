@@ -51,82 +51,80 @@ async function TeamAccountMembersPage({ params }: TeamAccountMembersPageProps) {
   const currentUserRoleHierarchy = account.role_hierarchy_level;
 
   return (
-    <>
+    <PageBody>
       <TeamAccountLayoutPageHeader
         title={<Trans i18nKey={'common.routes.members'} />}
         description={<AppBreadcrumbs />}
         account={account.slug}
       />
 
-      <PageBody>
-        <div className={'flex w-full max-w-4xl flex-col space-y-4 pb-32'}>
-          <Card>
-            <CardHeader className={'flex flex-row justify-between'}>
-              <div className={'flex flex-col space-y-1.5'}>
-                <CardTitle>
-                  <Trans i18nKey={'common.accountMembers'} />
-                </CardTitle>
+      <div className={'flex w-full max-w-4xl flex-col space-y-4 pb-32'}>
+        <Card>
+          <CardHeader className={'flex flex-row justify-between'}>
+            <div className={'flex flex-col space-y-1.5'}>
+              <CardTitle>
+                <Trans i18nKey={'common.accountMembers'} />
+              </CardTitle>
 
-                <CardDescription>
-                  <Trans i18nKey={'common.membersTabDescription'} />
-                </CardDescription>
-              </div>
+              <CardDescription>
+                <Trans i18nKey={'common.membersTabDescription'} />
+              </CardDescription>
+            </div>
 
-              <If condition={canManageInvitations && canAddMember}>
-                <InviteMembersDialogContainer
-                  userRoleHierarchy={currentUserRoleHierarchy}
-                  accountSlug={account.slug}
-                >
-                  <Button size={'sm'} data-test={'invite-members-form-trigger'}>
-                    <PlusCircle className={'w-4'} />
-
-                    <span>
-                      <Trans i18nKey={'teams.inviteMembersButton'} />
-                    </span>
-                  </Button>
-                </InviteMembersDialogContainer>
-              </If>
-            </CardHeader>
-
-            <CardContent>
-              <AccountMembersTable
+            <If condition={canManageInvitations && canAddMember}>
+              <InviteMembersDialogContainer
                 userRoleHierarchy={currentUserRoleHierarchy}
-                currentUserId={user.id}
-                currentAccountId={account.id}
-                members={members}
-                isPrimaryOwner={isPrimaryOwner}
-                canManageRoles={canManageRoles}
-              />
-            </CardContent>
-          </Card>
+                accountSlug={account.slug}
+              >
+                <Button size={'sm'} data-test={'invite-members-form-trigger'}>
+                  <PlusCircle className={'w-4'} />
 
-          <Card>
-            <CardHeader className={'flex flex-row justify-between'}>
-              <div className={'flex flex-col space-y-1.5'}>
-                <CardTitle>
-                  <Trans i18nKey={'teams.pendingInvitesHeading'} />
-                </CardTitle>
+                  <span>
+                    <Trans i18nKey={'teams.inviteMembersButton'} />
+                  </span>
+                </Button>
+              </InviteMembersDialogContainer>
+            </If>
+          </CardHeader>
 
-                <CardDescription>
-                  <Trans i18nKey={'teams.pendingInvitesDescription'} />
-                </CardDescription>
-              </div>
-            </CardHeader>
+          <CardContent>
+            <AccountMembersTable
+              userRoleHierarchy={currentUserRoleHierarchy}
+              currentUserId={user.id}
+              currentAccountId={account.id}
+              members={members}
+              isPrimaryOwner={isPrimaryOwner}
+              canManageRoles={canManageRoles}
+            />
+          </CardContent>
+        </Card>
 
-            <CardContent>
-              <AccountInvitationsTable
-                permissions={{
-                  canUpdateInvitation: canManageRoles,
-                  canRemoveInvitation: canManageRoles,
-                  currentUserRoleHierarchy,
-                }}
-                invitations={invitations}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </PageBody>
-    </>
+        <Card>
+          <CardHeader className={'flex flex-row justify-between'}>
+            <div className={'flex flex-col space-y-1.5'}>
+              <CardTitle>
+                <Trans i18nKey={'teams.pendingInvitesHeading'} />
+              </CardTitle>
+
+              <CardDescription>
+                <Trans i18nKey={'teams.pendingInvitesDescription'} />
+              </CardDescription>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <AccountInvitationsTable
+              permissions={{
+                canUpdateInvitation: canManageRoles,
+                canRemoveInvitation: canManageRoles,
+                currentUserRoleHierarchy,
+              }}
+              invitations={invitations}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </PageBody>
   );
 }
 

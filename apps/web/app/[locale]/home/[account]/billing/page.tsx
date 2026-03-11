@@ -62,57 +62,55 @@ async function TeamAccountBillingPage({ params }: TeamAccountBillingPageProps) {
   const shouldShowBillingPortal = canManageBilling && customerId;
 
   return (
-    <>
+    <PageBody>
       <TeamAccountLayoutPageHeader
         account={account}
         title={<Trans i18nKey={'common.routes.billing'} />}
         description={<AppBreadcrumbs />}
       />
 
-      <PageBody>
-        <div className={cn(`flex max-w-2xl flex-col space-y-4`)}>
-          <If condition={!hasBillingData}>
-            <If
-              condition={canManageBilling}
-              fallback={<CannotManageBillingAlert />}
-            >
-              <TeamAccountCheckoutForm
-                customerId={customerId}
-                accountId={accountId}
+      <div className={cn(`flex max-w-2xl flex-col space-y-4`)}>
+        <If condition={!hasBillingData}>
+          <If
+            condition={canManageBilling}
+            fallback={<CannotManageBillingAlert />}
+          >
+            <TeamAccountCheckoutForm
+              customerId={customerId}
+              accountId={accountId}
+            />
+          </If>
+        </If>
+
+        <If condition={subscription}>
+          {(subscription) => {
+            return (
+              <CurrentSubscriptionCard
+                subscription={subscription}
+                product={subscriptionProductPlan!.product}
+                plan={subscriptionProductPlan!.plan}
               />
-            </If>
-          </If>
+            );
+          }}
+        </If>
 
-          <If condition={subscription}>
-            {(subscription) => {
-              return (
-                <CurrentSubscriptionCard
-                  subscription={subscription}
-                  product={subscriptionProductPlan!.product}
-                  plan={subscriptionProductPlan!.plan}
-                />
-              );
-            }}
-          </If>
+        <If condition={order}>
+          {(order) => {
+            return (
+              <CurrentLifetimeOrderCard
+                order={order}
+                product={orderProductPlan!.product}
+                plan={orderProductPlan!.plan}
+              />
+            );
+          }}
+        </If>
 
-          <If condition={order}>
-            {(order) => {
-              return (
-                <CurrentLifetimeOrderCard
-                  order={order}
-                  product={orderProductPlan!.product}
-                  plan={orderProductPlan!.plan}
-                />
-              );
-            }}
-          </If>
-
-          {shouldShowBillingPortal ? (
-            <TeamBillingPortalForm accountId={accountId} slug={account} />
-          ) : null}
-        </div>
-      </PageBody>
-    </>
+        {shouldShowBillingPortal ? (
+          <TeamBillingPortalForm accountId={accountId} slug={account} />
+        ) : null}
+      </div>
+    </PageBody>
   );
 }
 

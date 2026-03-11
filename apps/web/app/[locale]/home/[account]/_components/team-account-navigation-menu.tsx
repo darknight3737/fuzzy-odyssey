@@ -2,9 +2,11 @@ import {
   BorderedNavigationMenu,
   BorderedNavigationMenuItem,
 } from '@kit/ui/bordered-navigation-menu';
+import { If } from '@kit/ui/if';
 
 import { AppLogo } from '~/components/app-logo';
 import { ProfileAccountDropdownContainer } from '~/components/personal-account-dropdown-container';
+import featureFlagsConfig from '~/config/feature-flags.config';
 import { getTeamAccountSidebarConfig } from '~/config/team-account-navigation.config';
 import { TeamAccountAccountsSelector } from '~/home/[account]/_components/team-account-accounts-selector';
 
@@ -49,7 +51,9 @@ export function TeamAccountNavigationMenu(props: {
       </div>
 
       <div className={'flex items-center justify-end space-x-2.5'}>
-        <TeamAccountNotifications accountId={account.id} userId={user.id} />
+        <If condition={featureFlagsConfig.enableNotifications}>
+          <TeamAccountNotifications accountId={account.id} userId={user.id} />
+        </If>
 
         <TeamAccountAccountsSelector
           userId={user.id}

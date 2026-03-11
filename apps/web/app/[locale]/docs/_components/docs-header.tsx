@@ -1,17 +1,18 @@
-import Link from "next/link";
+import Link from 'next/link';
 
-import { Header } from "@kit/ui/marketing";
-import { Separator } from "@kit/ui/separator";
-import { Trans } from "@kit/ui/trans";
+import { Header } from '@kit/ui/marketing';
+import { Separator } from '@kit/ui/separator';
+import { Trans } from '@kit/ui/trans';
 
-import { DocsBackButton } from "./docs-back-button";
-import { AppLogo } from "~/components/app-logo";
+import { AppLogo } from '~/components/app-logo';
+
+import { DocsBackButton } from './docs-back-button';
 
 export function DocsHeader() {
   return (
     <Header
       logo={
-        <div className={"flex w-full flex-1 justify-between"}>
+        <div className={'flex w-full flex-1 justify-between'}>
           <div className="flex items-center gap-x-4">
             <AppLogo href="/" />
 

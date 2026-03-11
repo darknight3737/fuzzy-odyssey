@@ -42,6 +42,7 @@ export function BorderedNavigationMenuItem(props: {
   return (
     <NavigationMenuItem className={props.className}>
       <Button
+        nativeButton={false}
         render={
           <Link
             href={props.path}

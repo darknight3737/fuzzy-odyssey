@@ -153,12 +153,7 @@ export function PageHeader({
   description?: string | React.ReactNode;
 }>) {
   return (
-    <div
-      className={cn(
-        'flex items-center justify-between py-5 lg:px-4',
-        className,
-      )}
-    >
+    <div className={cn('flex items-center justify-between py-4', className)}>
       <div className={'flex flex-col gap-y-2'}>
         <div className="flex items-center gap-x-2.5">
           <SidebarTrigger className="text-muted-foreground hover:text-secondary-foreground h-4.5 w-4.5 cursor-pointer" />

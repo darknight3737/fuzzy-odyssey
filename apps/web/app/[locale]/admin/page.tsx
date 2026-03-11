@@ -4,13 +4,11 @@ import { PageBody, PageHeader } from '@kit/ui/page';
 
 function AdminPage() {
   return (
-    <>
+    <PageBody>
       <PageHeader description={`Super Admin`} />
 
-      <PageBody>
-        <AdminDashboard />
-      </PageBody>
-    </>
+      <AdminDashboard />
+    </PageBody>
   );
 }
 
