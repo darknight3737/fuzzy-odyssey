@@ -1,6 +1,4 @@
 import 'server-only';
-import { notFound } from 'next/navigation';
-
 import { authActionClient } from '@kit/next/safe-action';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
@@ -15,7 +13,7 @@ export const adminActionClient = authActionClient.use(async ({ next, ctx }) => {
   const isAdmin = await isSuperAdmin(getSupabaseServerClient());
 
   if (!isAdmin) {
-    notFound();
+    throw new Error('Unauthorized');
   }
 
   return next({ ctx });
