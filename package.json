@@ -35,16 +35,18 @@
     "env:validate": "turbo gen validate-env"
   },
   "devDependencies": {
-    "@manypkg/cli": "^0.25.1",
-    "@turbo/gen": "^2.8.11",
-    "cross-env": "^10.0.0",
+    "@manypkg/cli": "catalog:",
+    "@turbo/gen": "catalog:",
+    "@types/node": "catalog:",
+    "cross-env": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "turbo": "2.8.11",
-    "typescript": "^5.9.3"
+    "server-only": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=20.10.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.32.1"
 }

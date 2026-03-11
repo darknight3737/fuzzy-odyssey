@@ -12,7 +12,6 @@
   "exports": {
     "./logger": "./src/logger/index.ts",
     "./utils": "./src/utils.ts",
-    "./hooks": "./src/hooks/index.ts",
     "./events": "./src/events/index.tsx",
     "./registry": "./src/registry/index.ts",
     "./env": "./src/env/index.ts"
@@ -27,7 +26,6 @@
   },
   "devDependencies": {
     "@kit/tsconfig": "workspace:*",
-    "@types/node": "catalog:",
     "@types/react": "catalog:"
   }
 }

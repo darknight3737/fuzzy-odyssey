@@ -22,7 +22,6 @@
   },
   "devDependencies": {
     "@kit/tsconfig": "workspace:*",
-    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "next-intl": "catalog:",
     "react": "catalog:",

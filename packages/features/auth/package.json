@@ -25,7 +25,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@hookform/resolvers": "^5.2.2",
+    "@hookform/resolvers": "catalog:",
     "@kit/shared": "workspace:*",
     "@kit/supabase": "workspace:*",
     "@kit/tsconfig": "workspace:*",
@@ -33,13 +33,12 @@
     "@marsidev/react-turnstile": "catalog:",
     "@supabase/supabase-js": "catalog:",
     "@tanstack/react-query": "catalog:",
-    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "lucide-react": "catalog:",
     "next": "catalog:",
     "next-intl": "catalog:",
     "react-hook-form": "catalog:",
-    "sonner": "^2.0.7",
+    "sonner": "catalog:",
     "zod": "catalog:"
   }
 }

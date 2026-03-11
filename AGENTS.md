@@ -9,15 +9,23 @@
 
 ## Monorepo Structure
 
-| Directory | Purpose | Details |
-|-----------|---------|---------|
-| `apps/web` | Main Next.js app | See `apps/web/AGENTS.md` |
+| Directory           | Purpose                       | Details                           |
+| ------------------- | ----------------------------- | --------------------------------- |
+| `apps/web`          | Main Next.js app              | See `apps/web/AGENTS.md`          |
 | `apps/web/supabase` | Database schemas & migrations | See `apps/web/supabase/AGENTS.md` |
-| `apps/e2e` | Playwright E2E tests | See `apps/e2e/AGENTS.md` |
-| `packages/ui` | UI components (@kit/ui) | See `packages/ui/AGENTS.md` |
-| `packages/supabase` | Supabase clients | See `packages/supabase/AGENTS.md` |
-| `packages/next` | Next.js utilities | See `packages/next/AGENTS.md` |
-| `packages/features` | Feature packages | See `packages/features/AGENTS.md` |
+| `apps/e2e`          | Playwright E2E tests          | See `apps/e2e/AGENTS.md`          |
+| `packages/ui`       | UI components (@kit/ui)       | See `packages/ui/AGENTS.md`       |
+| `packages/supabase` | Supabase clients              | See `packages/supabase/AGENTS.md` |
+| `packages/next`     | Next.js utilities             | See `packages/next/AGENTS.md`     |
+| `packages/features` | Feature packages              | See `packages/features/AGENTS.md` |
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# Next.js: ALWAYS read docs before coding
+
+Before any Next.js work, find and read the relevant doc in `apps/web/node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+
+<!-- END:nextjs-agent-rules -->
 
 ## Multi-Tenant Architecture
 
@@ -40,7 +48,7 @@ pnpm format:fix                   # Format code
 ## Key Patterns (Quick Reference)
 
 | Pattern        | Import                                                       | Details                       |
-|----------------|--------------------------------------------------------------|-------------------------------|
+| -------------- | ------------------------------------------------------------ | ----------------------------- |
 | Server Actions | `authActionClient` from `@kit/next/safe-action`              | `packages/next/AGENTS.md`     |
 | Route Handlers | `enhanceRouteHandler` from `@kit/next/routes`                | `packages/next/AGENTS.md`     |
 | Server Client  | `getSupabaseServerClient` from `@kit/supabase/server-client` | `packages/supabase/AGENTS.md` |
@@ -55,6 +63,7 @@ pnpm format:fix                   # Format code
 ## Verification
 
 After implementation, always run:
+
 1. `pnpm typecheck`
 2. `pnpm lint:fix`
 3. `pnpm format:fix`

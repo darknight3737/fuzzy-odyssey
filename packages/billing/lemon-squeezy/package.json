@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@lemonsqueezy/lemonsqueezy.js": "4.0.0"
+    "@lemonsqueezy/lemonsqueezy.js": "catalog:"
   },
   "devDependencies": {
     "@kit/billing": "workspace:*",

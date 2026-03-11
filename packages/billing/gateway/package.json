@@ -20,7 +20,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@hookform/resolvers": "^5.2.2",
+    "@hookform/resolvers": "catalog:",
     "@kit/billing": "workspace:*",
     "@kit/lemon-squeezy": "workspace:*",
     "@kit/shared": "workspace:*",
@@ -30,7 +30,7 @@
     "@kit/ui": "workspace:*",
     "@supabase/supabase-js": "catalog:",
     "@types/react": "catalog:",
-    "date-fns": "^4.1.0",
+    "date-fns": "catalog:",
     "lucide-react": "catalog:",
     "next": "catalog:",
     "next-intl": "catalog:",

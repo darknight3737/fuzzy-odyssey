@@ -1,66 +1,19 @@
-# Email Service Instructions
+# @kit/mailers — Email Service
 
-This file contains guidance for working with the email service supporting Resend and Nodemailer.
+## Non-Negotiables
 
-## Basic Usage
+1. ALWAYS use `getMailer()` factory from `@kit/mailers` — never instantiate mailer directly
+2. ALWAYS use `@kit/email-templates` renderers for HTML — never write inline HTML
+3. ALWAYS render template first (`renderXxxEmail()`), then pass `{ html, subject }` to `sendEmail()`
+4. NEVER hardcode sender/recipient addresses — use environment config
 
-```typescript
-import { getMailer } from '@kit/mailers';
-import { renderAccountDeleteEmail } from '@kit/email-templates';
+## Workflow
 
-async function sendSimpleEmail() {
-    // Get mailer instance
-  const mailer = await getMailer();
+1. Render: `const { html, subject } = await renderXxxEmail(props)`
+2. Get mailer: `const mailer = await getMailer()`
+3. Send: `await mailer.sendEmail({ to, from, subject, html })`
 
-  // Send simple email
-  await mailer.sendEmail({
-    to: 'user@example.com',
-    from: 'noreply@yourdomain.com', 
-    subject: 'Welcome!',
-    html: '<h1>Welcome!</h1><p>Thank you for joining us.</p>',
-  });
-}
+## Exemplars
 
-async function sendComplexEmail() {
-  // Send with email template
-  const { html, subject } = await renderAccountDeleteEmail({
-    userDisplayName: user.name,
-    productName: 'My SaaS App',
-  });
-
-  await mailer.sendEmail({
-    to: user.email,
-    from: 'noreply@yourdomain.com',
-    subject,
-    html,
-  });
-}
-```
-
-## Email Templates
-
-Email templates are located in `@kit/email-templates` and return `{ html, subject }`:
-
-```typescript
-import { 
-  renderAccountDeleteEmail,
-  renderWelcomeEmail,
-  renderPasswordResetEmail 
-} from '@kit/email-templates';
-
-// Render template
-const { html, subject } = await renderWelcomeEmail({
-  userDisplayName: 'John Doe',
-  loginUrl: 'https://app.com/login'
-});
-
-// Send rendered email
-const mailer = await getMailer();
-
-await mailer.sendEmail({
-  to: user.email,
-  from: 'welcome@yourdomain.com',
-  subject,
-  html,
-});
-```
+- Contact form: `apps/web/app/[locale]/(marketing)/contact/_lib/server/server-actions.ts`
+- Invitation dispatch: `packages/features/team-accounts/src/server/services/account-invitations-dispatcher.service.ts`

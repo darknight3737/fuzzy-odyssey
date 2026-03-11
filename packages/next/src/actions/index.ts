@@ -11,6 +11,7 @@ import { JWTUserData } from '@kit/supabase/types';
 /**
  * @name enhanceAction
  * @description Enhance an action with captcha, schema and auth checks
+ * @deprecated Use [authActionClient](safe-action-client.ts) instead
  */
 export function enhanceAction<
   Args,

@@ -22,7 +22,7 @@ const emailFrom = z
   .parse(process.env.EMAIL_SENDER);
 
 export const sendContactEmail = publicActionClient
-  .schema(ContactEmailSchema)
+  .inputSchema(ContactEmailSchema)
   .action(async ({ parsedInput: data }) => {
     const mailer = await getMailer();
 

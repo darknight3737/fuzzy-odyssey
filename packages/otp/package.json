@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@hookform/resolvers": "^5.2.2",
+    "@hookform/resolvers": "catalog:",
     "@kit/email-templates": "workspace:*",
     "@kit/mailers": "workspace:*",
     "@kit/next": "workspace:*",

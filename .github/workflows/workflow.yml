@@ -3,12 +3,12 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, v3]
+    branches: [main]
 jobs:
   typescript:
     name: ʦ TypeScript
     timeout-minutes: 10
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.RUNNER || 'ubuntu-latest' }}
     env:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       SUPABASE_DB_WEBHOOK_SECRET: ${{ secrets.SUPABASE_DB_WEBHOOK_SECRET }}
@@ -48,7 +48,7 @@ jobs:
   test:
     name: ⚫️ Test
     timeout-minutes: 20
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.RUNNER || 'ubuntu-latest' }}
     if: ${{ vars.ENABLE_E2E_JOB == 'true' }}
     env:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
