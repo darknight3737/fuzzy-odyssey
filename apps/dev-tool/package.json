@@ -27,8 +27,7 @@
     "@kit/shared": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@kit/ui": "workspace:*",
-    "@tailwindcss/postcss": "^4.2.1",
-    "@types/node": "catalog:",
+    "@tailwindcss/postcss": "^4.2.2",
     "@types/nodemailer": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -38,7 +37,7 @@
     "recharts": "2.15.3",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "zod": "catalog:"
   },
   "prettier": "@kit/prettier-config",

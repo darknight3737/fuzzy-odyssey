@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -56,6 +57,8 @@ export const deleteTeamAccountAction = enhanceAction(
     });
 
     logger.info(ctx, `Team account request successfully sent`);
+
+    revalidatePath('/', 'layout');
 
     return redirect('/home');
   },

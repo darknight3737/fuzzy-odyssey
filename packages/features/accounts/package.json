@@ -17,7 +17,7 @@
     "./api": "./src/server/api.ts"
   },
   "dependencies": {
-    "nanoid": "^5.1.6"
+    "nanoid": "^5.1.7"
   },
   "devDependencies": {
     "@hookform/resolvers": "^5.2.2",
