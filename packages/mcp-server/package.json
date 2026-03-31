@@ -37,11 +37,11 @@
     "@kit/email-templates": "workspace:*",
     "@kit/prettier-config": "workspace:*",
     "@kit/tsconfig": "workspace:*",
-    "@modelcontextprotocol/sdk": "1.27.1",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "postgres": "3.4.8",
     "tsup": "catalog:",
     "typescript": "^6.0.2",
-    "vitest": "^4.1.1",
+    "vitest": "^4.1.2",
     "zod": "catalog:"
   },
   "prettier": "@kit/prettier-config"

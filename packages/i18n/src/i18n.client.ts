@@ -42,7 +42,6 @@ export async function initializeI18nClient(
     .init(
       {
         ...settings,
-        showSupportNotice: false,
         detection: {
           order: ['cookie', 'htmlTag', 'navigator'],
           caches: ['cookie'],

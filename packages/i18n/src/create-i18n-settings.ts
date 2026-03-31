@@ -22,7 +22,6 @@ export function createI18nSettings({
     supportedLngs: languages,
     fallbackLng: languages[0],
     detection: undefined,
-    showSupportNotice: false,
     lng,
     preload: false as const,
     lowerCaseLng: true as const,
