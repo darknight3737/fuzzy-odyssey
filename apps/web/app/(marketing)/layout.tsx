@@ -7,6 +7,8 @@ import { withI18n } from '~/lib/i18n/with-i18n';
 
 export const dynamic = 'force-dynamic';
 
+export const dynamic = 'force-dynamic';
+
 async function SiteLayout(props: React.PropsWithChildren) {
   const client = getSupabaseServerClient();
   const user = await requireUser(client, { verifyMfa: false });
