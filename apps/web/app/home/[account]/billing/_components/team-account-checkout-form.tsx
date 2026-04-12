@@ -41,7 +41,7 @@ export function TeamAccountCheckoutForm(params: {
   const [pending, startTransition] = useTransition();
   const appEvents = useAppEvents();
 
-  const [checkoutToken, setCheckoutToken] = useState<string | undefined>(
+  const [checkoutToken, setCheckoutToken] = useState<string | undefined | null>(
     undefined,
   );
 

@@ -9,6 +9,13 @@ import type { CreateBillingCheckoutSchema } from '@kit/billing/schema';
 const enableTrialWithoutCreditCard =
   process.env.STRIPE_ENABLE_TRIAL_WITHOUT_CC === 'true';
 
+const UI_MODE_VALUES = ['embedded_page', 'hosted_page'] as const;
+
+const uiMode = z
+  .enum(UI_MODE_VALUES)
+  .default('embedded_page')
+  .parse(process.env.STRIPE_UI_MODE);
+
 /**
  * @name createStripeCheckout
  * @description Creates a Stripe Checkout session, and returns an Object
@@ -68,10 +75,8 @@ export async function createStripeCheckout(
 
   const urls = getUrls({
     returnUrl: params.returnUrl,
+    uiMode,
   });
-
-  // we use the embedded mode, so the user does not leave the page
-  const uiMode = 'embedded';
 
   const customerData = customer
     ? {
@@ -127,10 +132,20 @@ export async function createStripeCheckout(
   });
 }
 
-function getUrls(params: { returnUrl: string }) {
-  const returnUrl = `${params.returnUrl}?session_id={CHECKOUT_SESSION_ID}`;
+function getUrls(params: {
+  returnUrl: string;
+  uiMode: (typeof UI_MODE_VALUES)[number];
+}) {
+  const url = `${params.returnUrl}?session_id={CHECKOUT_SESSION_ID}`;
+
+  if (params.uiMode === 'hosted_page') {
+    return {
+      success_url: url,
+      cancel_url: params.returnUrl,
+    };
+  }
 
   return {
-    return_url: returnUrl,
+    return_url: url,
   };
 }

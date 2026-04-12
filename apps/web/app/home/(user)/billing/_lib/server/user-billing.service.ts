@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { redirect } from 'next/navigation';
+
 import { SupabaseClient } from '@supabase/supabase-js';
 
 import { z } from 'zod';
@@ -82,9 +84,12 @@ class UserBillingService {
       `User requested a personal account checkout session. Contacting provider...`,
     );
 
+    let checkoutToken: string | null | undefined;
+    let url: string | null | undefined;
+
     try {
       // call the payment gateway to create the checkout session
-      const { checkoutToken } = await service.createCheckoutSession({
+      const checkout = await service.createCheckoutSession({
         returnUrl,
         accountId,
         customerEmail: user.email,
@@ -94,18 +99,8 @@ class UserBillingService {
         enableDiscountField: product.enableDiscountField,
       });
 
-      logger.info(
-        {
-          userId: user.id,
-        },
-        `Checkout session created. Returning checkout token to client...`,
-      );
-
-      // return the checkout token to the client
-      // so we can call the payment gateway to complete the checkout
-      return {
-        checkoutToken,
-      };
+      checkoutToken = checkout.checkoutToken;
+      url = checkout.url;
     } catch (error) {
       logger.error(
         {
@@ -120,6 +115,37 @@ class UserBillingService {
 
       throw new Error(`Failed to create a checkout session`, { cause: error });
     }
+
+    if (!url && !checkoutToken) {
+      throw new Error(
+        'Checkout session returned neither a URL nor a checkout token',
+      );
+    }
+
+    // if URL provided, we redirect to the provider's hosted page
+    if (url) {
+      logger.info(
+        {
+          userId: user.id,
+        },
+        `Checkout session created. Redirecting to hosted page...`,
+      );
+
+      redirect(url);
+    }
+
+    logger.info(
+      {
+        userId: user.id,
+      },
+      `Checkout session created. Returning checkout token to client...`,
+    );
+
+    // return the checkout token to the client
+    // so we can call the payment gateway to complete the checkout
+    return {
+      checkoutToken,
+    };
   }
 
   /**

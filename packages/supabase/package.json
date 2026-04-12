@@ -28,7 +28,7 @@
     "@kit/eslint-config": "workspace:*",
     "@kit/prettier-config": "workspace:*",
     "@kit/tsconfig": "workspace:*",
-    "@supabase/ssr": "^0.9.0",
+    "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@types/react": "catalog:",
