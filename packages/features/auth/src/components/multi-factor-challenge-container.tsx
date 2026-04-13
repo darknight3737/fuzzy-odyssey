@@ -2,8 +2,6 @@
 
 import { useEffect, useEffectEvent } from 'react';
 
-import { useRouter } from 'next/navigation';
-
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { useMutation } from '@tanstack/react-query';
@@ -43,11 +41,9 @@ export function MultiFactorChallengeContainer({
     redirectPath: string;
   };
 }>) {
-  const router = useRouter();
-
   const verifyMFAChallenge = useVerifyMFAChallenge({
     onSuccess: () => {
-      router.replace(paths.redirectPath);
+      window.location.replace(paths.redirectPath);
     },
   });
 
