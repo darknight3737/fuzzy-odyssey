@@ -41,8 +41,8 @@ function getLocalVersion() {
   }
 }
 
-function getUpstreamVersion() {
-  const raw = runGitCommand('show', 'upstream/main:package.json');
+function getUpstreamVersion(branch = 'main') {
+  const raw = runGitCommand('show', `upstream/${branch}:package.json`);
 
   if (!raw) return null;
 
@@ -106,13 +106,35 @@ function checkMakerkitVersion() {
     return;
   }
 
-  // Fetch only main branch from upstream (may fail with SSH auth issues)
-  const fetchResult = runGitCommand('fetch', '--quiet', 'upstream', 'main');
+  const localVersion = getLocalVersion();
+
+  if (!localVersion) {
+    console.warn('Failed to read local version from package.json.');
+    return;
+  }
+
+  const localParsed = parseVersion(localVersion);
+
+  if (!localParsed) {
+    console.warn('Failed to parse local version.');
+    return;
+  }
+
+  // Determine which branch to compare against based on major version
+  const compareBranch = localParsed.major === 2 ? 'v2' : 'main';
+
+  // Fetch the appropriate branch from upstream (may fail with SSH auth issues)
+  const fetchResult = runGitCommand(
+    'fetch',
+    '--quiet',
+    'upstream',
+    compareBranch,
+  );
 
   if (fetchResult === null) {
     log(
       'yellow',
-      '⚠️ Could not fetch from upstream. Checking cached upstream/main data...',
+      `⚠️ Could not fetch from upstream. Checking cached upstream/${compareBranch} data...`,
     );
 
     if (isWindows && upstreamUrl.includes('git@')) {
@@ -124,11 +146,10 @@ function checkMakerkitVersion() {
     }
   }
 
-  const localVersion = getLocalVersion();
-  const upstreamVersion = getUpstreamVersion();
+  const upstreamVersion = getUpstreamVersion(compareBranch);
 
-  if (!localVersion || !upstreamVersion) {
-    console.warn('Failed to read version from package.json.');
+  if (!upstreamVersion) {
+    console.warn('Failed to read upstream version from package.json.');
     return;
   }
 
@@ -155,7 +176,23 @@ function checkMakerkitVersion() {
 
   if (severity === 'warning' || severity === 'critical') {
     log('yellow', 'Please update for bug fixes and optimizations.');
-    log('cyan', 'To update, run: git pull upstream main');
+    log('cyan', `To update, run: git pull upstream ${compareBranch}`);
+  }
+
+  // Check for new major versions on main branch
+  if (compareBranch !== 'main') {
+    const mainVersion = getUpstreamVersion('main');
+
+    if (mainVersion) {
+      const mainParsed = parseVersion(mainVersion);
+
+      if (mainParsed && mainParsed.major > localParsed.major) {
+        log(
+          'yellow',
+          `📢 A new major version (${mainVersion}) is available on the main branch. Consider upgrading when ready. Please refer to the documentation for the migration guide - do not upgrade directly.`,
+        );
+      }
+    }
   }
 }
 

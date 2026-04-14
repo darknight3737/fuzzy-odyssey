@@ -6,6 +6,7 @@
     "dev": "node ./src/dev.mjs",
     "checks": "node ./src/checks.mjs",
     "requirements": "node ./src/requirements.mjs",
-    "license": "node ./src/license.mjs"
+    "license": "node ./src/license.mjs",
+    "format": "prettier --write ."
   }
 }

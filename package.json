@@ -1,15 +1,12 @@
 {
   "name": "next-supabase-saas-kit-turbo",
-  "version": "2.27.0",
+  "version": "2.27.1",
   "private": true,
-  "sideEffects": false,
-  "engines": {
-    "node": ">=20.10.0"
-  },
   "author": {
-    "url": "https://makerkit.dev",
-    "name": "MakerKit"
+    "name": "MakerKit",
+    "url": "https://makerkit.dev"
   },
+  "sideEffects": false,
   "scripts": {
     "turbo": "turbo",
     "preinstall": "pnpm run --filter scripts requirements",
@@ -36,21 +33,24 @@
     "env:generate": "turbo gen env",
     "env:validate": "turbo gen validate-env"
   },
+  "devDependencies": {
+    "@manypkg/cli": "^0.25.1",
+    "@turbo/gen": "^2.9.6",
+    "@types/node": "catalog:",
+    "cross-env": "^10.0.0",
+    "prettier": "^3.8.2",
+    "server-only": "^0.0.1",
+    "turbo": "2.9.6",
+    "typescript": "^6.0.2"
+  },
   "prettier": "@kit/prettier-config",
+  "engines": {
+    "node": ">=20.10.0"
+  },
   "packageManager": "pnpm@10.33.0",
   "pnpm": {
     "overrides": {
       "zod": "3.25.76"
     }
-  },
-  "devDependencies": {
-    "@manypkg/cli": "^0.25.1",
-    "@turbo/gen": "^2.9.1",
-    "@types/node": "catalog:",
-    "cross-env": "^10.0.0",
-    "prettier": "^3.8.1",
-    "server-only": "^0.0.1",
-    "turbo": "2.9.1",
-    "typescript": "^6.0.2"
   }
 }
