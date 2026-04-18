@@ -236,7 +236,8 @@ class AccountInvitationsService {
 
     const ctx = {
       name: this.namespace,
-      ...params,
+      userId: params.userId,
+      inviteTokenFingerprint: getSecretFingerprint(params.inviteToken),
     };
 
     logger.info(ctx, 'Accepting invitation to team');
@@ -397,4 +398,12 @@ class AccountInvitationsService {
       );
     }
   }
+}
+
+function getSecretFingerprint(value: string) {
+  if (value.length <= 8) {
+    return '[redacted]';
+  }
+
+  return `${value.slice(0, 4)}...${value.slice(-4)}`;
 }

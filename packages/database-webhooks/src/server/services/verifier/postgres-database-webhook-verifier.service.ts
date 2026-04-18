@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { timingSafeEqual } from 'node:crypto';
 
 import { DatabaseWebhookVerifierService } from './database-webhook-verifier.service';
 
@@ -15,11 +16,22 @@ export function createDatabaseWebhookVerifierService() {
 }
 
 class PostgresDatabaseWebhookVerifierService implements DatabaseWebhookVerifierService {
-  verifySignatureOrThrow(header: string) {
-    if (header !== webhooksSecret) {
+  verifySignatureOrThrow(signature: string) {
+    if (!constantTimeEqual(signature, webhooksSecret)) {
       throw new Error('Invalid signature');
     }
 
     return Promise.resolve(true);
   }
+}
+
+function constantTimeEqual(left: string, right: string) {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+
+  if (leftBuffer.length !== rightBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(leftBuffer, rightBuffer);
 }
