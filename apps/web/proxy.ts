@@ -1,23 +1,21 @@
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-import { CsrfError, createCsrfProtect } from '@edge-csrf/nextjs';
+import { CsrfError, createCsrfProtect } from "@edge-csrf/nextjs";
 
-import { isSuperAdmin } from '@kit/admin';
-import { getSafeRedirectPath } from '@kit/shared/utils';
-import { checkRequiresMultiFactorAuthentication } from '@kit/supabase/check-requires-mfa';
-import { createMiddlewareClient } from '@kit/supabase/middleware-client';
+import { isSuperAdmin } from "@kit/admin";
+import { getSafeRedirectPath } from "@kit/shared/utils";
+import { checkRequiresMultiFactorAuthentication } from "@kit/supabase/check-requires-mfa";
+import { createMiddlewareClient } from "@kit/supabase/middleware-client";
 
-import appConfig from '~/config/app.config';
-import pathsConfig from '~/config/paths.config';
+import appConfig from "~/config/app.config";
+import pathsConfig from "~/config/paths.config";
 
-const CSRF_SECRET_COOKIE = 'csrfSecret';
-const NEXT_ACTION_HEADER = 'next-action';
+const CSRF_SECRET_COOKIE = "csrfSecret";
+const NEXT_ACTION_HEADER = "next-action";
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|images|locales|assets|sitemap.xml|robots.txt|api/*).*)',
-  ],
+  matcher: ["/((?!_next/static|_next/image|images|locales|assets|sitemap.xml|robots.txt|api/*).*)"],
 };
 
 const getUser = (request: NextRequest, response: NextResponse) => {
@@ -38,7 +36,7 @@ export async function proxy(request: NextRequest) {
   const csrfResponse = await withCsrfMiddleware(request, response);
 
   // handle patterns for specific routes
-  const handlePattern = await matchUrlPattern(request);
+  const handlePattern = await matchUrlPattern(request.url);
 
   // if a pattern handler exists, call it
   if (handlePattern) {
@@ -53,7 +51,7 @@ export async function proxy(request: NextRequest) {
   // append the action path to the request headers
   // which is useful for knowing the action path in server actions
   if (isServerAction(request)) {
-    csrfResponse.headers.set('x-action-path', request.nextUrl.pathname);
+    csrfResponse.headers.set("x-action-path", request.nextUrl.pathname);
   }
 
   // if no pattern handler returned a response,
@@ -61,10 +59,7 @@ export async function proxy(request: NextRequest) {
   return csrfResponse;
 }
 
-async function withCsrfMiddleware(
-  request: NextRequest,
-  response: NextResponse,
-) {
+async function withCsrfMiddleware(request: NextRequest, response: NextResponse) {
   // set up CSRF protection
   const csrfProtect = createCsrfProtect({
     cookie: {
@@ -73,9 +68,9 @@ async function withCsrfMiddleware(
     },
     // ignore CSRF errors for server actions since protection is built-in
     ignoreMethods: isServerAction(request)
-      ? ['POST']
+      ? ["POST"]
       : // always ignore GET, HEAD, and OPTIONS requests
-        ['GET', 'HEAD', 'OPTIONS'],
+        ["GET", "HEAD", "OPTIONS"],
   });
 
   try {
@@ -85,7 +80,7 @@ async function withCsrfMiddleware(
   } catch (error) {
     // if there is a CSRF error, return a 403 response
     if (error instanceof CsrfError) {
-      return NextResponse.json('Invalid CSRF token', {
+      return NextResponse.json("Invalid CSRF token", {
         status: 401,
       });
     }
@@ -101,14 +96,18 @@ function isServerAction(request: NextRequest) {
 }
 
 async function adminMiddleware(request: NextRequest, response: NextResponse) {
+  const isAdminPath = request.nextUrl.pathname.startsWith("/admin");
+
+  if (!isAdminPath) {
+    return;
+  }
+
   const { data, error } = await getUser(request, response);
 
   // If user is not logged in, redirect to sign in page.
   // This should never happen, but just in case.
   if (!data?.claims || error) {
-    return NextResponse.redirect(
-      new URL(pathsConfig.auth.signIn, request.nextUrl.origin).href,
-    );
+    return NextResponse.redirect(new URL(pathsConfig.auth.signIn, request.nextUrl.origin).href);
   }
 
   const client = createMiddlewareClient(request, response);
@@ -116,7 +115,7 @@ async function adminMiddleware(request: NextRequest, response: NextResponse) {
 
   // If user is not an admin, redirect to 404 page.
   if (!userIsSuperAdmin) {
-    return NextResponse.redirect(new URL('/404', request.nextUrl.origin).href);
+    return NextResponse.redirect(new URL("/404", request.nextUrl.origin).href);
   }
 
   // in all other cases, return the response
@@ -130,20 +129,19 @@ async function getPatterns() {
   let URLPattern = globalThis.URLPattern;
 
   if (!URLPattern) {
-    const { URLPattern: polyfill } = await import('urlpattern-polyfill');
+    const { URLPattern: polyfill } = await import("urlpattern-polyfill");
     URLPattern = polyfill as typeof URLPattern;
   }
 
   return [
     {
-      pattern: new URLPattern({ pathname: '/admin/*?' }),
+      pattern: new URLPattern({ pathname: "/admin/*?" }),
       handler: adminMiddleware,
     },
     {
-      pattern: new URLPattern({ pathname: '/auth/*?' }),
+      pattern: new URLPattern({ pathname: "/auth/*?" }),
       handler: async (req: NextRequest, res: NextResponse) => {
         const { data } = await getUser(req, res);
-        const normalizedPathname = getNormalizedPathname(req.nextUrl.pathname);
 
         // the user is logged out, so we don't need to do anything
         if (!data?.claims) {
@@ -151,24 +149,22 @@ async function getPatterns() {
         }
 
         // check if we need to verify MFA (user is authenticated but needs to verify MFA)
-        const isVerifyMfa = normalizedPathname === pathsConfig.auth.verifyMfa;
+        const isVerifyMfa = req.nextUrl.pathname === pathsConfig.auth.verifyMfa;
 
         // If user is logged in and does not need to verify MFA,
         // redirect to home page.
         if (!isVerifyMfa) {
           const nextPath = getSafeRedirectPath(
-            req.nextUrl.searchParams.get('next'),
+            req.nextUrl.searchParams.get("next"),
             pathsConfig.app.home,
           );
 
-          return NextResponse.redirect(
-            new URL(nextPath, req.nextUrl.origin).href,
-          );
+          return NextResponse.redirect(new URL(nextPath, req.nextUrl.origin).href);
         }
       },
     },
     {
-      pattern: new URLPattern({ pathname: '/home/*?' }),
+      pattern: new URLPattern({ pathname: "/home/*?" }),
       handler: async (req: NextRequest, res: NextResponse) => {
         const { data } = await getUser(req, res);
         const { origin, pathname: next } = req.nextUrl;
@@ -188,9 +184,7 @@ async function getPatterns() {
 
         // If user requires multi-factor authentication, redirect to MFA page.
         if (requiresMultiFactorAuthentication) {
-          return NextResponse.redirect(
-            new URL(pathsConfig.auth.verifyMfa, origin).href,
-          );
+          return NextResponse.redirect(new URL(pathsConfig.auth.verifyMfa, origin).href);
         }
       },
     },
@@ -199,43 +193,19 @@ async function getPatterns() {
 
 /**
  * Match URL patterns to specific handlers.
- * @param request
+ * @param url
  */
-async function matchUrlPattern(request: NextRequest) {
+async function matchUrlPattern(url: string) {
   const patterns = await getPatterns();
-  const input = getNormalizedPathname(request.nextUrl.pathname);
+  const input = url.split("?")[0];
 
   for (const pattern of patterns) {
     const patternResult = pattern.pattern.exec(input);
 
-    if (patternResult !== null && 'pathname' in patternResult) {
+    if (patternResult !== null && "pathname" in patternResult) {
       return pattern.handler;
     }
   }
-}
-
-function getNormalizedPathname(pathname: string) {
-  const localePrefix = getLocalePrefix(pathname);
-
-  if (!localePrefix) {
-    return pathname;
-  }
-
-  const normalizedPathname = pathname.slice(localePrefix.length);
-
-  return normalizedPathname || '/';
-}
-
-function getLocalePrefix(pathname: string) {
-  for (const locale of routing.locales) {
-    const prefix = `/${locale}`;
-
-    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
-      return prefix;
-    }
-  }
-
-  return null;
 }
 
 /**
@@ -243,7 +213,7 @@ function getLocalePrefix(pathname: string) {
  * @param request
  */
 function setRequestId(request: Request) {
-  request.headers.set('x-correlation-id', crypto.randomUUID());
+  request.headers.set("x-correlation-id", crypto.randomUUID());
 }
 
 /**
@@ -252,14 +222,14 @@ function setRequestId(request: Request) {
  * This is disabled by default. To enable set ENABLE_STRICT_CSP=true
  */
 async function createResponseWithSecureHeaders() {
-  const enableStrictCsp = process.env.ENABLE_STRICT_CSP ?? 'false';
+  const enableStrictCsp = process.env.ENABLE_STRICT_CSP ?? "false";
 
   // we disable ENABLE_STRICT_CSP by default
-  if (enableStrictCsp === 'false') {
+  if (enableStrictCsp === "false") {
     return {};
   }
 
-  const { createCspResponse } = await import('./lib/create-csp-response');
+  const { createCspResponse } = await import("./lib/create-csp-response");
 
   return createCspResponse();
 }
