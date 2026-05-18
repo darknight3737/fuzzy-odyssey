@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Script from 'next/script';
 
 import { ArrowRight, ChevronDown } from 'lucide-react';
 
@@ -67,7 +68,8 @@ async function FAQPage() {
 
   return (
     <>
-      <script
+      <Script
+        id={'faq:ld:json'}
         key={'ld:json'}
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
