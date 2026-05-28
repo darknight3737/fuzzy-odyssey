@@ -407,7 +407,8 @@ export class StripeBillingStrategyService implements BillingStrategyProviderServ
         lineItems,
         status: subscription.status,
         currency: subscription.currency,
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        cancelAtPeriodEnd:
+          subscriptionPayloadBuilder.getCancelAtPeriodEnd(subscription),
         periodStartsAt,
         periodEndsAt,
         trialStartsAt: subscription.trial_start,
