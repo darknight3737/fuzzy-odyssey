@@ -193,7 +193,8 @@ function getAdminAuthService() {
 }
 
 function getAdminAccountsService() {
+  const client = getSupabaseServerClient();
   const adminClient = getSupabaseServerAdminClient();
 
-  return createAdminAccountsService(adminClient);
+  return createAdminAccountsService(adminClient, client);
 }

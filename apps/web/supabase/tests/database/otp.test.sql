@@ -597,7 +597,11 @@ begin
     perform set_config('app.settings.security_test_token_id', token_id::text, false);
 end $$;
 
-select tests.authenticate_as('token_creator');
+-- authenticate WITH an aal claim (aal1): the restrictive restrict_mfa_nonces
+-- policy calls is_mfa_compliant(), which reads auth.jwt()->>'aal'. A real
+-- session always carries an aal; tests.authenticate_as alone leaves it NULL,
+-- which makes is_mfa_compliant() return NULL and the policy deny the read.
+select makerkit.authenticate_as('token_creator');
 do $$
 declare
     token_id uuid;
@@ -755,18 +759,11 @@ begin
     -- Get status after manual update
     status_result := public.get_nonce_status(token_id);
 
-    -- Now perform a verification with an incorrect token - this should trigger max attempts exceeded
+    -- verify_nonce now counts EVERY verification attempt (success OR failure).
+    -- With attempts pre-set to 3 and max 3, a single WRONG attempt pushes the
+    -- count to 4 (> 3), tripping the cap and revoking the token on this call.
     verification_result := public.verify_nonce(
         'wrong-token', -- Wrong token
-        'max-attempts-test', -- Correct purpose,
-        NULL, -- No user id
-        NULL, -- No required scopes
-        3     -- Max 3 attempts
-    );
-    
-    -- The above won't increment the counter, so we need to make one more attempt with the correct token
-    verification_result := public.verify_nonce(
-        token_text, -- Correct token
         'max-attempts-test', -- Correct purpose,
         NULL, -- No user id
         NULL, -- No required scopes
@@ -806,9 +803,13 @@ select is(
     'Revocation reason should indicate max attempts exceeded'
 );
 
--- Test 8.2: Setting max attempts to 0 should disable the limit
+-- Test 8.2: Passing max attempts = 0 must NOT disable the limit.
+-- verify_nonce is granted to `authenticated` and is callable directly via
+-- RPC, so the attempt cap is clamped server-side to a safe floor (1). A caller
+-- passing 0 (previously "unlimited") therefore still gets the strictest cap and
+-- the token is revoked once attempts exceed it, instead of being brute-forceable.
 do $$
-declare 
+declare
     token_result jsonb;
     verification_result jsonb;
     status_result jsonb;
@@ -817,50 +818,96 @@ declare
 begin
     -- Create a token
     token_result := public.create_nonce(
-        null, 
-        'unlimited-attempts-test',
+        null,
+        'clamp-floor-test',
         3600
     );
-    
+
     token_id := token_result->>'id';
     token_text := token_result->>'token';
-    
-    -- Manually set verification_attempts to a high number
-    UPDATE public.nonces
-    SET verification_attempts = 10
-    WHERE id = token_id;
-    
-    -- Get status after manual update
-    status_result := public.get_nonce_status(token_id);
 
-    -- Now perform a verification with the correct token and unlimited attempts
+    -- Manually set verification_attempts above the clamped floor (1)
+    UPDATE public.nonces
+    SET verification_attempts = 5
+    WHERE id = token_id;
+
+    -- Attacker hammers with a WRONG token and tries to disable the cap (0)
     verification_result := public.verify_nonce(
-        token_text, -- Correct token
-        'unlimited-attempts-test', -- Correct purpose,
-        NULL, -- No user id
-        NULL, -- No required scopes
-        0     -- Unlimited attempts (disabled)
+        'wrong-token',      -- Wrong token
+        'clamp-floor-test', -- Correct purpose
+        NULL,               -- No user id
+        NULL,               -- No required scopes
+        0                   -- Attempt to disable the cap (clamped to 1)
     );
-    
-    -- Check token status to verify it was not revoked
+
+    -- Check token status to verify it WAS revoked despite passing 0
     status_result := public.get_nonce_status(token_id);
 
     -- Store results for assertions outside the DO block
-    perform set_config('app.settings.unlimited_attempts_status', status_result::text, false);
+    perform set_config('app.settings.clamp_floor_verification', verification_result::text, false);
+    perform set_config('app.settings.clamp_floor_status', status_result::text, false);
 end $$;
 
--- Check unlimited attempts results outside the DO block
+-- Passing 0 must not grant unlimited attempts: the token is revoked.
 select is(
-    (current_setting('app.settings.unlimited_attempts_status', false)::jsonb)->>'revoked', 
-    'false', 
-    'Token should not be revoked when max attempts is disabled'
+    (current_setting('app.settings.clamp_floor_verification', false)::jsonb)->>'max_attempts_exceeded',
+    'true',
+    'Passing max attempts = 0 must not disable the cap (clamped to floor)'
+);
+
+select is(
+    (current_setting('app.settings.clamp_floor_status', false)::jsonb)->>'revoked',
+    'true',
+    'Token should be revoked even when caller passes max attempts = 0'
+);
+
+-- Test 8.3: Passing an absurdly large max attempts must be clamped to the ceiling (10).
+do $$
+declare
+    token_result jsonb;
+    verification_result jsonb;
+    status_result jsonb;
+    token_id uuid;
+    i int;
+begin
+    -- Create a token
+    token_result := public.create_nonce(
+        null,
+        'clamp-ceiling-test',
+        3600
+    );
+
+    token_id := token_result->>'id';
+
+    -- Attacker hammers with wrong guesses while passing a huge cap to try to
+    -- stay under it forever. The cap is clamped to 10, so the token is revoked
+    -- once attempts exceed 10.
+    for i in 1..15 loop
+        verification_result := public.verify_nonce(
+            'wrong-token',        -- Wrong token
+            'clamp-ceiling-test', -- Correct purpose
+            NULL,                 -- No user id
+            NULL,                 -- No required scopes
+            2147483647            -- Attempt to disable the cap (clamped to 10)
+        );
+    end loop;
+
+    status_result := public.get_nonce_status(token_id);
+
+    perform set_config('app.settings.clamp_ceiling_status', status_result::text, false);
+end $$;
+
+select is(
+    (current_setting('app.settings.clamp_ceiling_status', false)::jsonb)->>'revoked',
+    'true',
+    'Token should be revoked once attempts exceed the clamped ceiling (10)'
 );
 
 select cmp_ok(
-    (current_setting('app.settings.unlimited_attempts_status', false)::jsonb)->>'verification_attempts', 
-    '>=', 
-    '10', 
-    'Token should record at least 10 verification attempts'
+    ((current_setting('app.settings.clamp_ceiling_status', false)::jsonb)->>'verification_attempts')::int,
+    '<=',
+    11,
+    'Attempts should stop being recorded shortly after the clamped ceiling (no unlimited counting)'
 );
 
 -- ==========================================

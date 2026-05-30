@@ -5,10 +5,12 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 import * as z from 'zod';
 
+import { createAccountsApi } from '@kit/accounts/api';
 import { LineItemSchema } from '@kit/billing';
 import { getBillingGatewayProvider } from '@kit/billing-gateway';
 import { getLogger } from '@kit/shared/logger';
 import { requireUser } from '@kit/supabase/require-user';
+import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { createTeamAccountsApi } from '@kit/team-accounts/api';
 
@@ -84,6 +86,21 @@ class TeamBillingService {
     // so we can assign the correct checkout data
     const { plan, product } = getPlanDetails(params.productId, params.planId);
 
+    // Determine trial eligibility at the identity level: if the user already
+    // has billing history on any account they own, do not grant another trial.
+    // This prevents farming free trials by creating additional accounts (the
+    // per-account customer-id check below only suppresses trials on accounts
+    // that have been billed before). Uses the admin client to read across the
+    // user's own accounts, scoped to the authenticated user id after the
+    // billing.manage permission check above.
+    const ownerHasBillingHistory = await createAccountsApi(
+      getSupabaseServerAdminClient(),
+    ).ownerHasBillingHistory(userId);
+
+    const checkoutPlan = ownerHasBillingHistory
+      ? { ...plan, trialDays: undefined }
+      : plan;
+
     // find the customer ID for the account if it exists
     // (eg. if the account has been billed before)
     const customerId = await api.getCustomerId(accountId);
@@ -115,7 +132,7 @@ class TeamBillingService {
       // call the payment gateway to create the checkout session
       const checkout = await service.createCheckoutSession({
         accountId,
-        plan,
+        plan: checkoutPlan,
         returnUrl,
         customerEmail,
         customerId,

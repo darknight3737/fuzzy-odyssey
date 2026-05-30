@@ -142,6 +142,13 @@ class AdminAuthUserService {
     const targetUser =
       await this.adminClient.auth.admin.getUserById(targetUserId);
 
+    // Fail closed: if the lookup errors, we cannot determine the target's role,
+    // so do not let the destructive action proceed (a silent pass here would
+    // skip the Super Admin protection below).
+    if (targetUser.error ?? !targetUser.data.user) {
+      throw new Error(`Error fetching user`);
+    }
+
     const targetUserRole = targetUser.data.user?.app_metadata?.role;
 
     if (targetUserRole === 'super-admin') {

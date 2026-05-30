@@ -143,3 +143,17 @@ create policy restrict_mfa_notifications
     as restrictive
     to authenticated
     using (public.is_mfa_compliant());
+
+-- Restrict access to billing customers if MFA is enabled
+create policy restrict_mfa_billing_customers
+    on public.billing_customers
+    as restrictive
+    to authenticated
+    using (public.is_mfa_compliant());
+
+-- Restrict access to nonces if MFA is enabled
+create policy restrict_mfa_nonces
+    on public.nonces
+    as restrictive
+    to authenticated
+    using (public.is_mfa_compliant());

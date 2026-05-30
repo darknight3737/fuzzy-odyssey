@@ -15,7 +15,8 @@
     "./hooks/*": "./src/hooks/*.ts",
     "./webhooks": "./src/server/services/webhooks/index.ts",
     "./policies": "./src/server/policies/index.ts",
-    "./services/account-invitations.service": "./src/server/services/account-invitations.service.ts"
+    "./services/account-invitations.service": "./src/server/services/account-invitations.service.ts",
+    "./invitation-signature": "./src/server/services/invitation-signature.ts"
   },
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",

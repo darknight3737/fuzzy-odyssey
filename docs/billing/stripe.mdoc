@@ -226,6 +226,29 @@ You must also set `trialDays` in your billing schema:
 }
 ```
 
+### Trial Eligibility (One Trial Per User)
+
+Free trials are granted **once per user identity**, not once per account. When a
+user starts checkout, Makerkit checks whether they already have billing history
+(a billing customer record) on **any account they own** — across both their
+personal account and any team accounts they own. If they do, the trial period is
+removed and they are charged immediately.
+
+This prevents a user from obtaining repeated free trials by creating additional
+team accounts (each account would otherwise be treated as a brand-new customer
+and granted its own trial). Because the check is identity-wide, a user who has
+already trialed or subscribed on their personal account will not receive another
+trial when subscribing a team account they own, and vice versa.
+
+First-time users with no prior billing history are unaffected and receive the
+trial as configured by `trialDays`.
+
+{% alert type="warning" title="Lemon Squeezy trials are configured differently" %}
+This eligibility check covers the Stripe checkout path, where `trialDays` is
+sent to the provider at checkout. Lemon Squeezy trials are configured on the
+variant in the Lemon Squeezy dashboard and are not suppressed by this check.
+{% /alert %}
+
 ## Migrating Existing Subscriptions
 
 If you're migrating to Makerkit with existing Stripe subscriptions, you need to add metadata to each subscription.

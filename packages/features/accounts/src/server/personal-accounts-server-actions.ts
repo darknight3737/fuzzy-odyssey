@@ -55,6 +55,9 @@ export const deletePersonalAccountAction = authActionClient
       token: otp,
       userId: user.id,
       purpose: 'delete-personal-account',
+      // failed attempts are now counted (see verify_nonce); allow a few honest
+      // retries while still bounding brute-force attempts
+      maxVerificationAttempts: 5,
     });
 
     if (!otpResult.valid) {

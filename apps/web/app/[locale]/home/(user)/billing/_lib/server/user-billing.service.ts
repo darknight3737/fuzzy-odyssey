@@ -10,6 +10,7 @@ import { getProductPlanPair } from '@kit/billing';
 import { getBillingGatewayProvider } from '@kit/billing-gateway';
 import { getLogger } from '@kit/shared/logger';
 import { requireUser } from '@kit/supabase/require-user';
+import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 
 import appConfig from '~/config/app.config';
 import billingConfig from '~/config/billing.config';
@@ -71,6 +72,20 @@ class UserBillingService {
     }
 
     const { plan } = getProductPlanPair(billingConfig, planId);
+
+    // Determine trial eligibility at the identity level: if the user already
+    // has billing history on any account they own (personal or team), do not
+    // grant another trial. This prevents farming free trials by creating
+    // additional accounts. Uses the admin client to read across the user's own
+    // accounts, scoped to the authenticated user id.
+    const ownerHasBillingHistory = await createAccountsApi(
+      getSupabaseServerAdminClient(),
+    ).ownerHasBillingHistory(accountId);
+
+    const checkoutPlan = ownerHasBillingHistory
+      ? { ...plan, trialDays: undefined }
+      : plan;
+
     const logger = await getLogger();
 
     logger.info(
@@ -93,7 +108,7 @@ class UserBillingService {
         accountId,
         customerEmail: user.email,
         customerId,
-        plan,
+        plan: checkoutPlan,
         variantQuantities: [],
         enableDiscountField: product.enableDiscountField,
       });

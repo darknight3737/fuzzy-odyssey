@@ -47,14 +47,35 @@ from
   authenticated,
   service_role;
 
--- Open up access to invitations table for authenticated users and service_role
+-- service_role retains full access (used by the admin client for the accept route)
 grant
 select
 ,
   insert,
 update,
-delete on table public.invitations to authenticated,
-service_role;
+delete on table public.invitations to service_role;
+
+-- Authenticated users may insert/update/delete (gated by RLS) but may NOT read
+-- the invite_token column: it is a credential and must not be exposed via the
+-- data API to members of the inviting account. The accept route reads it with
+-- the service_role (admin) client. This is defense-in-depth on top of the
+-- signed-link check (see @kit/team-accounts/invitation-signature).
+grant insert,
+update,
+delete on table public.invitations to authenticated;
+
+grant
+select
+  (
+    id,
+    email,
+    account_id,
+    invited_by,
+    role,
+    created_at,
+    updated_at,
+    expires_at
+  ) on table public.invitations to authenticated;
 
 -- Enable RLS on the invitations table
 alter table public.invitations enable row level security;

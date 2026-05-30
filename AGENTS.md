@@ -67,4 +67,4 @@ After implementation, always run:
 1. `pnpm typecheck`
 2. `pnpm lint:fix`
 3. `pnpm format:fix`
-4. Run code quality reviewer agent
+4. Run /reviewer skill
