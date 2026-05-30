@@ -31,6 +31,8 @@ export const deleteTeamAccountAction = enhanceAction(
       purpose: `delete-team-account-${params.accountId}`,
       userId: user.id,
       token: params.otp,
+      // allow a few honest retries while still bounding brute-force attempts
+      maxVerificationAttempts: 5,
     });
 
     if (!otpResult.valid) {

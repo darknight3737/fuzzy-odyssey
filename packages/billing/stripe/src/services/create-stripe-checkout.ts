@@ -66,8 +66,11 @@ export async function createStripeCheckout(
     ? {
         trial_period_days: trialDays,
         metadata: {
-          accountId: params.accountId,
+          // spread caller metadata first so the server-set accountId always
+          // wins: the webhook trusts subscription.metadata.accountId as the
+          // account binding, so it must not be overridable by caller input.
           ...(params.metadata ?? {}),
+          accountId: params.accountId,
         },
         ...trialSettings,
       }

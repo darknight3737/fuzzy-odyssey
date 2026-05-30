@@ -42,13 +42,15 @@ export const removeMemberFromAccountAction = enhanceAction(
  * @description Updates the role of a member in an account.
  */
 export const updateMemberRoleAction = enhanceAction(
-  async (data) => {
+  async (data, user) => {
     const client = getSupabaseServerClient();
     const service = createAccountMembersService(client);
     const adminClient = getSupabaseServerAdminClient();
 
-    // update the role of the member
-    await service.updateMemberRole(data, adminClient);
+    // update the role of the member. The acting user's id is passed so the
+    // service can verify the actor is not assigning a role more elevated than
+    // their own.
+    await service.updateMemberRole(data, adminClient, user.id);
 
     // revalidate all pages that depend on the account
     revalidatePath('/home/[account]', 'layout');
@@ -98,6 +100,8 @@ export const transferOwnershipAction = enhanceAction(
       token: data.otp,
       userId: user.id,
       purpose: `transfer-team-ownership-${data.accountId}`,
+      // allow a few honest retries while still bounding brute-force attempts
+      maxVerificationAttempts: 5,
     });
 
     if (!otpResult.valid) {

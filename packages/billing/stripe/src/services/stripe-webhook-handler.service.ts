@@ -310,8 +310,16 @@ export class StripeWebhookHandlerService implements BillingWebhookHandlerService
       subscription: UpsertSubscriptionParams,
     ) => Promise<unknown>,
   ) {
-    const subscription = event.data.object;
-    const subscriptionId = subscription.id;
+    const subscriptionId = event.data.object.id;
+
+    // Re-fetch the authoritative subscription from Stripe rather than trusting
+    // the event-body snapshot. This makes replayed or out-of-order
+    // `customer.subscription.updated` events write the *current* state instead
+    // of a stale snapshot (which could otherwise regress or re-activate a
+    // cancelled subscription). Mirrors the checkout/invoice handlers.
+    const stripe = await this.loadStripe();
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
     const accountId = subscription.metadata.accountId as string;
 
     const subscriptionPayloadBuilderService =

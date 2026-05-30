@@ -51,3 +51,4 @@ node-compile-cache/
 
 # prds
 .prds/
+.bug-hunt/

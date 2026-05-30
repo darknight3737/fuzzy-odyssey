@@ -124,6 +124,34 @@ class AccountsApi {
 
     return response.data?.customer_id;
   }
+
+  /**
+   * @name ownerHasBillingHistory
+   * @description Returns whether the given user already has billing history
+   * (a billing customer record) on ANY account they own. Used to determine
+   * trial eligibility at an identity level rather than per-account, so a user
+   * cannot obtain a fresh trial by creating additional accounts.
+   *
+   * NOTE: this query is scoped explicitly by `primary_owner_user_id` and is
+   * intended to be run with an admin client so it can read across all of the
+   * user's owned accounts regardless of RLS.
+   * @param userId
+   */
+  async ownerHasBillingHistory(userId: string) {
+    const { count, error } = await this.client
+      .from('accounts')
+      .select('id, billing_customers !inner (id)', {
+        head: true,
+        count: 'exact',
+      })
+      .eq('primary_owner_user_id', userId);
+
+    if (error) {
+      throw error;
+    }
+
+    return (count ?? 0) > 0;
+  }
 }
 
 export function createAccountsApi(client: SupabaseClient<Database>) {

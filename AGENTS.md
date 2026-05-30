@@ -19,6 +19,14 @@
 | `packages/next` | Next.js utilities | See `packages/next/AGENTS.md` |
 | `packages/features` | Feature packages | See `packages/features/AGENTS.md` |
 
+<!-- BEGIN:nextjs-agent-rules -->
+
+# Next.js: ALWAYS read docs before coding
+
+Before any Next.js work, find and read the relevant doc in `apps/web/node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+
+<!-- END:nextjs-agent-rules -->
+
 ## Multi-Tenant Architecture
 
 - **Personal Accounts**: `auth.users.id = accounts.id`
@@ -55,7 +63,8 @@ pnpm format:fix                   # Format code
 ## Verification
 
 After implementation, always run:
+
 1. `pnpm typecheck`
 2. `pnpm lint:fix`
 3. `pnpm format:fix`
-4. Run code quality reviewer agent
+4. Run /reviewer skill

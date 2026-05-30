@@ -30,6 +30,9 @@ export function formatCurrency(params: {
  * - NOT start with `//` (protocol-relative URLs)
  * - NOT contain `://` (absolute URLs)
  * - NOT contain backslash (URL normalization attacks)
+ * - NOT contain ASCII control characters (tab/newline/CR are stripped by URL
+ *   parsers/browsers and could otherwise smuggle an off-origin host)
+ * - Resolve to the same origin when parsed (authoritative defense-in-depth check)
  */
 export function isSafeRedirectPath(path: string): boolean {
   if (!path || typeof path !== 'string') return false;
@@ -42,6 +45,24 @@ export function isSafeRedirectPath(path: string): boolean {
 
   // Must not contain backslashes (can be normalized to forward slashes)
   if (path.includes('\\')) return false;
+
+  // Must not contain ASCII control characters (C0 range + DEL). Browsers and
+  // the WHATWG URL parser strip tab/newline/CR before parsing, so a value such
+  // as `/\t//evil.com` would otherwise pass the checks above yet resolve to an
+  // off-origin URL.
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001f\u007f]/.test(path)) return false;
+
+  // Authoritative check: resolving the path against a fixed base must not
+  // change the origin. Catches any residual off-origin trick the string checks
+  // above might miss.
+  try {
+    const base = 'https://x.invalid';
+
+    if (new URL(path, base).origin !== base) return false;
+  } catch {
+    return false;
+  }
 
   return true;
 }

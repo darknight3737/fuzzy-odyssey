@@ -14,7 +14,10 @@ import { SubscriptionInvoiceWebhook } from '../types/subscription-invoice-webhoo
 import { SubscriptionWebhook } from '../types/subscription-webhook';
 import { initializeLemonSqueezyClient } from './lemon-squeezy-sdk';
 import { createLemonSqueezySubscriptionPayloadBuilderService } from './lemon-squeezy-subscription-payload-builder.service';
+import { getSubscriptionIntervalType } from './subscription-interval';
 import { createHmac } from './verify-hmac';
+
+import { timingSafeEqual as cryptoTimingSafeEqual } from 'node:crypto';
 
 type UpsertSubscriptionParams =
   Database['public']['Functions']['upsert_subscription']['Args'] & {
@@ -262,10 +265,35 @@ export class LemonSqueezyWebhookHandlerService implements BillingWebhookHandlerS
   ) {
     await initializeLemonSqueezyClient();
 
-    const subscription = event.data.attributes;
-    const orderId = subscription.order_id;
     const subscriptionId = event.data.id;
     const accountId = event.meta.custom_data.account_id;
+
+    // Re-fetch the authoritative subscription from Lemon Squeezy instead of
+    // trusting the event-body snapshot. Lemon Squeezy webhook signatures carry
+    // no timestamp, so a captured event can be replayed indefinitely; fetching
+    // live state ensures replayed/out-of-order events write the *current*
+    // subscription rather than a stale snapshot (which could otherwise regress
+    // or re-activate a cancelled subscription). Mirrors handleInvoicePaid.
+    const { data: subscriptionResponse } =
+      await getSubscription(subscriptionId);
+    const subscription = subscriptionResponse?.data.attributes;
+
+    if (!subscription) {
+      const logger = await getLogger();
+
+      logger.error(
+        {
+          subscriptionId,
+          accountId,
+          name: this.namespace,
+        },
+        'Failed to fetch subscription',
+      );
+
+      throw new Error('Failed to fetch subscription');
+    }
+
+    const orderId = subscription.order_id;
     const customerId = subscription.customer_id.toString();
     const status = subscription.status;
     const variantId = subscription.variant_id;
@@ -295,6 +323,21 @@ export class LemonSqueezyWebhookHandlerService implements BillingWebhookHandlerS
 
     const priceAmount = order?.data.attributes.first_order_item.price ?? 0;
     const firstSubscriptionItem = subscription.first_subscription_item;
+
+    if (!firstSubscriptionItem) {
+      const logger = await getLogger();
+
+      logger.error(
+        {
+          subscriptionId,
+          accountId,
+          name: this.namespace,
+        },
+        'Subscription has no subscription item',
+      );
+
+      throw new Error('Subscription has no subscription item');
+    }
 
     const lineItems = [
       {
@@ -391,8 +434,11 @@ export class LemonSqueezyWebhookHandlerService implements BillingWebhookHandlerS
     const endsAt = subscription.ends_at;
     const renewsAt = subscription.renews_at;
     const trialEndsAt = subscription.trial_ends_at;
-    const intervalCount = subscription.billing_anchor;
-    const interval = intervalCount === 1 ? 'month' : 'year';
+
+    // `billing_anchor` is a day-of-month (1-31), not an interval count. Derive
+    // the interval from the renewal date, consistent with the
+    // subscription-created path, instead of mislabelling the stored interval.
+    const { interval, intervalCount } = getSubscriptionIntervalType(renewsAt);
 
     const payloadBuilderService =
       createLemonSqueezySubscriptionPayloadBuilderService();
@@ -472,28 +518,14 @@ async function isSigningSecretValid(rawBody: string, signatureHeader: string) {
 }
 
 function timingSafeEqual(digest: string, signature: Buffer) {
-  return digest.toString() === signature.toString();
-}
+  const digestBuffer = Buffer.from(digest, 'utf8');
 
-function getSubscriptionIntervalType(renewsAt: string) {
-  const renewalDate = new Date(renewsAt);
-  const currentDate = new Date();
-
-  // Calculate the difference in milliseconds
-  const timeDifference = renewalDate.getTime() - currentDate.getTime();
-
-  // Convert milliseconds to days
-  const daysDifference = timeDifference / (1000 * 3600 * 24);
-
-  if (daysDifference <= 32) {
-    return {
-      interval: 'month',
-      intervalCount: 1,
-    };
+  // A length mismatch is itself a non-match. Comparing lengths first does not
+  // leak the secret (the HMAC digest length is fixed and public) and is
+  // required because crypto.timingSafeEqual throws on differing lengths.
+  if (digestBuffer.length !== signature.length) {
+    return false;
   }
 
-  return {
-    interval: 'year',
-    intervalCount: 1,
-  };
+  return cryptoTimingSafeEqual(digestBuffer, signature);
 }

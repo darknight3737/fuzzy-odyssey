@@ -1,4 +1,4 @@
-import type { AMREntry } from '@supabase/supabase-js';
+import type { AMREntry, AuthenticatorAssuranceLevels } from '@supabase/supabase-js';
 
 /**
  * @name JWTUserData
@@ -6,7 +6,7 @@ import type { AMREntry } from '@supabase/supabase-js';
  */
 export type JWTUserData = {
   is_anonymous: boolean;
-  aal: `aal1` | `aal2`;
+  aal: AuthenticatorAssuranceLevels;
   email: string | undefined;
   phone: string | undefined;
   is_superadmin: boolean;

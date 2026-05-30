@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { getLogger } from '@kit/shared/logger';
 import { Database, Tables } from '@kit/supabase/database';
 
+import { signInvitationToken } from './invitation-signature';
+
 type Invitation = Tables<'invitations'>;
 
 const invitePath = '/join';
@@ -162,6 +164,11 @@ class AccountInvitationsDispatchService {
     const url = new URL('/join/accept', siteUrl);
 
     url.searchParams.set('invite_token', token);
+
+    // Sign the token so the accept route can confirm this link originated from
+    // the server (i.e. was emailed to the invitee). A party who only read the
+    // token from the database cannot forge this signature.
+    url.searchParams.set('sig', signInvitationToken(token));
 
     return url.href;
   }

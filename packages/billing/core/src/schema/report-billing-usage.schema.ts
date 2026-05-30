@@ -1,17 +1,13 @@
 import { z } from 'zod';
 
 export const ReportBillingUsageSchema = z.object({
-  id: z.string({
-    description:
-      'The id of the usage record. For Stripe a customer ID, for LS a subscription item ID.',
-  }),
-  eventName: z
-    .string({
-      description: 'The name of the event that triggered the usage',
-    })
-    .optional(),
+  id: z.string().min(1),
+  eventName: z.string().optional(),
   usage: z.object({
-    quantity: z.number(),
+    // metered usage must be a non-negative integer: this prevents a caller
+    // from under-reporting (negative/fractional) usage if this schema is ever
+    // wired up to a client-facing entry point.
+    quantity: z.number().int().nonnegative(),
     action: z.enum(['increment', 'set']).optional(),
   }),
 });
