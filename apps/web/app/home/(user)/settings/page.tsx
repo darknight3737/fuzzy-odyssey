@@ -10,8 +10,6 @@ import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 import { withI18n } from '~/lib/i18n/with-i18n';
 import { requireUserInServerComponent } from '~/lib/server/require-user-in-server-component';
 
-import { AuthHashStatusListener } from './_components/auth-hash-status-listener';
-
 // Show email option if password, magic link, or OTP is enabled
 const showEmailOption =
   authConfig.providers.password ||
@@ -48,8 +46,6 @@ function PersonalAccountSettingsPage() {
 
   return (
     <PageBody>
-      <AuthHashStatusListener />
-
       <div className={'flex w-full flex-1 flex-col lg:max-w-2xl'}>
         <PersonalAccountSettingsContainer
           userId={user.id}
