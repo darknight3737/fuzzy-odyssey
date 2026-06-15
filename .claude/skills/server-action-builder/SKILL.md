@@ -1,6 +1,6 @@
 ---
 name: server-action-builder
-description: Create Next.js Server Actions with enhanceAction, Zod validation, and service patterns. Use when implementing mutations, form submissions, or API operations that need authentication and validation. Invoke with /server-action-builder.
+description: Create Next.js Server Actions with authActionClient, Zod validation, and service patterns. Use when implementing mutations, form submissions, or API operations that need authentication and validation. Invoke with /server-action-builder.
 ---
 
 # Server Action Builder
@@ -21,7 +21,7 @@ import * as z from 'zod';
 
 export const CreateFeatureSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  accountId: z.string().uuid('Invalid account ID'),
+  accountId: z.uuid('Invalid account ID'),
 });
 
 export type CreateFeatureInput = z.output<typeof CreateFeatureSchema>;
@@ -77,16 +77,18 @@ Create action in `_lib/server/server-actions.ts`:
 ```typescript
 'use server';
 
-import { enhanceAction } from '@kit/next/actions';
+import { revalidatePath } from 'next/cache';
+
+import { authActionClient } from '@kit/next/safe-action';
 import { getLogger } from '@kit/shared/logger';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
-import { revalidatePath } from 'next/cache';
 
 import { CreateFeatureSchema } from '../schemas/feature.schema';
 import { createFeatureService } from './feature.service';
 
-export const createFeatureAction = enhanceAction(
-  async function (data, user) {
+export const createFeatureAction = authActionClient
+  .inputSchema(CreateFeatureSchema)
+  .action(async ({ parsedInput: data, ctx: { user } }) => {
     const logger = await getLogger();
     const ctx = { name: 'create-feature', userId: user.id };
 
@@ -101,12 +103,20 @@ export const createFeatureAction = enhanceAction(
     revalidatePath('/home/[account]/features');
 
     return { success: true, data: result };
-  },
-  {
-    auth: true,
-    schema: CreateFeatureSchema,
-  },
-);
+  });
+```
+
+For **public actions** (no auth required), use `publicActionClient`:
+
+```typescript
+import { publicActionClient } from '@kit/next/safe-action';
+
+export const publicFeatureAction = publicActionClient
+  .inputSchema(FeatureSchema)
+  .action(async ({ parsedInput: data }) => {
+    // no ctx.user available
+    return { success: true };
+  });
 ```
 
 ## Key Patterns
