@@ -579,71 +579,29 @@ select is(
 -- Test 6: Security Tests
 -- ==========================================
 
--- Test 6.1: Regular users cannot view tokens directly from the nonces table
-select tests.authenticate_as('token_creator');
+-- The nonces table is RPC-only: it is never exposed to the data API. The
+-- authenticated role has no base table privileges, so any direct read is denied
+-- outright by table-level ACL (before RLS is even evaluated). All token access
+-- goes through the SECURITY DEFINER verify_nonce / get_nonce_status functions.
+-- The SELECT / restrictive-MFA RLS policies are defense in depth that only take
+-- effect if a base grant is ever added.
 
-set local role postgres;
-
-do $$
-declare
-    creator_id uuid;
-    token_id uuid;
-begin
-    -- Get the user id
-    creator_id := makerkit.get_id_by_identifier('token_creator');
-    
-    -- Create a token for this user
-    token_id := (public.create_nonce(creator_id, 'security-test', 3600))->>'id';
-    perform set_config('app.settings.security_test_token_id', token_id::text, false);
-end $$;
-
--- authenticate WITH an aal claim (aal1): the restrictive restrict_mfa_nonces
--- policy calls is_mfa_compliant(), which reads auth.jwt()->>'aal'. A real
--- session always carries an aal; tests.authenticate_as alone leaves it NULL,
--- which makes is_mfa_compliant() return NULL and the policy deny the read.
-select makerkit.authenticate_as('token_creator');
-do $$
-declare
-    token_id uuid;
-    token_count integer;
-begin
-    -- Get the token ID created by service role
-    token_id := (current_setting('app.settings.security_test_token_id', false))::uuid;
-    
-    -- Try to view token directly from nonces table
-    select count(*) into token_count from public.nonces where id = token_id;
-    
-    perform set_config('app.settings.creator_token_count', token_count::text, false);
-end $$;
-
--- Check creator can see their own token
-select is(
-    current_setting('app.settings.creator_token_count', false)::integer, 
-    1, 
-    'User should be able to see their own tokens in the table'
+-- Test 6.1: the authenticated role has no direct SELECT privilege on nonces
+select ok(
+    not has_table_privilege('authenticated', 'public.nonces', 'select'),
+    'Authenticated role should have no direct SELECT privilege on the nonces table'
 );
 
--- Test 6.2: Users cannot see tokens belonging to other users
-select tests.authenticate_as('token_verifier');
-do $$
-declare
-    token_id uuid;
-    token_count integer;
-begin
-    -- Get the token ID created for the creator user
-    token_id := (current_setting('app.settings.security_test_token_id', false))::uuid;
-    
-    -- Verifier tries to view token created for creator
-    select count(*) into token_count from public.nonces where id = token_id;
-    
-    perform set_config('app.settings.verifier_token_count', token_count::text, false);
-end $$;
+-- Test 6.2: a direct read attempt by an authenticated user is denied at runtime
+select tests.authenticate_as('token_creator');
 
--- Check verifier cannot see creator's token
-select is(
-    current_setting('app.settings.verifier_token_count', false)::integer, 
-    0, 
-    'User should not be able to see tokens belonging to other users'
+-- Match on SQLSTATE 42501 (insufficient_privilege) rather than the English
+-- message text, which is locale- and version-dependent (see invitations.test.sql).
+select throws_ok(
+    $$ select count(*) from public.nonces $$,
+    '42501',
+    null,
+    'Authenticated users cannot read the nonces table directly'
 );
 
 -- ==========================================
@@ -731,7 +689,11 @@ select is(
 -- ==========================================
 
 -- Test 8.1: Token should be revoked after exceeding max verification attempts
-set local role service_role;
+-- Run as the table owner: these tests preset verification_attempts with a direct
+-- UPDATE on nonces, which the data-API roles (service_role) cannot do — the table
+-- is RPC-only. The clamp/cap behaviour under test lives inside verify_nonce and
+-- is independent of the caller's role.
+set local role postgres;
 
 do $$
 declare 
@@ -915,7 +877,9 @@ select cmp_ok(
 -- ==========================================
 
 -- Test 9.1: Creating multiple anonymous nonces with the same purpose
-set local role service_role;
+-- Run as the table owner: this block counts rows with a direct SELECT on nonces,
+-- which the data-API roles cannot do (the table is RPC-only).
+set local role postgres;
 
 do $$
 declare 
@@ -1056,8 +1020,10 @@ declare
     wrong_verification jsonb;
     count_result integer;
 begin
-    set local role service_role;
-    
+    -- Run as the table owner: this block counts rows with a direct SELECT on
+    -- nonces, which the data-API roles cannot do (the table is RPC-only).
+    set local role postgres;
+
     -- Create anonymous token
     test_token1 := public.create_nonce(
         null, -- Anonymous
