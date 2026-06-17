@@ -1,5 +1,7 @@
 'use client';
 
+import type React from 'react';
+
 import Link from 'next/link';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,11 +34,13 @@ export function PasswordSignInForm({
   captchaLoading = false,
   loading = false,
   redirecting = false,
+  captchaField,
 }: {
   onSubmit: (params: z.output<typeof PasswordSignInSchema>) => unknown;
   captchaLoading: boolean;
   loading: boolean;
   redirecting: boolean;
+  captchaField?: React.ReactNode;
 }) {
   const t = useTranslations('auth');
 
@@ -108,6 +112,8 @@ export function PasswordSignInForm({
             )}
           />
         </div>
+
+        {captchaField}
 
         <Button
           data-test="auth-submit-button"

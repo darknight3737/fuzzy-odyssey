@@ -212,6 +212,21 @@ export const envVariables: EnvVariableModel[] = [
     },
   },
   {
+    name: 'NEXT_PUBLIC_CAPTCHA_WIDGET_SIZE',
+    displayName: 'Captcha Widget Size',
+    description:
+      'Turnstile widget size. Use "invisible" (default) for Non-interactive/Invisible site keys, or "normal"/"compact" for Managed site keys.',
+    category: 'Security',
+    type: 'enum',
+    values: ['invisible', 'normal', 'compact'],
+    validate: ({ value }) => {
+      return z
+        .enum(['invisible', 'normal', 'compact'])
+        .optional()
+        .safeParse(value);
+    },
+  },
+  {
     name: 'CAPTCHA_SECRET_TOKEN',
     displayName: 'Captcha Secret Token',
     description:

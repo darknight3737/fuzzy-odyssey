@@ -2,7 +2,12 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 
-import type { TurnstileInstance } from '@marsidev/react-turnstile';
+import type {
+  TurnstileInstance,
+  TurnstileProps,
+} from '@marsidev/react-turnstile';
+
+import { cn } from '@kit/ui/utils';
 
 import { CaptchaField } from './captcha-field';
 
@@ -31,7 +36,15 @@ import { CaptchaField } from './captcha-field';
  * ```
  */
 export function useCaptcha(
-  { siteKey, nonce }: { siteKey?: string; nonce?: string } = {
+  {
+    siteKey,
+    nonce,
+    options,
+  }: {
+    siteKey?: string;
+    nonce?: string;
+    options?: TurnstileProps;
+  } = {
     siteKey: undefined,
     nonce: undefined,
   },
@@ -55,6 +68,13 @@ export function useCaptcha(
     [],
   );
 
+  const isInvisible = options?.options?.size === 'invisible';
+
+  // fix for removing the "gap" for invisible widgets
+  const className = cn({
+    'mt-[-8px]': isInvisible,
+  });
+
   const field = useMemo(
     () => (
       <CaptchaField
@@ -62,9 +82,18 @@ export function useCaptcha(
         onTokenChange={handleTokenChange}
         onInstanceChange={handleInstanceChange}
         nonce={nonce}
+        options={options}
+        className={className}
       />
     ),
-    [siteKey, nonce, handleTokenChange, handleInstanceChange],
+    [
+      siteKey,
+      nonce,
+      options,
+      className,
+      handleTokenChange,
+      handleInstanceChange,
+    ],
   );
 
   // Ready when captcha is not configured (no siteKey) or token is available

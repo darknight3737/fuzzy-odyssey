@@ -222,6 +222,8 @@ function OtpEmailForm({
           )}
         />
 
+        {captcha.field}
+
         <Button
           type="submit"
           disabled={signInMutation.isPending}
@@ -237,8 +239,6 @@ function OtpEmailForm({
           )}
         </Button>
       </form>
-
-      {captcha.field}
     </Form>
   );
 }

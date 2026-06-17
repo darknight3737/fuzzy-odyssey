@@ -86,6 +86,8 @@ export function ResendAuthLinkForm(props: {
           }}
         />
 
+        {captcha.field}
+
         <Button type="submit" disabled={resendLink.isPending || captchaLoading}>
           <If condition={captchaLoading}>
             <Trans i18nKey={'auth.verifyingCaptcha'} />
@@ -100,8 +102,6 @@ export function ResendAuthLinkForm(props: {
           </If>
         </Button>
       </form>
-
-      {captcha.field}
     </Form>
   );
 }

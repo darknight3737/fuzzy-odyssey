@@ -60,9 +60,8 @@ export function EmailPasswordSignUpContainer({
             defaultValues={defaultValues}
             displayTermsCheckbox={displayTermsCheckbox}
             captchaLoading={captchaLoading}
+            captchaField={captcha.field}
           />
-
-          {captcha.field}
         </div>
       </If>
     </>

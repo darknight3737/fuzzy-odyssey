@@ -6,14 +6,23 @@ import {
   Turnstile,
   TurnstileInstance,
   TurnstileProps,
+  WidgetSize,
 } from '@marsidev/react-turnstile';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
 import { useController } from 'react-hook-form';
 
+// NEXT_PUBLIC_CAPTCHA_WIDGET_SIZE controls the default Turnstile widget size.
+// Set to 'normal' or 'compact' when using a Managed site key so the checkbox
+// is visible. Defaults to 'invisible' for non-interactive / invisible keys.
+const DEFAULT_WIDGET_SIZE =
+  (process.env['NEXT_PUBLIC_CAPTCHA_WIDGET_SIZE'] as WidgetSize | undefined) ??
+  'invisible';
+
 interface BaseCaptchaFieldProps {
   siteKey: string | undefined;
-  options?: TurnstileProps;
+  options?: Omit<TurnstileProps, 'siteKey' | 'onSuccess'>;
   nonce?: string;
+  className?: string;
 }
 
 interface StandaloneCaptchaFieldProps extends BaseCaptchaFieldProps {
@@ -65,61 +74,121 @@ export function CaptchaField<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >(props: CaptchaFieldProps<TFieldValues, TName>) {
-  const { siteKey, options, nonce } = props;
-  const instanceRef = useRef<TurnstileInstance | null>(null);
-
-  // React Hook Form integration
-  const controller =
-    'control' in props && props.control
-      ? // eslint-disable-next-line react-hooks/rules-of-hooks
-        useController({
-          control: props.control,
-          name: props.name,
-        })
-      : null;
-
-  if (!siteKey) {
+  if (!props.siteKey) {
     return null;
   }
 
-  const defaultOptions: Partial<TurnstileProps> = {
-    options: {
-      size: 'invisible',
-    },
-  };
+  if ('control' in props && props.control) {
+    return (
+      <CaptchaFieldRHF
+        siteKey={props.siteKey}
+        control={props.control}
+        name={props.name}
+        options={props.options}
+        nonce={props.nonce}
+        className={props.className}
+      />
+    );
+  }
 
-  const handleSuccess = (token: string) => {
-    if (controller) {
-      // React Hook Form mode - use setValue from controller
-      controller.field.onChange(token);
-    } else if ('onTokenChange' in props && props.onTokenChange) {
-      // Standalone mode
-      props.onTokenChange(token);
-    }
-  };
+  const standaloneProps = props as StandaloneCaptchaFieldProps;
 
-  const handleInstanceChange = (instance: TurnstileInstance | null) => {
-    instanceRef.current = instance;
+  return (
+    <CaptchaFieldStandalone
+      siteKey={props.siteKey}
+      onTokenChange={standaloneProps.onTokenChange}
+      onInstanceChange={standaloneProps.onInstanceChange}
+      options={props.options}
+      nonce={props.nonce}
+      className={props.className}
+    />
+  );
+}
 
-    if ('onInstanceChange' in props && props.onInstanceChange) {
-      props.onInstanceChange(instance);
-    }
+function CaptchaFieldStandalone({
+  siteKey,
+  options,
+  nonce,
+  className,
+  onTokenChange,
+  onInstanceChange,
+}: StandaloneCaptchaFieldProps & { siteKey: string }) {
+  const instanceRef = useRef<TurnstileInstance | null>(null);
+
+  return (
+    <CaptchaWidget
+      siteKey={siteKey}
+      options={options}
+      nonce={nonce}
+      className={className}
+      onSuccess={onTokenChange}
+      onInstanceChange={(instance) => {
+        instanceRef.current = instance;
+        onInstanceChange?.(instance);
+      }}
+    />
+  );
+}
+
+function CaptchaFieldRHF<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+>({
+  siteKey,
+  options,
+  nonce,
+  control,
+  name,
+  className,
+}: ReactHookFormCaptchaFieldProps<TFieldValues, TName> & { siteKey: string }) {
+  const { field } = useController({ control, name });
+
+  return (
+    <CaptchaWidget
+      siteKey={siteKey}
+      options={options}
+      nonce={nonce}
+      className={className}
+      onSuccess={field.onChange}
+    />
+  );
+}
+
+interface CaptchaWidgetProps {
+  siteKey: string;
+  options?: Omit<TurnstileProps, 'siteKey' | 'onSuccess'>;
+  nonce?: string;
+  className?: string;
+  onSuccess: (token: string) => void;
+  onInstanceChange?: (instance: TurnstileInstance | null) => void;
+}
+
+function CaptchaWidget({
+  siteKey,
+  options,
+  nonce,
+  className,
+  onSuccess,
+  onInstanceChange,
+}: CaptchaWidgetProps) {
+  const widgetOptions = {
+    size: DEFAULT_WIDGET_SIZE,
+    ...options?.options,
   };
 
   return (
     <Turnstile
+      className={className}
       ref={(instance) => {
         if (instance) {
-          handleInstanceChange(instance);
+          onInstanceChange?.(instance);
         }
       }}
       siteKey={siteKey}
-      onSuccess={handleSuccess}
-      scriptOptions={{
-        nonce,
-      }}
-      {...defaultOptions}
+      onSuccess={onSuccess}
+      scriptOptions={{ nonce }}
       {...options}
+      options={widgetOptions}
     />
   );
 }

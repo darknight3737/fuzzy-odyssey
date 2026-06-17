@@ -111,8 +111,6 @@ export function MagicLinkAuthContainer({
             <ErrorAlert />
           </If>
 
-          {captcha.field}
-
           <FormField
             render={({ field }) => (
               <FormItem>
@@ -133,6 +131,8 @@ export function MagicLinkAuthContainer({
           <If condition={displayTermsCheckbox}>
             <TermsAndConditionsFormField />
           </If>
+
+          {captcha.field}
 
           <Button
             type="submit"

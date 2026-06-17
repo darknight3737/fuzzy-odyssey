@@ -103,6 +103,8 @@ export function PasswordResetRequestContainer(params: {
                 )}
               />
 
+              {captcha.field}
+
               <Button
                 disabled={resetPasswordMutation.isPending || captchaLoading}
                 type="submit"
@@ -124,7 +126,6 @@ export function PasswordResetRequestContainer(params: {
                 </If>
               </Button>
             </div>
-            {captcha.field}
           </form>
         </Form>
       </If>

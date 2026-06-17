@@ -1,5 +1,7 @@
 'use client';
 
+import type React from 'react';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -36,6 +38,7 @@ interface PasswordSignUpFormProps {
 
   loading: boolean;
   captchaLoading: boolean;
+  captchaField?: React.ReactNode;
 }
 
 export function PasswordSignUpForm({
@@ -44,6 +47,7 @@ export function PasswordSignUpForm({
   onSubmit,
   loading,
   captchaLoading,
+  captchaField,
 }: PasswordSignUpFormProps) {
   const form = useForm({
     resolver: zodResolver(PasswordSignUpSchema),
@@ -114,6 +118,8 @@ export function PasswordSignUpForm({
         <If condition={displayTermsCheckbox}>
           <TermsAndConditionsFormField />
         </If>
+
+        {captchaField}
 
         <Button
           data-test={'auth-submit-button'}
