@@ -39,6 +39,8 @@ function LastAuthMethodHintImpl({ className }: LastAuthMethodHintProps) {
         return 'auth.methodMagicLink';
       case 'oauth':
         return 'auth.methodOauth';
+      case 'passkey':
+        return 'auth.methodPasskey';
       default:
         return null;
     }

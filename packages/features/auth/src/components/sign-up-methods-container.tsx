@@ -23,6 +23,9 @@ export function SignUpMethodsContainer(props: {
     password: boolean;
     magicLink: boolean;
     otp: boolean;
+    // NB: passkey sign-up is not supported — passkeys authenticate an existing
+    // account, so they only appear on the sign-in page.
+    passkey: boolean;
     oAuth: Provider[];
   };
 

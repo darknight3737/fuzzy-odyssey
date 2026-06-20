@@ -20,6 +20,7 @@ import { AccountDangerZone } from './account-danger-zone';
 import { UpdateEmailFormContainer } from './email/update-email-form-container';
 import { LinkAccountsList } from './link-accounts';
 import { MultiFactorAuthFactorsList } from './mfa/multi-factor-auth-list';
+import { PasskeysList } from './passkeys/passkeys-list';
 import { UpdatePasswordFormContainer } from './password/update-password-container';
 import { UpdateAccountDetailsFormContainer } from './update-account-details-form-container';
 import { UpdateAccountImageContainer } from './update-account-image-container';
@@ -32,6 +33,7 @@ export function PersonalAccountSettingsContainer(
       enableAccountDeletion: boolean;
       enablePasswordUpdate: boolean;
       enableAccountLinking: boolean;
+      enablePasskeys: boolean;
       showLinkEmailOption: boolean;
     };
 
@@ -155,6 +157,24 @@ export function PersonalAccountSettingsContainer(
           <MultiFactorAuthFactorsList userId={props.userId} />
         </CardContent>
       </Card>
+
+      <If condition={props.features.enablePasskeys}>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <Trans i18nKey={'account.passkeys'} />
+            </CardTitle>
+
+            <CardDescription>
+              <Trans i18nKey={'account.passkeysDescription'} />
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <PasskeysList userId={props.userId} />
+          </CardContent>
+        </Card>
+      </If>
 
       <Card>
         <CardHeader>

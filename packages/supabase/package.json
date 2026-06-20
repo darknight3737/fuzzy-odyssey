@@ -15,6 +15,7 @@
     "./middleware-client": "./src/clients/middleware-client.ts",
     "./browser-client": "./src/clients/browser-client.ts",
     "./check-requires-mfa": "./src/check-requires-mfa.ts",
+    "./passkey-errors": "./src/passkey-errors.ts",
     "./require-user": "./src/require-user.ts",
     "./hooks/*": "./src/hooks/*.ts",
     "./database": "./src/database.types.ts",

@@ -12,6 +12,7 @@ const AuthConfigSchema = z.object({
     password: z.boolean(),
     magicLink: z.boolean(),
     otp: z.boolean(),
+    passkey: z.boolean(),
     oAuth: providers.array(),
   }),
 });
@@ -36,6 +37,10 @@ const authConfig = AuthConfigSchema.parse({
     password: process.env.NEXT_PUBLIC_AUTH_PASSWORD === 'true',
     magicLink: process.env.NEXT_PUBLIC_AUTH_MAGIC_LINK === 'true',
     otp: process.env.NEXT_PUBLIC_AUTH_OTP === 'true',
+
+    // NB: Passkeys are disabled by default. Enable WebAuthn in the Supabase
+    // Console (Authentication > Sign In / Providers) for this to work.
+    passkey: process.env.NEXT_PUBLIC_AUTH_PASSKEY === 'true',
     oAuth: ['google'],
   },
 } satisfies z.output<typeof AuthConfigSchema>);

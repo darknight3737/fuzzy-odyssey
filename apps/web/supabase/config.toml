@@ -104,6 +104,14 @@ content_path = "./supabase/templates/change-email-address.html"
 subject = "Sign in to Makerkit"
 content_path = "./supabase/templates/magic-link.html"
 
+[auth.passkey]
+enabled = true
+[auth.webauthn]
+
+rp_display_name = "Makerkit"
+rp_id = "localhost"
+rp_origins = ["http://localhost:3000"]
+
 [analytics]
 enabled = true
 port = 54327

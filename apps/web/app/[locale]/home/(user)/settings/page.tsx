@@ -22,6 +22,7 @@ const features = {
   enablePasswordUpdate: authConfig.providers.password,
   enableAccountDeletion: featureFlagsConfig.enableAccountDeletion,
   enableAccountLinking: authConfig.enableIdentityLinking,
+  enablePasskeys: authConfig.providers.passkey,
 };
 
 const providers = authConfig.providers.oAuth;
