@@ -60,7 +60,7 @@ import { useTeamAccountWorkspace } from '@kit/team-accounts/hooks/use-team-accou
 | Paths | `config/paths.config.ts` |
 | Personal nav | `config/personal-account-navigation.config.tsx` |
 | Team nav | `config/team-account-navigation.config.tsx` |
-| i18n | `lib/i18n/i18n.settings.ts` |
+| i18n | `i18n/request.ts` |
 
 ## Internationalization
 

@@ -60,6 +60,38 @@ pnpm format:fix                   # Format code
 - **RLS enforces access control** - no manual auth checks needed with standard client
 - **Admin client** (`getSupabaseServerAdminClient`) bypasses RLS - use sparingly with manual validation
 
+
+## TypeScript
+
+- Write clean, simple, explicit code
+- Avoid obvious comments; add where clarity needed
+- Infer types implicitly - avoid explicit return types
+- Never use `any` unless required and justified
+- Use service pattern for server-side APIs
+- Add `import 'server-only';` to server-only code (except if using 'use server') (not needed in components)
+- Never mix client/server imports - use separate package.json exports
+
+## React
+
+- Encapsulate repeated code into reusable local components
+- Write small, composable, well-named components
+- Always use `react-hook-form` and `@kit/ui/form` for forms
+- Always use 'use client' directive for client components
+- Add `data-testid` for E2E tests where appropriate
+- Avoid `useEffect` - justify if necessary
+- Prefer single state object over multiple `useState`
+- Prefer RSC for data fetching
+- Display `Spinner` (from `@kit/ui/spinner`) where appropriate
+
+## Next.js
+
+- Use `next-safe-action` for Server Actions
+- Prefer implicit typing to explicit (unless required)
+- Use `authActionClient` (from `@kit/next/safe-action`) to protect actions; compose extra checks via `next-safe-action`'s `.use()` middleware
+- Use `use server` in server actions files
+- Add page metadata to pages
+- Use `redirect` after server actions (avoid client router)
+
 ## Verification
 
 After implementation, always run:
@@ -67,4 +99,5 @@ After implementation, always run:
 1. `pnpm typecheck`
 2. `pnpm lint:fix`
 3. `pnpm format:fix`
-4. Run /reviewer skill
+4. Run adversarial reviewer skill /reviewer
+5. Use available **Skills** when relevant. If unavailable, continue with local `AGENTS.md`, source, tests, and package exports.

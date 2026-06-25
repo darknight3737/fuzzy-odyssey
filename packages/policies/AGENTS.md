@@ -7,12 +7,12 @@
 3. ALWAYS use `allow()`/`deny()` returns with error codes and remediation messages
 4. ALWAYS assign stages (`preliminary`, `submission`) for stage-aware evaluation
 5. ALWAYS use `createPoliciesFromRegistry()` to load policies by ID — supports config tuples like `['max-invitations', { maxInvitations: 5 }]`
-6. ALWAYS use `createPolicyEvaluator()` and call `evaluatePolicies()` or `evaluateGroups()`
+6. ALWAYS use `createPoliciesEvaluator()` and call `evaluatePolicies()` or `evaluateGroups()`
 7. NEVER evaluate policies without specifying an operator (`ALL` = AND, `ANY` = OR)
 
 ## Key Imports
 
-- `definePolicy`, `allow`, `deny`, `createPolicyRegistry`, `createPoliciesFromRegistry`, `createPolicyEvaluator` — all from `@kit/policies`
+- `definePolicy`, `allow`, `deny`, `createPolicyRegistry`, `createPoliciesFromRegistry`, `createPoliciesEvaluator` — all from `@kit/policies`
 
 ## Exemplar
 
