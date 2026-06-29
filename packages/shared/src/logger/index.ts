@@ -1,6 +1,8 @@
 import { createRegistry } from '../registry';
 import { Logger as LoggerInstance } from './logger';
 
+export type { Logger } from './logger';
+
 // Define the type for the logger provider.  Currently supporting 'pino'.
 type LoggerProvider = 'pino' | 'console';
 

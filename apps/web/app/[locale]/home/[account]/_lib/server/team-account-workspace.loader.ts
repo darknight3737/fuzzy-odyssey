@@ -1,13 +1,14 @@
-import 'server-only';
 import { cache } from 'react';
 
 import { redirect } from 'next/navigation';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
-import { createTeamAccountsApi } from '@kit/team-accounts/api';
 
 import pathsConfig from '~/config/paths.config';
 import { requireUserInServerComponent } from '~/lib/server/require-user-in-server-component';
+import { composeTeamWorkspace } from '~/lib/server/workspace/compose-team-workspace';
+
+export { composeTeamWorkspace };
 
 export type TeamAccountWorkspace = Awaited<
   ReturnType<typeof loadTeamWorkspace>
@@ -26,21 +27,14 @@ export const loadTeamWorkspace = cache(workspaceLoader);
 
 async function workspaceLoader(accountSlug: string) {
   const client = getSupabaseServerClient();
-  const api = createTeamAccountsApi(client);
-
-  const [workspace, user] = await Promise.all([
-    api.getAccountWorkspace(accountSlug),
-    requireUserInServerComponent(),
-  ]);
+  const user = await requireUserInServerComponent();
+  const data = await composeTeamWorkspace(client, user, accountSlug);
 
   // we cannot find any record for the selected account
   // so we redirect the user to the home page
-  if (!workspace.data?.account) {
-    return redirect(pathsConfig.app.home);
+  if (!data) {
+    redirect(pathsConfig.app.home);
   }
 
-  return {
-    ...workspace.data,
-    user,
-  };
+  return data;
 }

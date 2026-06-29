@@ -19,7 +19,7 @@ const requirements = {
  */
 export const PasswordSchema = z
   .string()
-  .min(requirements.minLength)
+  .min(requirements.minLength, { message: 'auth.errors.minPasswordLength' })
   .max(requirements.maxLength);
 
 /**

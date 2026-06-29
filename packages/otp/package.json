@@ -11,11 +11,13 @@
   },
   "exports": {
     ".": "./src/api/index.ts",
-    "./components": "./src/components/index.ts"
+    "./components": "./src/components/index.ts",
+    "./orchestration": "./src/orchestration/index.ts"
   },
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run"
   },
   "devDependencies": {
     "@hookform/resolvers": "catalog:",
@@ -34,6 +36,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-hook-form": "catalog:",
+    "vitest": "catalog:",
     "zod": "catalog:"
   }
 }

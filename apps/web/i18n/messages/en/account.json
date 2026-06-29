@@ -6,6 +6,7 @@
   "settingsTab": "Settings",
   "multiFactorAuth": "Multi-Factor Authentication",
   "multiFactorAuthDescription": "Set up Multi-Factor Authentication method to further secure your account",
+  "nameMinLength": "Your name must be at least 2 characters",
   "passkeys": "Passkeys",
   "passkeysDescription": "Sign in faster and more securely with passkeys using your device's biometrics or security key",
   "loadingPasskeys": "Loading passkeys...",

@@ -15,7 +15,9 @@
     "./personal-account-settings": "./src/components/personal-account-settings/index.ts",
     "./components": "./src/components/index.ts",
     "./hooks/*": "./src/hooks/*.ts",
-    "./api": "./src/server/api.ts"
+    "./api": "./src/server/api.ts",
+    "./services/delete-personal-account.service": "./src/server/services/delete-personal-account.service.ts",
+    "./shared": "./src/shared/index.ts"
   },
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",

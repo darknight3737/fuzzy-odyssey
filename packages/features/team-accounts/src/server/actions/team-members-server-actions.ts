@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { authActionClient } from '@kit/next/safe-action';
-import { createOtpApi } from '@kit/otp';
+import { verifyOtpForPurpose } from '@kit/otp/orchestration';
 import { getLogger } from '@kit/shared/logger';
 import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
@@ -11,6 +11,7 @@ import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { RemoveMemberSchema } from '../../schema/remove-member.schema';
 import { TransferOwnershipConfirmationSchema } from '../../schema/transfer-ownership-confirmation.schema';
 import { UpdateMemberRoleSchema } from '../../schema/update-member-role.schema';
+import { assertAccountOwner } from '../orchestration';
 import { createAccountMembersService } from '../services/account-members.service';
 
 /**
@@ -75,12 +76,12 @@ export const transferOwnershipAction = authActionClient
 
     logger.info(ctx, 'Processing team ownership transfer request...');
 
-    // assert that the user is the owner of the account
-    const { data: isOwner, error } = await client.rpc('is_account_owner', {
-      account_id: data.accountId,
+    const isOwner = await assertAccountOwner({
+      client,
+      accountId: data.accountId,
     });
 
-    if (error || !isOwner) {
+    if (!isOwner) {
       logger.error(ctx, 'User is not the owner of this account');
 
       throw new Error(
@@ -89,30 +90,18 @@ export const transferOwnershipAction = authActionClient
     }
 
     // Verify the OTP
-    const otpApi = createOtpApi(client);
-
-    const otpResult = await otpApi.verifyToken({
-      token: data.otp,
+    await verifyOtpForPurpose({
+      client,
+      logger,
+      ctx,
       userId: user.id,
+      token: data.otp,
       purpose: `transfer-team-ownership-${data.accountId}`,
+      logInvalid: true,
+      logMismatch: true,
       // allow a few honest retries while still bounding brute-force attempts
       maxVerificationAttempts: 5,
     });
-
-    if (!otpResult.valid) {
-      logger.error(ctx, 'Invalid OTP provided');
-      throw new Error('Invalid OTP');
-    }
-
-    // validate the user ID matches the nonce's user ID
-    if (otpResult.user_id !== user.id) {
-      logger.error(
-        ctx,
-        `This token was meant to be used by a different user. Exiting.`,
-      );
-
-      throw new Error('Nonce mismatch');
-    }
 
     logger.info(
       ctx,

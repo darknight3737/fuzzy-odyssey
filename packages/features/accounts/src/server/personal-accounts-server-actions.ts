@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { authActionClient } from '@kit/next/safe-action';
-import { createOtpApi } from '@kit/otp';
+import { verifyOtpForPurpose } from '@kit/otp/orchestration';
 import { getLogger } from '@kit/shared/logger';
 import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
@@ -49,30 +49,19 @@ export const deletePersonalAccountAction = authActionClient
 
     // verify the OTP
     const client = getSupabaseServerClient();
-    const otpApi = createOtpApi(client);
 
-    const otpResult = await otpApi.verifyToken({
-      token: otp,
+    await verifyOtpForPurpose({
+      client,
+      logger,
+      ctx,
       userId: user.id,
+      token: otp,
       purpose: 'delete-personal-account',
+      logMismatch: true,
       // failed attempts are now counted (see verify_nonce); allow a few honest
       // retries while still bounding brute-force attempts
       maxVerificationAttempts: 5,
     });
-
-    if (!otpResult.valid) {
-      throw new Error('Invalid OTP');
-    }
-
-    // validate the user ID matches the nonce's user ID
-    if (otpResult.user_id !== user.id) {
-      logger.error(
-        ctx,
-        `This token was meant to be used by a different user. Exiting.`,
-      );
-
-      throw new Error('Nonce mismatch');
-    }
 
     // create a new instance of the personal accounts service
     const service = createDeletePersonalAccountService();

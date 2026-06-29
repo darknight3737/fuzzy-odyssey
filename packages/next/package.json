@@ -16,7 +16,8 @@
   },
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "next-safe-action": "catalog:"
@@ -28,6 +29,7 @@
     "@kit/tsconfig": "workspace:*",
     "@supabase/supabase-js": "catalog:",
     "next": "catalog:",
+    "vitest": "catalog:",
     "zod": "catalog:"
   }
 }

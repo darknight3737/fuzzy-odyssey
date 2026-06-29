@@ -4,7 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { AuthLayoutShell } from '@kit/auth/shared';
+import { AuthLayoutShell } from '@kit/auth/auth-layout';
 import { MultiFactorAuthError, requireUser } from '@kit/supabase/require-user';
 import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
