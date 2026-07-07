@@ -261,14 +261,16 @@ select
     'Non-owner member update attempt should not crash'
     );
 
--- Try to update primary owner without checking for exception
+-- Updating the primary owner is rejected at the privilege layer: authenticated
+-- only holds column-scoped UPDATE and primary_owner_user_id is not in the list
 select
-    lives_ok($$
-        update public.accounts 
-        set primary_owner_user_id = tests.get_supabase_uid('updatetest2') 
+    throws_ok($$
+        update public.accounts
+        set primary_owner_user_id = tests.get_supabase_uid('updatetest2')
         where id = (select id from makerkit.get_account_by_slug('updateteam'))
     $$,
-    'Non-owner member update of primary owner attempt should not crash'
+    'permission denied for table accounts',
+    'Non-owner member cannot update the primary owner column'
     );
 
 -- Verify the values have not changed by checking in both updatetest1 and updatetest2 sessions

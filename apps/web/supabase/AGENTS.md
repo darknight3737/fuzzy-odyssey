@@ -9,6 +9,11 @@ Schemas in `schemas/` directory with numbered prefixes for dependency ordering.
 For database implementation:
 - `/postgres-expert` - Schema design, RLS, migrations, testing
 
+After any change to RLS, grants, `SECURITY DEFINER` functions, views, or schema in
+this directory, run the deep adversarial RLS review during verification:
+- `/rls-review` - Statically audits tenant-isolation holes, then proves them (or
+  their absence) with runnable pgTAP cross-tenant attack tests.
+
 ## Migration Workflow
 
 ### New Entities
@@ -41,6 +46,18 @@ pnpm supabase:web:typegen
 - **ALWAYS enable RLS** on new tables
 - **NEVER use SECURITY DEFINER** without explicit access controls
 - Use existing helper functions (see `/postgres-expert` skill)
+- **NEVER grant table-level `UPDATE` to `authenticated`.** Grant column-level
+  UPDATE listing only the user-editable columns. Identity/tenancy columns
+  (`id`, `account_id`, and any FK that defines ownership) must be excluded so a
+  user cannot re-parent a row into another account via
+  `UPDATE ... SET account_id = <other tenant>`. RLS `WITH CHECK` alone does not
+  cover this cleanly; column privileges reject it up front.
+  - Column privileges are checked only against the statement's `SET` list, so
+    `BEFORE` triggers that write `updated_at`/tracking/system columns keep
+    working even though `authenticated` lacks UPDATE on them.
+  - `service_role` keeps full-table UPDATE for system-managed columns.
+  - `migra` (`supabase:db:diff`) does NOT emit column grants — it only detects
+    the `REVOKE`. Hand-write the `grant update (cols)` lines into the migration.
 
 ## Table Template
 
@@ -54,7 +71,15 @@ create table if not exists public.feature (
 
 alter table "public"."feature" enable row level security;
 revoke all on public.feature from authenticated, service_role;
-grant select, insert, update, delete on table public.feature to authenticated;
+
+-- service_role keeps full-table access
+grant select, insert, update, delete on table public.feature to service_role;
+
+-- authenticated: full access EXCEPT UPDATE, which is column-scoped so id and
+-- account_id (the tenancy link) can never be changed by a user's own UPDATE
+grant select, insert, delete on table public.feature to authenticated;
+grant update (/* user-editable columns only, NOT id / account_id */)
+  on table public.feature to authenticated;
 
 -- Use helper functions for policies
 create policy "feature_read" on public.feature for select

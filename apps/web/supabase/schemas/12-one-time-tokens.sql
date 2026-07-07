@@ -156,6 +156,17 @@ DECLARE
     v_exhausted      BOOLEAN;
     v_max_attempts   INTEGER := least(greatest(coalesce(p_max_verification_attempts, 5), 1), 10);
 BEGIN
+    -- SECURITY: authenticated callers may only act on their own (or anonymous)
+    -- tokens. Without this pin a user could pass another user's id and burn or
+    -- revoke that user's active tokens via failed attempts. The caller's role
+    -- is read from the JWT claim, falling back to the role GUC set by SET
+    -- ROLE: inside a SECURITY DEFINER function current_user is the function
+    -- owner, never the caller, so neither is usable here. The service_role
+    -- client keeps the ability to verify on behalf of any user.
+    IF coalesce(auth.jwt() ->> 'role', current_setting('role', true)) = 'authenticated' THEN
+        p_user_id := (select auth.uid());
+    END IF;
+
     -- Find and update the nonce in a single operation
     -- First filter by indexed columns to reduce candidate rows, then do bcrypt comparison
     WITH candidate_nonces AS (

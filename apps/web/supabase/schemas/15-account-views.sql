@@ -25,6 +25,8 @@ select
             public.subscriptions
         where
             account_id = accounts.id
+        order by
+            created_at desc
         limit
             1
     ) as subscription_status
