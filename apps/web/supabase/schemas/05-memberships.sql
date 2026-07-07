@@ -31,13 +31,32 @@ from
   service_role;
 
 -- Open up access to accounts_memberships table for authenticated users and service_role
+-- authenticated has no INSERT: memberships are only created by
+-- accept_invitation (run with the service_role client) and by
+-- create_team_account (SECURITY DEFINER), so the role never inserts rows
+-- directly.
+grant
+select
+,
+  delete on table public.accounts_memberships to authenticated;
+
 grant
 select
 ,
   insert,
-update,
-delete on table public.accounts_memberships to authenticated,
-service_role;
+  delete on table public.accounts_memberships to service_role;
+
+-- service_role retains full-table UPDATE
+grant
+update on table public.accounts_memberships to service_role;
+
+-- authenticated may only UPDATE the membership role. The identity columns
+-- (user_id, account_id) must never change: they define the tenancy link, so
+-- allowing them to change would let a member re-parent a membership row into
+-- another account. Enforced by Postgres up front, on top of the
+-- kit.prevent_memberships_update trigger.
+grant
+update (account_role) on table public.accounts_memberships to authenticated;
 
 -- Indexes on the accounts_memberships table
 create index ix_accounts_memberships_account_id on public.accounts_memberships (account_id);

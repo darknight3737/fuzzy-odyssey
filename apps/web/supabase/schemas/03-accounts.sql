@@ -45,13 +45,36 @@ from
   service_role;
 
 -- Open up access to accounts
+-- authenticated has no INSERT: accounts are only created by the
+-- kit.setup_new_user trigger and the create_team_account function (both
+-- SECURITY DEFINER), so the role never inserts rows directly.
+grant
+select
+,
+  delete on table public.accounts to authenticated;
+
 grant
 select
 ,
   insert,
-update,
-delete on table public.accounts to authenticated,
-service_role;
+  delete on table public.accounts to service_role;
+
+-- service_role retains full-table UPDATE (system-managed and identity columns)
+grant
+update on table public.accounts to service_role;
+
+-- authenticated may only UPDATE genuinely user-editable columns.
+-- Identity columns (id, primary_owner_user_id, is_personal_account, email) are
+-- guarded by kit.protect_account_fields and must never change. System-managed
+-- columns (created_at/updated_at, created_by/updated_by) are written only by
+-- triggers or the service_role. Note that `slug` IS user-editable: renaming a
+-- team updates it directly (see team-details-server-actions).
+-- Enforced by Postgres before RLS or the trigger run (defense-in-depth).
+-- NOTE: BEFORE triggers that mutate timestamps/tracking on NEW keep working,
+-- because column privileges are checked against the statement's SET list, not
+-- against columns a trigger writes.
+grant
+update (name, slug, picture_url, public_data) on table public.accounts to authenticated;
 
 -- constraint that conditionally allows nulls on the slug ONLY if
 --  personal_account is true
@@ -183,9 +206,12 @@ create
 or replace function kit.protect_account_fields () returns trigger as $$
 begin
     if current_user in('authenticated', 'anon') then
-	if new.id <> old.id or new.is_personal_account <>
-	    old.is_personal_account or new.primary_owner_user_id <>
-	    old.primary_owner_user_id or new.email <> old.email then
+	-- "is distinct from" treats NULL as a comparable value, so transitions
+	-- between NULL and a value (email is nullable) are caught as well
+	if new.id is distinct from old.id
+	    or new.is_personal_account is distinct from old.is_personal_account
+	    or new.primary_owner_user_id is distinct from old.primary_owner_user_id
+	    or new.email is distinct from old.email then
             raise exception 'You do not have permission to update this field';
 
         end if;
@@ -497,13 +523,16 @@ grant
 execute on function public.create_team_account (text, uuid, text) to service_role;
 
 -- RLS(public.accounts)
--- Authenticated users can delete team accounts
+-- The primary owner can delete team accounts. Personal accounts are excluded:
+-- they are deleted through the admin flow (auth.admin.deleteUser cascades to
+-- the account row), never directly by their owner.
 create policy delete_team_account
     on public.accounts
     for delete
     to authenticated
     using (
         auth.uid() = primary_owner_user_id
+        and is_personal_account = false
     );
 
 -- Functions "public.get_account_members"

@@ -42,9 +42,10 @@ values
     (makerkit.get_account_id_by_slug('invite-test'), tests.get_supabase_uid('inv_manager'), 'inv-custom');
 
 -- ----------------------------------------------------------------------------
--- Direct INSERTs into invitations are blocked by RLS for ALL authenticated
--- users (there is no INSERT policy). Invitations are only created via the
--- service_role RPC add_invitations_to_account.
+-- Direct INSERTs into invitations are blocked at the privilege layer for ALL
+-- authenticated users (the role has no INSERT grant, and there is no INSERT
+-- policy either). Invitations are only created via the service_role RPC
+-- add_invitations_to_account.
 -- ----------------------------------------------------------------------------
 
 -- account owner: blocked
@@ -52,7 +53,7 @@ select makerkit.authenticate_as('inv_owner');
 
 select throws_ok(
     $$ insert into public.invitations (email, invited_by, account_id, role, invite_token) values ('invite1@test.com', auth.uid(), makerkit.get_account_id_by_slug('invite-test'), 'member', gen_random_uuid()) $$,
-    'new row violates row-level security policy for table "invitations"',
+    'permission denied for table invitations',
     'the account owner cannot directly insert invitations'
 );
 
@@ -61,16 +62,16 @@ select makerkit.authenticate_as('inv_member');
 
 select throws_ok(
     $$ insert into public.invitations (email, invited_by, account_id, role, invite_token) values ('invite2@test.com', auth.uid(), makerkit.get_account_id_by_slug('invite-test'), 'member', gen_random_uuid()) $$,
-    'new row violates row-level security policy for table "invitations"',
+    'permission denied for table invitations',
     'a plain member cannot directly insert invitations'
 );
 
--- member holding invites.manage: STILL blocked (permission does not bypass RLS)
+-- member holding invites.manage: STILL blocked (permission does not grant INSERT)
 select makerkit.authenticate_as('inv_manager');
 
 select throws_ok(
     $$ insert into public.invitations (email, invited_by, account_id, role, invite_token) values ('invite3@test.com', auth.uid(), makerkit.get_account_id_by_slug('invite-test'), 'member', gen_random_uuid()) $$,
-    'new row violates row-level security policy for table "invitations"',
+    'permission denied for table invitations',
     'a member with invites.manage still cannot directly insert invitations'
 );
 
@@ -79,7 +80,7 @@ select makerkit.authenticate_as('inv_foreigner');
 
 select throws_ok(
     $$ insert into public.invitations (email, invited_by, account_id, role, invite_token) values ('invite4@test.com', auth.uid(), makerkit.get_account_id_by_slug('invite-test'), 'member', gen_random_uuid()) $$,
-    'new row violates row-level security policy for table "invitations"',
+    'permission denied for table invitations',
     'a non-member cannot directly insert invitations'
 );
 
@@ -138,15 +139,17 @@ select ok(
     'service_role can SELECT the invite_token column (used by the accept route)'
 );
 
--- the column-level revoke must not have stripped the row-mutation grants
+-- authenticated has no INSERT at all (invitations are created via the
+-- service_role RPC) and no table-wide UPDATE (only role/expires_at)
 select ok(
-    has_table_privilege('authenticated', 'public.invitations', 'insert'),
-    'authenticated retains INSERT on invitations (gated by RLS)'
+    not has_table_privilege('authenticated', 'public.invitations', 'insert'),
+    'authenticated has no INSERT on invitations (service_role RPC only)'
 );
 
 select ok(
-    has_table_privilege('authenticated', 'public.invitations', 'update'),
-    'authenticated retains UPDATE on invitations (gated by RLS)'
+    has_column_privilege('authenticated', 'public.invitations', 'role', 'update')
+    and has_column_privilege('authenticated', 'public.invitations', 'expires_at', 'update'),
+    'authenticated retains UPDATE on the role and expires_at columns (gated by RLS)'
 );
 
 select ok(

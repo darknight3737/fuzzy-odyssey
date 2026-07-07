@@ -100,4 +100,5 @@ After implementation, always run:
 2. `pnpm lint:fix`
 3. `pnpm format:fix`
 4. Run adversarial reviewer skill /reviewer
-5. Use available **Skills** when relevant. If unavailable, continue with local `AGENTS.md`, source, tests, and package exports.
+5. **If the change touched RLS or the database schema** — any policy, grant, `SECURITY DEFINER` function, view, migration, or file under `apps/web/supabase/` — also run the deep adversarial RLS review skill /rls-review to prove tenant isolation with pgTAP before merging.
+6. Use available **Skills** when relevant. If unavailable, continue with local `AGENTS.md`, source, tests, and package exports.

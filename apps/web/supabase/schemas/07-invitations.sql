@@ -16,6 +16,10 @@ create table if not exists
     created_at timestamptz default current_timestamp not null,
     updated_at timestamptz default current_timestamp not null,
     expires_at timestamptz default current_timestamp + interval '7 days' not null,
+    constraint invitations_expires_after_created check (expires_at > created_at),
+    constraint invitations_email_format check (
+      email ~* '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'
+    ),
     unique (email, account_id)
   );
 
@@ -55,14 +59,20 @@ select
 update,
 delete on table public.invitations to service_role;
 
--- Authenticated users may insert/update/delete (gated by RLS) but may NOT read
--- the invite_token column: it is a credential and must not be exposed via the
--- data API to members of the inviting account. The accept route reads it with
--- the service_role (admin) client. This is defense-in-depth on top of the
--- signed-link check (see @kit/team-accounts/invitation-signature).
-grant insert,
-update,
-delete on table public.invitations to authenticated;
+-- Authenticated users may update/delete (gated by RLS) but may NOT:
+--   * INSERT: invitations are only created by add_invitations_to_account,
+--     which runs with the service_role client (there is no INSERT policy);
+--   * read the invite_token column: it is a credential and must not be
+--     exposed via the data API to members of the inviting account. The accept
+--     route reads it with the service_role (admin) client. This is
+--     defense-in-depth on top of the signed-link check (see
+--     @kit/team-accounts/invitation-signature).
+grant delete on table public.invitations to authenticated;
+
+-- authenticated may only UPDATE the invitation role and expiry. Identity and
+-- delivery columns (id, email, account_id, invited_by, invite_token,
+-- created_at) are never user-updatable. Enforced by Postgres up front.
+grant update (role, expires_at) on table public.invitations to authenticated;
 
 grant
 select
@@ -284,11 +294,13 @@ begin
         invitation.created_at,
         invitation.updated_at,
         invitation.expires_at,
-        account.name,
-        account.email
+        inviter.name,
+        inviter.email
     from
         public.invitations as invitation
         join public.accounts as account on invitation.account_id = account.id
+        -- the inviter's personal account shares its id with the auth user
+        left join public.accounts as inviter on invitation.invited_by = inviter.id
     where
         account.slug = account_slug;
 
