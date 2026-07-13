@@ -257,19 +257,28 @@ export class TeamAccountsPageObject {
   }
 
   async transferOwnership(memberEmail: string, ownerEmail: string) {
+    // Open the member's actions dropdown and start the transfer flow. These are
+    // one-shot steps that open a dialog and consume a single-use OTP, so they
+    // must run exactly once — retrying them (as a wrapping toPass would) leaves
+    // the dialog mid-flow and re-sends the OTP, which is a flakiness source.
+    const memberRow = this.page.getByRole('row', { name: memberEmail });
+    await memberRow.getByRole('button').click();
+
+    // Click the transfer ownership option in the dropdown menu
+    await this.page.getByText('Transfer Ownership').click();
+
+    // Complete OTP verification (has its own retry for reading the code)
+    await this.otp.completeOtpVerification(ownerEmail);
+
+    // Confirm the transfer and wait for the mutation to complete. Only this
+    // final, idempotent step is retried.
     await expect(async () => {
-      // Find the member row and click the actions button
-      const memberRow = this.page.getByRole('row', { name: memberEmail });
-      await memberRow.getByRole('button').click();
-
-      // Click the transfer ownership option in the dropdown menu
-      await this.page.getByText('Transfer Ownership').click();
-
-      // Complete OTP verification
-      await this.otp.completeOtpVerification(ownerEmail);
-
-      // Wait for the transfer to complete and page to reload
-      const response = this.page.waitForResponse('**/members');
+      const response = this.page.waitForResponse((response) => {
+        return (
+          response.url().includes('members') &&
+          response.request().method() === 'POST'
+        );
+      });
 
       return Promise.all([
         this.page.click('[data-test="confirm-transfer-ownership-button"]'),
