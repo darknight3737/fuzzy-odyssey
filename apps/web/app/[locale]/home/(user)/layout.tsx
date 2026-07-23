@@ -10,6 +10,7 @@ import { Page, PageMobileNavigation, PageNavigation } from '@kit/ui/page';
 import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
+import { MobileSidebarTrigger } from '~/components/mobile-sidebar-trigger';
 import featuresFlagConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
 import { personalAccountNavigationConfig } from '~/config/personal-account-navigation.config';
@@ -52,8 +53,12 @@ async function SidebarLayout({ children }: React.PropsWithChildren) {
             <HomeSidebar workspace={workspace} />
           </PageNavigation>
 
-          <PageMobileNavigation>
-            <MobileNavigation workspace={workspace} />
+          <PageMobileNavigation className={'md:hidden'}>
+            <div>
+              <AppLogo />
+            </div>
+
+            <MobileSidebarTrigger />
           </PageMobileNavigation>
 
           {children}

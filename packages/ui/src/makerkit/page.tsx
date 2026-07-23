@@ -28,7 +28,7 @@ export function Page(props: PageProps) {
 }
 
 function PageWithSidebar(props: PageProps) {
-  const { Navigation, Children } = getSlotsFromPage(props);
+  const { Navigation, Children, MobileNavigation } = getSlotsFromPage(props);
 
   return (
     <div
@@ -42,6 +42,8 @@ function PageWithSidebar(props: PageProps) {
           'mx-auto flex h-screen w-full min-w-0 flex-1 flex-col bg-inherit'
         }
       >
+        {MobileNavigation}
+
         <div
           className={'bg-background flex min-w-0 flex-1 flex-col px-4 lg:px-0'}
         >
@@ -60,7 +62,7 @@ export function PageMobileNavigation(
   return (
     <div
       className={cn(
-        'container flex w-full items-center justify-between px-0 py-2 group-data-[slot="sidebar-wrapper"]/sidebar-wrapper:border-b lg:hidden',
+        'container flex w-full items-center justify-between px-0 py-2 group-data-[slot="sidebar-wrapper"]/sidebar-wrapper:border-b group-data-[slot="sidebar-wrapper"]/sidebar-wrapper:px-4 lg:hidden',
         props.className,
       )}
     >

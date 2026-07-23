@@ -66,12 +66,14 @@ export function WorkspaceDropdown({
   workspace,
 }: WorkspaceDropdownProps) {
   const router = useRouter();
-  const { open: isSidebarOpen } = useSidebar();
+  const { open: isSidebarOpen, isMobile } = useSidebar();
   const signOutMutation = useSignOut();
 
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
 
-  const collapsed = !isSidebarOpen;
+  // On mobile the sidebar renders as a full-width sheet, never the icon rail,
+  // so it must always show the expanded (non-collapsed) content.
+  const collapsed = !isSidebarOpen && !isMobile;
   const isTeamContext = !!selectedAccount;
 
   const { data: personalAccountData } = usePersonalAccountData(
@@ -119,13 +121,13 @@ export function WorkspaceDropdown({
                   size="icon"
                   className="border-border hover:shadow"
                 >
-                  <Avatar className="size-8">
+                  <Avatar className="size-8 rounded-md after:hidden">
                     <AvatarImage
                       className="rounded-md!"
                       src={currentAvatar ?? undefined}
                       alt={currentLabel ?? ''}
                     />
-                    <AvatarFallback>
+                    <AvatarFallback className="rounded-md! bg-transparent">
                       {isTeamContext ? (
                         (currentLabel ?? '').charAt(0).toUpperCase()
                       ) : (
@@ -146,12 +148,13 @@ export function WorkspaceDropdown({
                 className="hover:bg-accent/40 active:bg-accent border-border/50! hover:border-border h-11 w-full justify-start gap-x-1 rounded-md border px-1 transition-colors hover:shadow-xs"
               >
                 <span className="flex aspect-square size-8 items-center justify-center">
-                  <Avatar className="size-6">
+                  <Avatar className="size-6 rounded-md after:rounded-md">
                     <AvatarImage
+                      className="rounded-md!"
                       src={currentAvatar ?? undefined}
                       alt={currentLabel ?? ''}
                     />
-                    <AvatarFallback>
+                    <AvatarFallback className="rounded-md!">
                       {isTeamContext ? (
                         (currentLabel ?? '').charAt(0).toUpperCase()
                       ) : (
@@ -222,7 +225,7 @@ export function WorkspaceDropdown({
                     className="flex gap-2"
                     onClick={switchToPersonal}
                   >
-                    <div className="flex size-8 items-center justify-center rounded-sm border">
+                    <div className="flex size-8 items-center justify-center rounded-md border">
                       <User className="size-4" />
                     </div>
 
@@ -256,7 +259,7 @@ export function WorkspaceDropdown({
                           }
                         }}
                       >
-                        <Avatar className="size-8">
+                        <Avatar className="size-8 rounded-md after:rounded-md">
                           <AvatarImage
                             className="rounded-md!"
                             src={account.image ?? undefined}

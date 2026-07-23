@@ -10,6 +10,7 @@ import { Page, PageMobileNavigation, PageNavigation } from '@kit/ui/page';
 import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
+import { MobileSidebarTrigger } from '~/components/mobile-sidebar-trigger';
 import { getTeamAccountSidebarConfig } from '~/config/team-account-navigation.config';
 
 // local imports
@@ -67,16 +68,12 @@ async function SidebarLayout({
             />
           </PageNavigation>
 
-          <PageMobileNavigation>
-            <AppLogo />
-
-            <div className={'flex'}>
-              <TeamAccountLayoutMobileNavigation
-                userId={data.user.id}
-                accounts={accounts}
-                account={account}
-              />
+          <PageMobileNavigation className={'md:hidden'}>
+            <div>
+              <AppLogo />
             </div>
+
+            <MobileSidebarTrigger />
           </PageMobileNavigation>
 
           {children}
