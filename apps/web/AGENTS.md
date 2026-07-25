@@ -2,16 +2,9 @@
 
 ## Route Organization
 
-```
-app/
-├── (marketing)/          # Public pages
-├── (auth)/               # Authentication
-├── home/                 # Authenticated routes
-│   ├── (user)/           # Personal account
-│   └── [account]/        # Team account (slug, not ID)
-├── admin/                # Super admin
-└── api/                  # API routes
-```
+Localized routes live under `app/[locale]/`; `app/api/` is not localized.
+Within `app/[locale]/home/`: `(user)/` is the personal account, `[account]/` is
+the team account (addressed by **slug, not ID**).
 
 ## Component Organization
 
@@ -21,11 +14,9 @@ app/
 ## Skills
 
 For specialized implementation:
-- `/feature-builder` - End-to-end feature implementation
 - `/service-builder` - Server side services
 - `/server-action-builder` - Server actions
-- `/forms-builder` - Forms with validation
-- `/navigation-config` - Adding routes and menu items
+- `/react-form-builder` - Forms with validation
 
 ## Next.js 16 Params Pattern
 
@@ -68,7 +59,7 @@ Always use `Trans` component:
 
 ```tsx
 import { Trans } from '@kit/ui/trans';
-<Trans i18nKey="namespace:key" values={{ name }} />
+<Trans i18nKey="namespace.key" values={{ name }} />
 ```
 
 ## Security

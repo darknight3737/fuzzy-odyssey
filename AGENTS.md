@@ -1,12 +1,5 @@
 # Makerkit SaaS Starter
 
-## Tech Stack
-
-- **Next.js 16** (App Router) + **React 19** + **TypeScript**
-- **Supabase** (Postgres, Auth, Storage)
-- **Tailwind CSS 4** + Shadcn UI
-- **Turborepo** monorepo
-
 ## Monorepo Structure
 
 | Directory           | Purpose                       | Details                           |
@@ -33,18 +26,6 @@ Before any Next.js work, find and read the relevant doc in `apps/web/node_module
 - **Team Accounts**: Shared workspaces with members, roles, permissions
 - Data links to accounts via `account_id` foreign key
 
-## Essential Commands
-
-```bash
-pnpm dev                          # Start development
-pnpm supabase:web:start           # Start local Supabase
-pnpm supabase:web:reset           # Reset database
-pnpm supabase:web:typegen         # Generate TypeScript types
-pnpm typecheck                    # Type check
-pnpm lint:fix                     # Fix linting
-pnpm format:fix                   # Format code
-```
-
 ## Key Patterns (Quick Reference)
 
 | Pattern        | Import                                                       | Details                       |
@@ -63,8 +44,6 @@ pnpm format:fix                   # Format code
 
 ## TypeScript
 
-- Write clean, simple, explicit code
-- Avoid obvious comments; add where clarity needed
 - Infer types implicitly - avoid explicit return types
 - Never use `any` unless required and justified
 - Use service pattern for server-side APIs
@@ -73,11 +52,9 @@ pnpm format:fix                   # Format code
 
 ## React
 
-- Encapsulate repeated code into reusable local components
-- Write small, composable, well-named components
 - Always use `react-hook-form` and `@kit/ui/form` for forms
 - Always use 'use client' directive for client components
-- Add `data-testid` for E2E tests where appropriate
+- Add `data-test` for E2E tests where appropriate (Playwright's `testIdAttribute`)
 - Avoid `useEffect` - justify if necessary
 - Prefer single state object over multiple `useState`
 - Prefer RSC for data fetching
@@ -86,9 +63,7 @@ pnpm format:fix                   # Format code
 ## Next.js
 
 - Use `next-safe-action` for Server Actions
-- Prefer implicit typing to explicit (unless required)
 - Use `authActionClient` (from `@kit/next/safe-action`) to protect actions; compose extra checks via `next-safe-action`'s `.use()` middleware
-- Use `use server` in server actions files
 - Add page metadata to pages
 - Use `redirect` after server actions (avoid client router)
 
