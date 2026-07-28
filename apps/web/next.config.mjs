@@ -58,6 +58,7 @@ const config = {
   experimental: {
     mdxRs: true,
     turbopackFileSystemCacheForDev: true,
+    useTypeScriptCli: true,
     optimizePackageImports: [
       'recharts',
       'lucide-react',
@@ -70,8 +71,6 @@ const config = {
       transform: 'lodash/{{member}}',
     },
   },
-  /** We already do linting and typechecking as separate tasks in CI */
-  typescript: { ignoreBuildErrors: true },
 };
 
 export default withBundleAnalyzer({
