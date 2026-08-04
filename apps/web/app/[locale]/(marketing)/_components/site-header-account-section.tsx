@@ -5,11 +5,13 @@ import Link from 'next/link';
 
 import { PersonalAccountDropdown } from '@kit/accounts/personal-account-dropdown';
 import { useSignOut } from '@kit/supabase/hooks/use-sign-out';
-import { JWTUserData } from '@kit/supabase/types';
+import { useUser } from '@kit/supabase/hooks/use-user';
 import { Button } from '@kit/ui/button';
 import { If } from '@kit/ui/if';
+import { Skeleton } from '@kit/ui/skeleton';
 import { Trans } from '@kit/ui/trans';
 
+import { Delayed } from '~/components/skeletons/page-skeletons';
 import featuresFlagConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
 
@@ -38,12 +40,14 @@ const features = {
   enableThemeToggle: featuresFlagConfig.enableThemeToggle,
 };
 
-export function SiteHeaderAccountSection({
-  user,
-}: {
-  user: JWTUserData | null;
-}) {
+/** Reads the user on the client so cacheable marketing HTML stays user-free. */
+export function SiteHeaderAccountSection() {
   const signOut = useSignOut();
+  const { data: user, isPending } = useUser();
+
+  if (isPending) {
+    return <AccountSectionPlaceholder />;
+  }
 
   if (user) {
     return (
@@ -58,6 +62,16 @@ export function SiteHeaderAccountSection({
   }
 
   return <AuthButtons />;
+}
+
+/** Reserves the control's space so the header doesn't shift once auth resolves. */
+function AccountSectionPlaceholder() {
+  return (
+    <Delayed className={'flex items-center gap-x-2'}>
+      <Skeleton className={'h-8 w-16'} />
+      <Skeleton className={'h-8 w-20'} />
+    </Delayed>
+  );
 }
 
 function AuthButtons() {
