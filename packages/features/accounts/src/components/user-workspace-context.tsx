@@ -22,13 +22,17 @@ interface UserWorkspace {
   user: JWTUserData;
 }
 
-export const UserWorkspaceContext = createContext<UserWorkspace>(
-  {} as UserWorkspace,
-);
+/**
+ * Holds a promise rather than resolved data so the layout can render its shell
+ * and children immediately. `useUserWorkspace` unwraps it with `use()`,
+ * suspending only the components that actually read the workspace.
+ */
+export const UserWorkspaceContext =
+  createContext<Promise<UserWorkspace> | null>(null);
 
 export function UserWorkspaceContextProvider(
   props: React.PropsWithChildren<{
-    value: UserWorkspace;
+    value: Promise<UserWorkspace>;
   }>,
 ) {
   return (

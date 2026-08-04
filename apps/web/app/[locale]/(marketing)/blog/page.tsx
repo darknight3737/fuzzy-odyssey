@@ -1,4 +1,4 @@
-import { cache } from 'react';
+import { Suspense, cache } from 'react';
 
 import type { Metadata } from 'next';
 
@@ -66,13 +66,40 @@ const getContentItems = cache(
   },
 );
 
-async function BlogPage(props: BlogPageProps) {
+function BlogPage(props: BlogPageProps) {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <BlogHeader />
+      </Suspense>
+
+      <div className={'container flex flex-col space-y-6 py-8'}>
+        <Suspense fallback={null}>
+          <BlogPosts searchParams={props.searchParams} />
+        </Suspense>
+      </div>
+    </>
+  );
+}
+
+export default BlogPage;
+
+async function BlogHeader() {
   const t = await getTranslations('marketing');
+
+  return <SitePageHeader title={t('blog')} subtitle={t('blogSubtitle')} />;
+}
+
+async function BlogPosts({
+  searchParams,
+}: {
+  searchParams: BlogPageProps['searchParams'];
+}) {
   const language = await getLocale();
-  const searchParams = await props.searchParams;
+  const { page: pageParam } = await searchParams;
 
   const limit = BLOG_POSTS_PER_PAGE;
-  const page = searchParams.page ? parseInt(searchParams.page) : 0;
+  const page = pageParam ? parseInt(pageParam) : 0;
   const offset = page * limit;
 
   const { total, items: posts } = await getContentItems(
@@ -83,33 +110,27 @@ async function BlogPage(props: BlogPageProps) {
 
   return (
     <>
-      <SitePageHeader title={t('blog')} subtitle={t('blogSubtitle')} />
+      <If
+        condition={posts.length > 0}
+        fallback={<Trans i18nKey="marketing.noPosts" />}
+      >
+        <PostsGridList>
+          {posts.map((post, idx) => {
+            return <PostPreview key={idx} post={post} />;
+          })}
+        </PostsGridList>
 
-      <div className={'container flex flex-col space-y-6 py-8'}>
-        <If
-          condition={posts.length > 0}
-          fallback={<Trans i18nKey="marketing.noPosts" />}
-        >
-          <PostsGridList>
-            {posts.map((post, idx) => {
-              return <PostPreview key={idx} post={post} />;
-            })}
-          </PostsGridList>
-
-          <div>
-            <BlogPagination
-              currentPage={page}
-              canGoToNextPage={offset + limit < total}
-              canGoToPreviousPage={page > 0}
-            />
-          </div>
-        </If>
-      </div>
+        <div>
+          <BlogPagination
+            currentPage={page}
+            canGoToNextPage={offset + limit < total}
+            canGoToPreviousPage={page > 0}
+          />
+        </div>
+      </If>
     </>
   );
 }
-
-export default BlogPage;
 
 function PostsGridList({ children }: React.PropsWithChildren) {
   return (

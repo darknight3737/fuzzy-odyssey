@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import { locale as localeRootParam } from 'next/root-params';
 
 import { SidebarInset, SidebarProvider } from '@kit/ui/sidebar';
@@ -18,7 +20,9 @@ function DocsLayout({ children }: React.PropsWithChildren) {
         } as React.CSSProperties
       }
     >
-      <DocsSidebar />
+      <Suspense fallback={null}>
+        <DocsSidebar />
+      </Suspense>
 
       <SidebarInset className="h-screen overflow-y-auto overscroll-y-none">
         <DocsHeader />

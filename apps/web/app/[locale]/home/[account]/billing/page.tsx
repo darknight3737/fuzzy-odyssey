@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import { TriangleAlert } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
@@ -14,6 +16,11 @@ import { PageBody } from '@kit/ui/page';
 import { Trans } from '@kit/ui/trans';
 import { cn } from '@kit/ui/utils';
 
+import {
+  CardSkeleton,
+  Delayed,
+  PageHeaderSkeleton,
+} from '~/components/skeletons/page-skeletons';
 import billingConfig from '~/config/billing.config';
 
 // local imports
@@ -36,7 +43,50 @@ export const generateMetadata = async () => {
   };
 };
 
-async function TeamAccountBillingPage({ params }: TeamAccountBillingPageProps) {
+/**
+ * The header renders from the slug alone; only the billing data waits.
+ */
+function TeamAccountBillingPage({ params }: TeamAccountBillingPageProps) {
+  return (
+    <PageBody>
+      <Suspense fallback={<PageHeaderSkeleton />}>
+        <BillingPageHeader params={params} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <Delayed className={'flex max-w-2xl flex-col'}>
+            <CardSkeleton rows={4} />
+          </Delayed>
+        }
+      >
+        <TeamAccountBillingContent params={params} />
+      </Suspense>
+    </PageBody>
+  );
+}
+
+async function BillingPageHeader({
+  params,
+}: {
+  params: TeamAccountBillingPageProps['params'];
+}) {
+  const account = (await params).account;
+
+  return (
+    <TeamAccountLayoutPageHeader
+      account={account}
+      title={<Trans i18nKey={'common.routes.billing'} />}
+      description={<AppBreadcrumbs />}
+    />
+  );
+}
+
+async function TeamAccountBillingContent({
+  params,
+}: {
+  params: TeamAccountBillingPageProps['params'];
+}) {
   const account = (await params).account;
   const workspace = await loadTeamWorkspace(account);
   const accountId = workspace.account.id;
@@ -63,13 +113,7 @@ async function TeamAccountBillingPage({ params }: TeamAccountBillingPageProps) {
   const shouldShowBillingPortal = canManageBilling && customerId;
 
   return (
-    <PageBody>
-      <TeamAccountLayoutPageHeader
-        account={account}
-        title={<Trans i18nKey={'common.routes.billing'} />}
-        description={<AppBreadcrumbs />}
-      />
-
+    <>
       <div className={cn(`flex max-w-2xl flex-col space-y-4`)}>
         <If condition={!hasBillingData}>
           <If
@@ -111,7 +155,7 @@ async function TeamAccountBillingPage({ params }: TeamAccountBillingPageProps) {
           <TeamBillingPortalForm accountId={accountId} slug={account} />
         ) : null}
       </div>
-    </PageBody>
+    </>
   );
 }
 

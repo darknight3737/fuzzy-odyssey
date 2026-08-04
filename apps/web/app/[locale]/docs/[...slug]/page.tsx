@@ -1,4 +1,4 @@
-import { cache } from 'react';
+import { Suspense, cache } from 'react';
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -36,7 +36,15 @@ export async function generateMetadata({
   };
 }
 
-async function DocumentationPage({ params }: DocumentationPageProps) {
+function DocumentationPage({ params }: DocumentationPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <DocumentationContent params={params} />
+    </Suspense>
+  );
+}
+
+async function DocumentationContent({ params }: DocumentationPageProps) {
   const slug = (await params).slug.join('/');
   const page = await getPageBySlug(slug);
 

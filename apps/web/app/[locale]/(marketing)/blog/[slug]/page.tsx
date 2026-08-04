@@ -1,4 +1,4 @@
-import { cache } from 'react';
+import { Suspense, cache } from 'react';
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -57,7 +57,17 @@ export async function generateMetadata({
   });
 }
 
-async function BlogPost({ params }: BlogPageProps) {
+function BlogPost({ params }: BlogPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <BlogPostContent params={params} />
+    </Suspense>
+  );
+}
+
+export default BlogPost;
+
+async function BlogPostContent({ params }: BlogPageProps) {
   const slug = (await params).slug;
   const post = await getPostBySlug(slug);
 
@@ -71,5 +81,3 @@ async function BlogPost({ params }: BlogPageProps) {
     </div>
   );
 }
-
-export default BlogPost;

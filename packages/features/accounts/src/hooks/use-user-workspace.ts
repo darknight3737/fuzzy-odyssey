@@ -1,9 +1,13 @@
 'use client';
 
-import { useContext } from 'react';
+import { use, useContext } from 'react';
 
 import { UserWorkspaceContext } from '../components';
 
+/**
+ * Suspends until the workspace resolves, so callers need a `<Suspense>`
+ * boundary above them. Without one the nearest boundary further up handles it.
+ */
 export function useUserWorkspace() {
   const ctx = useContext(UserWorkspaceContext);
 
@@ -13,5 +17,5 @@ export function useUserWorkspace() {
     );
   }
 
-  return ctx;
+  return use(ctx);
 }
