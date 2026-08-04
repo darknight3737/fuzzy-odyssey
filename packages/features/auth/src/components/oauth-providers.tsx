@@ -15,6 +15,7 @@ import { Trans } from '@kit/ui/trans';
 import { useLastAuthMethod } from '../hooks/use-last-auth-method';
 import { AuthErrorAlert } from './auth-error-alert';
 import { AuthProviderButton } from './auth-provider-button';
+import { LastAuthMethodHint } from './last-auth-method-hint';
 
 /**
  * @name OAUTH_SCOPES
@@ -103,16 +104,21 @@ export const OauthProviders: React.FC<{
                   } satisfies SignInWithOAuthCredentials;
 
                   return onSignInWithProvider(async () => {
-                    const result =
-                      await signInWithProviderMutation.mutateAsync(credentials);
-
-                    // Record successful OAuth sign-in
+                    // record before the mutation: signInWithOAuth navigates
+                    // away with window.location.assign, so code after it may
+                    // never run
                     recordAuthMethod('oauth', { provider });
 
-                    return result;
+                    return signInWithProviderMutation.mutateAsync(credentials);
                   });
                 }}
               >
+                <LastAuthMethodHint
+                  name={provider}
+                  type="oauth"
+                  className="absolute right-0 translate-x-[50%] translate-y-[-50%]"
+                />
+
                 <Trans
                   i18nKey={'auth.signInWithProvider'}
                   values={{

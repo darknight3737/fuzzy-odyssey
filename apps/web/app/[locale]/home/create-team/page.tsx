@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 
 import { createAccountsApi } from '@kit/accounts/api';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
@@ -34,6 +35,8 @@ async function loadData() {
   if (!featuresFlagConfig.enableTeamsOnly) {
     return { redirectTo: pathsConfig.app.home };
   }
+
+  await connection();
 
   const client = getSupabaseServerClient();
   const api = createAccountsApi(client);

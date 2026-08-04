@@ -77,14 +77,18 @@ async function FAQPage() {
       <div className={'flex flex-col space-y-4 xl:space-y-8'}>
         <SitePageHeader title={t('faq')} subtitle={t('faqSubtitle')} />
 
-        <div className={'container flex flex-col items-center space-y-8 pb-16'}>
-          <div className="divide-border flex w-full max-w-xl flex-col divide-y divide-dashed rounded-md border">
+        <div
+          className={
+            'divide container flex flex-col items-center space-y-4 divide-y pb-16'
+          }
+        >
+          <div className="flex w-full max-w-xl flex-col">
             {faqItems.map((item, index) => {
               return <FaqItem key={index} item={item} />;
             })}
           </div>
 
-          <div>
+          <div className="flex w-full max-w-xl justify-start p-2">
             <Button
               nativeButton={false}
               render={<Link href={'/contact'} />}
@@ -94,7 +98,7 @@ async function FAQPage() {
                 <Trans i18nKey={'marketing.contactFaq'} />
               </span>
 
-              <ArrowRight className={'ml-2 w-4'} />
+              <ArrowRight className={'w-4'} />
             </Button>
           </div>
         </div>
@@ -116,13 +120,17 @@ function FaqItem({
   return (
     <details
       className={
-        'hover:bg-muted/70 [&:open]:bg-muted/70 [&:open]:hover:bg-muted transition-all'
+        '[&:open]:bg-muted/50 border-dashed transition-all [&:open]:scale-[1.05]'
       }
     >
       <summary
-        className={'flex items-center justify-between p-4 hover:cursor-pointer'}
+        className={'group/faq-item flex items-center justify-between p-4'}
       >
-        <h2 className={'cursor-pointer font-sans text-base'}>
+        <h2
+          className={
+            'cursor-pointer font-sans text-base group-hover/faq-item:underline'
+          }
+        >
           <Trans i18nKey={item.question} defaults={item.question} />
         </h2>
 

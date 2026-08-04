@@ -1,4 +1,4 @@
-import { use } from 'react';
+import { Suspense, use } from 'react';
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -11,6 +11,7 @@ import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
 import { MobileSidebarTrigger } from '~/components/mobile-sidebar-trigger';
+import { QueryHydration } from '~/components/query-hydration';
 import featuresFlagConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
 import { personalAccountNavigationConfig } from '~/config/personal-account-navigation.config';
@@ -21,23 +22,87 @@ import { HomeMobileNavigation } from './_components/home-mobile-navigation';
 import { HomeSidebar } from './_components/home-sidebar';
 import { loadUserWorkspace } from './_lib/server/load-user-workspace';
 
+/**
+ * The workspace promise is passed down unawaited so the page shell and
+ * `children` render immediately. Only the navigation, which reads the
+ * workspace, sits behind a boundary.
+ */
 function UserHomeLayout({ children }: React.PropsWithChildren) {
   const state = use(getLayoutState());
+  const workspace = loadUserWorkspace();
+  const isSidebar = state.style === 'sidebar';
 
-  if (state.style === 'sidebar') {
-    return <SidebarLayout>{children}</SidebarLayout>;
-  }
+  const navigation = isSidebar ? (
+    // Renders its own frame and nav immediately; only its header suspends.
+    <HomeSidebar />
+  ) : (
+    <Suspense fallback={null}>
+      <UserHeaderNavigation />
+    </Suspense>
+  );
 
-  return <HeaderLayout>{children}</HeaderLayout>;
+  const content = (
+    <Page style={isSidebar ? 'sidebar' : 'header'}>
+      <PageNavigation>{navigation}</PageNavigation>
+
+      <PageMobileNavigation className={isSidebar ? 'md:hidden' : undefined}>
+        <div>
+          <AppLogo />
+        </div>
+
+        {/* The sidebar already holds the nav, so mobile only needs a trigger. */}
+        {isSidebar ? (
+          <MobileSidebarTrigger />
+        ) : (
+          <Suspense fallback={null}>
+            <UserMobileNavigation />
+          </Suspense>
+        )}
+      </PageMobileNavigation>
+
+      <Suspense fallback={null}>
+        <HydratedWorkspace>{children}</HydratedWorkspace>
+      </Suspense>
+    </Page>
+  );
+
+  return (
+    <UserWorkspaceContextProvider value={workspace}>
+      {isSidebar ? (
+        <SidebarProvider defaultOpen={state.open}>{content}</SidebarProvider>
+      ) : (
+        content
+      )}
+    </UserWorkspaceContextProvider>
+  );
 }
 
 export default UserHomeLayout;
 
-async function SidebarLayout({ children }: React.PropsWithChildren) {
-  const [workspace, state] = await Promise.all([
-    loadUserWorkspace().catch(() => null),
-    getLayoutState(),
-  ]);
+async function HydratedWorkspace({ children }: React.PropsWithChildren) {
+  const { user, workspace } = await loadWorkspaceOrRedirect();
+
+  return (
+    <QueryHydration user={user} account={workspace}>
+      {children}
+    </QueryHydration>
+  );
+}
+
+async function UserHeaderNavigation() {
+  const workspace = await loadWorkspaceOrRedirect();
+
+  return <HomeMenuNavigation workspace={workspace} />;
+}
+
+async function UserMobileNavigation() {
+  const workspace = await loadWorkspaceOrRedirect();
+
+  return <HomeMobileNavigation workspace={workspace} />;
+}
+
+async function loadWorkspaceOrRedirect() {
+  const workspace = await loadUserWorkspace().catch(() => null);
 
   if (!workspace) {
     redirect('/');
@@ -45,65 +110,7 @@ async function SidebarLayout({ children }: React.PropsWithChildren) {
 
   await redirectIfTeamsOnly(workspace);
 
-  return (
-    <UserWorkspaceContextProvider value={workspace}>
-      <SidebarProvider defaultOpen={state.open}>
-        <Page style={'sidebar'}>
-          <PageNavigation>
-            <HomeSidebar workspace={workspace} />
-          </PageNavigation>
-
-          <PageMobileNavigation className={'md:hidden'}>
-            <div>
-              <AppLogo />
-            </div>
-
-            <MobileSidebarTrigger />
-          </PageMobileNavigation>
-
-          {children}
-        </Page>
-      </SidebarProvider>
-    </UserWorkspaceContextProvider>
-  );
-}
-
-async function HeaderLayout({ children }: React.PropsWithChildren) {
-  const workspace = await loadUserWorkspace();
-
-  await redirectIfTeamsOnly(workspace);
-
-  return (
-    <UserWorkspaceContextProvider value={workspace}>
-      <Page style={'header'}>
-        <PageNavigation>
-          <HomeMenuNavigation workspace={workspace} />
-        </PageNavigation>
-
-        <PageMobileNavigation>
-          <MobileNavigation workspace={workspace} />
-        </PageMobileNavigation>
-
-        {children}
-      </Page>
-    </UserWorkspaceContextProvider>
-  );
-}
-
-function MobileNavigation({
-  workspace,
-}: {
-  workspace: Awaited<ReturnType<typeof loadUserWorkspace>>;
-}) {
-  return (
-    <>
-      <div>
-        <AppLogo />
-      </div>
-
-      <HomeMobileNavigation workspace={workspace} />
-    </>
-  );
+  return workspace;
 }
 
 async function redirectIfTeamsOnly(

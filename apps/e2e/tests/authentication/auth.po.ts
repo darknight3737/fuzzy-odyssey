@@ -31,14 +31,17 @@ export class AuthPageObject {
   }
 
   async signOut() {
+    // Scoped to :visible because the route we navigated away from is still
+    // mounted at zero size, so these selectors would otherwise match both its
+    // chrome and the current page's.
     const trigger = this.page.locator(
-      '[data-test="workspace-dropdown-trigger"], [data-test="account-dropdown-trigger"]',
+      '[data-test="workspace-dropdown-trigger"]:visible, [data-test="account-dropdown-trigger"]:visible',
     );
 
     await trigger.click();
 
     const signOutButton = this.page.locator(
-      '[data-test="workspace-sign-out"], [data-test="account-dropdown-sign-out"]',
+      '[data-test="workspace-sign-out"]:visible, [data-test="account-dropdown-sign-out"]:visible',
     );
 
     await signOutButton.click();

@@ -32,6 +32,13 @@ When you need to extend a shadcn primitive, use one of these patterns and keep `
 
 For both patterns: add a header comment in the makerkit file explaining why it exists, and confirm `cn()` (tailwind-merge) resolves any conflicting utility classes the upstream variant applies.
 
+**Worked example:** `src/makerkit/page-style-context.tsx`. `SidebarTrigger` throws
+outside a `SidebarProvider`, so callers used to read the `layout-style` cookie to
+decide whether to render it — which made every page dynamic under Cache
+Components. Rather than exporting the shadcn context, `Page` provides its own
+style context and `PageSidebarTrigger` reads it. `src/shadcn/sidebar.tsx` stays
+untouched.
+
 ## Skills
 
 - `/react-form-builder` — Full form implementation workflow with react-hook-form + Zod

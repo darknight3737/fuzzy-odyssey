@@ -1,4 +1,7 @@
+import { Suspense } from 'react';
+
 import { notFound, redirect } from 'next/navigation';
+import { connection } from 'next/server';
 
 import { getBillingGatewayProvider } from '@kit/billing-gateway';
 import { BillingSessionStatus } from '@kit/billing-gateway/components';
@@ -15,7 +18,19 @@ interface SessionPageProps {
   }>;
 }
 
-async function ReturnCheckoutSessionPage({ searchParams }: SessionPageProps) {
+function ReturnCheckoutSessionPage({ searchParams }: SessionPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <CheckoutSessionStatus searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+/**
+ * The Stripe session id arrives in the query string and the session itself is
+ * fetched per request, so both sit behind the boundary.
+ */
+async function CheckoutSessionStatus({ searchParams }: SessionPageProps) {
   const sessionId = (await searchParams).session_id;
 
   if (!sessionId) {
@@ -62,6 +77,8 @@ function BlurryBackdrop() {
 
 async function loadCheckoutSession(sessionId: string) {
   await requireUserInServerComponent();
+
+  await connection();
 
   const client = getSupabaseServerClient();
   const gateway = await getBillingGatewayProvider(client);

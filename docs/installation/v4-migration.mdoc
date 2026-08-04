@@ -1,0 +1,1726 @@
+---
+status: "published"
+title: "Migrate to Next.js Supabase v4"
+label: "Upgrading from v3 to v4"
+order: 9
+description: "A guide to updating this kit from v3 to v4 using git and AI Agents"
+---
+
+The source for this page is available at `docs/installation/v4-migration.mdoc`. You can reference this file to AI agents for automatic migrations.
+
+v4 is a major upgrade focused on one thing: **making navigations instant**.
+
+- **Cache Components** — Partial Prerendering by default; you choose what to cache
+- **Root params** — `[locale]` is readable anywhere via `next/root-params`, no prop drilling
+- **Partial Prefetching** — one reusable App Shell per route instead of one prefetch per link
+- **Suspense-first pages** — real content paints immediately, data streams into place
+- **Skeleton loading states** — route-shaped skeletons replace full-page spinners
+- **Statically generated content** — blog, docs, and changelog prerender at build time
+- **CDN-safe marketing pages** — the marketing site can finally be cached at the edge
+
+The result: navigating between pages shows real, cached content immediately
+instead of a spinner while the server works.
+
+This guide covers every breaking change and what you need to update if you
+customized the codebase.
+
+## Requirements
+
+v4 requires **Next.js 16.3 or later**. Root params (`next/root-params`) do not
+exist before 16.3, and Step 2 depends on them; `cacheComponents` in Step 6 needs
+the same version.
+
+**The bump is not one of the steps.** It landed on the v3 line before v4 was
+branched, because nothing about it is specific to v4 — so if you are up to date
+you already have it. [Before starting the
+migration](#before-starting-the-migration) shows you how to check.
+
+The catalog pins `16.3.0`. If you keep your own pin, or track Next outside the
+catalog, make sure it resolves to 16.3 or later before you start — the failure
+mode is silent rather than loud, see below.
+
+## How long will it take?
+
+If you haven't customized much, expect **2-4 hours** — most steps are `git pull`
++ `pnpm install` with few conflicts.
+
+If you've heavily customized the app directory (custom pages that fetch data,
+custom layouts, a rewritten marketing site), expect **1-2 days**. This upgrade
+touches how *every* page is structured, so the work scales with how many custom
+pages you have.
+
+The migration is split into 9 steps for a reason — each step is self-contained
+and your app should build after each one. You don't have to do it all at once.
+Merge one step, verify it works, ship it to production if you want, then come
+back to the next one tomorrow or next week. There is no rush.
+
+## Should I just start from scratch?
+
+**No.** Starting from scratch means losing all your customizations, git history,
+and deployed infrastructure. The incremental upgrade preserves everything and
+lets you ship each step independently.
+
+The only scenario where starting fresh might make sense is if you've barely
+customized the kit or have only started using it in the past week or so.
+
+## Not Ready to Upgrade?
+
+That's okay!
+
+The `v3` branch is available as a long-term support (LTS) release. It will
+receive important updates.
+
+If you're not ready to upgrade now, you can switch to the `v3` branch:
+
+```bash
+git checkout v3
+```
+
+From now on, pull updates exclusively from `v3`:
+
+```bash
+git pull upstream v3
+```
+
+v4 is a performance upgrade, not a functionality upgrade. Your app works fine on
+v3. Upgrade when you have the time to do it properly — rushing this one has no
+upside.
+
+## What actually changes
+
+The core idea is small, and everything else follows from it.
+
+In v3, a page fetched all its data at the top and returned finished HTML. Nothing
+rendered until the slowest query came back, so every navigation showed a spinner.
+
+In v4, a page returns immediately with everything it already knows — headers,
+navigation, card chrome, cached content — and the parts that need fresh data
+stream into `<Suspense>` boundaries as they resolve.
+
+```diff
+- async function Page({ params }) {
+-   const { account } = await params;
+-   const members = await loadMembers(account);   // blocks the entire page
+-   return <PageBody><Header /><MembersTable members={members} /></PageBody>;
+- }
+
++ function Page({ params }) {
++   return (
++     <PageBody>
++       <Header />
++       <Suspense fallback={<MembersTableSkeleton />}>
++         <MembersTable params={params} />         {/* only this waits */}
++       </Suspense>
++     </PageBody>
++   );
++ }
+```
+
+That's the whole migration, applied route by route. Everything below is either
+enabling this pattern or cleaning up things that block it.
+
+## How the Upgrade Works
+
+v4 is delivered as **9 incremental PRs**, each merged in order. Every PR is a
+self-contained step — your app should build and run after each one.
+
+If you haven't customized a particular area, `git pull` handles it automatically
+— only read the sections relevant to your changes.
+
+### Merge Order
+
+Merge these in exact order. Each step depends on the previous ones. Each step is
+tagged so you can merge incrementally:
+
+| # | Tag | What It Does |
+|---|-----|-------------|
+| 1 | `v4-step/root-layout` | Makes `app/[locale]/layout.tsx` the real root layout |
+| 2 | `v4-step/root-params-i18n` | Resolves the locale via `next/root-params` |
+| 3 | `v4-step/loading-states` | Replaces full-page spinners with skeletons |
+| 4 | `v4-step/marketing-auth` | Makes marketing pages CDN-cacheable |
+| 5 | `v4-step/suspense-boundaries` | Adds `<Suspense>` across the app |
+| 6 | `v4-step/cache-components` | Enables `cacheComponents` |
+| 7 | `v4-step/static-content` | Prerenders and caches blog, docs, and changelog |
+| 8 | `v4-step/partial-prefetching` | Enables `partialPrefetching` |
+| 9 | `v4-step/design` | Visual refresh — the only step that is purely cosmetic |
+
+There is no dependency step. The Next 16.3 bump these tags need is already on the
+branch you are migrating from — see [Before starting the
+migration](#before-starting-the-migration).
+
+Steps 1-2 are structural and low-conflict. Steps 3-5 touch pages you have
+probably customized — those are where your time will go. Steps 6-8 are mostly
+configuration plus fixing whatever the dev overlay reports. Step 9 is optional
+and independent of everything else.
+
+### Every step is a working state
+
+This is the rule the step order is built around: **after each step your app
+builds, runs, and is deployable.** No step leaves you in a half-migrated state
+that only compiles once the next step lands.
+
+Three consequences worth knowing before you start:
+
+- **`use cache` is not available until Step 6.** The directive requires
+  `cacheComponents`, which Step 6 enables. Steps 1-5 deliberately use only APIs
+  that work without it — `<Suspense>`, `generateStaticParams`, and ordinary
+  component restructuring. If an agent suggests adding `use cache` before Step 6,
+  it is wrong and your build will fail.
+- **The order exists so you never touch a file twice.** Step 5 puts your data
+  access behind `<Suspense>`, which is what lets Step 6 turn the flag on cleanly.
+  Step 7 then caches that same data in one pass, with `use cache` available. If
+  you reorder these, you will either do the work twice or leave `instant = false`
+  scattered through your app.
+- **Steps 1-5 are valuable on their own.** Suspense boundaries, skeletons, and a
+  cacheable marketing site all improve your app under the v3 rendering model. If
+  you stop after Step 5, you keep every one of those gains. Steps 6-8 turn them
+  into guaranteed-instant navigation.
+
+After merging the last tag, merge the latest `main` to pick up any fixes released
+after the migration tags:
+
+```bash
+git pull upstream main
+```
+
+### Before starting the migration
+
+Make sure your `main` branch is up to date with the `v3` branch, and that
+`typecheck`, `lint`, and `format` run without errors.
+
+If you're behind `v3`, update it:
+
+```bash
+git pull upstream v3
+```
+
+Now make sure these commands run without errors:
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm format
+```
+
+If any of these return errors, fix them before starting the migration.
+
+### You already have the dependency bump
+
+The Next 16.3 bump the migration needs is **not** one of the tags below. It
+landed on the v3 line as an ordinary catalog refresh, because nothing about it is
+specific to v4 and a fork that is not migrating yet still wants it. Bringing your
+branch up to date, which you just did, is all it takes.
+
+Check that it worked:
+
+```bash
+grep "^  next:" pnpm-workspace.yaml
+```
+
+Anything below 16.3 means you are still behind — pull again before you start. If
+you pin Next yourself rather than using the catalog, update your own pin now.
+
+Conflicts from that update land in `pnpm-lock.yaml`. Do not merge that file by
+hand — take either side and regenerate it:
+
+```bash
+git checkout --ours pnpm-lock.yaml
+pnpm install
+git add pnpm-lock.yaml
+```
+
+The same update carries a test-only fix worth knowing about if you have your own
+Stripe checkout tests: `apps/e2e/tests/utils/stripe.po.ts` now retries the
+checkout submit until the button reports it is processing. Stripe re-renders the
+embedded checkout while it validates the form, and a click that lands mid-render
+is dropped silently — the test then fails 20s later waiting on a success page
+that was never going to appear. Apply the same retry to your own tests.
+
+### Work on a separate branch
+
+We recommend performing the migration on a dedicated branch. This keeps your
+`main` branch stable and deployable while you upgrade, and gives you an easy
+escape hatch if anything goes wrong.
+
+**Option A: One branch per step** — Create a branch for each step (e.g.
+`v4/root-layout`, `v4/static-content`), merge it into `main` after verifying,
+then start the next step from `main`. This lets you deploy each step
+independently.
+
+**Option B: Single migration branch** — Create one `v4-migration` branch, merge
+all 9 steps into it, then merge the whole thing into `main` at the end.
+
+Option A is safer for production apps. It is strongly recommended for this
+particular upgrade, because steps 6-8 change runtime rendering behaviour and you
+want to catch that in isolation.
+
+### Step-by-Step Process
+
+For each step below, follow this process:
+
+**1. Create a branch and merge the tag:**
+
+```bash
+git checkout -b v4/<step-name>
+git pull upstream <TAG>
+pnpm install
+```
+
+Always run `pnpm install` after each `git pull` — several steps change
+dependencies.
+
+**2. Resolve conflicts.** If easy enough, resolve manually first.
+
+**3. Run the AI-assisted review** using an AI coding agent (Claude Code, Cursor,
+etc.). Each step below includes a tailored prompt.
+
+**4. Validate** — check the "Validate Before Continuing" checklist for that step.
+
+**5. Commit and optionally merge.**
+
+---
+
+## Table of Contents
+
+1. [Root Layout](#1-root-layout)
+2. [Root Params + i18n](#2-root-params--i18n)
+3. [Loading States](#3-loading-states)
+4. [Marketing Auth](#4-marketing-auth)
+5. [Suspense Boundaries](#5-suspense-boundaries)
+6. [Cache Components](#6-cache-components)
+7. [Static Content](#7-static-content)
+8. [Partial Prefetching](#8-partial-prefetching)
+9. [Design Updates](#9-design-updates)
+10. [After Upgrading](#after-upgrading)
+
+---
+
+## 1. Root Layout
+
+Create a branch and pull in the changes:
+
+```bash
+git checkout -b v4/root-layout
+git pull upstream v4-step/root-layout
+pnpm install
+```
+
+Then run the AI-assisted review with this prompt:
+
+```
+I'm upgrading Makerkit from v3 to v4. I just merged `v4-step/root-layout`.
+
+This step deletes `apps/web/app/layout.tsx` so that
+`apps/web/app/[locale]/layout.tsx` becomes the true root layout. This is
+required for `next/root-params` to work. `apps/web/app/not-found.tsx` stays,
+but is rewritten to render without a root layout of its own.
+
+In my custom code:
+
+1. If I customized `apps/web/app/layout.tsx`, move those customizations into
+   `apps/web/app/[locale]/layout.tsx`. Note the CSS import path changes from
+   `../styles/globals.css` to `../../styles/globals.css`.
+2. If I customized `apps/web/app/not-found.tsx`, keep it but strip the <html>,
+   <body>, theme and i18n provider wrappers — there is no root layout above it
+   any more, so Next supplies the document shell. It must not render a page
+   shell of its own.
+   `apps/web/app/[locale]/not-found.tsx` handles 404s inside the locale tree
+   and inherits <html>/<body> from the layout.
+3. Check for any page or layout files still directly under `apps/web/app/`.
+   Only these may remain there: `global-error.tsx`, `robots.ts`, `sitemap.ts`,
+   `api/`, and other route handlers. Everything else must move under
+   `[locale]/`.
+4. Search for imports referencing the deleted files.
+
+Then run `pnpm typecheck`, start the dev server, and confirm that `/` returns
+200 and an unknown URL returns 404.
+```
+
+### Why this is needed
+
+Root params are the dynamic segments that appear **before** the root layout.
+
+In v3, `apps/web/app/layout.tsx` existed as a pass-through (`return children`)
+purely so that `apps/web/app/not-found.tsx` had a layout to render into. That
+pass-through counted as the root layout, which put `[locale]` *below* it — so
+`[locale]` was not a root param.
+
+Removing it promotes `[locale]/layout.tsx` to root layout and makes `locale` a
+root param. You can verify this after merging: Next generates the type
+definition during `next dev` or `next typegen`.
+
+```bash
+pnpm --filter web exec next typegen
+cat apps/web/.next/types/root-params.d.ts
+```
+
+You should see:
+
+```typescript
+declare module 'next/root-params' {
+  export function locale(): Promise<string>
+}
+```
+
+If it instead says `No root params detected`, something is still above the
+`[locale]` segment — check for a stray `layout.tsx` or page file directly under
+`apps/web/app/`. Also confirm you are on Next 16.3 or later; earlier versions do
+not emit this file at all.
+
+### Directory Structure
+
+```diff
+  apps/web/app/
+- ├── layout.tsx           ← deleted (was just `return children`)
+  ├── not-found.tsx        ← kept, for requests the proxy does not rewrite
+  ├── [locale]/
+  │   ├── layout.tsx       ← now the root layout, owns the CSS import
+  │   └── not-found.tsx    ← now handles all 404s
+  ├── api/                 ← unchanged
+  ├── global-error.tsx     ← unchanged
+  ├── robots.ts            ← unchanged
+  └── sitemap.ts           ← unchanged
+```
+
+### 404 handling
+
+There are two not-found files and they cover different traffic:
+
+- `apps/web/app/[locale]/not-found.tsx` handles anything the proxy rewrote into
+  the locale tree, which is most requests. It inherits the layout.
+- `apps/web/app/not-found.tsx` handles what the proxy skips — the paths excluded
+  by its matcher, such as `api/*`, `sitemap.xml` and `robots.txt`. With no root
+  layout above it, Next provides the document shell, so this file must render
+  only its own content.
+
+Keeping a page-like file at `app/` root does **not** reintroduce the root-layout
+problem on 16.3: `next typegen` still emits `root-params.d.ts`. Verify after this
+step rather than assuming — that file is the whole reason Step 2 works.
+
+### Validate Before Continuing
+
+```bash
+pnpm typecheck
+pnpm dev
+```
+
+- [ ] `apps/web/.next/types/root-params.d.ts` declares `locale()`
+- [ ] `/` returns 200 and renders with the correct `<html lang>`
+- [ ] An unknown URL returns 404 and renders your not-found page
+- [ ] Your custom root layout changes survived the move
+
+---
+
+## 2. Root Params + i18n
+
+Create a branch and pull in the changes:
+
+```bash
+git checkout -b v4/root-params-i18n
+git pull upstream v4-step/root-params-i18n
+pnpm install
+```
+
+Then run the AI-assisted review with this prompt:
+
+```
+I'm upgrading Makerkit from v3 to v4. I just merged
+`v4-step/root-params-i18n`.
+
+This step changes `apps/web/i18n/request.ts` to resolve the locale from
+`next/root-params` instead of reading `requestLocale`. Reading `requestLocale`
+calls `headers()`, which forces dynamic rendering everywhere and makes
+next-intl unusable inside a `use cache` boundary.
+
+In my custom code:
+
+1. Find any custom code reading `requestLocale` in the i18n request config
+   and remove it.
+2. Find any server component that receives `locale` as a prop — whether it
+   feeds `getTranslations`, a data loader, or anything else. They can all call
+   `locale()` from `next/root-params` directly. Remove the prop drilling, and
+   the now-unused `params` types that went with it.
+3. `next/root-params` cannot be used in Client Components, Server Actions, or
+   Route Handlers. If any of my custom code calls `getTranslations` or
+   `getLocale` from those places, flag it — it needs an explicit locale passed
+   in instead.
+
+Then run `pnpm typecheck` and verify translated pages still render in each
+configured locale.
+```
+
+### What changed
+
+`getRequestConfig` receives `requestLocale` as a **lazy getter** — it only calls
+`headers()` if you read it. v3 read it. v4 does not:
+
+```diff
++ import { locale as localeRootParam } from 'next/root-params';
+
+- export default getRequestConfig(async ({ requestLocale }) => {
+-   let locale = await requestLocale;
++ export default getRequestConfig(async ({ locale: localeOverride }) => {
++   let locale = localeOverride ?? (await localeRootParam());
+
+    if (!locale || !routing.locales.includes(locale as never)) {
+      locale = routing.defaultLocale;
+    }
+
+    return { locale, messages: await loadMessages(locale) };
+  });
+```
+
+Because the config never touches `headers()`, next-intl works inside cached
+components — which [Step 6](#6-cache-components) depends on.
+
+### No more prop drilling
+
+Any server component can now read the locale directly:
+
+```diff
+- async function DocsSidebar({ locale }: { locale: string }) {
+-   const pages = await getDocs(locale);
++ import { locale } from 'next/root-params';
++
++ async function DocsSidebar() {
++   const pages = await getDocs(await locale());
+```
+
+Root param getters are also tracked inside `use cache` — only the params you
+actually read become part of the cache key.
+
+### Where root params do not work
+
+`next/root-params` is Server Components only. It throws in:
+
+- Client Components
+- Server Actions
+- Route Handlers
+- `unstable_cache`
+
+The kit itself does not call next-intl from any of these. If your custom code
+does — for example rendering a localized email inside a Server Action — pass the
+locale in explicitly with `getTranslations({ locale })`.
+
+### `setRequestLocale` is not a substitute
+
+`setRequestLocale` stores the locale in a React `cache()`-scoped object. That
+scope does not cross a `use cache` boundary, so it will not make next-intl work
+inside cached components. Resolving the locale in `getRequestConfig` is what
+does the work.
+
+### Validate Before Continuing
+
+```bash
+pnpm typecheck
+pnpm dev
+```
+
+- [ ] Pages render translated content in the default locale
+- [ ] Pages render translated content in a non-default locale (e.g. `/es`)
+- [ ] Locale switching still works
+- [ ] No `headers()` / dynamic rendering errors in the dev console
+
+---
+
+## 3. Loading States
+
+Create a branch and pull in the changes:
+
+```bash
+git checkout -b v4/loading-states
+git pull upstream v4-step/loading-states
+pnpm install
+```
+
+Then run the AI-assisted review with this prompt:
+
+```
+I'm upgrading Makerkit from v3 to v4. I just merged `v4-step/loading-states`.
+
+This step replaces full-page spinners in `loading.tsx` with route-shaped
+skeletons.
+
+In my custom code:
+
+1. Find `loading.tsx` files that render a full-page spinner and replace them
+   with a skeleton that matches the shape of the page underneath — same
+   header, same layout, placeholder blocks where content goes.
+2. Reuse the building blocks in `apps/web/components/skeletons`, or the
+   `Skeleton` component from `@kit/ui/skeleton` for anything bespoke.
+3. Note where the `loading.tsx` sits. One inside a layout only replaces the page
+   area, so the sidebar and navigation stay on screen and the skeleton should
+   not redraw them. One above a layout has to stand in for the whole shell.
+4. Keep the skeleton cheap. It renders on every navigation and must not fetch
+   data.
+
+Show me each replacement so I can check the skeleton matches my page layout.
+```
+
+### Why
+
+A full-page spinner throws away everything the user was looking at. A skeleton
+that matches the page keeps the layout stable and makes the wait feel shorter,
+even when it isn't.
+
+This step is cosmetic and safe to merge on its own. It also sets you up for
+[Step 5](#5-suspense-boundaries), where the same skeleton components become
+`<Suspense>` fallbacks — which is why the shared pieces live in
+`components/skeletons` rather than inline in each `loading.tsx`.
+
+### Validate Before Continuing
+
+- [ ] Navigating to each route shows a skeleton matching that page
+- [ ] No layout shift when real content replaces the skeleton
+- [ ] Skeletons do not fetch data
+
+---
+
+## 4. Marketing Auth
+
+Create a branch and pull in the changes:
+
+```bash
+git checkout -b v4/marketing-auth
+git pull upstream v4-step/marketing-auth
+pnpm install
+```
+
+Then run the AI-assisted review with this prompt:
+
+```
+I'm upgrading Makerkit from v3 to v4. I just merged `v4-step/marketing-auth`.
+
+This step removes `export const dynamic = 'force-dynamic'` from the marketing
+layout and stops fetching the user on the server there, so marketing pages can
+be cached by a CDN.
+
+IMPORTANT: `force-dynamic` was there for a security reason. It prevented a CDN
+from caching a page containing one user's data and serving it to another user.
+Do not simply remove `force-dynamic` from your own routes without applying the
+same restructure.
+
+In my custom code:
+
+1. Find any marketing/public page or layout that renders user-specific data
+   (email, name, avatar, account info) from a server-side fetch. That data must
+   move to a client component, or behind a Suspense boundary that is never part
+   of the cached shell.
+2. Find other uses of `export const dynamic = 'force-dynamic'`. For each one,
+   tell me WHY it is there before changing anything. If it guards user data,
+   restructure. If it was cargo-culted, it can be removed — under Cache
+   Components everything is dynamic by default.
+3. Verify no public, cacheable page renders user identity on the server.
+4. `useUser()` now returns `null` for signed-out visitors instead of
+   `undefined`. If my code compares against `undefined`, or relies on
+   `data === undefined` to mean "signed out", update it.
+
+List everything you find before making changes.
+```
+
+### Read this section even if you didn't customize anything
+
+In v3, the marketing layout fetched the signed-in user on the server so the
+header could show "Dashboard" instead of "Sign in". That put a real user's data
+into HTML that a CDN could cache and serve to somebody else.
+`force-dynamic` was the fix: it disabled caching entirely.
+
+That worked, but it made the entire public site — homepage, pricing, FAQ, blog,
+changelog, legal pages — uncacheable and dependent on an auth round-trip.
+
+v4 fixes the cause instead. The marketing header now resolves auth state on the
+client, so the server-rendered HTML contains no user data at all. The page
+becomes safe to cache because there is nothing user-specific in it — not because
+a config flag says so.
+
+```diff
+- export const dynamic = 'force-dynamic';
+-
+- async function SiteLayout(props: React.PropsWithChildren) {
+-   const client = getSupabaseServerClient();
+-   const user = await requireUser(client, { verifyMfa: false });
+-
+-   return <SiteHeader user={user.data} />;
++ function SiteLayout(props: React.PropsWithChildren) {
++   return <SiteHeader />;   // resolves auth client-side
+```
+
+The trade-off is a brief skeleton on one header button on first paint. In
+exchange the whole marketing site becomes edge-cacheable.
+
+### `useUser()` now returns `null` when signed out
+
+It previously returned `undefined`, which React Query rejects with *"Query data
+cannot be undefined"*. That never surfaced in v3 because every caller sat on an
+authenticated page; the marketing header is the first anonymous one.
+
+If your code treats `undefined` as "signed out", switch to `null` — or just
+check falsiness, which works for both.
+
+### Verify it yourself
+
+Do not take this on trust — the failure mode is silent and only shows up in
+production caches. Sign in, then check that a real session changes nothing about
+the server-rendered HTML:
+
+```bash
+# 1. sign in and capture the session cookie from your browser devtools
+COOKIE='sb-...-auth-token=...'
+
+# 2. an authenticated page SHOULD contain your email — this proves the grep works
+curl -s -H "Cookie: $COOKIE" http://localhost:3000/home | grep -c 'you@example.com'
+
+# 3. a marketing page MUST NOT
+curl -s -H "Cookie: $COOKIE" http://localhost:3000/pricing | grep -c 'you@example.com'
+```
+
+Step 2 matters as much as step 3: a grep that finds nothing anywhere proves
+nothing. Confirm it can detect a leak before trusting that it found none.
+
+For a stronger check, diff the two responses:
+
+```bash
+curl -s http://localhost:3000/pricing > anon.html
+curl -s -H "Cookie: $COOKIE" http://localhost:3000/pricing > auth.html
+diff <(sed -E 's/self\.__next_r="[^"]*"/X/' anon.html) \
+     <(sed -E 's/self\.__next_r="[^"]*"/X/' auth.html)
+```
+
+Apart from Next's per-request render id and RSC stream row numbers, the two
+should be identical — the server output should not depend on auth at all.
+
+### If you cache these pages yourself
+
+If you put your own CDN in front of the app, two things matter:
+
+- Next varies responses on `rsc`, `next-router-prefetch`,
+  `next-router-state-tree`, and `next-router-segment-prefetch`. Your CDN must
+  either honour `Vary` or include the `_rsc` query parameter in its cache key.
+  Getting this wrong is how cached variants get crossed between users.
+- `proxy.ts` must run **before** the CDN cache, since it is the source of truth
+  for auth, redirects, and rewrites. If your CDN sits in front of it, bypass the
+  cache for routes that depend on proxy decisions.
+
+Verify with real requests before trusting it:
+
+```bash
+curl -sI https://your-app.com/pricing | grep -i 'cache-control\|vary'
+```
+
+A public marketing page should show a shared-cache directive (`s-maxage`).
+Anything under `/home` should show `private, no-store`. If a page under `/home`
+is publicly cacheable, stop and investigate.
+
+### Validate Before Continuing
+
+- [ ] Marketing pages render correctly signed out
+- [ ] Marketing pages show the right header state signed in — check this in a
+      browser, since the swap happens on the client and `curl` cannot see it
+- [ ] No user data (email, name, ID) appears in the server-rendered HTML of a
+      public page — check with `curl`, not the browser
+- [ ] Your grep can actually detect a leak (it finds the email on `/home`)
+- [ ] No "Query data cannot be undefined" errors in the browser console
+- [ ] Authenticated pages still return `private, no-store`
+
+---
+
+## 5. Suspense Boundaries
+
+Create a branch and pull in the changes:
+
+```bash
+git checkout -b v4/suspense-boundaries
+git pull upstream v4-step/suspense-boundaries
+pnpm install
+```
+
+Then run the AI-assisted review with this prompt:
+
+```
+I'm upgrading Makerkit from v3 to v4. I just merged
+`v4-step/suspense-boundaries`.
+
+This step restructures pages so data fetching happens inside <Suspense>
+boundaries instead of at the top of the component.
+
+For each of my custom pages and layouts under `apps/web/app/[locale]/`:
+
+1. Find components that `await params`, `await searchParams`, or await a data
+   fetch at the top level before returning JSX.
+2. Restructure: keep the page component synchronous, pass the params/
+   searchParams PROMISE down (do not await it), and await it inside a child
+   wrapped in <Suspense>.
+3. Put the boundary as low as possible. Everything outside it renders
+   immediately, so keep headers, breadcrumbs, and card chrome outside.
+4. Use the skeleton components from step 3 as fallbacks.
+5. Do not wrap the whole page in one <Suspense> — that just recreates the
+   full-page spinner.
+6. BREAKING: `useUserWorkspace()` and `useTeamAccountWorkspace()` now suspend.
+   Find every component of mine that calls either, and make sure a <Suspense>
+   boundary sits above it. Their return type has not changed, so this will not
+   show up as a type error — it shows up as a page that suspends higher than I
+   intended.
+
+Work one page at a time and show me each before/after.
+```
+
+### Breaking: the workspace hooks now suspend
+
+The workspace contexts hold a **promise** instead of resolved data, and
+`useUserWorkspace()` / `useTeamAccountWorkspace()` unwrap it with `use()`.
+
+This is what lets the layouts render. Previously the provider took resolved
+data and wrapped `{children}`, so nothing below could render until the workspace
+loaded — including pages that never read it.
+
+```diff
+- async function TeamWorkspaceLayout({ children, params }) {
+-   const data = await loadTeamWorkspace(account);   // everything waits
+-   return (
+-     <TeamAccountWorkspaceContextProvider value={data}>
+-       <Sidebar {...data} />
+-       {children}
+-     </TeamAccountWorkspaceContextProvider>
+-   );
++ function TeamWorkspaceLayout({ children, params }) {
++   const workspace = loadTeamWorkspace(account);     // promise, not awaited
++   return (
++     <TeamAccountWorkspaceContextProvider value={workspace}>
++       <Suspense fallback={<SidebarSkeleton />}>
++         <TeamAccountSidebar account={account} />
++       </Suspense>
++       {children}                                    {/* renders immediately */}
++     </TeamAccountWorkspaceContextProvider>
++   );
+```
+
+**The hooks' return type is unchanged**, so your code still compiles. What
+changes is timing: a component calling either hook now suspends to the nearest
+boundary above it. If there isn't one, it suspends further up than you want —
+possibly taking the whole page with it.
+
+Audit every caller and give each one a boundary.
+
+### The pattern
+
+```diff
+- async function MembersPage({ params }: Props) {
+-   const slug = (await params).account;
+-   const [members, invitations] = await loadMembersPageData(client, slug);
+-
+-   return (
+-     <PageBody>
+-       <PageHeader title="Members" />
+-       <MembersTable members={members} />
+-       <InvitationsTable invitations={invitations} />
+-     </PageBody>
+-   );
+- }
+
++ function MembersPage({ params }: Props) {
++   return (
++     <PageBody>
++       <PageHeader title="Members" />
++       <Suspense fallback={<MembersTableSkeleton />}>
++         <MembersTable params={params} />
++       </Suspense>
++       <Suspense fallback={<InvitationsTableSkeleton />}>
++         <InvitationsTable params={params} />
++       </Suspense>
++     </PageBody>
++   );
++ }
+```
+
+The header now paints immediately, and the two tables resolve independently
+instead of the slower one holding up the faster one.
+
+### Boundary placement matters
+
+Placing one `<Suspense>` around the whole page technically satisfies the
+validator in [Step 6](#6-cache-components), but it replaces the entire page with
+a fallback on every navigation — no better than the v3 spinner.
+
+Keep as much real content outside the boundary as you can. A page that keeps its
+header, navigation, and card structure visible with only a table behind a
+fallback feels dramatically faster than a full-page skeleton, even at identical
+total load time.
+
+### Suspend the smallest region that actually needs the data
+
+Split components before wrapping them. Much of what looks data-dependent is not.
+
+The sidebar is the clearest example. It looks like it needs the workspace, so
+the obvious move is to wrap the whole thing:
+
+```diff
+- <Suspense fallback={<SidebarSkeleton />}>
+-   <TeamAccountLayoutSidebar account={account} />
+- </Suspense>
+```
+
+That is worse than not doing it at all. The sidebar is then absent from the
+first paint and **pushes the layout when it arrives**, because a suspended
+region reserves no space.
+
+In fact only the header widget — the account dropdown and notifications — reads
+the workspace. The frame and every navigation item come from config derived from
+the account slug. So the boundary belongs inside the sidebar:
+
+```tsx
+<Sidebar>                                    {/* renders immediately */}
+  <SidebarHeader>
+    <Suspense fallback={<SidebarHeaderSkeleton />}>
+      <TeamAccountSidebarHeader account={account} />
+    </Suspense>
+  </SidebarHeader>
+
+  <SidebarContent>
+    <SidebarNavigation config={config} />    {/* renders immediately */}
+  </SidebarContent>
+</Sidebar>
+```
+
+Now the sidebar and its links are on screen from the first byte, and a small
+avatar-sized placeholder fills in.
+
+Two rules follow:
+
+- **A suspended region reserves no space.** If the fallback does not occupy the
+  same footprint as the real content, the page shifts when it resolves. Prefer
+  moving the boundary inward over drawing a bigger fallback.
+- **Structural fallbacks should not be delayed.** The delay from
+  [Step 3](#3-loading-states) exists to avoid flicker in content areas. In a
+  fixed slot that is always occupied there is no flicker to avoid — delaying
+  just leaves it blank and then pops in.
+
+### When you can't predict the shape, reserve the space
+
+Not every region deserves a skeleton, but `fallback={null}` is not the answer
+either — it lets the container collapse, so the page jumps as content arrives.
+
+Content whose shape you can't predict — CMS-driven listings, long-form articles
+— gets a fallback that **holds the height and draws nothing**:
+
+```tsx
+<Suspense fallback={<ContentFallback />}>
+  <BlogPosts searchParams={searchParams} />
+</Suspense>
+```
+
+`ContentFallback` is a `min-h-[60vh]` container with a spinner that only appears
+after 400ms. Fast navigations show reserved space and nothing else; slow ones
+get honest feedback. No invented cards, no collapsing layout.
+
+The kit uses this for blog, changelog and docs. A grid of grey cards there
+mispredicts posts badly — images and headline lengths vary far too much — and on
+a public page it reads as cheap in a way it does not inside an app.
+
+So there are three answers, not two:
+
+| Region | Fallback |
+|---|---|
+| Known shape (table, cards, page header) | Matching skeleton |
+| Unknown shape, large surface | Reserved space, no content |
+| Fixed slot, resolves fast (a header widget) | Small skeleton, no delay |
+
+### How to tell it actually worked
+
+A page can render correctly and still be fully blocking, so check the stream
+rather than the finished page. Fetch a route and confirm the fallback markup and
+the page content are both present in the same response:
+
+```bash
+curl -s -H "Cookie: $COOKIE" http://localhost:3000/home/your-team/members \
+  | grep -c 'data-slot="skeleton"'
+```
+
+A hit means the boundary is real and the rest of the document was flushed
+without waiting. Zero means everything still resolved server-side before the
+first byte — the boundary is in the wrong place, or nothing below it actually
+suspends.
+
+### Validate Before Continuing
+
+- [ ] Each page paints its header and layout immediately on navigation
+- [ ] Only data-dependent regions show a fallback
+- [ ] No page is entirely replaced by a skeleton
+- [ ] Data still loads correctly after streaming in
+- [ ] Every caller of `useUserWorkspace` / `useTeamAccountWorkspace` has a
+      `<Suspense>` boundary above it
+- [ ] Fallback markup appears in the streamed HTML, not just in your JSX
+- [ ] Nothing shifts position when a boundary resolves — navigate with the
+      network throttled and watch for content being pushed around
+
+---
+
+## 6. Cache Components
+
+Create a branch and pull in the changes:
+
+```bash
+git checkout -b v4/cache-components
+git pull upstream v4-step/cache-components
+pnpm install
+```
+
+Then run the AI-assisted review with this prompt:
+
+```
+I'm upgrading Makerkit from v3 to v4. I just merged
+`v4-step/cache-components`. This enables `cacheComponents: true`.
+
+This is the step most likely to break my custom code. In my custom code:
+
+1. Remove `export const dynamic = 'force-dynamic'` — everything is dynamic by
+   default now. (Check first that it is not guarding user data — see step 4.)
+2. Remove `export const dynamic = 'force-static'`. Replace with `use cache`
+   plus a long `cacheLife` on the data access.
+3. Remove `unstable_noStore()` / `noStore()` — nothing is cached unless I opt
+   in. If a component must run per request, call `connection()` and wrap it in
+   <Suspense>.
+4. Replace `unstable_cache` with `use cache`.
+5. `export const runtime = 'edge'` is not supported. Move to the Node runtime.
+6. In Server Actions, replace `revalidateTag(tag)` with `updateTag(tag)` when
+   the user must see their own change immediately. In Route Handlers and
+   webhooks, `revalidateTag` now REQUIRES a cache profile as a second
+   argument: `revalidateTag(tag, 'max')`.
+7. `use cache` is available from this step onward. Add it to CMS and content
+   loader functions with an appropriate `cacheLife` profile.
+8. Do NOT add plain `use cache` to anything that reads `cookies()`,
+   `headers()`, or the Supabase server client — that client marks its caller
+   request-bound. Those need `use cache: private` (per-session, browser-only)
+   or a <Suspense> boundary instead.
+9. Run `pnpm build`. When an error names no component, re-run with
+   `next build --debug-prerender` for a real stack trace. Fix the TOPMOST cause
+   and rebuild before working through the list — failures cluster, and one root
+   cause often accounts for every failing route.
+10. A green build is not the end. Start the dev server and click through every
+    route: the overlay also validates client navigations, which the build does
+    not check. Expect a second round of fixes here.
+11. Look for shared components reading `cookies()` or `headers()` — a page
+    header, a nav item. Each one makes every page that renders it dynamic.
+    Derive the value from context or props instead.
+12. If a fix would touch many call sites, check whether it can be made once
+    further down. Caching one loader often clears dozens of routes.
+
+For any route I can't fix right now, add `export const instant = false` to its
+page or layout and tell me which routes you did that to, so I can come back.
+```
+
+### The build is not enough — walk the app in dev
+
+`cacheComponents` errors at build time on uncached data access it can't resolve.
+Unlike the dev-only navigation insights, this is not a warning.
+
+But **a green build does not mean you are done.** The build validates
+prerendering; the dev overlay additionally validates *client navigations*, and
+catches things the build never sees. Expect a second round of fixes after the
+build passes.
+
+Do not find them by clicking around. A blocking route is *valid* — it just
+is not instant — so nothing fails, and a manual walk quietly skips routes you
+do not think to visit. Sweep them systematically instead; see
+[Sweep every route](#sweep-every-route-before-you-call-this-done) below.
+
+Use `next build --debug-prerender` when an error names no component — it turns
+"Route X encountered uncached data" into an actual stack trace.
+
+### Expect one root cause behind many routes
+
+Failures cluster. In this kit, 35 of 35 failing routes traced to two lines in
+the root layout. Fix the topmost cause and re-run before working through the
+list — most of it disappears.
+
+The order they surfaced here, which is roughly the order to expect:
+
+1. **Route segment configs** — `dynamic = 'force-dynamic' | 'force-static'` are
+   hard incompatibilities. Compile error, trivial fix.
+2. **Root params** — `generateStaticParams` is required for `[locale]`, or the
+   build fails.
+3. **Runtime data in the root layout** — anything reading `cookies()` or
+   `headers()` there blocks *every* route.
+4. **Unstable values in client components** — `Date.now()` during render,
+   including inside React Query internals.
+5. **`generateMetadata`** — uncached I/O, usually `getTranslations()`.
+6. **Client hooks reading the URL** — `usePathname`, `useSearchParams`.
+
+### Two fixes worth copying
+
+**Cache at the source, not the call site.** 21 `generateMetadata` functions
+failed here because each awaited `getTranslations()`. Rather than adding
+`use cache` to all 21, cache the message loading in `i18n/request.ts` once:
+
+```tsx
+async function loadMessages(locale: string) {
+  'use cache';
+  cacheLife('max');
+  // ...
+}
+```
+
+**Derive from context, not cookies.** A shared page-header component read the
+`layout-style` cookie to decide whether to show the sidebar trigger — making
+every page that used it dynamic. The layout already knows its style, so the
+trigger now reads it from React context and the cookie read is gone.
+
+Look for shared components reading `cookies()`; each one poisons every page that
+renders it.
+
+### Unstable values are not fixed by `<Suspense>`
+
+```
+Next.js encountered the unstable value `Date.now()` while prerendering.
+```
+
+Uncached data and unstable values are different problems. A boundary lets Next
+stop and stream; an unstable value is an error, because the same render would
+produce a different answer next time. Adding `<Suspense>` will not clear it.
+
+Pick by what the value is:
+
+| The value is | Fix |
+| ------------ | --- |
+| Genuinely per-request — session, nonce, "now" for this visitor | `await connection()` before it |
+| The same for everyone for a while — copyright year, price list | `use cache` + `cacheLife` |
+| Only meaningful in the browser | `'use client'` |
+| Telemetry | `performance.now()` |
+
+Two things that cost time here:
+
+**It must be awaited.** During a prerender `connection()` returns a promise that
+never resolves — that is how it stalls. `void connection()` reads as equivalent
+and does nothing, unlike `void cookies()`.
+
+**It belongs before the line that touches the value**, which is earlier than the
+stack suggests. Any auth call reads `Date.now()` to check whether the session has
+expired, so `requireUser`, `getUser` and `isSuperAdmin` all trip it — not just the
+obvious ones.
+
+The stack names the library, not your code — you'll see `GoTrueClient` and a
+component several levels up. Work outwards to the first thing in that subtree
+that builds a client or reads a clock.
+
+Prefer the **shared loader** over the page. `requireUserInServerComponent` and
+the two workspace loaders cover most authenticated routes here, so fixing those
+three clears the bulk of it in one edit.
+
+They do not cover everything, though — plenty of pages and loaders build a
+client themselves and never go through them. Those need their own
+`await connection()`. To find yours:
+
+```bash
+grep -rl "getSupabaseServerClient" apps/web/app --include="page.tsx" \
+  --include="layout.tsx" --include="*.loader.ts"
+```
+
+Only **render paths** matter. Server actions and route handlers always run at
+request time, so they can never be prerendered and need nothing.
+
+### Client queries must be seeded
+
+React Query is not hydrated from the server by default. Any component gated on a
+client query — `useUser()`, `usePersonalAccountData()` — renders its loading
+state during SSR and the real content on the client. That surfaces as **empty
+cards and hydration mismatches**, not as a validator error.
+
+This step adds `QueryHydration` in the authenticated layouts to seed the cache
+from data the server already loaded. If you have your own client queries that
+gate rendering, seed them the same way or pass `initialData`.
+
+### Auth gating moves to the proxy
+
+Pages that read the session to redirect can't prerender. Moving that gate into
+`proxy.ts` fixes it and improves the UX — the redirect happens before any HTML
+is sent, so there's no flash of a page the user was never meant to see.
+
+Pages keep their own checks as defence in depth, behind a boundary.
+
+**Gate the page, not the whole subtree.** A pattern like `/join/*?` also matches
+`/join/accept` — a route handler that has to stay reachable while signed out,
+because it is the entry point for emailed invite links and mints the session
+itself. Gating it redirects the user to sign-up before the handler ever runs, and
+silently breaks the invitation flow. Match the page exactly:
+
+```diff
+- pattern: new URLPattern({ pathname: '/join/*?' }),
++ pattern: new URLPattern({ pathname: '/join' }),
+```
+
+Check every pattern you add against the route handlers that live beneath it.
+
+One behaviour change to be aware of: a request for a **team you don't belong
+to** now returns `200` with a shell and a streamed redirect, rather than a `307`.
+No data is exposed — RLS still applies and the response contains no team data —
+but update any monitoring or e2e tests asserting the status code.
+
+The escape hatch is per-route:
+
+```typescript
+// app/[locale]/some-custom-route/page.tsx
+export const instant = false;
+```
+
+This opts the segment out of validation. Use it freely to get unblocked, keep a
+list, and come back. A route with `instant = false` still works — it just isn't
+guaranteed to navigate instantly.
+
+### This step should be almost mechanical
+
+If steps 3-5 went well, turning the flag on is a small change: remove the
+incompatible segment configs, add `generateStaticParams` for your root `locale`
+param, and fix whatever the dev overlay still reports.
+
+That is the point of the ordering. Step 5 put your data access behind
+`<Suspense>`, which is exactly what Cache Components validates for. Routes that
+already stream will pass; routes that still await at the top will not.
+
+`use cache` becomes available from this step onward, but resist adopting it here
+beyond what the build demands — [Step 7](#7-static-content) does that in one pass
+over the content routes.
+
+### Revalidation changes
+
+| v3 | v4 |
+|----|-----|
+| `revalidateTag('posts')` in a Server Action | `updateTag('posts')` |
+| `revalidateTag('posts')` in a Route Handler | `revalidateTag('posts', 'max')` |
+| `revalidatePath('/home')` | unchanged |
+
+`updateTag` gives read-your-own-writes: the next request waits for fresh data
+rather than serving stale content. It can only be called from a Server Action.
+
+### UI state is now preserved across navigation
+
+Cache Components enables React's `<Activity>`, so the previous route stays
+mounted and hidden instead of unmounting. Navigating back restores its state.
+
+This is usually an improvement, but it changes behaviour for anything that
+assumed unmount-on-navigate. Test dialogs, dropdowns, and any component holding
+transient state. If a dialog reopens with stale state after navigating away and
+back, that is this change.
+
+The common case is a dialog whose action ends in `redirect()`. Under v3 the
+navigation unmounted it, so nobody bothered to close it. Now it stays open on the
+route you left, and reappears — backdrop and all — when you come back. Close it
+explicitly on the navigation:
+
+```diff
+  const { execute } = useAction(createTeamAccountAction, {
+    onSuccess: ({ data }) => { /* ... */ },
++   // The action redirects, which no longer unmounts this dialog.
++   onNavigation: () => props.onClose?.(),
+  });
+```
+
+Audit every dialog whose submit handler redirects. This kit had one.
+
+### Your e2e tests will break, and the failure is misleading
+
+A retained route keeps its DOM, so **every `data-test` selector can now match
+twice** — once on the page you are on, once on the page you left. The stale copy
+has zero size, so nothing looks wrong in a screenshot.
+
+Playwright reports this in two very different ways depending on the API:
+
+| API | Behaviour with 2 matches |
+| --- | --- |
+| `page.locator(...)`, `getByTestId(...)` | strict-mode violation, names both elements |
+| `page.click(...)`, `page.fill(...)` | **silently picks the first**, which may be the invisible one, then waits for it to become visible until the test times out |
+
+The second is the one that costs you an afternoon: a 120-second timeout with no
+error message, on a page that looks perfectly fine.
+
+Scope the selector to the live route:
+
+```diff
+- await page.click('[data-test="workspace-dropdown-trigger"]');
++ await page.click('[data-test="workspace-dropdown-trigger"]:visible');
+```
+
+Apply it to container selectors too — scoping the dialog is enough to
+disambiguate everything inside it.
+
+### Sweep every route before you call this done
+
+The routes that block are rarely the ones you suspect. In this kit a sweep
+found four that a clean `next build --debug-prerender` had passed, on pages
+nobody thought to re-check: a profile tab, an admin detail page, and the two
+billing return pages.
+
+**Enumerate routes from the running server, not from memory.** Next 16 exposes
+an MCP endpoint on the dev server; `get_routes` is authoritative and includes
+entry points a `find` over `page.tsx` misses. `get_compilation_issues` covers
+every route without a browser.
+
+**Then load each one in a browser, signed in as the role it needs**, and
+collect console errors matching `Next.js encountered` / `uncached data` /
+`unstable value`. Give dynamic segments real values — a seeded slug, a real
+content id, a plausible `?session_id=x`.
+
+**Assert you actually landed on the route you asked for.** This is the trap.
+If a session has expired, every authenticated route silently redirects to
+sign-in — and the sign-in page is clean. You then audit it fifteen times and
+conclude the app is healthy. That happened here: a sweep reported "31 of 33
+clean" while four routes were broken. Fail loudly on a redirect instead:
+
+```js
+const landed = new URL(page.url()).pathname;
+
+if (signedIn && landed.startsWith('/auth/sign-in')) {
+  throw new Error(`NOT AUDITED: ${route} bounced to ${landed}`);
+}
+```
+
+**Keep the whole stack for anything you find.** The first line names the
+framework; the line that names *your* code is further down. That is how
+`isSuperAdmin` and GoTrue were identified here.
+
+Rerun this sweep whenever you add routes. It is the only check that catches
+this class, and it takes a couple of minutes.
+
+### Validate Before Continuing
+
+```bash
+pnpm typecheck
+pnpm build
+```
+
+- [ ] Build completes
+- [ ] You swept **every** route, not just the ones you remembered, and each
+      loads without dev overlay errors or is explicitly `instant = false`
+- [ ] No route in that sweep was silently redirected to sign-in and counted
+      as clean
+- [ ] Dialogs and dropdowns behave correctly across navigation, including
+      after an action that redirects
+- [ ] Your e2e suite passes, with selectors scoped to the visible route
+- [ ] No proxy pattern gates a route handler that must work signed out
+- [ ] Mutations still show updated data immediately
+- [ ] You have a written list of every `instant = false` you added
+
+---
+
+## 7. Static Content
+
+Create a branch and pull in the changes:
+
+```bash
+git checkout -b v4/static-content
+git pull upstream v4-step/static-content
+pnpm install
+```
+
+Then run the AI-assisted review with this prompt:
+
+```
+I'm upgrading Makerkit from v3 to v4. I just merged `v4-step/static-content`.
+
+This step enumerates the content routes (blog, docs, changelog) with
+`generateStaticParams` AND caches their loaders with `use cache`, in one pass.
+`cacheComponents` was enabled in step 6, so `use cache` is available now.
+
+In my custom code:
+
+1. Find custom content routes with dynamic segments that have no
+   `generateStaticParams`. Add one.
+2. Return at least one param from every `generateStaticParams`. Returning `[]`
+   is a build error under Cache Components (`empty-generate-static-params`). If
+   I can't enumerate everything, return a subset — the rest are still served,
+   just rendered on first visit.
+3. Add `'use cache'` to the CMS/content loader functions those routes call, with
+   an appropriate `cacheLife` profile. After step 5 these already sit inside
+   <Suspense>, so this pulls them back out of the fallback and into the
+   prerendered shell.
+4. Do NOT add plain `use cache` to anything reading `cookies()`, `headers()`, or
+   the Supabase server client — that client marks its caller request-bound.
+   Those need `use cache: private` or stay behind their Suspense boundary.
+5. Content from the filesystem or a CMS is a good candidate. Anything per-user
+   or per-account is not — leave those alone.
+
+Then run `pnpm build` and confirm the content routes prerender (○ rather than ƒ
+in the route table).
+```
+
+### What changed
+
+Content routes previously rendered on every request. They are now enumerated at
+build time and their data is cached, in a single edit per route:
+
+```diff
++ export async function generateStaticParams() {
++   const client = await createCmsClient();
++   const { items } = await client.getContentItems({ collection: 'posts' });
++   return items.map((item) => ({ slug: item.slug }));
++ }
+
+  async function getPostBySlug(slug: string) {
++   'use cache';
+    const client = await createCmsClient();
+    return client.getContentItemBySlug({ slug, collection: 'posts' });
+  }
+```
+
+This is why the step sits *after* [Cache Components](#6-cache-components).
+Enumerating the routes before the flag exists would mean coming back to add
+`use cache` to the same functions later — the same files, edited twice.
+
+### Remove `cache()` wrappers from anything you cache
+
+React's `cache()` and `use cache` do not compose. Wrapping a `use cache`
+function in `cache()` fails the build with a misleading error:
+
+```
+TypeError: Invalid value used as weak map key
+    at generateMetadata
+```
+
+`cache()` keys a WeakMap on the function identity, which the `use cache`
+transform invalidates. Drop the wrapper — `use cache` already dedupes, and does
+it across requests rather than only within one:
+
+```diff
+- const getPostBySlug = cache(postLoader);
+-
+- async function postLoader(slug: string) {
++ async function getPostBySlug(slug: string) {
++   'use cache';
++   cacheLife('hours');
+    const client = await createCmsClient();
+    return client.getContentItemBySlug({ slug, collection: 'posts' });
+  }
+```
+
+Every content loader in the kit used `cache()`, so expect to hit this on each
+one you convert.
+
+### Where `use cache` can go
+
+- **Plain `use cache`** — data that doesn't depend on the request: CMS content,
+  config, public catalogues.
+- **`use cache: private`** — per-session data. Reads runtime APIs directly and
+  caches in the browser only, never on the server.
+
+`getSupabaseServerClient()` marks its caller request-bound as soon as it is
+created, so anything using it can never sit inside a plain `use cache`. Either
+extract the value it needs and pass that into a cached function, or use
+`use cache: private`.
+
+### Return at least one param
+
+Under Cache Components, returning `[]` raises `empty-generate-static-params` and
+fails the build. Paths you don't return are still served — Next serves the App
+Shell immediately, then upgrades it in the background once the params are known.
+
+### Validate Before Continuing
+
+```bash
+pnpm build
+```
+
+- [ ] Build completes without `empty-generate-static-params` errors
+- [ ] Blog, docs, and changelog appear as static (○) in the route table
+- [ ] Blog, docs, and changelog pages render correctly
+- [ ] Your custom content routes still work
+
+---
+
+## 8. Partial Prefetching
+
+Create a branch and pull in the changes:
+
+```bash
+git checkout -b v4/partial-prefetching
+git pull upstream v4-step/partial-prefetching
+pnpm install
+```
+
+Then run the AI-assisted review with this prompt:
+
+```
+I'm upgrading Makerkit from v3 to v4. I just merged
+`v4-step/partial-prefetching`. This enables `partialPrefetching: true`.
+
+With this on, every <Link> prefetches a shared per-route App Shell instead of
+a per-link full prefetch. `<Link prefetch={true}>` no longer prefetches the
+destination's dynamic content.
+
+In my custom code, find every `<Link prefetch={true}>` and decide per
+destination:
+
+- Destination is static or already cached -> remove `prefetch={true}`, it's
+  redundant.
+- Destination had uncached content I want ready before the click -> cache it
+  with `use cache`, then remove `prefetch={true}`.
+- Destination depends on cookies()/headers() -> cache the lookup behind the
+  session value, then remove `prefetch={true}`. Session data is already in the
+  App Shell.
+- Destination reads params/searchParams and I want that resolved before the
+  click -> KEEP `prefetch={true}` and add `export const prefetch =
+  'allow-runtime'` to the destination.
+- Destination is real-time -> remove `prefetch={true}`, let it stream.
+
+Also flag any list or grid rendering many <Link prefetch={true}> to the same
+`allow-runtime` route — that costs one server render per visible link. Suggest
+hover-triggered prefetch there instead.
+```
+
+### What changes for `<Link>`
+
+| | Before | After |
+|---|---|---|
+| `<Link href="/x">` | Prefetched the cached page render | Loads the shared App Shell for `/x` |
+| `<Link href="/x" prefetch>` | Prefetched page **and** dynamic content | Loads the App Shell; adds per-link data only if `/x` sets `prefetch = 'allow-runtime'` |
+| `<Link href="/x" prefetch={false}>` | Disabled | Unchanged |
+
+The App Shell is shared by every link to a route, so rendering many links to the
+same destination no longer multiplies prefetch work.
+
+### Runtime prefetching costs a server render per link
+
+`prefetch = 'allow-runtime'` resolves `params` and `searchParams` at prefetch
+time. It costs **one server invocation per visible link**, so use it only where
+the destination genuinely depends on URL data and the traffic justifies it.
+
+Skip it when the route barely reads URL data, when the content must be fresh on
+every request, or when the route is rarely visited — you pay per visible link
+regardless of click-through.
+
+### The kit uses `allow-runtime` on nothing, and probably neither should you
+
+The obvious candidate is `/home/[account]/*` — the slug is URL data and the
+workspace lookup depends on it. It still doesn't qualify.
+
+A runtime prefetch only helps if the URL-dependent content is **cacheable**. It
+renders the route again with the URL resolved, advancing through anything static
+or `use cache`-backed, then stops at the first uncached read. Per-account data
+here comes from RLS-scoped Supabase queries, which are request-bound and can
+never sit inside a plain `use cache`. The prerender would stop at exactly the
+same `<Suspense>` boundary the App Shell already stops at — you'd pay a server
+render per visible link to arrive at the same UI.
+
+The content routes don't need it either: they're prerendered via
+`generateStaticParams` from [Step 7](#7-static-content), so their params are
+already resolved at build time.
+
+Before reaching for `allow-runtime`, ask whether the data behind the URL can
+actually be cached. If it can't, the flag buys nothing.
+
+### Validate Before Continuing
+
+- [ ] Navigation between routes feels immediate
+- [ ] No dev console errors about links prefetching dynamic data
+- [ ] Long lists of links don't cause a burst of server requests
+- [ ] Every remaining `prefetch={true}` points at an `allow-runtime` route
+
+---
+
+## 9. Design Updates
+
+Create a branch and pull in the changes:
+
+```bash
+git checkout -b v4/design
+git pull upstream v4-step/design
+pnpm install
+```
+
+### This step is different
+
+Every other step changes how the app renders. This one only changes how it
+looks — no data fetching, no caching, no route structure. That has two
+consequences:
+
+- **It is optional.** Skip it entirely if you have your own design. Everything
+  in steps 1-8 works without it.
+- **It also cuts the release.** Steps 1-8 ship as `4.0.0-rc.N`; this step sets
+  `4.0.0`. If you skip it you stay on `4.0.0-rc.8` — the app is complete and
+  supported, you just bump the version yourself whenever you are ready.
+- **It is the highest-conflict step in the migration**, because it touches the
+  components you are most likely to have restyled. If you have a custom design
+  system, take the diff as a reference rather than merging it wholesale.
+
+Because it is purely cosmetic, there is no AI-assisted prompt for this step —
+an agent cannot tell which of your visual changes were deliberate.
+
+### What changed
+
+<!-- TODO: still growing as the design work lands. Add component-level changes
+     here as they are decided — spacing scale, card treatment, typography,
+     sidebar chrome. -->
+
+#### Avatars are rounded squares, everywhere
+
+v3 used the upstream shadcn avatar, which is a circle. v4 renders **every**
+avatar as a rounded square — people and workspaces alike — so a personal
+account and a team account read as the same kind of object in the workspace
+switcher.
+
+The shape is applied by a wrapper, not by editing the primitive:
+
+- `packages/ui/src/makerkit/avatar.tsx` wraps `Avatar`, `AvatarImage`,
+  `AvatarFallback` and `AvatarGroupCount` with `rounded-md`
+- `packages/ui/package.json` points the `"./avatar"` export at that file
+  instead of `./src/shadcn/avatar.tsx`
+
+`src/shadcn/avatar.tsx` stays byte-identical to upstream so the shadcn CLI can
+still replace it — the same wrap-and-re-export pattern already used for
+`FormMessage`. Call sites keep importing `@kit/ui/avatar` and need no change.
+
+Two details worth copying if you port this to another kit:
+
+- The primitive rounds **four** surfaces independently — the root, its `after:`
+  border ring, the image and the fallback. Overriding only the root leaves a
+  circular ring around a square avatar.
+- `AvatarBadge` stays round. It is a status dot, not an avatar.
+
+**If you want to keep circles**, do not take the `package.json` export change —
+that single line is the whole switch.
+
+#### One avatar component per workspace row
+
+`apps/web/components/workspace-dropdown.tsx` previously rendered the personal
+account as a bare bordered `div` with a user glyph, and teams as an `Avatar`
+with a filled initial — different shape, different surface. Both now go through
+a local `WorkspaceAvatar`, which branches only on glyph-vs-initial.
+
+The same defect exists in
+`packages/features/accounts/src/components/account-selector.tsx`
+(`PersonalAccountAvatar` renders a bare icon). That component has no call sites
+in the kit — if you use it, apply the same fix.
+
+#### Last-used sign-in method hints
+
+The auth pages now show a "Last used" badge on the method you signed in with
+last, stored under the `auth_last_method` key in `localStorage`
+(`packages/features/auth/src/utils/last-auth-method.ts`, 30-day expiry).
+
+The rule for where to record it depends on where the sign-in *completes*:
+
+| Method | Record at |
+| ------ | --------- |
+| Password, passkey | after the mutation resolves — the session lands in the same page |
+| OAuth | **before** calling `signInWithOAuth` — it calls `window.location.assign` internally, so anything after it races the navigation |
+| Magic link, OTP | when the email is sent — the sign-in may complete in `/auth/confirm` on a different page load |
+
+If you add your own auth method, follow the row that matches how it completes.
+
+#### The magic link template carries the OTP code
+
+`apps/web/supabase/templates/magic-link.html` now renders both the sign-in
+button (`{{ .TokenHash }}`) and the code (`{{ .Token }}`).
+
+Supabase has no separate OTP template — `signInWithOtp` sends the `magic_link`
+template for both flows, so a link-only template leaves OTP users with no code
+to type. The standalone `otp.html` is still there if you want a code-only email;
+point `[auth.email.template.magic_link]` at it in `config.toml`.
+
+**This is not just a file change:** `config.toml` only applies locally. Paste
+the same HTML into **Authentication → Templates → Magic Link** in the Supabase
+Dashboard for each hosted project, or your production OTP emails stay
+code-less.
+
+### If you have customized the UI
+
+1. Merge the tag and expect conflicts in `packages/ui` and your marketing pages.
+2. Resolve in favour of **your** styling wherever you have deliberately
+   diverged. This step has no functional behaviour to preserve.
+3. Check the components you did not customize — those you can usually take as-is.
+4. Re-check dark mode. Theme handling moved to the client in step 6, so this is
+   a good moment to confirm both themes look right.
+
+### Validate Before Continuing
+
+- [ ] Both light and dark mode render correctly
+- [ ] Your own brand styling survived the merge
+- [ ] Loading skeletons still match the shape of their pages — the fallbacks
+      from step 3 were sized against the old design
+- [ ] No layout shift when a boundary resolves
+
+## After Upgrading
+
+### Run all quality checks
+
+```bash
+pnpm install
+pnpm typecheck
+pnpm lint:fix
+pnpm format:fix
+pnpm build
+```
+
+### Test core flows manually
+
+Start the dev server and verify these flows work:
+
+- [ ] Sign up / sign in
+- [ ] Team creation and switching
+- [ ] Inviting team members
+- [ ] Billing portal access
+- [ ] Account settings and profile updates
+- [ ] Navigation between authenticated pages shows content immediately
+
+### Verify caching headers
+
+Confirm the marketing site is cacheable and authenticated pages are not:
+
+```bash
+curl -sI https://your-app.com/pricing | grep -i 'cache-control'
+curl -sI https://your-app.com/home    | grep -i 'cache-control'
+```
+
+Public pages should be shared-cacheable. Authenticated pages must be
+`private, no-store`.
+
+### Lock in the behaviour with tests
+
+`@next/playwright` ships an `instant()` helper that asserts on what is visible
+the moment a navigation completes, so regressions fail CI instead of shipping:
+
+```typescript
+import { test, expect } from '@playwright/test';
+import { instant } from '@next/playwright';
+
+test('members page header appears instantly', async ({ page }) => {
+  await page.goto('/home/my-team');
+
+  await instant(page, async () => {
+    await page.click('a[href="/home/my-team/members"]');
+    await expect(page.getByRole('heading', { name: 'Members' })).toBeVisible();
+  });
+
+  // after instant() exits, streamed content arrives
+  await expect(page.getByTestId('members-table')).toBeVisible();
+});
+```
+
+Add one of these for each route that matters most to you. Without them, the next
+person to add an `await` at the top of a page silently undoes this migration.
+
+### Clear your `instant = false` list
+
+If you used `instant = false` to get through [Step 6](#6-cache-components),
+revisit those routes now. Each one is a route that is not navigating instantly.
+
+The kit itself ships zero `instant = false` exports — the step order is designed
+so the flag turns on cleanly. If you needed them for your own routes, treat them
+as a to-do list rather than a permanent state.
+
+### Switch to main for future updates
+
+After completing the migration, pull future updates from `main` instead of `v3`:
+
+```bash
+git pull upstream main
+```
+
+### Recommendations
+
+- **Use the Navigation Inspector.** Next.js DevTools → Navigation Inspector →
+  "Pause on navigations" freezes the page at its initial state so you can see
+  exactly what your users see before data streams in. Pair it with the React
+  DevTools Suspense panel to see which boundary covers what.
+- **Push boundaries down over time.** Passing validation means navigation is
+  instant, not that the loading state is good. Revisit pages and move
+  `<Suspense>` closer to the data.
+- **Watch your server costs after Step 8.** `allow-runtime` trades server
+  invocations for perceived speed. Check your metrics after rollout.

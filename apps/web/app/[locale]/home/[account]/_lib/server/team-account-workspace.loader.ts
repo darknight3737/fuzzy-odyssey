@@ -1,6 +1,7 @@
 import { cache } from 'react';
 
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
@@ -26,6 +27,8 @@ export type TeamAccountWorkspace = Awaited<
 export const loadTeamWorkspace = cache(workspaceLoader);
 
 async function workspaceLoader(accountSlug: string) {
+  await connection();
+
   const client = getSupabaseServerClient();
   const user = await requireUserInServerComponent();
   const data = await composeTeamWorkspace(client, user, accountSlug);

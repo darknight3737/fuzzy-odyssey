@@ -20,6 +20,7 @@ import { Trans } from '@kit/ui/trans';
 
 import { PasswordSignUpSchema } from '../schemas/password-sign-up.schema';
 import { EmailInput } from './email-input';
+import { LastAuthMethodHint } from './last-auth-method-hint';
 import { PasswordInput } from './password-input';
 import { TermsAndConditionsFormField } from './terms-and-conditions-form-field';
 
@@ -123,10 +124,15 @@ export function PasswordSignUpForm({
 
         <Button
           data-test={'auth-submit-button'}
-          className={'w-full'}
+          className={'relative w-full'}
           type="submit"
           disabled={loading || captchaLoading}
         >
+          <LastAuthMethodHint
+            type="password"
+            className="absolute right-0 translate-x-[50%] translate-y-[-100%]"
+          />
+
           <If condition={captchaLoading}>
             <span className={'animate-in fade-in slide-in-from-bottom-24'}>
               <Trans i18nKey={'auth.verifyingCaptcha'} />
@@ -142,7 +148,7 @@ export function PasswordSignUpForm({
           <If condition={!loading && !captchaLoading}>
             <span
               className={
-                'animate-in fade-in slide-in-from-bottom-24 flex items-center'
+                'animate-in fade-in slide-in-from-bottom-24 flex items-center gap-1'
               }
             >
               <Trans i18nKey={'auth.signUpWithEmail'} />

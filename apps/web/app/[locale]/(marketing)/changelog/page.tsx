@@ -1,6 +1,7 @@
-import { cache } from 'react';
+import { Suspense } from 'react';
 
 import type { Metadata } from 'next';
+import { cacheLife } from 'next/cache';
 
 import { getLocale, getTranslations } from 'next-intl/server';
 
@@ -8,6 +9,8 @@ import { createCmsClient } from '@kit/cms';
 import { getLogger } from '@kit/shared/logger';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
+
+import { ContentFallback } from '~/components/skeletons/page-skeletons';
 
 import { SitePageHeader } from '../_components/site-page-header';
 import { ChangelogEntry } from './_components/changelog-entry';
@@ -42,36 +45,68 @@ export const generateMetadata = async (
   };
 };
 
-const getContentItems = cache(
-  async (language: string | undefined, limit: number, offset: number) => {
-    const client = await createCmsClient();
-    const logger = await getLogger();
+async function getContentItems(
+  language: string | undefined,
+  limit: number,
+  offset: number,
+) {
+  'use cache';
+  cacheLife('hours');
 
-    try {
-      return await client.getContentItems({
-        collection: 'changelog',
-        limit,
-        offset,
-        content: false,
-        language,
-        sortBy: 'publishedAt',
-        sortDirection: 'desc',
-      });
-    } catch (error) {
-      logger.error({ error }, 'Failed to load changelog entries');
+  const client = await createCmsClient();
+  const logger = await getLogger();
 
-      return { total: 0, items: [] };
-    }
-  },
-);
+  try {
+    return await client.getContentItems({
+      collection: 'changelog',
+      limit,
+      offset,
+      content: false,
+      language,
+      sortBy: 'publishedAt',
+      sortDirection: 'desc',
+    });
+  } catch (error) {
+    logger.error({ error }, 'Failed to load changelog entries');
 
-async function ChangelogPage(props: ChangelogPageProps) {
+    return { total: 0, items: [] };
+  }
+}
+
+function ChangelogPage(props: ChangelogPageProps) {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <ChangelogHeader />
+      </Suspense>
+
+      <div className="container flex max-w-4xl flex-col space-y-12 py-12">
+        <Suspense fallback={<ContentFallback />}>
+          <ChangelogEntries searchParams={props.searchParams} />
+        </Suspense>
+      </div>
+    </>
+  );
+}
+
+async function ChangelogHeader() {
   const t = await getTranslations('marketing');
+
+  return (
+    <SitePageHeader title={t('changelog')} subtitle={t('changelogSubtitle')} />
+  );
+}
+
+async function ChangelogEntries({
+  searchParams,
+}: {
+  searchParams: ChangelogPageProps['searchParams'];
+}) {
   const language = await getLocale();
-  const searchParams = await props.searchParams;
+  const { page: pageParam } = await searchParams;
 
   const limit = CHANGELOG_ENTRIES_PER_PAGE;
-  const page = searchParams.page ? parseInt(searchParams.page) : 0;
+  const page = pageParam ? parseInt(pageParam) : 0;
   const offset = page * limit;
 
   const { total, items: entries } = await getContentItems(
@@ -82,35 +117,28 @@ async function ChangelogPage(props: ChangelogPageProps) {
 
   return (
     <>
-      <SitePageHeader
-        title={t('changelog')}
-        subtitle={t('changelogSubtitle')}
-      />
+      <If
+        condition={entries.length > 0}
+        fallback={<Trans i18nKey="marketing.noChangelogEntries" />}
+      >
+        <div className="space-y-0">
+          {entries.map((entry, index) => {
+            return (
+              <ChangelogEntry
+                key={entry.id}
+                entry={entry}
+                highlight={index === 0}
+              />
+            );
+          })}
+        </div>
 
-      <div className="container flex max-w-4xl flex-col space-y-12 py-12">
-        <If
-          condition={entries.length > 0}
-          fallback={<Trans i18nKey="marketing.noChangelogEntries" />}
-        >
-          <div className="space-y-0">
-            {entries.map((entry, index) => {
-              return (
-                <ChangelogEntry
-                  key={entry.id}
-                  entry={entry}
-                  highlight={index === 0}
-                />
-              );
-            })}
-          </div>
-
-          <ChangelogPagination
-            currentPage={page}
-            canGoToNextPage={offset + limit < total}
-            canGoToPreviousPage={page > 0}
-          />
-        </If>
-      </div>
+        <ChangelogPagination
+          currentPage={page}
+          canGoToNextPage={offset + limit < total}
+          canGoToPreviousPage={page > 0}
+        />
+      </If>
     </>
   );
 }

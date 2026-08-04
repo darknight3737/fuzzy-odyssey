@@ -27,6 +27,7 @@ import {
 import { Trans } from '@kit/ui/trans';
 
 import { PasswordSignInSchema } from '../schemas/password-sign-in.schema';
+import { LastAuthMethodHint } from './last-auth-method-hint';
 import { PasswordInput } from './password-input';
 
 export function PasswordSignInForm({
@@ -117,10 +118,15 @@ export function PasswordSignInForm({
 
         <Button
           data-test="auth-submit-button"
-          className={'group w-full'}
+          className={'group relative w-full'}
           type="submit"
           disabled={loading || redirecting || captchaLoading}
         >
+          <LastAuthMethodHint
+            type="password"
+            className="absolute right-0 translate-x-[50%] translate-y-[-100%]"
+          />
+
           <If condition={redirecting}>
             <span className={'animate-in fade-in slide-in-from-bottom-24'}>
               <Trans i18nKey={'auth.redirecting'} />

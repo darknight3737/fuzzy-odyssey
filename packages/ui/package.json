@@ -13,7 +13,7 @@
   "exports": {
     "./accordion": "./src/shadcn/accordion.tsx",
     "./alert-dialog": "./src/shadcn/alert-dialog.tsx",
-    "./avatar": "./src/shadcn/avatar.tsx",
+    "./avatar": "./src/makerkit/avatar.tsx",
     "./button": "./src/shadcn/button.tsx",
     "./calendar": "./src/shadcn/calendar.tsx",
     "./card": "./src/shadcn/card.tsx",

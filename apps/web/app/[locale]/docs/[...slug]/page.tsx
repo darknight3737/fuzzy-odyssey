@@ -1,21 +1,38 @@
-import { cache } from 'react';
+import { Suspense } from 'react';
 
 import type { Metadata } from 'next';
+import { cacheLife } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 import { ContentRenderer, createCmsClient } from '@kit/cms';
 import { cn } from '@kit/ui/utils';
 
-const getPageBySlug = cache(pageLoader);
+import { ContentFallback } from '~/components/skeletons/page-skeletons';
 
 interface DocumentationPageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-async function pageLoader(slug: string) {
+async function getPageBySlug(slug: string) {
+  'use cache';
+  cacheLife('hours');
+
   const client = await createCmsClient();
 
   return client.getContentItemBySlug({ slug, collection: 'documentation' });
+}
+
+export async function generateStaticParams() {
+  'use cache';
+  cacheLife('hours');
+
+  const client = await createCmsClient();
+  const { items } = await client.getContentItems({
+    collection: 'documentation',
+    content: false,
+  });
+
+  return items.map((item) => ({ slug: item.slug.split('/') }));
 }
 
 export async function generateMetadata({
@@ -36,7 +53,15 @@ export async function generateMetadata({
   };
 }
 
-async function DocumentationPage({ params }: DocumentationPageProps) {
+function DocumentationPage({ params }: DocumentationPageProps) {
+  return (
+    <Suspense fallback={<ContentFallback />}>
+      <DocumentationContent params={params} />
+    </Suspense>
+  );
+}
+
+async function DocumentationContent({ params }: DocumentationPageProps) {
   const slug = (await params).slug.join('/');
   const page = await getPageBySlug(slug);
 

@@ -13,10 +13,11 @@
 1. ALWAYS use `createAccountsApi(client)` / `createTeamAccountsApi(client)` factories — NEVER query tables directly if methods exist
 2. NEVER import `useUserWorkspace` outside `app/home/(user)` routes
 3. NEVER import `useTeamAccountWorkspace` outside `app/home/[account]` routes
-4. NEVER call admin operations without `isSuperAdmin()` check first
-5. ALWAYS wrap admin pages with `AdminGuard`
-6. ALWAYS use `getLogger()` from `@kit/shared/logger` for structured logging — NEVER `console.log` in production code
-7. NEVER bypass permission checks when permissions exist — use `api.hasPermission({ accountId, userId, permission })`
+4. ALWAYS put a `<Suspense>` boundary above components calling either workspace hook — both suspend (the contexts hold a promise unwrapped with `use()`)
+5. NEVER call admin operations without `isSuperAdmin()` check first
+6. ALWAYS wrap admin pages with `AdminGuard`
+7. ALWAYS use `getLogger()` from `@kit/shared/logger` for structured logging — NEVER `console.log` in production code
+8. NEVER bypass permission checks when permissions exist — use `api.hasPermission({ accountId, userId, permission })`
 
 ## Key Imports
 

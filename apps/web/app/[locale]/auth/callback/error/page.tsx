@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import Link from 'next/link';
 
 import type { AuthError } from '@supabase/supabase-js';
@@ -19,7 +21,19 @@ interface AuthCallbackErrorPageProps {
   }>;
 }
 
-async function AuthCallbackErrorPage(props: AuthCallbackErrorPageProps) {
+function AuthCallbackErrorPage(props: AuthCallbackErrorPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <AuthCallbackError searchParams={props.searchParams} />
+    </Suspense>
+  );
+}
+
+/**
+ * The error details come from the query string, which is runtime data, so this
+ * sits behind a boundary. The auth card around it renders straight away.
+ */
+async function AuthCallbackError(props: AuthCallbackErrorPageProps) {
   const { error, callback, code } = await props.searchParams;
   const signInPath = pathsConfig.auth.signIn;
   const redirectPath = callback ?? pathsConfig.auth.callback;

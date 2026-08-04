@@ -1,7 +1,6 @@
 'use client';
 
 import { useCaptureException } from '@kit/monitoring/hooks';
-import { useUser } from '@kit/supabase/hooks/use-user';
 
 import { SiteHeader } from '~/(marketing)/_components/site-header';
 import { ErrorPageContent } from '~/components/error-page-content';
@@ -28,11 +27,9 @@ const GlobalErrorPage = ({
 };
 
 function GlobalErrorContent({ reset }: { reset: () => void }) {
-  const user = useUser();
-
   return (
     <div className={'flex h-screen flex-1 flex-col'}>
-      <SiteHeader user={user.data} />
+      <SiteHeader />
 
       <ErrorPageContent
         statusCode={'common.errorPageHeading'}

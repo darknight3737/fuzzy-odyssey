@@ -11,7 +11,7 @@ export function AuthProviderButton({
 }>) {
   return (
     <Button
-      className={'flex w-full gap-x-3 text-center'}
+      className={'relative flex w-full gap-x-3 text-center'}
       data-provider={providerId}
       data-test={'auth-provider-button'}
       variant={'outline'}

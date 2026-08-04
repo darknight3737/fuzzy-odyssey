@@ -38,7 +38,17 @@ export function UpdateAccountDetailsForm({
   const t = useTranslations('account');
 
   const form = useForm({
-    resolver: zodResolver(AccountDetailsSchema),
+    resolver: zodResolver(
+      AccountDetailsSchema.refine(
+        (values) => {
+          return values.displayName !== displayName;
+        },
+        {
+          path: ['displayName'],
+          error: t('duplicateNameError'),
+        },
+      ),
+    ),
     defaultValues: {
       displayName,
     },

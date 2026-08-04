@@ -1,3 +1,6 @@
-import { GlobalLoader } from '@kit/ui/global-loader';
+import { PageHeaderOnlySkeleton } from '~/components/skeletons/page-skeletons';
 
-export default GlobalLoader;
+/** The personal home page renders a header and nothing else. */
+export default function Loading() {
+  return <PageHeaderOnlySkeleton />;
+}

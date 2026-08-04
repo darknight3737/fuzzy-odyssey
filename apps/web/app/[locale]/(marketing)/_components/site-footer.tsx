@@ -1,10 +1,25 @@
+import { cacheLife } from 'next/cache';
+
 import { Footer } from '@kit/ui/marketing';
 import { Trans } from '@kit/ui/trans';
 
 import { AppLogo } from '~/components/app-logo';
 import appConfig from '~/config/app.config';
 
-export function SiteFooter() {
+/**
+ * `new Date()` can't be prerendered — it changes every render. Caching it makes
+ * the value stable for the prerender and refreshes it daily.
+ */
+async function getCopyrightYear() {
+  'use cache';
+  cacheLife('days');
+
+  return new Date().getFullYear();
+}
+
+export async function SiteFooter() {
+  const year = await getCopyrightYear();
+
   return (
     <Footer
       logo={<AppLogo className="w-[85px] md:w-[95px]" />}
@@ -14,7 +29,7 @@ export function SiteFooter() {
           i18nKey="marketing.copyright"
           values={{
             product: appConfig.name,
-            year: new Date().getFullYear(),
+            year,
           }}
         />
       }

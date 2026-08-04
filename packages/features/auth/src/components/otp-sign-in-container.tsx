@@ -30,6 +30,7 @@ import { useCaptcha } from '../captcha/client';
 import { useLastAuthMethod } from '../hooks/use-last-auth-method';
 import { AuthErrorAlert } from './auth-error-alert';
 import { EmailInput } from './email-input';
+import { LastAuthMethodHint } from './last-auth-method-hint';
 
 const EmailSchema = z.object({ email: z.string().email() });
 const OtpSchema = z.object({ token: z.string().min(6).max(6) });
@@ -91,6 +92,11 @@ export function OtpSignInContainer(props: OtpSignInContainerProps) {
         shouldCreateUser={shouldCreateUser}
         captchaSiteKey={props.captchaSiteKey}
         onSendOtp={(email) => {
+          // record on send: the user may complete the sign in by clicking the
+          // link in the email, which resolves server-side in /auth/confirm and
+          // never runs handleVerifyOtp
+          recordAuthMethod('otp', { email });
+
           otpForm.setValue('email', email, {
             shouldValidate: true,
           });
@@ -102,7 +108,7 @@ export function OtpSignInContainer(props: OtpSignInContainerProps) {
   return (
     <Form {...otpForm}>
       <form
-        className="flex w-full flex-col items-center space-y-8"
+        className="flex w-full flex-col items-center gap-y-4"
         onSubmit={otpForm.handleSubmit(handleVerifyOtp)}
       >
         <AuthErrorAlert error={verifyMutation.error} />
@@ -111,7 +117,7 @@ export function OtpSignInContainer(props: OtpSignInContainerProps) {
           name="token"
           render={({ field }) => (
             <FormItem>
-              <FormControl>
+              <FormControl className="flex justify-center">
                 <InputOTP
                   maxLength={6}
                   {...field}
@@ -157,6 +163,7 @@ export function OtpSignInContainer(props: OtpSignInContainerProps) {
           </Button>
 
           <Button
+            className="relative"
             type="button"
             variant="ghost"
             disabled={verifyMutation.isPending}
@@ -204,7 +211,7 @@ function OtpEmailForm({
   return (
     <Form {...emailForm}>
       <form
-        className="flex flex-col gap-y-4"
+        className="flex flex-col gap-y-2"
         onSubmit={emailForm.handleSubmit(handleSendOtp)}
       >
         <AuthErrorAlert error={signInMutation.error} />
@@ -226,6 +233,7 @@ function OtpEmailForm({
 
         <Button
           type="submit"
+          className="relative"
           disabled={signInMutation.isPending}
           data-test="otp-send-button"
         >
@@ -237,6 +245,11 @@ function OtpEmailForm({
           ) : (
             <Trans i18nKey="common.otp.sendVerificationCode" />
           )}
+
+          <LastAuthMethodHint
+            type="otp"
+            className="absolute right-0 translate-x-[50%] translate-y-[-50%]"
+          />
         </Button>
       </form>
     </Form>

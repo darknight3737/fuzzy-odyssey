@@ -1,8 +1,10 @@
+import { Suspense } from 'react';
+
 import { NavigationMenu, NavigationMenuList } from '@kit/ui/navigation-menu';
 import { Trans } from '@kit/ui/trans';
 
 import { MobileSiteNavigation } from './mobile-site-navigation';
-import { SiteNavigationItem } from './site-navigation-item';
+import { SiteNavigationItem, SiteNavigationLink } from './site-navigation-item';
 
 const links = {
   Blog: {
@@ -38,25 +40,31 @@ const links = {
   },
 };
 
+const desktopLinks = Object.values(links).filter(
+  (item) => !('showOn' in item && item.showOn === 'mobile'),
+);
+
 export function SiteNavigation() {
-  const NavItems = Object.values(links)
-    .map((item) => {
-      if ('showOn' in item && item.showOn === 'mobile') return null;
-
-      return (
-        <SiteNavigationItem key={item.path} path={item.path}>
-          <Trans i18nKey={item.label} />
-        </SiteNavigationItem>
-      );
-    })
-    .filter(Boolean);
-
   return (
     <>
       <div className={'hidden items-center justify-center md:flex'}>
         <NavigationMenu>
-          <NavigationMenuList className={'gap-x-2.5'}>
-            {NavItems}
+          <NavigationMenuList className={'gap-x-4'}>
+            {/* The fallback renders the same links without the active
+                highlight, so the header never shifts. */}
+            <Suspense
+              fallback={desktopLinks.map((item) => (
+                <SiteNavigationLink key={item.path} path={item.path}>
+                  <Trans i18nKey={item.label} />
+                </SiteNavigationLink>
+              ))}
+            >
+              {desktopLinks.map((item) => (
+                <SiteNavigationItem key={item.path} path={item.path}>
+                  <Trans i18nKey={item.label} />
+                </SiteNavigationItem>
+              ))}
+            </Suspense>
           </NavigationMenuList>
         </NavigationMenu>
       </div>

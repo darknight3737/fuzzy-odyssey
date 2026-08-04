@@ -60,9 +60,7 @@ export function ContactForm() {
     <Form {...form}>
       <form
         className={'flex flex-col space-y-4'}
-        onSubmit={form.handleSubmit((data) => {
-          execute(data);
-        })}
+        onSubmit={form.handleSubmit(execute)}
       >
         <FormField
           name={'name'}
@@ -125,7 +123,7 @@ export function ContactForm() {
           }}
         />
 
-        <Button disabled={isPending} type={'submit'}>
+        <Button disabled={isPending} type={'submit'} size="lg">
           <Trans i18nKey={'marketing.sendMessage'} />
         </Button>
       </form>

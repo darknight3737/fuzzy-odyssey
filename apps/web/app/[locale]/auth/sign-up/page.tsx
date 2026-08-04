@@ -26,14 +26,10 @@ const paths = {
 async function SignUpPage() {
   return (
     <>
-      <div className={'flex flex-col items-center gap-1'}>
-        <Heading level={4} className={'tracking-tight'}>
+      <div className={'flex flex-col items-center'}>
+        <Heading level={2} className={'tracking-tighter'}>
           <Trans i18nKey={'auth.signUpHeading'} />
         </Heading>
-
-        <p className={'text-muted-foreground text-sm'}>
-          <Trans i18nKey={'auth.signUpSubheading'} />
-        </p>
       </div>
 
       <SignUpMethodsContainer
@@ -46,7 +42,7 @@ async function SignUpPage() {
       <div className={'flex justify-center'}>
         <Button
           render={
-            <Link href={pathsConfig.auth.signIn} prefetch={true}>
+            <Link href={pathsConfig.auth.signIn}>
               <Trans i18nKey={'auth.alreadyHaveAnAccount'} />
             </Link>
           }

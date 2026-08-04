@@ -1,7 +1,10 @@
+import { Suspense } from 'react';
+
 import { getTranslations } from 'next-intl/server';
 
 import { PersonalAccountSettingsContainer } from '@kit/accounts/personal-account-settings';
 
+import { CardSkeleton, Delayed } from '~/components/skeletons/page-skeletons';
 import authConfig from '~/config/auth.config';
 import featureFlagsConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
@@ -35,9 +38,26 @@ interface TeamProfileSettingsPageProps {
   params: Promise<{ account: string }>;
 }
 
-async function TeamProfileSettingsPage({
-  params,
-}: TeamProfileSettingsPageProps) {
+function TeamProfileSettingsPage({ params }: TeamProfileSettingsPageProps) {
+  return (
+    <div className={'flex w-full flex-1 flex-col lg:max-w-2xl'}>
+      <Suspense
+        fallback={
+          <Delayed>
+            <CardSkeleton rows={4} />
+          </Delayed>
+        }
+      >
+        <ProfileSettings params={params} />
+      </Suspense>
+    </div>
+  );
+}
+
+export default TeamProfileSettingsPage;
+
+/** The session is what makes this per-request, so it waits behind the boundary. */
+async function ProfileSettings({ params }: TeamProfileSettingsPageProps) {
   const [user, { account }] = await Promise.all([
     requireUserInServerComponent(),
     params,
@@ -53,15 +73,11 @@ async function TeamProfileSettingsPage({
   };
 
   return (
-    <div className={'flex w-full flex-1 flex-col lg:max-w-2xl'}>
-      <PersonalAccountSettingsContainer
-        userId={user.id}
-        features={features}
-        paths={paths}
-        providers={providers}
-      />
-    </div>
+    <PersonalAccountSettingsContainer
+      userId={user.id}
+      features={features}
+      paths={paths}
+      providers={providers}
+    />
   );
 }
-
-export default TeamProfileSettingsPage;

@@ -1,4 +1,6 @@
-import { getLocale } from 'next-intl/server';
+import { Suspense } from 'react';
+
+import { locale as localeRootParam } from 'next/root-params';
 
 import { SidebarInset, SidebarProvider } from '@kit/ui/sidebar';
 
@@ -8,17 +10,7 @@ import { DocsNavigation } from './_components/docs-navigation';
 import { getDocs } from './_lib/server/docs.loader';
 import { buildDocumentationTree } from './_lib/utils';
 
-type DocsLayoutProps = React.PropsWithChildren<{
-  params: Promise<{ locale?: string }>;
-}>;
-
-async function DocsLayout({ children, params }: DocsLayoutProps) {
-  let { locale } = await params;
-
-  if (!locale) {
-    locale = await getLocale();
-  }
-
+function DocsLayout({ children }: React.PropsWithChildren) {
   return (
     <SidebarProvider
       defaultOpen={true}
@@ -28,7 +20,9 @@ async function DocsLayout({ children, params }: DocsLayoutProps) {
         } as React.CSSProperties
       }
     >
-      <DocsSidebar locale={locale} />
+      <Suspense fallback={null}>
+        <DocsSidebar />
+      </Suspense>
 
       <SidebarInset className="h-screen overflow-y-auto overscroll-y-none">
         <DocsHeader />
@@ -39,8 +33,8 @@ async function DocsLayout({ children, params }: DocsLayoutProps) {
   );
 }
 
-async function DocsSidebar({ locale }: { locale: string }) {
-  const pages = await getDocs(locale);
+async function DocsSidebar() {
+  const pages = await getDocs(await localeRootParam());
   const tree = buildDocumentationTree(pages);
 
   return <DocsNavigation pages={tree} />;

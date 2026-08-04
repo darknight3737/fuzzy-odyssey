@@ -7,7 +7,6 @@ import { If } from '@kit/ui/if';
 import { Separator } from '@kit/ui/separator';
 import { Trans } from '@kit/ui/trans';
 
-import { ExistingAccountHint } from './existing-account-hint';
 import { MagicLinkAuthContainer } from './magic-link-auth-container';
 import { OauthProviders } from './oauth-providers';
 import { OtpSignInContainer } from './otp-sign-in-container';
@@ -37,9 +36,6 @@ export function SignUpMethodsContainer(props: {
 
   return (
     <>
-      {/* Show hint if user might already have an account */}
-      <ExistingAccountHint />
-
       <If condition={props.providers.password}>
         <EmailPasswordSignUpContainer
           emailRedirectTo={redirectUrl}
@@ -80,7 +76,7 @@ export function SignUpMethodsContainer(props: {
             </div>
 
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background text-muted-foreground px-2">
+              <span className="bg-background text-muted-foreground px-2 text-[0.6rem]">
                 <Trans i18nKey="auth.orContinueWith" />
               </span>
             </div>

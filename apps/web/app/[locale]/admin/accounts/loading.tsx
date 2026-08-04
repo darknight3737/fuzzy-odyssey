@@ -1,3 +1,20 @@
-import { GlobalLoader } from '@kit/ui/global-loader';
+import { PageBody } from '@kit/ui/page';
 
-export default GlobalLoader;
+import {
+  Delayed,
+  PageHeaderSkeleton,
+  TableSkeleton,
+} from '~/components/skeletons/page-skeletons';
+
+/** A filterable table — the most predictable shape in the app. */
+export default function Loading() {
+  return (
+    <PageBody>
+      <Delayed className={'flex flex-col'}>
+        <PageHeaderSkeleton withActions />
+
+        <TableSkeleton />
+      </Delayed>
+    </PageBody>
+  );
+}

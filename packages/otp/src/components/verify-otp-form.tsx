@@ -188,7 +188,7 @@ export function VerifyOtpForm({
                 control={otpForm.control}
                 render={({ field }) => (
                   <FormItem>
-                    <FormControl>
+                    <FormControl className="mx-auto">
                       <InputOTP
                         maxLength={6}
                         {...field}
@@ -212,6 +212,7 @@ export function VerifyOtpForm({
                     <FormDescription>
                       <Trans i18nKey="common.otp.enterCodeFromEmail" />
                     </FormDescription>
+
                     <FormMessage />
                   </FormItem>
                 )}

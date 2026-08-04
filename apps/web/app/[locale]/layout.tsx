@@ -1,3 +1,4 @@
+import '../../styles/globals.css';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
@@ -12,11 +13,18 @@ import { cn } from '@kit/ui/utils';
 import { RootProviders } from '~/components/root-providers';
 import { getFontsClassName } from '~/lib/fonts';
 import { generateRootMetadata } from '~/lib/root-metadata';
-import { getRootTheme } from '~/lib/root-theme';
 
 export const generateMetadata = () => {
   return generateRootMetadata();
 };
+
+/**
+ * Cache Components requires every root parameter to have at least one value,
+ * or the build fails.
+ */
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -33,46 +41,47 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  const [theme, nonce, messages] = await Promise.all([
-    getRootTheme(),
+  const [nonce, messages] = await Promise.all([
     getCspNonce(),
     getMessages({ locale }),
   ]);
 
-  const className = getRootClassName(theme);
-
   return (
-    <html lang={locale} className={className} suppressHydrationWarning>
+    <html lang={locale} className={getRootClassName()} suppressHydrationWarning>
       <head>
         <PublicEnvScript nonce={nonce} />
       </head>
 
       <body>
-        <RootProviders
-          theme={theme}
-          locale={locale}
-          nonce={nonce}
-          messages={messages}
-        >
+        <RootProviders locale={locale} nonce={nonce} messages={messages}>
           {children}
 
-          <Toaster richColors={true} theme={theme} position="top-center" />
+          <Toaster richColors={true} position="top-center" />
         </RootProviders>
       </body>
     </html>
   );
 }
 
-function getRootClassName(theme: string) {
-  const fontsClassName = getFontsClassName(theme);
-
+function getRootClassName() {
   return cn(
     'bg-background min-h-screen antialiased md:overscroll-y-none',
-    fontsClassName,
+    getFontsClassName(),
   );
 }
 
+/**
+ * Reading `headers()` here makes every route dynamic, so it is gated on the
+ * flag that produces the nonce in the first place. A CSP nonce must be unique
+ * per response and can never live in a cached static shell — enabling
+ * `ENABLE_STRICT_CSP` therefore also requires `export const instant = false`
+ * on this layout.
+ */
 async function getCspNonce() {
+  if (process.env.ENABLE_STRICT_CSP !== 'true') {
+    return undefined;
+  }
+
   const headersStore = await headers();
 
   return headersStore.get('x-nonce') ?? undefined;

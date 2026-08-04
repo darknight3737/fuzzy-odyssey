@@ -1,5 +1,5 @@
 import { cn } from '../lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '../shadcn/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 
 type SessionProps = {
   displayName: string | null;

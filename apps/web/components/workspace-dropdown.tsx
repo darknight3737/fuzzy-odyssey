@@ -59,6 +59,39 @@ interface WorkspaceDropdownProps {
   };
 }
 
+/**
+ * @name WorkspaceAvatar
+ * @description
+ * Renders the avatar for a workspace — personal or team — so both share the
+ * same shape and surface. Personal accounts fall back to a user glyph instead
+ * of an initial, but the container is identical.
+ */
+function WorkspaceAvatar({
+  className,
+  pictureUrl,
+  label,
+  isTeam,
+}: {
+  className?: string;
+  pictureUrl?: string | null;
+  label?: string | null;
+  isTeam: boolean;
+}) {
+  return (
+    <Avatar className={className}>
+      <AvatarImage src={pictureUrl ?? undefined} alt={label ?? ''} />
+
+      <AvatarFallback>
+        {isTeam ? (
+          (label ?? '').charAt(0).toUpperCase()
+        ) : (
+          <User className="size-4" />
+        )}
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
 export function WorkspaceDropdown({
   user,
   accounts,
@@ -117,24 +150,15 @@ export function WorkspaceDropdown({
               render={
                 <Button
                   data-test="workspace-dropdown-trigger"
-                  variant="secondary"
+                  variant="ghost"
                   size="icon"
-                  className="border-border hover:shadow"
                 >
-                  <Avatar className="size-8 rounded-md after:hidden">
-                    <AvatarImage
-                      className="rounded-md!"
-                      src={currentAvatar ?? undefined}
-                      alt={currentLabel ?? ''}
-                    />
-                    <AvatarFallback className="rounded-md! bg-transparent">
-                      {isTeamContext ? (
-                        (currentLabel ?? '').charAt(0).toUpperCase()
-                      ) : (
-                        <User className="text-secondary-foreground size-4" />
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
+                  <WorkspaceAvatar
+                    className="size-8"
+                    isTeam={isTeamContext}
+                    pictureUrl={currentAvatar}
+                    label={currentLabel}
+                  />
                 </Button>
               }
             />
@@ -148,20 +172,12 @@ export function WorkspaceDropdown({
                 className="hover:bg-accent/40 active:bg-accent border-border/50! hover:border-border h-11 w-full justify-start gap-x-1 rounded-md border px-1 transition-colors hover:shadow-xs"
               >
                 <span className="flex aspect-square size-8 items-center justify-center">
-                  <Avatar className="size-6 rounded-md after:rounded-md">
-                    <AvatarImage
-                      className="rounded-md!"
-                      src={currentAvatar ?? undefined}
-                      alt={currentLabel ?? ''}
-                    />
-                    <AvatarFallback className="rounded-md!">
-                      {isTeamContext ? (
-                        (currentLabel ?? '').charAt(0).toUpperCase()
-                      ) : (
-                        <User className="size-4" />
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
+                  <WorkspaceAvatar
+                    className="size-6"
+                    isTeam={isTeamContext}
+                    pictureUrl={currentAvatar}
+                    label={currentLabel}
+                  />
                 </span>
 
                 <span className="grid flex-1 text-left text-sm leading-tight">
@@ -225,9 +241,12 @@ export function WorkspaceDropdown({
                     className="flex gap-2"
                     onClick={switchToPersonal}
                   >
-                    <div className="flex size-8 items-center justify-center rounded-md border">
-                      <User className="size-4" />
-                    </div>
+                    <WorkspaceAvatar
+                      className="size-8"
+                      isTeam={false}
+                      pictureUrl={personalAccountData?.picture_url}
+                      label={displayName}
+                    />
 
                     <span className="flex-1">
                       <Trans i18nKey={'teams.personalAccount'} />
@@ -259,16 +278,12 @@ export function WorkspaceDropdown({
                           }
                         }}
                       >
-                        <Avatar className="size-8 rounded-md after:rounded-md">
-                          <AvatarImage
-                            className="rounded-md!"
-                            src={account.image ?? undefined}
-                            alt={account.label ?? ''}
-                          />
-                          <AvatarFallback className="rounded-md! text-xs">
-                            {(account.label ?? '').charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <WorkspaceAvatar
+                          className="size-8"
+                          isTeam
+                          pictureUrl={account.image}
+                          label={account.label}
+                        />
 
                         <div className="flex-1">
                           <div className="font-medium">{account.label}</div>

@@ -1,3 +1,20 @@
-import { GlobalLoader } from '@kit/ui/global-loader';
+import { PageBody } from '@kit/ui/page';
 
-export default GlobalLoader;
+import {
+  DashboardSkeleton,
+  Delayed,
+  PageHeaderSkeleton,
+} from '~/components/skeletons/page-skeletons';
+
+/** Header above a dashboard. Renders inside the layout, so chrome stays put. */
+export default function Loading() {
+  return (
+    <PageBody>
+      <Delayed className={'flex flex-col'}>
+        <PageHeaderSkeleton />
+
+        <DashboardSkeleton />
+      </Delayed>
+    </PageBody>
+  );
+}

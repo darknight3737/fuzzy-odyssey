@@ -1,7 +1,6 @@
-import { use } from 'react';
+import { Suspense, use } from 'react';
 
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 
 import * as z from 'zod';
 
@@ -11,6 +10,7 @@ import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
 import { MobileSidebarTrigger } from '~/components/mobile-sidebar-trigger';
+import { QueryHydration } from '~/components/query-hydration';
 import { getTeamAccountSidebarConfig } from '~/config/team-account-navigation.config';
 
 // local imports
@@ -23,105 +23,99 @@ type TeamWorkspaceLayoutProps = React.PropsWithChildren<{
   params: Promise<{ account: string }>;
 }>;
 
+/**
+ * The workspace promise is passed down unawaited so the page shell and
+ * `children` render immediately. Only the navigation, which reads the
+ * workspace, sits behind a boundary.
+ */
 function TeamWorkspaceLayout({ children, params }: TeamWorkspaceLayoutProps) {
   const account = use(params).account;
   const state = use(getLayoutState(account));
+  const workspace = loadTeamWorkspace(account);
+  const isSidebar = state.style === 'sidebar';
 
-  if (state.style === 'sidebar') {
-    return <SidebarLayout account={account}>{children}</SidebarLayout>;
-  }
+  const navigation = isSidebar ? (
+    // Renders its own frame and nav immediately; only its header suspends.
+    <TeamAccountLayoutSidebar account={account} />
+  ) : (
+    <Suspense fallback={null}>
+      <TeamAccountHeaderNavigation account={account} />
+    </Suspense>
+  );
 
-  return <HeaderLayout account={account}>{children}</HeaderLayout>;
-}
+  const content = (
+    <Page style={isSidebar ? 'sidebar' : 'header'}>
+      <PageNavigation>{navigation}</PageNavigation>
 
-async function SidebarLayout({
-  account,
-  children,
-}: React.PropsWithChildren<{
-  account: string;
-}>) {
-  const [data, state] = await Promise.all([
-    loadTeamWorkspace(account),
-    getLayoutState(account),
-  ]);
+      <PageMobileNavigation
+        className={
+          isSidebar ? 'md:hidden' : 'flex items-center justify-between'
+        }
+      >
+        <div>
+          <AppLogo />
+        </div>
 
-  if (!data) {
-    redirect('/');
-  }
+        {/* The sidebar already holds the nav, so mobile only needs a trigger. */}
+        {isSidebar ? (
+          <MobileSidebarTrigger />
+        ) : (
+          <Suspense fallback={null}>
+            <TeamAccountMobileNavigation account={account} />
+          </Suspense>
+        )}
+      </PageMobileNavigation>
 
-  const accounts = data.accounts.map(({ name, slug, picture_url }) => ({
-    label: name,
-    value: slug,
-    image: picture_url,
-  }));
+      <Suspense fallback={null}>
+        <HydratedWorkspace account={account}>{children}</HydratedWorkspace>
+      </Suspense>
+    </Page>
+  );
 
   return (
-    <TeamAccountWorkspaceContextProvider value={data}>
-      <SidebarProvider defaultOpen={state.open}>
-        <Page style={'sidebar'}>
-          <PageNavigation>
-            <TeamAccountLayoutSidebar
-              account={account}
-              accountId={data.account.id}
-              accounts={accounts}
-              user={data.user}
-            />
-          </PageNavigation>
-
-          <PageMobileNavigation className={'md:hidden'}>
-            <div>
-              <AppLogo />
-            </div>
-
-            <MobileSidebarTrigger />
-          </PageMobileNavigation>
-
-          {children}
-        </Page>
-      </SidebarProvider>
+    <TeamAccountWorkspaceContextProvider value={workspace}>
+      {isSidebar ? (
+        <SidebarProvider defaultOpen={state.open}>{content}</SidebarProvider>
+      ) : (
+        content
+      )}
     </TeamAccountWorkspaceContextProvider>
   );
 }
 
-function HeaderLayout({
+async function HydratedWorkspace({
   account,
   children,
-}: React.PropsWithChildren<{
-  account: string;
-}>) {
-  const data = use(loadTeamWorkspace(account));
+}: React.PropsWithChildren<{ account: string }>) {
+  const data = await loadTeamWorkspace(account);
 
-  const accounts = data.accounts.map(({ name, slug, picture_url }) => ({
+  return <QueryHydration user={data.user}>{children}</QueryHydration>;
+}
+
+async function TeamAccountHeaderNavigation({ account }: { account: string }) {
+  const data = await loadTeamWorkspace(account);
+
+  return <TeamAccountNavigationMenu workspace={data} />;
+}
+
+async function TeamAccountMobileNavigation({ account }: { account: string }) {
+  const data = await loadTeamWorkspace(account);
+
+  return (
+    <TeamAccountLayoutMobileNavigation
+      userId={data.user.id}
+      accounts={toAccountModels(data)}
+      account={account}
+    />
+  );
+}
+
+function toAccountModels(data: Awaited<ReturnType<typeof loadTeamWorkspace>>) {
+  return data.accounts.map(({ name, slug, picture_url }) => ({
     label: name,
     value: slug,
     image: picture_url,
   }));
-
-  return (
-    <TeamAccountWorkspaceContextProvider value={data}>
-      <Page style={'header'}>
-        <PageNavigation>
-          <TeamAccountNavigationMenu workspace={data} />
-        </PageNavigation>
-
-        <PageMobileNavigation className={'flex items-center justify-between'}>
-          <div>
-            <AppLogo />
-          </div>
-
-          <div>
-            <TeamAccountLayoutMobileNavigation
-              userId={data.user.id}
-              accounts={accounts}
-              account={account}
-            />
-          </div>
-        </PageMobileNavigation>
-
-        {children}
-      </Page>
-    </TeamAccountWorkspaceContextProvider>
-  );
 }
 
 async function getLayoutState(account: string) {

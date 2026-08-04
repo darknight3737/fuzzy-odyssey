@@ -11,12 +11,16 @@ interface AccountWorkspace {
   user: JWTUserData;
 }
 
-export const TeamAccountWorkspaceContext = createContext<AccountWorkspace>(
-  {} as AccountWorkspace,
-);
+/**
+ * Holds a promise rather than resolved data so the layout can render its shell
+ * and children immediately. `useTeamAccountWorkspace` unwraps it with `use()`,
+ * suspending only the components that actually read the workspace.
+ */
+export const TeamAccountWorkspaceContext =
+  createContext<Promise<AccountWorkspace> | null>(null);
 
 export function TeamAccountWorkspaceContextProvider(
-  props: React.PropsWithChildren<{ value: AccountWorkspace }>,
+  props: React.PropsWithChildren<{ value: Promise<AccountWorkspace> }>,
 ) {
   return (
     <TeamAccountWorkspaceContext.Provider value={props.value}>
