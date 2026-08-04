@@ -1,5 +1,4 @@
 import '../../styles/globals.css';
-
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
