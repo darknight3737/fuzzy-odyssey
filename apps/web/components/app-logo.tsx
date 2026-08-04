@@ -49,7 +49,6 @@ export function AppLogo({
     <Link
       aria-label={label ?? 'Home Page'}
       href={href ?? '/'}
-      prefetch={true}
       className="mx-auto md:mx-0"
     >
       <LogoImage className={className} />

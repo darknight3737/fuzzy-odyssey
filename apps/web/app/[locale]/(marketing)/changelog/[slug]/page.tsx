@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation';
 
 import { createCmsClient } from '@kit/cms';
 
+import { ContentFallback } from '~/components/skeletons/page-skeletons';
+
 import { ChangelogDetail } from '../_components/changelog-detail';
 
 interface ChangelogEntryPageProps {
@@ -86,7 +88,7 @@ export async function generateMetadata({
 
 function ChangelogEntryPage({ params }: ChangelogEntryPageProps) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<ContentFallback />}>
       <ChangelogEntryContent params={params} />
     </Suspense>
   );

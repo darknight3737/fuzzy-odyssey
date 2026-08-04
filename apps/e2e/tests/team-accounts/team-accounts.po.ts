@@ -35,20 +35,33 @@ export class TeamAccountsPageObject {
     };
   }
 
+  /**
+   * Builds a selector scoped to the route currently on screen.
+   *
+   * After a client-side navigation the route we came from is still mounted,
+   * just sized to zero, so a plain `data-test` selector matches twice: once on
+   * this page and once on the previous one. Playwright treats that as a strict
+   * mode violation, and the plain `page.click`/`page.fill` helpers silently
+   * pick whichever came first. Filtering on `:visible` leaves only the live one.
+   */
+  private visible(testId: string) {
+    return `[data-test="${testId}"]:visible`;
+  }
+
   getTeamFromSelector(teamName: string) {
-    return this.page.locator('[data-test="workspace-team-item"]', {
+    return this.page.locator(this.visible('workspace-team-item'), {
       hasText: teamName,
     });
   }
 
   getTeams() {
-    return this.page.locator('[data-test="workspace-team-item"]');
+    return this.page.locator(this.visible('workspace-team-item'));
   }
 
   goToSettings() {
     return expect(async () => {
       await this.page
-        .locator('a', {
+        .locator('a:visible', {
           hasText: 'Settings',
         })
         .click();
@@ -60,7 +73,7 @@ export class TeamAccountsPageObject {
   goToMembers() {
     return expect(async () => {
       await this.page
-        .locator('a', {
+        .locator('a:visible', {
           hasText: 'Members',
         })
         .click();
@@ -72,7 +85,7 @@ export class TeamAccountsPageObject {
   goToBilling() {
     return expect(async () => {
       await this.page
-        .locator('a', {
+        .locator('a:visible', {
           hasText: 'Billing',
         })
         .click();
@@ -83,18 +96,18 @@ export class TeamAccountsPageObject {
 
   openAccountsSelector() {
     return expect(async () => {
-      await this.page.click('[data-test="workspace-dropdown-trigger"]');
-      await this.page.click('[data-test="workspace-switch-submenu"]');
+      await this.page.click(this.visible('workspace-dropdown-trigger'));
+      await this.page.click(this.visible('workspace-switch-submenu'));
 
       return expect(
-        this.page.locator('[data-test="workspace-switch-content"]'),
+        this.page.locator(this.visible('workspace-switch-content')),
       ).toBeVisible();
     }).toPass();
   }
 
   async tryCreateTeam(teamName: string, slug?: string) {
     const nameInput = this.page.locator(
-      '[data-test="create-team-form"] [data-test="team-name-input"]',
+      '[data-test="create-team-form"]:visible [data-test="team-name-input"]',
     );
 
     await nameInput.fill('');
@@ -103,14 +116,16 @@ export class TeamAccountsPageObject {
     // If slug is provided (for non-Latin names), fill the slug field
     if (slug) {
       const slugInput = this.page.locator(
-        '[data-test="create-team-form"] [data-test="team-slug-input"]',
+        '[data-test="create-team-form"]:visible [data-test="team-slug-input"]',
       );
 
       await expect(slugInput).toBeVisible();
       await slugInput.fill(slug);
     }
 
-    return this.page.click('[data-test="create-team-form"] button:last-child');
+    return this.page.click(
+      '[data-test="create-team-form"]:visible button:last-child',
+    );
   }
 
   async createTeam({ teamName, slug } = this.createTeamName()) {
@@ -119,7 +134,7 @@ export class TeamAccountsPageObject {
     await this.page.click('[data-test="create-team-trigger"]');
 
     await this.page.fill(
-      '[data-test="create-team-form"] [data-test="team-name-input"]',
+      '[data-test="create-team-form"]:visible [data-test="team-name-input"]',
       teamName,
     );
 
@@ -127,7 +142,7 @@ export class TeamAccountsPageObject {
     // The database trigger will auto-generate the slug from the name
 
     const click = this.page.click(
-      '[data-test="create-team-form"] button:last-child',
+      '[data-test="create-team-form"]:visible button:last-child',
     );
 
     const response = this.page.waitForURL(`/home/${slug}`);
@@ -150,7 +165,7 @@ export class TeamAccountsPageObject {
     await this.page.click('[data-test="create-team-trigger"]');
 
     await this.page.fill(
-      '[data-test="create-team-form"] [data-test="team-name-input"]',
+      '[data-test="create-team-form"]:visible [data-test="team-name-input"]',
       teamName,
     );
 
@@ -158,12 +173,12 @@ export class TeamAccountsPageObject {
     await expect(this.getSlugField()).toBeVisible();
 
     await this.page.fill(
-      '[data-test="create-team-form"] [data-test="team-slug-input"]',
+      '[data-test="create-team-form"]:visible [data-test="team-slug-input"]',
       slug,
     );
 
     const click = this.page.click(
-      '[data-test="create-team-form"] button:last-child',
+      '[data-test="create-team-form"]:visible button:last-child',
     );
 
     const response = this.page.waitForURL(`/home/${slug}`);
@@ -184,13 +199,13 @@ export class TeamAccountsPageObject {
     await this.page.locator('body').click({ position: { x: 0, y: 0 } });
 
     await expect(
-      this.page.locator('[data-test="workspace-switch-content"]'),
+      this.page.locator(this.visible('workspace-switch-content')),
     ).toBeHidden();
   }
 
   getSlugField() {
     return this.page.locator(
-      '[data-test="create-team-form"] [data-test="team-slug-input"]',
+      '[data-test="create-team-form"]:visible [data-test="team-slug-input"]',
     );
   }
 

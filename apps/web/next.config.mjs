@@ -55,6 +55,7 @@ const config = {
           position: 'bottom-right',
         },
   reactCompiler: ENABLE_REACT_COMPILER,
+  cacheComponents: true,
   experimental: {
     mdxRs: true,
     turbopackFileSystemCacheForDev: true,

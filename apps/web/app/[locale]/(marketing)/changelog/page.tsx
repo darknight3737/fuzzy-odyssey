@@ -9,6 +9,8 @@ import { getLogger } from '@kit/shared/logger';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
+import { ContentFallback } from '~/components/skeletons/page-skeletons';
+
 import { SitePageHeader } from '../_components/site-page-header';
 import { ChangelogEntry } from './_components/changelog-entry';
 import { ChangelogPagination } from './_components/changelog-pagination';
@@ -73,7 +75,7 @@ function ChangelogPage(props: ChangelogPageProps) {
       </Suspense>
 
       <div className="container flex max-w-4xl flex-col space-y-12 py-12">
-        <Suspense fallback={null}>
+        <Suspense fallback={<ContentFallback />}>
           <ChangelogEntries searchParams={props.searchParams} />
         </Suspense>
       </div>

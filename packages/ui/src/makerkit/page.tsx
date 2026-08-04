@@ -2,8 +2,8 @@ import * as React from 'react';
 
 import { cn } from '../lib/utils';
 import { Separator } from '../shadcn/separator';
-import { SidebarTrigger } from '../shadcn/sidebar';
 import { If } from './if';
+import { PageSidebarTrigger, PageStyleProvider } from './page-style-context';
 
 export type PageLayoutStyle = 'sidebar' | 'header' | 'custom';
 
@@ -15,6 +15,14 @@ type PageProps = React.PropsWithChildren<{
 }>;
 
 export function Page(props: PageProps) {
+  return (
+    <PageStyleProvider style={props.style ?? 'sidebar'}>
+      {renderPage(props)}
+    </PageStyleProvider>
+  );
+}
+
+function renderPage(props: PageProps) {
   switch (props.style) {
     case 'header':
       return <PageWithHeader {...props} />;
@@ -183,7 +191,7 @@ export function PageHeader({
       <div className={'flex min-w-0 flex-col gap-y-2'}>
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
           <If condition={displaySidebarTrigger}>
-            <SidebarTrigger className="text-muted-foreground hover:text-secondary-foreground h-4.5 w-4.5 cursor-pointer" />
+            <PageSidebarTrigger className="text-muted-foreground hover:text-secondary-foreground h-4.5 w-4.5 cursor-pointer" />
           </If>
 
           <If condition={description}>

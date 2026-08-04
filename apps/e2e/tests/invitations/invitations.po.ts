@@ -67,7 +67,7 @@ export class InvitationsPageObject {
   navigateToMembers() {
     return expect(async () => {
       await this.page
-        .locator('a', {
+        .locator('a:visible', {
           hasText: 'Members',
         })
         .click();

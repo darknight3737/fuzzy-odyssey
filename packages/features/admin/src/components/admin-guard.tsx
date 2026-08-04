@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
@@ -15,6 +16,14 @@ export function AdminGuard<Params extends object>(
   Component: LayoutOrPageComponent<Params>,
 ) {
   return async function AdminGuardServerComponentWrapper(params: Params) {
+    // Admin routes are per-request by definition, so they can never be
+    // prerendered. This has to come before the client is created rather than
+    // before the first query: creating a Supabase server client already runs
+    // GoTrue's initialize(), which reads Date.now() to check whether the
+    // session has expired. Without this, Cache Components reports an unstable
+    // value and points at this component.
+    await connection();
+
     const client = getSupabaseServerClient();
     const isUserSuperAdmin = await isSuperAdmin(client);
 

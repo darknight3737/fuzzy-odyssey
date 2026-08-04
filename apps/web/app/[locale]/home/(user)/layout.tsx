@@ -11,6 +11,7 @@ import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
 import { MobileSidebarTrigger } from '~/components/mobile-sidebar-trigger';
+import { QueryHydration } from '~/components/query-hydration';
 import featuresFlagConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
 import { personalAccountNavigationConfig } from '~/config/personal-account-navigation.config';
@@ -59,7 +60,9 @@ function UserHomeLayout({ children }: React.PropsWithChildren) {
         )}
       </PageMobileNavigation>
 
-      {children}
+      <Suspense fallback={null}>
+        <HydratedWorkspace>{children}</HydratedWorkspace>
+      </Suspense>
     </Page>
   );
 
@@ -75,6 +78,16 @@ function UserHomeLayout({ children }: React.PropsWithChildren) {
 }
 
 export default UserHomeLayout;
+
+async function HydratedWorkspace({ children }: React.PropsWithChildren) {
+  const { user, workspace } = await loadWorkspaceOrRedirect();
+
+  return (
+    <QueryHydration user={user} account={workspace}>
+      {children}
+    </QueryHydration>
+  );
+}
 
 async function UserHeaderNavigation() {
   const workspace = await loadWorkspaceOrRedirect();

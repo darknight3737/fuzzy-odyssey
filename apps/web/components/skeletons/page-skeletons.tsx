@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from '@kit/ui/card';
 import { PageBody } from '@kit/ui/page';
 import { Skeleton } from '@kit/ui/skeleton';
+import { Spinner } from '@kit/ui/spinner';
 import { cn } from '@kit/ui/utils';
 
 /**
@@ -91,6 +92,26 @@ export function TableSkeleton({ rows = 8 }: { rows?: number }) {
           <Skeleton key={index} className={'h-8 w-full'} />
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Holds a content area's height so the page doesn't collapse, without drawing
+ * fake content. For regions whose shape can't be predicted — long-form or
+ * CMS-driven content. The spinner only appears if the wait is real.
+ */
+export function ContentFallback({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        'flex min-h-[60vh] w-full items-center justify-center',
+        className,
+      )}
+    >
+      <Delayed delayMs={400}>
+        <Spinner />
+      </Delayed>
     </div>
   );
 }

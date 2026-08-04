@@ -1,6 +1,8 @@
 import 'server-only';
 import { cache } from 'react';
 
+import { connection } from 'next/server';
+
 import { createAccountsApi } from '@kit/accounts/api';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
@@ -14,7 +16,9 @@ export const loadPersonalAccountBillingPageData = cache(
   personalAccountBillingPageDataLoader,
 );
 
-function personalAccountBillingPageDataLoader(userId: string) {
+async function personalAccountBillingPageDataLoader(userId: string) {
+  await connection();
+
   const client = getSupabaseServerClient();
   const api = createAccountsApi(client);
 

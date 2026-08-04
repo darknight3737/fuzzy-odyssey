@@ -7,6 +7,7 @@
  * 2. Multiple files: messages/${locale}/*.json (namespaces in separate files for lazy loading)
  *
  */
+import { cacheLife } from 'next/cache';
 import { locale as localeRootParam } from 'next/root-params';
 
 import { getRequestConfig } from 'next-intl/server';
@@ -59,8 +60,15 @@ export default getRequestConfig(async ({ locale: localeOverride }) => {
 /**
  * Loads translation messages for all namespaces.
  * Each namespace is loaded from a separate file for better code splitting.
+ *
+ * Cached because every `getTranslations()` call would otherwise count as
+ * uncached I/O, which blocks prerendering — including inside
+ * `generateMetadata()`. Messages only change on deploy.
  */
 async function loadMessages(locale: string) {
+  'use cache';
+  cacheLife('max');
+
   const loadedMessages: Record<string, unknown> = {};
 
   // Load each namespace file

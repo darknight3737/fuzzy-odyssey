@@ -13,7 +13,8 @@ export const metadata = {
   title: `Super Admin`,
 };
 
-export const dynamic = 'force-dynamic';
+// AdminGuard must resolve super-admin status before anything renders.
+export const instant = false;
 
 export default function AdminLayout(props: React.PropsWithChildren) {
   const state = use(getLayoutState());

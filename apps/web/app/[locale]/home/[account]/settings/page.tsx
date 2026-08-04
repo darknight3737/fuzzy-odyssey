@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
 
+import { connection } from 'next/server';
+
 import { getTranslations } from 'next-intl/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
@@ -48,6 +50,8 @@ async function TeamAccountSettings({
 }: {
   params: TeamAccountSettingsPageProps['params'];
 }) {
+  await connection();
+
   const api = createTeamAccountsApi(getSupabaseServerClient());
   const slug = (await params).account;
   const data = await api.getTeamAccount(slug);

@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
 
+import { connection } from 'next/server';
+
 import { ServerDataLoader } from '@makerkit/data-loader-supabase-nextjs';
 
 import { AdminAccountsTable } from '@kit/admin/components/admin-accounts-table';
@@ -59,6 +61,8 @@ async function AccountsTable({
 }: {
   searchParams: AdminAccountsPageProps['searchParams'];
 }) {
+  await connection();
+
   const client = getSupabaseServerClient();
   const searchParams = await searchParamsPromise;
   const page = searchParams.page ? parseInt(searchParams.page) : 1;

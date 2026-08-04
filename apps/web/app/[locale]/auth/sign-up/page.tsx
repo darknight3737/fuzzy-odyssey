@@ -46,7 +46,7 @@ async function SignUpPage() {
       <div className={'flex justify-center'}>
         <Button
           render={
-            <Link href={pathsConfig.auth.signIn} prefetch={true}>
+            <Link href={pathsConfig.auth.signIn}>
               <Trans i18nKey={'auth.alreadyHaveAnAccount'} />
             </Link>
           }

@@ -27,12 +27,12 @@ export { sans, heading };
 /**
  * @name getFontsClassName
  * @description Get the class name for the root layout.
- * @param theme
+ *
+ * Fonts only. The `dark`/`light` class is owned by next-themes, which sets it
+ * before paint from the client — reading it on the server would need `cookies()`
+ * in the root layout, which prevents every route from having a static shell.
  */
-export function getFontsClassName(theme?: string) {
-  const dark = theme === 'dark';
-  const light = !dark;
-
+export function getFontsClassName() {
   const font = [sans.variable, heading.variable].reduce<string[]>(
     (acc, curr) => {
       if (acc.includes(curr)) return acc;
@@ -42,8 +42,5 @@ export function getFontsClassName(theme?: string) {
     [],
   );
 
-  return cn(...font, {
-    dark,
-    light,
-  });
+  return cn(...font);
 }

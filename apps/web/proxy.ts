@@ -144,32 +144,99 @@ async function getPatterns() {
     },
     {
       pattern: new URLPattern({ pathname: '/home/*?' }),
-      handler: async (req: NextRequest, res: NextResponse) => {
-        const { data } = await getUser(req, res);
-        const { origin, pathname: next } = req.nextUrl;
-
-        // If user is not logged in, redirect to sign in page.
-        if (!data?.claims) {
-          const signIn = pathsConfig.auth.signIn;
-          const redirectPath = `${signIn}?next=${next}`;
-
-          return NextResponse.redirect(new URL(redirectPath, origin).href);
-        }
-
-        const supabase = createMiddlewareClient(req, res);
-
-        const requiresMultiFactorAuthentication =
-          await checkRequiresMultiFactorAuthentication(supabase);
-
-        // If user requires multi-factor authentication, redirect to MFA page.
-        if (requiresMultiFactorAuthentication) {
-          return NextResponse.redirect(
-            new URL(pathsConfig.auth.verifyMfa, origin).href,
-          );
-        }
-      },
+      handler: requireAuthenticatedUser,
+    },
+    {
+      pattern: new URLPattern({ pathname: '/identities/*?' }),
+      handler: requireAuthenticatedUser,
+    },
+    {
+      pattern: new URLPattern({ pathname: '/update-password/*?' }),
+      handler: requireAuthenticatedUser,
+    },
+    {
+      // Match the page exactly rather than the whole subtree. A wildcard here
+      // would also capture /join/accept, which is the route handler behind the
+      // links we email out. That handler has to stay reachable while signed
+      // out, because verifying the link signature and creating the session is
+      // its whole job. Gating it would bounce the invitee to sign-up before it
+      // ever ran.
+      pattern: new URLPattern({ pathname: '/join' }),
+      handler: joinTeamMiddleware,
     },
   ];
+}
+
+/**
+ * Gating auth here rather than in the page means the redirect happens before
+ * any HTML is sent, and the page can render its shell without waiting on the
+ * session. Pages keep their own checks as defence in depth.
+ */
+async function requireAuthenticatedUser(req: NextRequest, res: NextResponse) {
+  const { data } = await getUser(req, res);
+  const { origin, pathname: next } = req.nextUrl;
+
+  // If user is not logged in, redirect to sign in page.
+  if (!data?.claims) {
+    const signIn = pathsConfig.auth.signIn;
+    const redirectPath = `${signIn}?next=${next}`;
+
+    return NextResponse.redirect(new URL(redirectPath, origin).href);
+  }
+
+  const supabase = createMiddlewareClient(req, res);
+
+  const requiresMultiFactorAuthentication =
+    await checkRequiresMultiFactorAuthentication(supabase);
+
+  // If user requires multi-factor authentication, redirect to MFA page.
+  if (requiresMultiFactorAuthentication) {
+    return NextResponse.redirect(
+      new URL(pathsConfig.auth.verifyMfa, origin).href,
+    );
+  }
+}
+
+/**
+ * Invitations differ from the generic gate: a logged-out visitor is sent to
+ * sign-up rather than sign-in, and the invite token has to survive the round
+ * trip. Token validation itself stays in the page.
+ */
+async function joinTeamMiddleware(req: NextRequest, res: NextResponse) {
+  const token = req.nextUrl.searchParams.get('invite_token');
+  const { origin } = req.nextUrl;
+
+  // No token — let the page render its own not-found.
+  if (!token) {
+    return;
+  }
+
+  const { data } = await getUser(req, res);
+
+  if (!data?.claims) {
+    const params = new URLSearchParams({ invite_token: token });
+
+    return NextResponse.redirect(
+      new URL(`${pathsConfig.auth.signUp}?${params.toString()}`, origin).href,
+    );
+  }
+
+  const supabase = createMiddlewareClient(req, res);
+
+  const requiresMultiFactorAuthentication =
+    await checkRequiresMultiFactorAuthentication(supabase);
+
+  if (requiresMultiFactorAuthentication) {
+    const email = req.nextUrl.searchParams.get('email') ?? '';
+
+    const next = `${pathsConfig.app.joinTeam}?invite_token=${token}&email=${email}`;
+    const params = new URLSearchParams({ next });
+
+    return NextResponse.redirect(
+      new URL(`${pathsConfig.auth.verifyMfa}?${params.toString()}`, origin)
+        .href,
+    );
+  }
 }
 
 /**

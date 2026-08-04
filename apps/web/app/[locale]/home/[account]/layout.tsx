@@ -10,6 +10,7 @@ import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
 import { MobileSidebarTrigger } from '~/components/mobile-sidebar-trigger';
+import { QueryHydration } from '~/components/query-hydration';
 import { getTeamAccountSidebarConfig } from '~/config/team-account-navigation.config';
 
 // local imports
@@ -63,7 +64,9 @@ function TeamWorkspaceLayout({ children, params }: TeamWorkspaceLayoutProps) {
         )}
       </PageMobileNavigation>
 
-      {children}
+      <Suspense fallback={null}>
+        <HydratedWorkspace account={account}>{children}</HydratedWorkspace>
+      </Suspense>
     </Page>
   );
 
@@ -76,6 +79,15 @@ function TeamWorkspaceLayout({ children, params }: TeamWorkspaceLayoutProps) {
       )}
     </TeamAccountWorkspaceContextProvider>
   );
+}
+
+async function HydratedWorkspace({
+  account,
+  children,
+}: React.PropsWithChildren<{ account: string }>) {
+  const data = await loadTeamWorkspace(account);
+
+  return <QueryHydration user={data.user}>{children}</QueryHydration>;
 }
 
 async function TeamAccountHeaderNavigation({ account }: { account: string }) {
