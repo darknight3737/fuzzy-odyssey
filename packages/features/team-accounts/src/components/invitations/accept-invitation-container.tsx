@@ -4,6 +4,7 @@ import Image from 'next/image';
 
 import { useAction } from 'next-safe-action/hooks';
 
+import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
 import { Button } from '@kit/ui/button';
 import { Heading } from '@kit/ui/heading';
 import { If } from '@kit/ui/if';
@@ -32,7 +33,13 @@ export function AcceptInvitationContainer(props: {
     nextPath: string;
   };
 }) {
-  const { execute, isPending } = useAction(acceptInvitationAction);
+  const { execute, isPending, result } = useAction(acceptInvitationAction);
+
+  // On success the action redirects, so a settled result can only mean failure.
+  // Without this the button would simply reset and the invitee would be left
+  // clicking it forever with no indication that anything went wrong.
+  const hasError =
+    result.serverError !== undefined || result.validationErrors !== undefined;
 
   return (
     <div className={'flex flex-col items-center space-y-4'}>
@@ -66,7 +73,19 @@ export function AcceptInvitationContainer(props: {
         />
       </div>
 
-      <div className={'flex flex-col space-y-4'}>
+      <div className={'flex w-full flex-col space-y-4'}>
+        <If condition={hasError}>
+          <Alert variant={'destructive'} data-test={'accept-invitation-error'}>
+            <AlertTitle>
+              <Trans i18nKey={'teams.acceptInvitationErrorTitle'} />
+            </AlertTitle>
+
+            <AlertDescription>
+              <Trans i18nKey={'teams.acceptInvitationErrorDescription'} />
+            </AlertDescription>
+          </Alert>
+        </If>
+
         <form
           data-test={'join-team-form'}
           className={'w-full'}
