@@ -1,6 +1,7 @@
-import { Suspense, cache } from 'react';
+import { Suspense } from 'react';
 
 import type { Metadata } from 'next';
+import { cacheLife } from 'next/cache';
 
 import { getLocale, getTranslations } from 'next-intl/server';
 
@@ -45,28 +46,33 @@ export const generateMetadata = async (
   };
 };
 
-const getContentItems = cache(
-  async (language: string | undefined, limit: number, offset: number) => {
-    const client = await createCmsClient();
-    const logger = await getLogger();
+async function getContentItems(
+  language: string | undefined,
+  limit: number,
+  offset: number,
+) {
+  'use cache';
+  cacheLife('hours');
 
-    try {
-      return await client.getContentItems({
-        collection: 'posts',
-        limit,
-        offset,
-        language,
-        content: false,
-        sortBy: 'publishedAt',
-        sortDirection: 'desc',
-      });
-    } catch (error) {
-      logger.error({ error }, 'Failed to load blog posts');
+  const client = await createCmsClient();
+  const logger = await getLogger();
 
-      return { total: 0, items: [] };
-    }
-  },
-);
+  try {
+    return await client.getContentItems({
+      collection: 'posts',
+      limit,
+      offset,
+      language,
+      content: false,
+      sortBy: 'publishedAt',
+      sortDirection: 'desc',
+    });
+  } catch (error) {
+    logger.error({ error }, 'Failed to load blog posts');
+
+    return { total: 0, items: [] };
+  }
+}
 
 function BlogPage(props: BlogPageProps) {
   return (

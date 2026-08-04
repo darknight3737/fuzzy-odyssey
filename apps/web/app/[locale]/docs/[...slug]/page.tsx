@@ -1,6 +1,7 @@
-import { Suspense, cache } from 'react';
+import { Suspense } from 'react';
 
 import type { Metadata } from 'next';
+import { cacheLife } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 import { ContentRenderer, createCmsClient } from '@kit/cms';
@@ -8,16 +9,30 @@ import { cn } from '@kit/ui/utils';
 
 import { ContentFallback } from '~/components/skeletons/page-skeletons';
 
-const getPageBySlug = cache(pageLoader);
-
 interface DocumentationPageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-async function pageLoader(slug: string) {
+async function getPageBySlug(slug: string) {
+  'use cache';
+  cacheLife('hours');
+
   const client = await createCmsClient();
 
   return client.getContentItemBySlug({ slug, collection: 'documentation' });
+}
+
+export async function generateStaticParams() {
+  'use cache';
+  cacheLife('hours');
+
+  const client = await createCmsClient();
+  const { items } = await client.getContentItems({
+    collection: 'documentation',
+    content: false,
+  });
+
+  return items.map((item) => ({ slug: item.slug.split('/') }));
 }
 
 export async function generateMetadata({

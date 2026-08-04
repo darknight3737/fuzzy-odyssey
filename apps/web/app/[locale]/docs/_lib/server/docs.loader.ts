@@ -1,4 +1,4 @@
-import { cache } from 'react';
+import { cacheLife } from 'next/cache';
 
 import { createCmsClient } from '@kit/cms';
 import { getLogger } from '@kit/shared/logger';
@@ -8,9 +8,10 @@ import { getLogger } from '@kit/shared/logger';
  * @description Load the documentation pages.
  * @param language
  */
-export const getDocs = cache(docsLoader);
+export async function getDocs(language: string | undefined) {
+  'use cache';
+  cacheLife('hours');
 
-async function docsLoader(language: string | undefined) {
   const cms = await createCmsClient();
   const logger = await getLogger();
 
