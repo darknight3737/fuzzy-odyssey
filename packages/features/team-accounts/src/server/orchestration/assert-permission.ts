@@ -28,7 +28,7 @@ export async function assertPermission(params: {
   try {
     const api = createTeamAccountsApi(params.client);
 
-    return api.hasPermission({
+    return await api.hasPermission({
       accountId: params.accountId,
       userId: params.userId,
       permission: params.permission,

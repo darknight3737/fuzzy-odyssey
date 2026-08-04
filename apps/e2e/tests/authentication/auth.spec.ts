@@ -27,6 +27,10 @@ test.describe('Auth flow', () => {
 
     await Promise.all([signUp, response]);
 
+    // The native app confirms with this code instead of the link; nothing on web
+    // reads it, so assert it here or a template edit can drop it silently.
+    await auth.expectAuthOtpCode(email, 'Confirm your email');
+
     await auth.visitConfirmEmailLink(email);
 
     await page.waitForURL('**/home', {

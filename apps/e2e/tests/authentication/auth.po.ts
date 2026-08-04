@@ -99,6 +99,18 @@ export class AuthPageObject {
     }).toPass();
   }
 
+  async expectAuthOtpCode(email: string, subject: string) {
+    let code = '';
+
+    await expect(async () => {
+      code = await this.mailbox.getAuthOtpFromEmail(email, subject);
+
+      expect(code).toMatch(/^\d{6}$/);
+    }).toPass();
+
+    return code;
+  }
+
   createRandomEmail() {
     const value = Math.random() * 10000000000000;
 

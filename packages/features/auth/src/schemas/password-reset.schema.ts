@@ -1,10 +1,25 @@
 import * as z from 'zod';
 
-import { RefinedPasswordSchema, refineRepeatPassword } from './password.schema';
+import {
+  createRefinedPasswordSchema,
+  refineRepeatPassword,
+  webPasswordRequirements,
+  type PasswordRequirements,
+} from './password.schema';
 
-export const PasswordResetSchema = z
-  .object({
-    password: RefinedPasswordSchema,
-    repeatPassword: RefinedPasswordSchema,
-  })
-  .superRefine(refineRepeatPassword);
+export const createPasswordResetSchema = (
+  passwordRequirements: PasswordRequirements,
+) => {
+  const password = createRefinedPasswordSchema(passwordRequirements);
+
+  return z
+    .object({
+      password,
+      repeatPassword: password,
+    })
+    .superRefine(refineRepeatPassword);
+};
+
+export const PasswordResetSchema = createPasswordResetSchema(
+  webPasswordRequirements,
+);

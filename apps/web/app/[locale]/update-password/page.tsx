@@ -32,6 +32,8 @@ async function UpdatePasswordPage(props: UpdatePasswordPageProps) {
 
   const result = await requireUser(client, {
     next: pathsConfig.auth.passwordUpdate,
+    signInPath: pathsConfig.auth.signIn,
+    mfaVerifyPath: pathsConfig.auth.verifyMfa,
   });
 
   if (result.error) {

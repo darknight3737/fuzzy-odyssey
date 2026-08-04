@@ -129,6 +129,31 @@ export class Mailbox {
     throw new Error('Could not find OTP code in email');
   }
 
+  /**
+   * Retrieves the 6-digit code from the `{{ .Token }}` panel in a GoTrue auth
+   * email (confirmation, recovery). Distinct from `getOtpFromEmail`, which reads
+   * the kit mailer's "One-time password for" email — a different mechanism.
+   */
+  async getAuthOtpFromEmail(email: string, subject: string) {
+    const json = await this.getEmail(email, { deleteAfter: false, subject });
+
+    if (!json) {
+      throw new Error(`Email with subject "${subject}" was not found`);
+    }
+
+    const code = json.HTML.match(
+      /Or enter this code in the app:[\s\S]*?>(\d{6})</,
+    )?.[1];
+
+    if (!code) {
+      throw new Error(
+        `No auth code panel found in the "${subject}" email — did the {{ .Token }} block get dropped from the template?`,
+      );
+    }
+
+    return code;
+  }
+
   async getEmail(
     email: string,
     params: {
