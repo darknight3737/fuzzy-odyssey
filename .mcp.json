@@ -4,6 +4,10 @@
       "type": "stdio",
       "command": "node",
       "args": ["packages/mcp-server/build/index.cjs"]
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
     }
   }
 }
