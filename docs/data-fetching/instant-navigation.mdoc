@@ -1,0 +1,312 @@
+---
+status: "published"
+title: "Instant Navigation"
+description: "How the kit structures pages so navigations paint immediately, and the rules to follow when you add your own."
+label: "Instant Navigation"
+order: 4
+---
+
+The kit runs with Next.js **Cache Components** enabled. Pages render what they
+already know straight away, and data streams into `<Suspense>` boundaries as it
+resolves. A navigation should never wait on a database round trip before
+painting.
+
+This page covers the rules to follow when you add pages of your own. Break them
+and the dev overlay will tell you — the validator runs on every page load.
+
+## The core rule
+
+**Never await runtime data at the top of a page or layout.**
+
+Runtime data means `params`, `searchParams`, `cookies()`, `headers()`, or any
+data fetch. Awaiting it at the top blocks the whole page.
+
+```tsx
+// Blocks: nothing renders until the query returns
+async function MembersPage({ params }: PageProps<'/home/[account]/members'>) {
+  const { account } = await params;
+  const members = await loadMembers(account);
+
+  return (
+    <PageBody>
+      <PageHeader title="Members" />
+      <MembersTable members={members} />
+    </PageBody>
+  );
+}
+```
+
+Keep the page synchronous, pass the promise down, and await it inside a child:
+
+```tsx
+function MembersPage({ params }: PageProps<'/home/[account]/members'>) {
+  return (
+    <PageBody>
+      <PageHeader title="Members" />
+
+      <Suspense fallback={<CardSkeleton />}>
+        <MembersTable params={params} />
+      </Suspense>
+    </PageBody>
+  );
+}
+
+async function MembersTable({ params }: { params: Params }) {
+  const { account } = await params;
+  const members = await loadMembers(account);
+
+  return <Table rows={members} />;
+}
+```
+
+The header now paints immediately and only the table waits.
+
+## Put the boundary as low as possible
+
+Split the component and check what actually reads the data before wrapping it.
+Usually less depends on it than you think.
+
+The sidebar is the clearest example. It looks like it needs the workspace, so
+the tempting move is to wrap the whole thing — but then it is missing from the
+first paint and **pushes the layout when it arrives**, because a suspended
+region reserves no space.
+
+In fact only the account dropdown reads the workspace. The frame and every
+navigation link come from config, so the boundary belongs *inside* the sidebar:
+
+```tsx
+<Sidebar>                                 {/* renders immediately */}
+  <SidebarHeader>
+    <Suspense fallback={<SidebarHeaderSkeleton />}>
+      <TeamAccountSidebarHeader account={account} />
+    </Suspense>
+  </SidebarHeader>
+
+  <SidebarContent>
+    <SidebarNavigation config={config} /> {/* renders immediately */}
+  </SidebarContent>
+</Sidebar>
+```
+
+## Choosing a fallback
+
+There are three answers, not two:
+
+| Region | Fallback |
+| ------ | -------- |
+| Known shape — table, cards, page header | Matching skeleton |
+| Unknown shape, large surface — CMS content | Reserved space, no content |
+| Fixed slot that resolves fast — a header widget | Small skeleton, no delay |
+
+The kit's building blocks live in `apps/web/components/skeletons`.
+
+Two rules behind the table:
+
+- **A suspended region reserves no space.** If the fallback does not occupy the
+  same footprint as the real content, the page jumps when it resolves. Prefer
+  moving the boundary inward over drawing a bigger fallback.
+- **Only delay content fallbacks.** Skeletons use a `Delayed` wrapper so
+  navigations faster than 200ms paint nothing rather than flickering. A fixed
+  slot that is always occupied has no flicker to avoid — delaying it just leaves
+  a gap and then pops in.
+
+For content whose shape you cannot predict — blog posts, docs — use
+`ContentFallback`. It holds the height and shows a spinner only if the wait is
+real. A grid of grey cards standing in for posts mispredicts badly.
+
+## Client components that read the URL
+
+`usePathname()` and `useSearchParams()` are runtime data too. Split the
+component so only the URL-dependent part suspends:
+
+```tsx
+// The link renders in the shell; only the active highlight waits.
+export function NavItem({ path, children }: Props) {
+  const pathname = usePathname();
+
+  return <NavLink path={path} isActive={isRouteActive(path, pathname)}>{children}</NavLink>;
+}
+```
+
+Then wrap `NavItem` in `<Suspense>` with `NavLink` (unhighlighted) as the
+fallback, so the navigation never disappears.
+
+## Caching data
+
+`use cache` is available. Pair it with `cacheLife`:
+
+```tsx
+async function getPosts() {
+  'use cache';
+  cacheLife('hours');
+
+  return cms.getPosts();
+}
+```
+
+**Never put plain `use cache` on anything using the Supabase server client.**
+That client marks its caller request-bound, so the cache entry would be wrong.
+Either extract the value you need and pass it in as an argument, or use
+`use cache: private`, which caches per session in the browser only.
+
+**Never wrap a `use cache` function in React's `cache()`.** They do not compose,
+and the build fails with a misleading error:
+
+```
+TypeError: Invalid value used as weak map key
+    at generateMetadata
+```
+
+`use cache` already dedupes, and across requests rather than only within one, so
+the wrapper is redundant as well as broken.
+
+## Prerendering content routes
+
+Dynamic segments serving content — blog posts, docs pages — should enumerate
+their paths so they can be built ahead of time:
+
+```tsx
+export async function generateStaticParams() {
+  'use cache';
+  cacheLife('hours');
+
+  const client = await createCmsClient();
+  const { items } = await client.getContentItems({ collection: 'posts' });
+
+  return items.map((item) => ({ slug: item.slug }));
+}
+```
+
+It must return **at least one param** or the build fails. Paths you don't return
+are still served — Next renders the shell immediately and upgrades it in the
+background once the params are known.
+
+Catch-all segments take an array: `{ slug: item.slug.split('/') }`.
+
+## When to reach for `connection()`
+
+You will hit this error:
+
+```
+Next.js encountered the unstable value `Date.now()` while prerendering.
+```
+
+**`<Suspense>` does not fix it.** Uncached data and unstable values are separate
+problems. A boundary lets Next stop and stream; an unstable value is an error,
+because the same render would produce a different result next time.
+
+The heuristic:
+
+| The value is | Do this |
+| ------------ | ------- |
+| Genuinely per-request — a session, a nonce, "now" for this visitor | `await connection()` before it |
+| The same for everyone for a while — a copyright year, a price list | `use cache` + `cacheLife` |
+| Only meaningful in the browser — a relative timestamp, a random ID | `'use client'` |
+| Telemetry | `performance.now()` |
+
+Two rules that save time:
+
+**It must be awaited.** During a prerender `connection()` returns a promise that
+never resolves — that is *how* it stalls. `void connection()` looks equivalent
+and does nothing at all.
+
+**It goes before the first line that touches the value**, which is often earlier
+than you expect. Any auth call reads `Date.now()` to check session expiry, so
+`requireUser`, `getUser` and `isSuperAdmin` all trip it.
+
+```tsx
+async function loadWorkspace() {
+  await connection();                     // before, not after
+
+  const client = getSupabaseServerClient();
+  const user = await requireUserInServerComponent();
+  // ...
+}
+```
+
+### Finding the right place
+
+The stack trace names the library, not your code — you will see `GoTrueClient`
+or `dehydrate`, and a component several levels up. Work outwards: find the
+first thing in that subtree that constructs a client or reads a clock, and put
+`await connection()` above it.
+
+Prefer the **shared loader** over the page: the two workspace loaders and
+`requireUserInServerComponent` cover most authenticated routes, so three edits
+do most of the work. Pages and loaders that build a client themselves still need
+their own — find them with:
+
+```bash
+grep -rl "getSupabaseServerClient" apps/web/app --include="page.tsx" \
+  --include="layout.tsx" --include="*.loader.ts"
+```
+
+Render paths only. Server actions and route handlers always run at request time,
+so they never prerender.
+
+## Checking a route you just added
+
+A route that blocks navigation is still a *valid* route. `next build` passes,
+nothing throws, and the page works — it just is not instant. So the build will
+never tell you, and neither will your tests.
+
+The dev overlay does. After adding or changing a route, load it in the browser
+signed in as the role it needs, and check for:
+
+```
+Next.js encountered uncached data during prerendering or a navigation.
+```
+
+If you see it, something is awaited above every `<Suspense>` — usually the page
+itself being `async`. Keep the page synchronous, pass the promise down, and
+await it inside a boundary.
+
+Two things worth knowing when you check:
+
+- **Confirm you are actually on the route.** If your session has expired you
+  are looking at the sign-in page, which is always clean. That reads as a pass
+  and is the easiest way to convince yourself an app is healthy when it is not.
+- **`export const instant = false` does not silence this.** It only stops
+  flagging navigations *into* that segment; direct loads still report. An
+  opted-out route showing the message is expected.
+
+The dev server also exposes an MCP endpoint. `get_routes` lists every entry
+point — including ones a filesystem search misses — and
+`get_compilation_issues` checks them all without a browser.
+
+## Authentication
+
+Auth gating lives in `proxy.ts`, not at the top of your page. The redirect
+happens before any HTML is sent, so unauthorised users never see a flash of the
+page and your page never blocks on the session.
+
+Add a pattern there for new protected routes:
+
+```ts
+{
+  pattern: new URLPattern({ pathname: '/your-route/*?' }),
+  handler: requireAuthenticatedUser,
+}
+```
+
+Keep the check in the page too as defence in depth — just behind a boundary.
+
+## Client queries need seeding
+
+React Query is not hydrated automatically. A component gated on `useUser()`
+renders a spinner during SSR and the real content on the client, which shows up
+as an empty card and a hydration warning.
+
+The authenticated layouts seed the cache with `QueryHydration`. If you add a
+client query that gates rendering, seed it the same way or pass `initialData`.
+
+## Opting out
+
+Some routes should block — an admin area that must resolve permissions before
+rendering anything, for example. For those:
+
+```tsx
+export const instant = false;
+```
+
+Use it sparingly. In the kit only `/admin` does.
