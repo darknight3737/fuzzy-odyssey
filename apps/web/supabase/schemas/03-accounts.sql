@@ -41,6 +41,7 @@ alter table "public"."accounts" enable row level security;
 -- Revoke all on accounts table from authenticated and service_role
 revoke all on public.accounts
 from
+  anon,
   authenticated,
   service_role;
 
@@ -206,20 +207,15 @@ create
 or replace function kit.protect_account_fields () returns trigger as $$
 begin
     if current_user in('authenticated', 'anon') then
-	-- "is distinct from" treats NULL as a comparable value, so transitions
-	-- between NULL and a value (email is nullable) are caught as well
-	if new.id is distinct from old.id
-	    or new.is_personal_account is distinct from old.is_personal_account
-	    or new.primary_owner_user_id is distinct from old.primary_owner_user_id
-	    or new.email is distinct from old.email then
+        if new.id is distinct from old.id
+            or new.is_personal_account is distinct from old.is_personal_account
+            or new.primary_owner_user_id is distinct from old.primary_owner_user_id
+            or new.email is distinct from old.email then
             raise exception 'You do not have permission to update this field';
-
         end if;
-
     end if;
 
     return NEW;
-
 end
 $$ language plpgsql
 set

@@ -36,6 +36,7 @@ comment on column public.orders.billing_customer_id is 'The billing customer ID 
 -- Revoke all access to orders table for authenticated users and service_role
 revoke all on public.orders
 from
+  anon,
   authenticated,
   service_role;
 
@@ -121,6 +122,7 @@ comment on column public.order_items.updated_at is 'The last update date of the 
 -- Revoke all access to order_items table for authenticated users and service_role
 revoke all on public.order_items
 from
+  anon,
   authenticated,
   service_role;
 
