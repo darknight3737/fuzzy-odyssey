@@ -45,6 +45,12 @@ CREATE INDEX IF NOT EXISTS idx_nonces_verify_lookup ON public.nonces (purpose, e
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.nonces ENABLE ROW LEVEL SECURITY;
 
+-- Nothing is granted back: this table is RPC-only (see the note on the policies
+-- below). Without this, Supabase's default privileges leave all three roles
+-- holding TRUNCATE, which bypasses RLS -- and for service_role it would be the
+-- only write it can perform here.
+REVOKE ALL ON public.nonces FROM anon, authenticated, service_role;
+
 -- RLS policies
 -- Users can view their own nonces for verification
 CREATE POLICY "Users can read their own nonces"

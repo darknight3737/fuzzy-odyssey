@@ -27,6 +27,7 @@ create index ix_role_permissions_role on public.role_permissions (role);
 -- Revoke all on role_permissions table from authenticated and service_role
 revoke all on public.role_permissions
 from
+  anon,
   authenticated,
   service_role;
 

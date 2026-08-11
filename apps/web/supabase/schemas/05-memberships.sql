@@ -27,6 +27,7 @@ comment on column public.accounts_memberships.account_role is 'The role for the 
 -- Revoke all on accounts_memberships table from authenticated and service_role
 revoke all on public.accounts_memberships
 from
+  anon,
   authenticated,
   service_role;
 

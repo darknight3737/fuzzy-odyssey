@@ -43,6 +43,7 @@ comment on column notifications.created_at is 'The creation date for the notific
 -- Revoke all access to notifications table for authenticated users and service_role
 revoke all on public.notifications
 from
+  anon,
   authenticated,
   service_role;
 

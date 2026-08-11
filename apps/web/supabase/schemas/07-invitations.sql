@@ -48,6 +48,7 @@ for each row execute function public.trigger_set_timestamps();
 -- Revoke all on invitations table from authenticated and service_role
 revoke all on public.invitations
 from
+  anon,
   authenticated,
   service_role;
 
@@ -58,6 +59,11 @@ select
   insert,
 update,
 delete on table public.invitations to service_role;
+
+-- id is a serial, so INSERT needs nextval() on its sequence. usage, not update:
+-- update would also permit setval(). authenticated has no INSERT here, so it
+-- needs nothing.
+grant usage on sequence public.invitations_id_seq to service_role;
 
 -- Authenticated users may update/delete (gated by RLS) but may NOT:
 --   * INSERT: invitations are only created by add_invitations_to_account,
