@@ -39,6 +39,7 @@ values
 -- Revoke all on accounts table from authenticated and service_role
 revoke all on public.config
 from
+  anon,
   authenticated,
   service_role;
 

@@ -51,6 +51,7 @@ comment on column public.subscriptions.billing_customer_id is 'The billing custo
 -- Revoke all on subscriptions table from authenticated and service_role
 revoke all on public.subscriptions
 from
+  anon,
   authenticated,
   service_role;
 
@@ -302,6 +303,7 @@ comment on column public.subscription_items.updated_at is 'The last update date 
 -- Revoke all access to subscription_items table for authenticated users and service_role
 revoke all on public.subscription_items
 from
+  anon,
   authenticated,
   service_role;
 

@@ -58,6 +58,30 @@ pnpm supabase:web:typegen
   - `service_role` keeps full-table UPDATE for system-managed columns.
   - `migra` (`supabase:db:diff`) does NOT emit column grants — it only detects
     the `REVOKE`. Hand-write the `grant update (cols)` lines into the migration.
+- **Revoke from all three roles, `anon` included.** Supabase's defaults grant
+  `REFERENCES`, `TRIGGER`, `TRUNCATE` and (PG17+) `MAINTAIN` on every new table
+  to `anon`, `authenticated` and `service_role` — before you grant anything and
+  with RLS on. `TRUNCATE` bypasses RLS.
+  `20260811000000_revoke_residual_privileges.sql` strips these defaults, but
+  keep the per-table `revoke` as the readable, local guarantee.
+  - Invisible to normal testing — `SELECT` is denied while `TRUNCATE` succeeds.
+    Assert it in pgTAP; see `privileges.test.sql` and `/rls-review`.
+  - Do not assume `service_role`'s DML makes its `TRUNCATE` redundant. On an
+    RPC-only table (`nonces`) it holds no DML at all, so `TRUNCATE` would be the
+    only write it could perform.
+  - `REVOKE ... ON ALL TABLES IN SCHEMA` only covers tables that already exist,
+    so it never substitutes for a per-table `revoke`.
+  - The stripped defaults cover objects created by `postgres` (migrations,
+    dashboard, pg_meta). Supabase's `supabase_admin` defaults still grant full
+    `arwdDxtm` and `postgres` cannot alter them on hosted, so extension-created
+    tables in `public` need their own explicit revoke.
+- **Prefer `generated always as identity` over `serial`/`bigserial`.** Identity
+  columns need no privilege on their sequence, so there is no sequence ACL to
+  get wrong. A `serial` column needs `usage` on its sequence for `nextval()`,
+  which you must now grant explicitly alongside the table grants:
+  `grant usage on sequence public.feature_id_seq to authenticated;`
+  - Never grant `update` on a sequence to an API role — it permits `setval()`,
+    which can rewind a counter into primary-key collisions. `usage` does not.
 
 ## Table Template
 
@@ -70,7 +94,9 @@ create table if not exists public.feature (
 );
 
 alter table "public"."feature" enable row level security;
-revoke all on public.feature from authenticated, service_role;
+
+-- anon belongs here: Supabase's defaults grant it TRUNCATE, which bypasses RLS
+revoke all on public.feature from anon, authenticated, service_role;
 
 -- service_role keeps full-table access
 grant select, insert, update, delete on table public.feature to service_role;
