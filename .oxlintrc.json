@@ -42,6 +42,65 @@
       }
     ]
   },
+  "overrides": [
+    {
+      "files": [
+        "packages/*/src/**/shared/**/*.ts",
+        "packages/*/src/**/shared/**/*.tsx",
+        "packages/*/src/shared.ts",
+        "packages/features/*/src/**/shared/**/*.ts",
+        "packages/features/*/src/**/shared/**/*.tsx",
+        "packages/features/*/src/shared.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "next",
+                  "next/*",
+                  "next-intl",
+                  "next-intl/*",
+                  "react-dom",
+                  "react-dom/*",
+                  "@kit/ui",
+                  "@kit/ui/*",
+                  "@kit/next",
+                  "@kit/next/*"
+                ],
+                "message": "Platform-coupled module — not allowed in /shared. /shared paths must be importable from any runtime (web, native, plain Node)."
+              }
+            ]
+          }
+        ],
+        "no-restricted-globals": [
+          "error",
+          {
+            "name": "window",
+            "message": "Browser global — not allowed in /shared."
+          },
+          {
+            "name": "document",
+            "message": "Browser global — not allowed in /shared."
+          },
+          {
+            "name": "navigator",
+            "message": "Browser global — not allowed in /shared."
+          },
+          {
+            "name": "localStorage",
+            "message": "Browser global — not allowed in /shared."
+          },
+          {
+            "name": "sessionStorage",
+            "message": "Browser global — not allowed in /shared."
+          }
+        ]
+      }
+    }
+  ],
   "ignorePatterns": [
     "**/node_modules",
     "**/database.types.ts",

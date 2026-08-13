@@ -28,6 +28,9 @@ export async function assertPermission(params: {
   try {
     const api = createTeamAccountsApi(params.client);
 
+    // awaited inside the `try` on purpose: `hasPermission` rejects when the
+    // `has_permission` RPC errors, and a returned (un-awaited) promise would
+    // escape this catch — breaking the documented "returns false" contract.
     return await api.hasPermission({
       accountId: params.accountId,
       userId: params.userId,

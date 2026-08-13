@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "supabase": "supabase",
     "supabase:start": "supabase status || supabase start",
+    "supabase:start:ci": "supabase status || supabase start -x studio,imgproxy,logflare,vector",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
     "supabase:status": "supabase status",

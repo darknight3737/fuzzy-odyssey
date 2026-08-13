@@ -26,6 +26,7 @@
     "syncpack:list": "pnpm dlx syncpack list-mismatches",
     "syncpack:fix": "pnpm dlx syncpack fix-mismatches",
     "supabase:web:start": "pnpm --filter web supabase:start",
+    "supabase:web:start:ci": "pnpm --filter web supabase:start:ci",
     "supabase:web:stop": "pnpm --filter web supabase:stop",
     "supabase:web:typegen": "pnpm --filter web supabase:typegen",
     "supabase:web:reset": "pnpm --filter web supabase:reset",
@@ -46,5 +47,5 @@
   "engines": {
     "node": ">=20.10.0"
   },
-  "packageManager": "pnpm@11.20.0"
+  "packageManager": "pnpm@11.21.0"
 }
