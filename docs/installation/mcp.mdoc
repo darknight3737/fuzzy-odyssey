@@ -16,15 +16,15 @@ Run the command:
 pnpm --filter "@kit/mcp-server" build
 ```
 
-The command will build the MCP Server at `packages/mcp-server/build/index.js`.
+The command will build the MCP Server at `packages/mcp-server/build/index.cjs`.
 
 ## Adding MCP Servers to AI Coding tools
 
 In general, tools should automatically detect the MCP Server and use it as we ship the configuration in the `.mcp.json` file. However, you can add it manually to your AI coding tool by following the steps below.
 
-Before getting started, retrieve the absolute path to the `index.js` file created above. You can normally do this in your IDE by right-clicking the `index.js` file and selecting `Copy Path`.
+Before getting started, retrieve the absolute path to the `index.cjs` file created above. You can normally do this in your IDE by right-clicking the `index.cjs` file and selecting `Copy Path`.
 
-I will reference this as `<full-path>` in the steps below: please replace it with the full path to your `index.js`.
+I will reference this as `<full-path>` in the steps below: please replace it with the full path to your `index.cjs`.
 
 ### Claude Code
 
@@ -41,6 +41,29 @@ args = ["<path-to-mcp-server>"]
 ```
 
 Please change the `<path-to-mcp-server>` to the actual path of the MCP Server.
+
+### Google Antigravity
+
+Antigravity does not read `.mcp.json`. It reads `.agents/mcp_config.json` (per project) and `~/.gemini/config/mcp_config.json` (global, shared by the Antigravity IDE, the `agy` CLI and the SDK).
+
+The kit ships `.agents/mcp_config.json`, so the MCP Server is detected automatically once you have built it. Nothing else to configure.
+
+If Antigravity does not pick it up, add it globally instead. Open `~/.gemini/config/mcp_config.json` — or, in the IDE, click the `…` menu at the top of the agent panel, select `MCP Servers`, then `Manage MCP Servers` and `View raw config` — and add:
+
+```json
+{
+  "mcpServers": {
+    "makerkit": {
+      "command": "node",
+      "args": ["<path-to-mcp-server>"]
+    }
+  }
+}
+```
+
+Use the absolute path to `index.cjs` here, since the global config is shared across all your projects.
+
+In the CLI, run `/mcp` to check that the server is connected and to list its tools.
 
 ### Cursor
 
