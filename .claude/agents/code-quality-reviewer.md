@@ -25,13 +25,12 @@ You will analyze recently written or modified code against these critical criter
 - Flag any useEffect usage as a code smell requiring justification
 - Verify single state objects are preferred over multiple useState calls (4-5+ is too many)
 - Ensure server-side data fetching uses React Server Components where appropriate
-- Check for loading indicators (LoadingSpinner) in async operations
+- Check for loading indicators (`Spinner` from `@kit/ui/spinner`) in async operations
 - Verify data-test attributes are added for E2E testing where needed
 - Confirm forms use react-hook-form with @kit/ui/form components
-- Check that server actions use enhanceAction and API routes use enhanceRouteHandler
+- Check that server actions use `authActionClient` from `@kit/next/safe-action` and API routes use `enhanceRouteHandler`
 - Check that server actions and route handlers use reusable services for encapsulating business logic
-- Verify pages export components using withI18n utility
-- Ensure redirects after server actions use redirect() with proper isRedirectError handling in the client-side form where the server action is called
+- Ensure redirects after server actions use redirect() rather than client-side routing
 - Verify back-end does not expose sensitive data
 
 **Makerkit Architecture Validation:**
