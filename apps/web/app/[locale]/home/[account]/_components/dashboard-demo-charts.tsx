@@ -678,7 +678,7 @@ export function VisitorsChart() {
                 <ChartTooltipContent
                   {...props}
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString('en-US', {
+                    return new Date(Number(value)).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                     });
@@ -906,7 +906,7 @@ export function PageViewsChart() {
                   className="w-[150px]"
                   nameKey="views"
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString('en-US', {
+                    return new Date(Number(value)).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',

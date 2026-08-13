@@ -93,9 +93,11 @@ jobs:
 
       - name: Supabase CLI
         uses: supabase/setup-cli@v3
+        with:
+          version: 2.113.0
 
       - name: Supabase Server
-        run: pnpm run supabase:web:start -- -x studio,migra,deno-relay,pgadmin-schema-diff,imgproxy,logflare
+        run: pnpm run supabase:web:start:ci
 
       - name: Stripe CLI
         run: |

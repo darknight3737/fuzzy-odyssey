@@ -413,7 +413,7 @@ class AccountInvitationsService {
  * emails at sign-up, so every comparison between an invitation address and a
  * user address must be case-insensitive.
  */
-function normalizeEmail(email: string | null | undefined) {
+export function normalizeEmail(email: string | null | undefined) {
   return email?.trim().toLowerCase() ?? '';
 }
 
