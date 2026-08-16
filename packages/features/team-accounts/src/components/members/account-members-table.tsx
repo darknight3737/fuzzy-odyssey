@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Ellipsis } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 
 import { Database } from '@kit/supabase/database';
 import { Badge } from '@kit/ui/badge';
@@ -125,6 +125,7 @@ function useGetColumns(
   },
 ): ColumnDef<Members[0]>[] {
   const t = useTranslations('teams');
+  const format = useFormatter();
 
   return useMemo(
     () => [
@@ -185,7 +186,9 @@ function useGetColumns(
       {
         header: t('joinedAtLabel'),
         cell: ({ row }) => {
-          return new Date(row.original.created_at).toLocaleDateString();
+          return format.dateTime(new Date(row.original.created_at), {
+            dateStyle: 'medium',
+          });
         },
       },
       {
@@ -202,7 +205,7 @@ function useGetColumns(
         ),
       },
     ],
-    [t, params, permissions],
+    [t, format, params, permissions],
   );
 }
 

@@ -6,7 +6,9 @@ import {
   execFileSync,
   spawn,
 } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { platform } from 'node:os';
+import path from 'node:path';
 import { promisify } from 'node:util';
 
 const rawExecFileAsync = promisify(execFile);
@@ -14,22 +16,23 @@ const rawExecFileAsync = promisify(execFile);
 export const IS_WINDOWS = platform() === 'win32';
 
 /**
- * Cross-platform execFile for `.cmd` / `.bat` commands (pnpm, npm, etc.).
+ * Cross-platform execFile.
  *
- * On Windows, `.cmd`/`.bat` files cannot be executed without a shell
- * (see https://nodejs.org/api/child_process.html#spawning-bat-and-cmd-files-on-windows).
- * Adds `shell: true` + `windowsHide: true` on Windows to resolve them
- * without opening a visible console window.
- *
- * For native executables (git, node, docker) prefer `execFileSync` / `execFile`
- * directly — they don't need a shell.
+ * On Windows only `.cmd` / `.bat` shims (pnpm, npm, the `node_modules/.bin`
+ * entries) need `cmd.exe`; native executables (node, git, docker) are spawned
+ * directly so Node keeps escaping their arguments.
  */
 export function execFileAsync(
   command: string,
   args: string[],
   options: ExecFileOptions = {},
 ) {
-  return rawExecFileAsync(command, args, withShell(options));
+  const invocation = buildInvocation(command, args);
+
+  return rawExecFileAsync(invocation.command, invocation.args, {
+    ...options,
+    ...invocation.options,
+  });
 }
 
 /**
@@ -40,7 +43,12 @@ export function crossExecFileSync(
   args: string[],
   options: ExecFileSyncOptions = {},
 ) {
-  return execFileSync(command, args, withShell(options));
+  const invocation = buildInvocation(command, args);
+
+  return execFileSync(invocation.command, invocation.args, {
+    ...options,
+    ...invocation.options,
+  });
 }
 
 /**
@@ -56,14 +64,17 @@ export function spawnDetached(
   args: string[],
   options: SpawnOptions = {},
 ) {
-  const child = spawn(command, args, {
+  const invocation = buildInvocation(command, args);
+
+  const child = spawn(invocation.command, invocation.args, {
     ...options,
-    ...(IS_WINDOWS ? { shell: true, windowsHide: true } : {}),
+    ...invocation.options,
     detached: !IS_WINDOWS,
     stdio: 'ignore',
   });
 
   child.unref();
+
   return child;
 }
 
@@ -144,16 +155,144 @@ export async function findProcessesByName(
 }
 
 // ---------------------------------------------------------------------------
-// Internal helpers
+// Windows command resolution
 // ---------------------------------------------------------------------------
 
-function withShell<T extends SpawnOptions | ExecFileOptions>(options: T): T {
-  if (IS_WINDOWS) {
-    return { ...options, shell: true, windowsHide: true };
+const resolvedCommands = new Map<string, string>();
+
+/**
+ * Decide how to invoke a command on the current platform.
+ *
+ * `shell: true` combined with an args array performs **no** escaping (see
+ * DEP0190), so quotes, parens and `%` in arguments get mangled. Instead we
+ * resolve the command against PATH/PATHEXT and only build a `cmd.exe` command
+ * line — escaped by hand — for the `.cmd`/`.bat` shims that genuinely require
+ * one.
+ */
+function buildInvocation(command: string, args: string[]) {
+  if (!IS_WINDOWS) {
+    return { command, args, options: {} };
   }
 
-  return options;
+  const resolved = resolveWindowsCommand(command);
+
+  if (!isBatchFile(resolved)) {
+    return { command: resolved, args, options: { windowsHide: true } };
+  }
+
+  const commandLine = [
+    escapeWindowsCommand(resolved),
+    // `.cmd`/`.bat` files are parsed twice by cmd.exe, so meta characters need
+    // to survive one extra round of unescaping.
+    ...args.map((arg) => escapeWindowsArgument(arg, true)),
+  ].join(' ');
+
+  return {
+    command: process.env.comspec ?? 'cmd.exe',
+    args: ['/d', '/s', '/c', `"${commandLine}"`],
+    options: { windowsHide: true, windowsVerbatimArguments: true },
+  };
 }
+
+function resolveWindowsCommand(command: string) {
+  const cached = resolvedCommands.get(command);
+
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const resolved = lookupWindowsCommand(command);
+
+  // Misses are not cached: a CLI installed after the server started should be
+  // picked up on the next call rather than staying unresolved for the session.
+  if (resolved) {
+    resolvedCommands.set(command, resolved);
+  }
+
+  return resolved ?? command;
+}
+
+/**
+ * Locate the file a Windows command actually points at.
+ *
+ * Handles the two shapes used in this package: a bare name looked up on PATH
+ * (`pnpm`), and an extensionless path to a workspace bin (`node_modules/.bin/
+ * supabase`) whose real file carries a PATHEXT extension.
+ */
+function lookupWindowsCommand(command: string) {
+  const extensions = (process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD')
+    .split(';')
+    .map((extension) => extension.trim())
+    .filter(Boolean);
+
+  const probe = (candidate: string) => {
+    if (path.extname(candidate) && existsSync(candidate)) {
+      return candidate;
+    }
+
+    for (const extension of extensions) {
+      const withExtension = candidate + extension;
+
+      if (existsSync(withExtension)) {
+        return withExtension;
+      }
+    }
+
+    return null;
+  };
+
+  if (command.includes('/') || command.includes('\\')) {
+    return probe(command);
+  }
+
+  const searchPath = process.env.PATH ?? process.env.Path ?? '';
+
+  for (const dir of searchPath.split(path.delimiter).filter(Boolean)) {
+    const found = probe(path.join(dir, command));
+
+    if (found) {
+      return found;
+    }
+  }
+
+  return null;
+}
+
+function isBatchFile(file: string) {
+  return /\.(cmd|bat)$/i.test(file);
+}
+
+// Meta characters cmd.exe acts on. Escaping algorithm below follows
+// cross-spawn / https://qntm.org/cmd.
+const CMD_META_CHARS = /([()\][%!^"`<>&|;, *?])/g;
+
+function escapeWindowsCommand(command: string) {
+  return command.replace(CMD_META_CHARS, '^$1');
+}
+
+function escapeWindowsArgument(
+  argument: string,
+  doubleEscapeMetaChars = false,
+) {
+  // Backslashes preceding a double quote are doubled, and the quote escaped.
+  let escaped = argument.replace(/(\\*)"/g, '$1$1\\"');
+
+  // Backslashes at the end would otherwise escape the closing quote we add.
+  escaped = escaped.replace(/(\\*)$/, '$1$1');
+
+  escaped = `"${escaped}"`;
+  escaped = escaped.replace(CMD_META_CHARS, '^$1');
+
+  if (doubleEscapeMetaChars) {
+    escaped = escaped.replace(CMD_META_CHARS, '^$1');
+  }
+
+  return escaped;
+}
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
 
 async function getPortProcessUnix(port: number, cwd: string) {
   const result = await rawExecFileAsync(
@@ -209,41 +348,34 @@ async function getPortProcessWindows(port: number, cwd: string) {
 async function findProcessesByNameUnix(pattern: string, cwd: string) {
   const result = await rawExecFileAsync('pgrep', ['-fl', pattern], { cwd });
 
-  return result.stdout
-    .split('\n')
-    .filter(Boolean)
-    .map((line) => {
-      const spaceIdx = line.indexOf(' ');
-
-      if (spaceIdx <= 0) return null;
-
-      const pid = Number(line.slice(0, spaceIdx));
-      const command = line.slice(spaceIdx + 1).trim();
-
-      if (!Number.isFinite(pid)) return null;
-
-      return { pid, command };
-    })
-    .filter((p): p is { pid: number; command: string } => p !== null);
+  return parseProcessLines(result.stdout);
 }
 
 async function findProcessesByNameWindows(pattern: string, cwd: string) {
-  // Convert simple regex-like pattern to a PowerShell -match pattern.
-  // The patterns used in the codebase (e.g. "stripe.*listen") are already
-  // valid PowerShell regex.
+  // The pattern travels in an environment variable rather than inside the
+  // script: embedding it would make the PowerShell process's own command line
+  // match the Win32_Process query it is running.
   const psCommand = [
     `Get-CimInstance Win32_Process`,
-    `| Where-Object { $_.CommandLine -match '${pattern.replace(/'/g, "''")}' }`,
+    `| Where-Object { $_.CommandLine -match $env:MK_PROCESS_PATTERN }`,
     `| ForEach-Object { "$($_.ProcessId) $($_.CommandLine)" }`,
   ].join(' ');
 
   const result = await rawExecFileAsync(
     'powershell',
     ['-NoProfile', '-Command', psCommand],
-    { cwd, windowsHide: true },
+    {
+      cwd,
+      windowsHide: true,
+      env: { ...process.env, MK_PROCESS_PATTERN: pattern },
+    },
   );
 
-  return result.stdout
+  return parseProcessLines(result.stdout);
+}
+
+function parseProcessLines(stdout: string) {
+  return stdout
     .split('\n')
     .filter(Boolean)
     .map((line) => {

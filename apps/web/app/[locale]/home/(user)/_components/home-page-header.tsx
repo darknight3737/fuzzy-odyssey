@@ -16,10 +16,7 @@ export async function HomeLayoutPageHeader(
     (layoutStyleCookie ?? personalAccountNavigationConfig.style) === 'sidebar';
 
   return (
-    <PageHeader
-      description={props.description}
-      displaySidebarTrigger={displaySidebarTrigger}
-    >
+    <PageHeader title={props.title} description={props.description} displaySidebarTrigger={displaySidebarTrigger}>
       {props.children}
     </PageHeader>
   );

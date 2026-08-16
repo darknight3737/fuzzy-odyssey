@@ -18,10 +18,7 @@ export async function TeamAccountLayoutPageHeader(
     (layoutStyleCookie ?? defaultStyle) === 'sidebar';
 
   return (
-    <PageHeader
-      description={props.description}
-      displaySidebarTrigger={displaySidebarTrigger}
-    >
+    <PageHeader title={props.title} description={props.description} displaySidebarTrigger={displaySidebarTrigger}>
       {props.children}
     </PageHeader>
   );

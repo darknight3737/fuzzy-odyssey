@@ -1,7 +1,7 @@
 import { Page, expect, test } from '@playwright/test';
 
 import { InvitationsPageObject } from '../invitations/invitations.po';
-import { TeamAccountsPageObject } from './team-accounts.po';
+import { HOME_LANDING_URL, TeamAccountsPageObject } from './team-accounts.po';
 
 // Helper function to set up a team with a member
 async function setupTeamWithMember(page: Page, memberRole = 'member') {
@@ -353,6 +353,6 @@ test.describe('Team Account Security', () => {
     await userBPage.goto(`/home/${teamSlug}`);
 
     // Check that we're not on the team page anymore (should redirect)
-    await expect(userBPage).toHaveURL(`/home`);
+    await expect(userBPage).toHaveURL(HOME_LANDING_URL);
   });
 });

@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react';
 import type { PasskeyListItem } from '@supabase/supabase-js';
 
 import { Fingerprint, Plus, TriangleAlert, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 
 import { useDeletePasskey } from '@kit/supabase/hooks/use-delete-passkey';
 import { useFetchPasskeys } from '@kit/supabase/hooks/use-fetch-passkeys';
@@ -115,6 +115,7 @@ function PasskeysListContainer(props: { userId: string }) {
 
 function PasskeyItem(props: { passkey: PasskeyListItem; userId: string }) {
   const t = useTranslations();
+  const format = useFormatter();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const friendlyName =
@@ -134,7 +135,9 @@ function PasskeyItem(props: { passkey: PasskeyListItem; userId: string }) {
             <Trans
               i18nKey={'account.passkeyCreatedAt'}
               values={{
-                date: new Date(props.passkey.created_at).toLocaleDateString(),
+                date: format.dateTime(new Date(props.passkey.created_at), {
+                  dateStyle: 'medium',
+                }),
               }}
             />
           </ItemDescription>

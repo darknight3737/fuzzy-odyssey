@@ -69,6 +69,19 @@ describe('pnpm commands', () => {
     ).rejects.toThrow();
   });
 
+  it('pnpm exec passes quoted args through untouched', async () => {
+    // On Windows pnpm is a `.cmd` shim, so this is the one path that goes
+    // through cmd.exe — arguments must survive its double parsing intact.
+    const result = await execFileAsync('pnpm', [
+      'exec',
+      'node',
+      '-e',
+      'console.log("shim (ok) & done")',
+    ]);
+
+    expect(result.stdout).toContain('shim (ok) & done');
+  });
+
   it('pnpm ls --json (read-only, similar to deps-advisor outdated)', async () => {
     const result = await execFileAsync('pnpm', ['ls', '--json', '--depth=0']);
     // pnpm ls --json returns valid JSON
@@ -122,6 +135,18 @@ describe('node commands', () => {
     const result = await execFileAsync('node', ['-e', 'console.log("hello")']);
 
     expect(result.stdout.trim()).toBe('hello');
+  });
+
+  it('node -e preserves shell meta characters in arguments', async () => {
+    const value = 'a&b|c^d%e (f)';
+
+    const result = await execFileAsync('node', [
+      '-e',
+      'console.log(process.argv[1])',
+      value,
+    ]);
+
+    expect(result.stdout.trim()).toBe(value);
   });
 });
 

@@ -3,6 +3,12 @@ import { Page, expect } from '@playwright/test';
 import { AuthPageObject } from '../authentication/auth.po';
 import { OtpPo } from '../utils/otp.po';
 
+/**
+ * Where a user without a personal dashboard lands: `/home` normally, and the
+ * create-team onboarding when `NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_ONLY` is on.
+ */
+export const HOME_LANDING_URL = /\/home(\/create-team)?$/;
+
 export class TeamAccountsPageObject {
   private readonly page: Page;
   public auth: AuthPageObject;
@@ -222,7 +228,9 @@ export class TeamAccountsPageObject {
         '[data-test="delete-team-form-confirm-button"]',
       );
 
-      const response = this.page.waitForURL('**/home');
+      // With TEAM_ACCOUNTS_ONLY a user left without any team is sent to the
+      // create-team onboarding instead of /home.
+      const response = this.page.waitForURL(HOME_LANDING_URL);
 
       return Promise.all([click, response]);
     }).toPass();

@@ -61,7 +61,7 @@ export class KitEmailsService {
     ensureInsideRoot(absolutePath, this.deps.rootPath, input.id);
 
     const source = await this.deps.readFile(absolutePath);
-    const isReactEmail = absolutePath.includes('packages/email-templates');
+    const isReactEmail = template.category === 'transactional';
     const props = isReactEmail ? extractPropsFromSource(source) : [];
 
     let renderedHtml: string | null = null;
@@ -108,7 +108,7 @@ export class KitEmailsService {
         id,
         name,
         category: 'transactional',
-        file: path.join(dir, file),
+        file: toPosixPath(path.join(dir, file)),
         description: `${name} transactional email template`,
       });
     }
@@ -140,13 +140,22 @@ export class KitEmailsService {
         id,
         name,
         category: 'supabase-auth',
-        file: path.join(dir, file),
+        file: toPosixPath(path.join(dir, file)),
         description: `${name} Supabase auth email template`,
       });
     }
 
     return templates.sort((a, b) => a.id.localeCompare(b.id));
   }
+}
+
+/**
+ * Keep the `file` field POSIX-shaped so tool output does not change with the
+ * host platform. `path.resolve` accepts forward slashes on Windows, so the
+ * value still round-trips back to an absolute path in `read`.
+ */
+function toPosixPath(filePath: string): string {
+  return filePath.split(path.sep).join('/');
 }
 
 function humanize(kebab: string): string {
