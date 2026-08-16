@@ -5,16 +5,30 @@ import {
   createKitEmailsService,
 } from '../kit-emails.service';
 
+import path from 'node:path';
+
+// The service builds absolute paths with `path.resolve`, so the fixtures are
+// normalized the same way — otherwise nothing matches on Windows.
+const ROOT = path.resolve('/repo');
+
 function createDeps(
   files: Record<string, string>,
   directories: string[],
 ): KitEmailsDeps {
-  const store = { ...files };
-  const dirSet = new Set(directories);
+  const store = Object.fromEntries(
+    Object.entries(files).map(([filePath, content]) => [
+      path.normalize(filePath),
+      content,
+    ]),
+  );
+
+  const dirSet = new Set(directories.map((dir) => path.normalize(dir)));
 
   return {
-    rootPath: '/repo',
-    async readFile(filePath: string) {
+    rootPath: ROOT,
+    async readFile(rawPath: string) {
+      const filePath = path.normalize(rawPath);
+
       if (!(filePath in store)) {
         const error = new Error(
           `ENOENT: no such file: ${filePath}`,
@@ -26,19 +40,20 @@ function createDeps(
 
       return store[filePath]!;
     },
-    async readdir(dirPath: string) {
+    async readdir(rawPath: string) {
+      const dirPath = path.normalize(rawPath);
+
       if (!dirSet.has(dirPath)) {
         return [];
       }
 
       return Object.keys(store)
-        .filter((p) => {
-          const parent = p.substring(0, p.lastIndexOf('/'));
-          return parent === dirPath;
-        })
-        .map((p) => p.substring(p.lastIndexOf('/') + 1));
+        .filter((p) => path.dirname(p) === dirPath)
+        .map((p) => path.basename(p));
     },
-    async fileExists(filePath: string) {
+    async fileExists(rawPath: string) {
+      const filePath = path.normalize(rawPath);
+
       return filePath in store || dirSet.has(filePath);
     },
     async renderReactEmail() {
@@ -47,8 +62,8 @@ function createDeps(
   };
 }
 
-const REACT_DIR = '/repo/packages/email-templates/src/emails';
-const SUPABASE_DIR = '/repo/apps/web/supabase/templates';
+const REACT_DIR = path.resolve(ROOT, 'packages/email-templates/src/emails');
+const SUPABASE_DIR = path.resolve(ROOT, 'apps/web/supabase/templates');
 
 describe('KitEmailsService.list', () => {
   it('discovers React Email templates with -email suffix in id', async () => {

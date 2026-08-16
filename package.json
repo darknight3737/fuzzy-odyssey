@@ -1,6 +1,6 @@
 {
   "name": "next-supabase-saas-kit-turbo",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "private": true,
   "author": {
     "name": "MakerKit",
@@ -22,6 +22,7 @@
     "healthcheck": "oxlint --fix && oxfmt && pnpm run typecheck && manypkg fix",
     "typecheck": "turbo typecheck --affected --cache-dir=.turbo",
     "test": "turbo test --cache-dir=.turbo",
+    "test:unit": "turbo test:unit --cache-dir=.turbo",
     "update": "pnpm update -r",
     "syncpack:list": "pnpm dlx syncpack list-mismatches",
     "syncpack:fix": "pnpm dlx syncpack fix-mismatches",
