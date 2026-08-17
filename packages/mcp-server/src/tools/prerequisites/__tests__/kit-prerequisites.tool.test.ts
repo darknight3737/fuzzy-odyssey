@@ -33,5 +33,7 @@ describe('registerKitPrerequisitesTool', () => {
 
     expect(parsed.prerequisites.length).toBeGreaterThan(0);
     expect(typeof parsed.ready_to_develop).toBe('boolean');
-  });
+    // Shells out to node/pnpm/docker, each of which is slow to start on
+    // Windows CI — vitest's 5s default leaves no headroom.
+  }, 30_000);
 });

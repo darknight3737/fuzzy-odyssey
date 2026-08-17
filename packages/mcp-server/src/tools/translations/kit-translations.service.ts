@@ -114,7 +114,7 @@ export class KitTranslationsService {
 
     return {
       success: true,
-      file: namespacePath,
+      file: toPosixPath(namespacePath),
     };
   }
 
@@ -225,7 +225,7 @@ export class KitTranslationsService {
     return {
       success: true,
       namespace: input.namespace,
-      files_created: filesCreated,
+      files_created: filesCreated.map(toPosixPath),
     };
   }
 
@@ -286,7 +286,7 @@ export class KitTranslationsService {
     return {
       success: true,
       locale: input.locale,
-      files_created: filesCreated,
+      files_created: filesCreated.map(toPosixPath),
     };
   }
 
@@ -319,7 +319,7 @@ export class KitTranslationsService {
     return {
       success: true,
       namespace: input.namespace,
-      files_removed: filesRemoved,
+      files_removed: filesRemoved.map(toPosixPath),
     };
   }
 
@@ -347,7 +347,7 @@ export class KitTranslationsService {
     return {
       success: true,
       locale: input.locale,
-      path_removed: localeDir,
+      path_removed: toPosixPath(localeDir),
     };
   }
 
@@ -410,6 +410,15 @@ export class KitTranslationsService {
   private getLocalesRoot() {
     return path.resolve(this.deps.rootPath, 'apps', 'web', 'i18n', 'messages');
   }
+}
+
+/**
+ * Paths travel to the client POSIX-shaped so tool output does not change with
+ * the host platform. Only emitted values are converted — the paths handed to
+ * the fs deps stay native.
+ */
+function toPosixPath(filePath: string) {
+  return filePath.split(path.sep).join('/');
 }
 
 function ensureInsideRoot(resolved: string, root: string, input: string) {
