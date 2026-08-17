@@ -2,6 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { type KitDbServiceDeps, createKitDbService } from '../kit-db.service';
 
+// The service joins paths with the platform separator, so fixtures compare
+// against a forward-slash form rather than assuming POSIX.
+const containsDir = (filePath: string, segment: string) =>
+  filePath.replace(/\\/g, '/').includes(segment);
+
 function createDeps(
   overrides: Partial<KitDbServiceDeps> = {},
 ): KitDbServiceDeps {
@@ -37,7 +42,7 @@ describe('KitDbService.status', () => {
   it('reports pending migrations when CLI output is unavailable', async () => {
     const deps = createDeps({
       async fileExists(path: string) {
-        return path.includes('supabase/migrations');
+        return containsDir(path, 'supabase/migrations');
       },
       async readdir() {
         return ['20260101010101_create_table.sql'];
@@ -59,7 +64,7 @@ describe('KitDbService.status', () => {
   it('treats local migrations as applied when connected', async () => {
     const deps = createDeps({
       async fileExists(path: string) {
-        return path.includes('supabase/migrations');
+        return containsDir(path, 'supabase/migrations');
       },
       async readdir() {
         return ['20260101010101_create_table.sql'];
@@ -108,7 +113,7 @@ describe('KitDbService.status', () => {
   it('maps id/name columns to local migration names', async () => {
     const deps = createDeps({
       async fileExists(path: string) {
-        return path.includes('supabase/migrations');
+        return containsDir(path, 'supabase/migrations');
       },
       async readdir() {
         return ['20240319163440_roles-seed.sql'];
@@ -140,7 +145,7 @@ describe('KitDbService.status', () => {
   it('treats id/name list with no status as applied', async () => {
     const deps = createDeps({
       async fileExists(path: string) {
-        return path.includes('supabase/migrations');
+        return containsDir(path, 'supabase/migrations');
       },
       async readdir() {
         return [
@@ -182,7 +187,7 @@ describe('KitDbService.migrate', () => {
   it('returns applied migrations from pending list', async () => {
     const deps = createDeps({
       async fileExists(path: string) {
-        return path.includes('supabase/migrations');
+        return containsDir(path, 'supabase/migrations');
       },
       async readdir() {
         return ['20260101010101_create_table.sql'];

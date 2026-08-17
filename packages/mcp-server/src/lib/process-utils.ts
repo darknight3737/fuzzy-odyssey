@@ -16,6 +16,18 @@ const rawExecFileAsync = promisify(execFile);
 export const IS_WINDOWS = platform() === 'win32';
 
 /**
+ * Guard against a wedged process lookup — not a latency budget.
+ *
+ * Windows has no cheap way to read another process's command line: it means
+ * WMI, and reaching WMI means starting PowerShell. That normally costs under a
+ * second, but on a loaded machine it is far worse — a contended CI runner
+ * measured 28s for `powershell -NoProfile -Command "Write-Output ok"`, with the
+ * CIM query itself adding almost nothing on top. Anything tight enough to feel
+ * like a timeout budget just turns a slow machine into "no processes found".
+ */
+const PROCESS_LOOKUP_TIMEOUT_MS = 60_000;
+
+/**
  * Cross-platform execFile.
  *
  * On Windows only `.cmd` / `.bat` shims (pnpm, npm, the `node_modules/.bin`
@@ -352,26 +364,46 @@ async function findProcessesByNameUnix(pattern: string, cwd: string) {
 }
 
 async function findProcessesByNameWindows(pattern: string, cwd: string) {
-  // The pattern travels in an environment variable rather than inside the
-  // script: embedding it would make the PowerShell process's own command line
-  // match the Win32_Process query it is running.
+  // Encoding the whole script is what stops the query matching its own
+  // invocation: the pattern reaches the child as base64, so the plain text
+  // never appears in this PowerShell process's own command line. It also
+  // sidesteps quoting — base64 needs none, while the `"` in the output
+  // expression below would be escaped as `\"` by Node's Windows command line
+  // builder, which powershell.exe parses by different rules than the CRT.
   const psCommand = [
     `Get-CimInstance Win32_Process`,
-    `| Where-Object { $_.CommandLine -match $env:MK_PROCESS_PATTERN }`,
+    `| Where-Object { $_.CommandLine -match '${pattern.replace(/'/g, "''")}' }`,
     `| ForEach-Object { "$($_.ProcessId) $($_.CommandLine)" }`,
   ].join(' ');
 
+  const result = await runPowerShell(psCommand, cwd);
+
+  return parseProcessLines(result);
+}
+
+/**
+ * Run a PowerShell script, capped so a stalled call degrades to no output
+ * rather than hanging the caller (`kit_dev_stop` and friends await this).
+ *
+ * Note the deliberate lack of an `env` option: passing one replaces the child's
+ * entire environment, and PowerShell is far more sensitive to a subtly
+ * incomplete environment than the plain executables this module otherwise
+ * spawns.
+ */
+async function runPowerShell(script: string, cwd: string) {
+  const encodedCommand = Buffer.from(script, 'utf16le').toString('base64');
+
   const result = await rawExecFileAsync(
     'powershell',
-    ['-NoProfile', '-Command', psCommand],
+    ['-NoProfile', '-NonInteractive', '-EncodedCommand', encodedCommand],
     {
       cwd,
       windowsHide: true,
-      env: { ...process.env, MK_PROCESS_PATTERN: pattern },
+      timeout: PROCESS_LOOKUP_TIMEOUT_MS,
     },
   );
 
-  return parseProcessLines(result.stdout);
+  return result.stdout;
 }
 
 function parseProcessLines(stdout: string) {

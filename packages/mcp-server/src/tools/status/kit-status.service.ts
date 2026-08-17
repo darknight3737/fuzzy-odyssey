@@ -1,7 +1,5 @@
 import type { KitStatusInput, KitStatusOutput } from './schema';
 
-import { join } from 'node:path';
-
 interface VariantDescriptor {
   variant: string;
   variant_family: string;
@@ -438,9 +436,9 @@ export class KitStatusService {
       return null;
     }
 
-    const appPackage = await this.readObject(
-      join('apps', 'web', 'package.json'),
-    );
+    // Repo-relative and POSIX-shaped, like the `pathExists` call above: the
+    // deps join it onto rootPath, which normalizes separators per platform.
+    const appPackage = await this.readObject('apps/web/package.json');
 
     const hasNextDependency = this.hasDependency(appPackage, 'next');
 
