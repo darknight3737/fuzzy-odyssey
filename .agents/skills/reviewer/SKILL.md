@@ -34,7 +34,7 @@ Default to skepticism. Assume the change can fail in subtle, high-cost, or user-
 
 ### Track A — Adversarial Code Quality & Architecture Audit
 
-Spawn an `Explore` sub-agent using the prompt in `.Codex/agents/code-quality-reviewer.md`.
+Spawn an `Explore` sub-agent using the prompt in `.agents/agents/code-quality-reviewer.md`.
 
 Pass it the list of changed files. Its job: verify AGENTS.md compliance, flag anti-patterns, and propose simpler/better-structured alternatives.
 
