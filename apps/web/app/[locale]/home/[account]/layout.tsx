@@ -47,18 +47,18 @@ function TeamWorkspaceLayout({ children, params }: TeamWorkspaceLayoutProps) {
     <Page style={isSidebar ? 'sidebar' : 'header'}>
       <PageNavigation>{navigation}</PageNavigation>
 
-      <PageMobileNavigation
-        className={
-          isSidebar ? 'md:hidden' : 'flex items-center justify-between'
-        }
-      >
+      <PageMobileNavigation>
         <div>
           <AppLogo />
         </div>
 
         {/* The sidebar already holds the nav, so mobile only needs a trigger. */}
         {isSidebar ? (
-          <MobileSidebarTrigger />
+          <MobileSidebarTrigger
+            collapsible={
+              getTeamAccountSidebarConfig(account).sidebarCollapsedStyle
+            }
+          />
         ) : (
           <Suspense fallback={null}>
             <TeamAccountMobileNavigation account={account} />

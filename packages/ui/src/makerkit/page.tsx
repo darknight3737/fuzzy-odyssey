@@ -40,7 +40,18 @@ function PageWithSidebar(props: PageProps) {
 
   return (
     <div
-      className={cn('flex min-w-0 flex-1 overflow-x-hidden', props.className)}
+      className={cn(
+        'flex min-w-0 flex-1 overflow-x-hidden',
+        // `useIsMobile` can only answer `false` on the server, so `Sidebar`
+        // always renders its desktop branch into the SSR markup. That branch
+        // is gated at `md` upstream, so without this it would paint — beside
+        // the `lg:hidden` mobile bar — for the whole 768-1023px band until
+        // hydration swaps it for the Sheet. Scoped to `[data-state]`, which
+        // only the collapsible branch sets: the `collapsible="none"` sidebar
+        // has no Sheet to fall back on and must stay visible.
+        'max-lg:[&_[data-slot=sidebar][data-state]]:hidden',
+        props.className,
+      )}
     >
       {Navigation}
 
