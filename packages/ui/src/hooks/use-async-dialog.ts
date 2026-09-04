@@ -1,8 +1,18 @@
 'use client';
 
-import { useCallback, useMemo, useReducer, useRef } from 'react';
+import {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 
-import { createAsyncDialogState } from './use-async-dialog-state';
+import {
+  asyncDialogReducer,
+  createAsyncDialogState,
+} from './use-async-dialog-state';
 
 interface UseAsyncDialogOptions {
   /**
@@ -47,24 +57,37 @@ export function useAsyncDialog(
 ): UseAsyncDialogReturn {
   const { open: externalOpen, onOpenChange: externalOnOpenChange } = options;
 
-  const [, forceRender] = useReducer((value: number) => value + 1, 0);
-  const [internalOpen, setInternalOpen] = useReducer(
-    (_: boolean, next: boolean) => next,
-    false,
-  );
-  const stateRef = useRef(createAsyncDialogState(Boolean(externalOpen)));
+  const [internalOpen, setInternalOpen] = useState(false);
 
   const isControlled = externalOpen !== undefined;
   const open = isControlled ? externalOpen : internalOpen;
 
-  stateRef.current.syncOpen(open);
+  const [state, dispatch] = useReducer(
+    asyncDialogReducer,
+    open,
+    createAsyncDialogState,
+  );
 
-  const isPending = stateRef.current.isPending();
-  const sessionId = stateRef.current.getSessionId();
+  // Session follows the open prop; React re-renders immediately when
+  // state is set during render, so nothing from this pass is committed
+  if (state.open !== open) {
+    dispatch({ type: 'sync', open });
+  }
+
+  const { sessionId } = state;
+  const isPending = state.pendingCount > 0;
+
+  // Latest session id for callbacks captured by older renders,
+  // e.g. an async completion from a dialog that has since been reopened
+  const currentSessionRef = useRef(sessionId);
+
+  useLayoutEffect(() => {
+    currentSessionRef.current = sessionId;
+  }, [sessionId]);
 
   const setOpen = useCallback(
     (newOpen: boolean) => {
-      if (!stateRef.current.isCurrentSession(sessionId)) return;
+      if (currentSessionRef.current !== sessionId) return;
 
       if (isControlled && externalOnOpenChange) {
         externalOnOpenChange(newOpen);
@@ -77,21 +100,18 @@ export function useAsyncDialog(
 
   const setIsPending = useCallback(
     (pending: boolean) => {
-      if (!stateRef.current.isCurrentSession(sessionId)) return;
-
-      stateRef.current.setPending(sessionId, pending);
-      forceRender();
+      dispatch({ type: 'pending', sessionId, pending });
     },
     [sessionId],
   );
 
   const guardedOnOpenChange = useCallback(
     (newOpen: boolean) => {
-      if (!newOpen && stateRef.current.isPending()) return;
+      if (!newOpen && isPending) return;
 
       setOpen(newOpen);
     },
-    [setOpen],
+    [isPending, setOpen],
   );
 
   const dialogProps = useMemo(

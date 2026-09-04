@@ -78,7 +78,7 @@ interface ReactTableProps<T extends DataItem> {
   onRowSelectionChange?: (selection: Record<string, boolean>) => void;
   onClick?: (props: { row: Row<T>; cell: Cell<T, unknown> }) => void;
   tableProps?: React.ComponentProps<typeof Table> &
-    Record<`data-${string}`, string>;
+  Record<`data-${string}`, string>;
   sticky?: boolean;
   renderCell?: (props: {
     cell: Cell<T, unknown>;
@@ -149,6 +149,7 @@ export function DataTable<RecordData extends DataItem>({
 
   const navigateToPage = useNavigateToNewPage();
 
+  // oxlint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     getRowId,
@@ -321,18 +322,18 @@ export function DataTable<RecordData extends DataItem>({
                 const left =
                   isPinned === 'left'
                     ? headerGroup.headers
-                        .slice(0, index)
-                        .filter((h) => h.column.getIsPinned() === 'left')
-                        .reduce((acc, h) => acc + h.column.getSize(), 0)
+                      .slice(0, index)
+                      .filter((h) => h.column.getIsPinned() === 'left')
+                      .reduce((acc, h) => acc + h.column.getSize(), 0)
                     : undefined;
 
                 // Calculate right offset for right-pinned columns
                 const right =
                   isPinned === 'right'
                     ? headerGroup.headers
-                        .slice(index + 1)
-                        .filter((h) => h.column.getIsPinned() === 'right')
-                        .reduce((acc, h) => acc + h.column.getSize(), 0)
+                      .slice(index + 1)
+                      .filter((h) => h.column.getIsPinned() === 'right')
+                      .reduce((acc, h) => acc + h.column.getSize(), 0)
                     : undefined;
 
                 return (
@@ -420,20 +421,20 @@ export function DataTable<RecordData extends DataItem>({
               const left =
                 isPinned === 'left'
                   ? row
-                      .getVisibleCells()
-                      .slice(0, index)
-                      .filter((c) => c.column.getIsPinned() === 'left')
-                      .reduce((acc, c) => acc + c.column.getSize(), 0)
+                    .getVisibleCells()
+                    .slice(0, index)
+                    .filter((c) => c.column.getIsPinned() === 'left')
+                    .reduce((acc, c) => acc + c.column.getSize(), 0)
                   : undefined;
 
               // Calculate right offset for right-pinned columns
               const right =
                 isPinned === 'right'
                   ? row
-                      .getVisibleCells()
-                      .slice(index + 1)
-                      .filter((c) => c.column.getIsPinned() === 'right')
-                      .reduce((acc, c) => acc + c.column.getSize(), 0)
+                    .getVisibleCells()
+                    .slice(index + 1)
+                    .filter((c) => c.column.getIsPinned() === 'right')
+                    .reduce((acc, c) => acc + c.column.getSize(), 0)
                   : undefined;
 
               const className = cn(

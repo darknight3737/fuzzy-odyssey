@@ -1,46 +1,42 @@
-interface AsyncDialogState {
-  getSessionId: () => number;
-  isCurrentSession: (sessionId: number) => boolean;
-  isPending: () => boolean;
-  setPending: (sessionId: number, pending: boolean) => void;
-  syncOpen: (open: boolean) => void;
+export interface AsyncDialogState {
+  open: boolean;
+  /** Incremented every time the dialog transitions from closed to open */
+  sessionId: number;
+  /** Number of in-flight async operations for the current session */
+  pendingCount: number;
 }
 
-export function createAsyncDialogState(initialOpen = false): AsyncDialogState {
-  let isOpen = initialOpen;
-  let sessionId = initialOpen ? 1 : 0;
-  const pendingCountBySession = new Map<number, number>();
+export type AsyncDialogAction =
+  | { type: 'sync'; open: boolean }
+  | { type: 'pending'; sessionId: number; pending: boolean };
 
-  const getPendingCount = () => pendingCountBySession.get(sessionId) ?? 0;
+export function createAsyncDialogState(open = false): AsyncDialogState {
+  return { open, sessionId: open ? 1 : 0, pendingCount: 0 };
+}
 
-  return {
-    getSessionId: () => sessionId,
-    isCurrentSession: (candidateSessionId) => candidateSessionId === sessionId,
-    isPending: () => getPendingCount() > 0,
-    setPending: (targetSessionId, pending) => {
-      if (targetSessionId !== sessionId) return;
+export function asyncDialogReducer(
+  state: AsyncDialogState,
+  action: AsyncDialogAction,
+): AsyncDialogState {
+  switch (action.type) {
+    case 'sync': {
+      if (action.open === state.open) return state;
 
-      const currentPendingCount =
-        pendingCountBySession.get(targetSessionId) ?? 0;
-      const nextPendingCount = pending
-        ? currentPendingCount + 1
-        : Math.max(0, currentPendingCount - 1);
+      return action.open
+        ? { open: true, sessionId: state.sessionId + 1, pendingCount: 0 }
+        : { ...state, open: false };
+    }
 
-      if (nextPendingCount === 0) {
-        pendingCountBySession.delete(targetSessionId);
-        return;
-      }
+    case 'pending': {
+      if (action.sessionId !== state.sessionId) return state;
 
-      pendingCountBySession.set(targetSessionId, nextPendingCount);
-    },
-    syncOpen: (nextOpen) => {
-      if (nextOpen === isOpen) return;
+      const pendingCount = action.pending
+        ? state.pendingCount + 1
+        : Math.max(0, state.pendingCount - 1);
 
-      isOpen = nextOpen;
+      if (pendingCount === state.pendingCount) return state;
 
-      if (nextOpen) {
-        sessionId += 1;
-      }
-    },
-  };
+      return { ...state, pendingCount };
+    }
+  }
 }

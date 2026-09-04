@@ -156,13 +156,27 @@ export class StripeBillingStrategyService implements BillingStrategyProviderServ
     try {
       const session = await stripe.checkout.sessions.retrieve(params.sessionId);
       const isSessionOpen = session.status === 'open';
+      const rawStatus = session.status ?? 'complete';
+
+      // Stripe types open enums as `literal | string`, so an unknown status
+      // can appear at runtime. Narrow it here rather than widening the contract.
+      const status = isKnownCheckoutSessionStatus(rawStatus)
+        ? rawStatus
+        : 'complete';
+
+      if (status !== rawStatus) {
+        logger.warn(
+          { ...ctx, status: rawStatus },
+          'Unknown checkout session status received from Stripe',
+        );
+      }
 
       logger.info(ctx, 'Checkout session retrieved successfully');
 
       return {
         checkoutToken: session.client_secret,
         isSessionOpen,
-        status: session.status ?? 'complete',
+        status,
         customer: {
           email: session.customer_details?.email ?? null,
         },
@@ -352,7 +366,10 @@ export class StripeBillingStrategyService implements BillingStrategyProviderServ
         name: (price.product as Stripe.Product).name,
         description: (price.product as Stripe.Product).description || '',
         amount: price.unit_amount ? price.unit_amount / 100 : 0,
-        type: price.type,
+        type:
+          price.type === 'recurring'
+            ? ('recurring' as const)
+            : ('one_time' as const),
         interval: price.recurring?.interval ?? 'month',
         intervalCount: price.recurring?.interval_count,
       };
@@ -423,4 +440,14 @@ export class StripeBillingStrategyService implements BillingStrategyProviderServ
   private async stripeProvider(): Promise<Stripe> {
     return createStripeClient();
   }
+}
+
+const CHECKOUT_SESSION_STATUSES = ['complete', 'expired', 'open'] as const;
+
+type CheckoutSessionStatus = (typeof CHECKOUT_SESSION_STATUSES)[number];
+
+function isKnownCheckoutSessionStatus(
+  status: string,
+): status is CheckoutSessionStatus {
+  return (CHECKOUT_SESSION_STATUSES as readonly string[]).includes(status);
 }
