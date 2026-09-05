@@ -17,7 +17,8 @@
   },
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@keystatic/core": "catalog:",
@@ -30,6 +31,7 @@
     "@kit/ui": "workspace:*",
     "@types/react": "catalog:",
     "react": "catalog:",
+    "vitest": "catalog:",
     "zod": "catalog:"
   }
 }

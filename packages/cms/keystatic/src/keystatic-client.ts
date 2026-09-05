@@ -3,6 +3,8 @@ import { Cms, CmsClient } from '@kit/cms-types';
 import { createKeystaticReader } from './create-reader';
 import { DocumentationEntryProps, PostEntryProps } from './keystatic.config';
 import { renderMarkdoc } from './markdoc';
+import { resolveParents } from './resolve-parents';
+import { createContentItemComparator } from './sort-content-items';
 
 export function createKeystaticClient() {
   return new KeystaticClient();
@@ -60,152 +62,30 @@ class KeystaticClient implements CmsClient {
 
         return true;
       })
-      .sort((a, b) => {
-        const direction = options.sortDirection ?? 'asc';
-        const sortBy = options.sortBy ?? 'publishedAt';
+      .sort(createContentItemComparator(options));
 
-        const transform = (value: string | number | undefined | null) => {
-          if (typeof value === 'string') {
-            return new Date(value).getTime();
-          }
-
-          return value ?? 0;
-        };
-
-        const left = transform(a.entry[sortBy]);
-        const right = transform(b.entry[sortBy]);
-
-        if (direction === 'asc') {
-          return left - right;
-        }
-
-        return right - left;
-      });
-
-    function processItems(items: typeof filtered) {
-      const slugSet = new Set(items.map((item) => item.slug));
-      const indexFileCache = new Map<string, boolean>();
-      const parentCache = new Map<string, string | null>();
-
-      const isIndexFile = (slug: string): boolean => {
-        if (indexFileCache.has(slug)) {
-          return indexFileCache.get(slug)!;
-        }
-
-        const parts = slug.split('/');
-
-        const result =
-          parts.length === 1 ||
-          (parts.length >= 2 &&
-            parts[parts.length - 1] === parts[parts.length - 2]);
-
-        indexFileCache.set(slug, result);
-        return result;
-      };
-
-      const findClosestValidParent = (pathParts: string[]): string | null => {
-        const path = pathParts.join('/');
-
-        if (parentCache.has(path)) {
-          return parentCache.get(path)!;
-        }
-
-        for (let i = pathParts.length - 1; i > 0; i--) {
-          const parentParts = pathParts.slice(0, i);
-          const lastPart = parentParts[parentParts.length - 1];
-
-          if (!lastPart) {
-            continue;
-          }
-
-          const possibleIndexParent = parentParts.concat(lastPart).join('/');
-
-          if (slugSet.has(possibleIndexParent)) {
-            parentCache.set(path, possibleIndexParent);
-            return possibleIndexParent;
-          }
-
-          const regularParent = parentParts.join('/');
-
-          if (slugSet.has(regularParent)) {
-            parentCache.set(path, regularParent);
-            return regularParent;
-          }
-        }
-
-        parentCache.set(path, null);
-        return null;
-      };
-
-      const results = new Array(items.length) as typeof items;
-
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-
-        if (!item) {
-          continue;
-        }
-
-        // If the parent is already set, we don't need to do anything
-        if (item.entry.parent !== null) {
-          continue;
-        }
-
-        if (isIndexFile(item.slug)) {
-          item.entry.parent = null;
-          results[i] = item;
-          continue;
-        }
-
-        const pathParts = item.slug.split('/');
-        const parentParts = pathParts.slice(0, -1);
-        const lastPart = parentParts[parentParts.length - 1]!;
-        const possibleIndexParent = parentParts.concat(lastPart).join('/');
-
-        if (slugSet.has(possibleIndexParent)) {
-          item.entry.parent = possibleIndexParent;
-        } else {
-          const regularParent = parentParts.join('/');
-          if (slugSet.has(regularParent)) {
-            item.entry.parent = regularParent;
-          } else {
-            item.entry.parent = findClosestValidParent(pathParts);
-          }
-        }
-
-        results[i] = item;
-      }
-
-      return results;
-    }
-
-    const itemsWithParents = processItems(filtered);
+    const itemsWithParents = resolveParents(filtered);
 
     const items = await Promise.all(
-      itemsWithParents
-        .slice(startOffset, endOffset)
-        .sort((a, b) => {
-          return (a.entry.order ?? 0) - (b.entry.order ?? 0);
-        })
-        .map((item) => {
-          if (collection === 'documentation') {
-            return this.mapDocumentationPost(
-              item as {
-                entry: DocumentationEntryProps;
-                slug: string;
-              },
-              { fetchContent },
-            );
-          }
-
-          return this.mapPost(
+      itemsWithParents.slice(startOffset, endOffset).map((item) => {
+        if (collection === 'documentation') {
+          return this.mapDocumentationPost(
             item as {
-              entry: PostEntryProps;
+              entry: DocumentationEntryProps;
               slug: string;
             },
             { fetchContent },
           );
-        }),
+        }
+
+        return this.mapPost(
+          item as {
+            entry: PostEntryProps;
+            slug: string;
+          },
+          { fetchContent },
+        );
+      }),
     );
 
     return {
