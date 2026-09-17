@@ -1,6 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import {
+  DESTRUCTIVE_TOOL,
+  IDEMPOTENT_MUTATING_TOOL,
+  READ_ONLY_TOOL,
+} from '../../lib/tool-response';
+import {
   type KitEnvDeps,
   createKitEnvDeps,
   createKitEnvService,
@@ -32,6 +37,7 @@ export function registerKitEnvTools(server: McpServer, rootPath?: string) {
       description: 'Return environment variable schema for this kit variant',
       inputSchema: KitEnvSchemaInputSchema,
       outputSchema: KitEnvSchemaOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async () => {
       try {
@@ -53,6 +59,7 @@ export function registerKitEnvTools(server: McpServer, rootPath?: string) {
       description: 'Read environment variables and validation state',
       inputSchema: KitEnvReadInputSchema,
       outputSchema: KitEnvReadOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async (input) => {
       try {
@@ -75,6 +82,7 @@ export function registerKitEnvTools(server: McpServer, rootPath?: string) {
       description: 'Update one environment variable in a target .env file',
       inputSchema: KitEnvUpdateInputSchema,
       outputSchema: KitEnvUpdateOutputSchema,
+      annotations: IDEMPOTENT_MUTATING_TOOL,
     },
     async (input) => {
       try {
@@ -97,6 +105,7 @@ export function registerKitEnvTools(server: McpServer, rootPath?: string) {
       description: 'Read raw content of an .env file',
       inputSchema: KitEnvRawReadInputSchema,
       outputSchema: KitEnvRawReadOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async (input) => {
       try {
@@ -119,6 +128,7 @@ export function registerKitEnvTools(server: McpServer, rootPath?: string) {
       description: 'Write raw content to an .env file',
       inputSchema: KitEnvRawWriteInputSchema,
       outputSchema: KitEnvRawWriteOutputSchema,
+      annotations: DESTRUCTIVE_TOOL,
     },
     async (input) => {
       try {

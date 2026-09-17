@@ -1,21 +1,16 @@
 'use server';
 
-import { DatabaseTool } from '@kit/mcp-server/database';
-
-import { relative } from 'path';
+import { getDatabaseService } from './database-tools.loader';
 
 export async function getTableDetailsAction(
   tableName: string,
   schema = 'public',
 ) {
   try {
-    DatabaseTool.ROOT_PATH = relative(process.cwd(), '../..');
-
-    console.log('Fetching table info for:', { tableName, schema });
-
-    const tableInfo = await DatabaseTool.getTableInfo(schema, tableName);
-
-    console.log('Successfully fetched table info:', tableInfo);
+    const tableInfo = await getDatabaseService().getTableInfo({
+      schema,
+      tableName,
+    });
 
     return {
       success: true,

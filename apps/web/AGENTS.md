@@ -20,12 +20,33 @@ For specialized implementation:
 
 ## Next.js 16 Params Pattern
 
-```typescript
-// CORRECT - await params directly
-async function Page({ params }: Props) {
-  const { account } = await params;
+`params` is a promise — there is no `use(params)`-free synchronous access, and
+no legacy plain-object form.
+
+But **do not `await` it at the top of a page or layout.** That is Cache
+Components non-negotiable #1 below, and it outranks the shape of the API: an
+awaited `params` at the top makes the whole route dynamic and it can no longer
+produce a static shell. Keep the component synchronous and hand the promise to a
+`<Suspense>`-wrapped child, which awaits it:
+
+```tsx
+// CORRECT in a page or layout — stays synchronous, promise passed down
+function Page({ params }: { params: Promise<{ account: string }> }) {
+  return (
+    <Suspense fallback={<PageHeaderSkeleton />}>
+      <Header params={params} />
+    </Suspense>
+  );
+}
+
+async function Header({ params }: { params: Promise<{ account: string }> }) {
+  const { account } = await params; // awaited here, behind the boundary
 }
 ```
+
+`await params` directly in an `async function Page` is only correct in a route
+handler or a component that already sits behind a boundary. See
+`app/[locale]/home/[account]/members/page.tsx` for the full shape.
 
 ## Data Fetching
 
@@ -124,6 +145,10 @@ Two consequences worth knowing:
    yourself on the navigation — with next-safe-action that is
    `onNavigation: () => props.onClose?.()`.
 
+   This is easy to miss because the rule lives here, in a routing section,
+   while the code that needs it is a form — `packages/ui/AGENTS.md` repeats it
+   under "Forms in dialogs".
+
    Do NOT try to solve this generically in `useAsyncDialog` with an effect
    cleanup. Cleanup also runs on ordinary unmount and on StrictMode's
    double-invoke, and many dialogs here are mounted conditionally
@@ -166,6 +191,11 @@ Always use `Trans` component:
 import { Trans } from '@kit/ui/trans';
 <Trans i18nKey="namespace.key" values={{ name }} />
 ```
+
+Adding a namespace takes **two** steps: create
+`i18n/messages/<locale>/<namespace>.json` *and* add its name to the `namespaces`
+array in `i18n/request.ts`. Miss the second and every key renders as the raw key
+with no error. Key format rules live in `packages/ui/AGENTS.md`.
 
 ## Security
 

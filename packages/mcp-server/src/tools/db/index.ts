@@ -1,6 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { execFileAsync } from '../../lib/process-utils';
+import {
+  DESTRUCTIVE_TOOL,
+  MUTATING_TOOL,
+  READ_ONLY_TOOL,
+} from '../../lib/tool-response';
 import { type KitDbServiceDeps, createKitDbService } from './kit-db.service';
 import {
   KitDbMigrateInputSchema,
@@ -31,6 +36,7 @@ export function registerKitDbTools(server: McpServer, rootPath?: string) {
       description: 'Check database connectivity and migrations state',
       inputSchema: KitDbStatusInputSchema,
       outputSchema: KitDbStatusOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async (input) => {
       KitDbStatusInputSchema.parse(input);
@@ -54,6 +60,7 @@ export function registerKitDbTools(server: McpServer, rootPath?: string) {
       description: 'Apply pending database migrations',
       inputSchema: KitDbMigrateInputSchema,
       outputSchema: KitDbMigrateOutputSchema,
+      annotations: MUTATING_TOOL,
     },
     async (input) => {
       try {
@@ -76,6 +83,7 @@ export function registerKitDbTools(server: McpServer, rootPath?: string) {
       description: 'Run database seed scripts',
       inputSchema: KitDbSeedInputSchema,
       outputSchema: KitDbSeedOutputSchema,
+      annotations: MUTATING_TOOL,
     },
     async (input) => {
       KitDbSeedInputSchema.parse(input);
@@ -99,6 +107,7 @@ export function registerKitDbTools(server: McpServer, rootPath?: string) {
       description: 'Reset the database after confirmation',
       inputSchema: KitDbResetInputSchema,
       outputSchema: KitDbResetOutputSchema,
+      annotations: DESTRUCTIVE_TOOL,
     },
     async (input) => {
       try {

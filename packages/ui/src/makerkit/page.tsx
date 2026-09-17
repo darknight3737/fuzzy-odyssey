@@ -4,6 +4,7 @@ import { cn } from '../lib/utils';
 import { Separator } from '../shadcn/separator';
 import { If } from './if';
 import { PageSidebarTrigger, PageStyleProvider } from './page-style-context';
+import { sidebarExtras } from './sidebar';
 
 export type PageLayoutStyle = 'sidebar' | 'header' | 'custom';
 
@@ -42,14 +43,7 @@ function PageWithSidebar(props: PageProps) {
     <div
       className={cn(
         'flex min-w-0 flex-1 overflow-x-hidden',
-        // `useIsMobile` can only answer `false` on the server, so `Sidebar`
-        // always renders its desktop branch into the SSR markup. That branch
-        // is gated at `md` upstream, so without this it would paint — beside
-        // the `lg:hidden` mobile bar — for the whole 768-1023px band until
-        // hydration swaps it for the Sheet. Scoped to `[data-state]`, which
-        // only the collapsible branch sets: the `collapsible="none"` sidebar
-        // has no Sheet to fall back on and must stay visible.
-        'max-lg:[&_[data-slot=sidebar][data-state]]:hidden',
+        sidebarExtras.ssrDesktopGuard,
         props.className,
       )}
     >
@@ -81,7 +75,7 @@ export function PageMobileNavigation(
   return (
     <div
       className={cn(
-        'container flex w-full items-center justify-between px-0 py-2 group-data-[slot="sidebar-wrapper"]/sidebar-wrapper:border-b group-data-[slot="sidebar-wrapper"]/sidebar-wrapper:px-4 lg:hidden',
+        'flex w-full items-center justify-between px-0 py-2 group-data-[slot="sidebar-wrapper"]/sidebar-wrapper:border-b group-data-[slot="sidebar-wrapper"]/sidebar-wrapper:px-4 lg:hidden',
         props.className,
       )}
     >

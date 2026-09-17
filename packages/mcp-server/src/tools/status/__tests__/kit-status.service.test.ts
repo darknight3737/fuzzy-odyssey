@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { DEFAULT_SUPABASE_PORTS } from '../../../lib/supabase-config';
 import {
   type KitStatusDeps,
   createKitStatusService,
@@ -82,6 +83,12 @@ function createDeps(overrides: Partial<KitStatusDeps> = {}): KitStatusDeps {
     },
     async isPortOpen(port: number) {
       return port === 3000 || port === 54321 || port === 54323;
+    },
+    async resolveSupabasePorts() {
+      return {
+        api: DEFAULT_SUPABASE_PORTS.api,
+        studio: DEFAULT_SUPABASE_PORTS.studio,
+      };
     },
     getNodeVersion() {
       return 'v22.5.0';

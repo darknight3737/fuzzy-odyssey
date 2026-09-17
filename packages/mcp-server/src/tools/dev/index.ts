@@ -7,6 +7,8 @@ import {
   killProcess,
   spawnDetached,
 } from '../../lib/process-utils';
+import { resolveSupabaseConfig } from '../../lib/supabase-config';
+import { MUTATING_TOOL, READ_ONLY_TOOL } from '../../lib/tool-response';
 import {
   DEFAULT_PORT_CONFIG,
   type KitDevServiceDeps,
@@ -36,6 +38,7 @@ export function registerKitDevTools(server: McpServer, rootPath?: string) {
       description: 'Start all or selected local development services',
       inputSchema: KitDevStartInputSchema,
       outputSchema: KitDevStartOutputSchema,
+      annotations: MUTATING_TOOL,
     },
     async (input) => {
       const parsedInput = KitDevStartInputSchema.parse(input);
@@ -67,6 +70,7 @@ export function registerKitDevTools(server: McpServer, rootPath?: string) {
       description: 'Stop all or selected local development services',
       inputSchema: KitDevStopInputSchema,
       outputSchema: KitDevStopOutputSchema,
+      annotations: MUTATING_TOOL,
     },
     async (input) => {
       const parsedInput = KitDevStopInputSchema.parse(input);
@@ -99,6 +103,7 @@ export function registerKitDevTools(server: McpServer, rootPath?: string) {
         'Check status for app, database, mailbox, and stripe local services',
       inputSchema: KitDevStatusInputSchema,
       outputSchema: KitDevStatusOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async (input) => {
       KitDevStatusInputSchema.parse(input);
@@ -131,6 +136,7 @@ export function registerKitDevTools(server: McpServer, rootPath?: string) {
         'Check local mailbox health with graceful fallback fields for UI state',
       inputSchema: KitMailboxStatusInputSchema,
       outputSchema: KitMailboxStatusOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async (input) => {
       KitMailboxStatusInputSchema.parse(input);
@@ -199,31 +205,14 @@ export function createKitDevDeps(rootPath = process.cwd()): KitDevServiceDeps {
       } as const;
     },
     async resolvePortConfig() {
-      const configTomlPath = join(
-        rootPath,
-        'apps',
-        'web',
-        'supabase',
-        'config.toml',
-      );
-
-      let supabaseApiPort = DEFAULT_PORT_CONFIG.supabaseApiPort;
-      let supabaseStudioPort = DEFAULT_PORT_CONFIG.supabaseStudioPort;
-
-      try {
-        const toml = await readFile(configTomlPath, 'utf8');
-        supabaseApiPort = parseTomlSectionPort(toml, 'api') ?? supabaseApiPort;
-        supabaseStudioPort =
-          parseTomlSectionPort(toml, 'studio') ?? supabaseStudioPort;
-      } catch {
-        // config.toml not present or unreadable — use defaults.
-      }
+      // Single source of truth for local Supabase ports (see lib/supabase-config).
+      const { ports } = await resolveSupabaseConfig(rootPath);
 
       return {
         appPort: DEFAULT_PORT_CONFIG.appPort,
-        supabaseApiPort,
-        supabaseStudioPort,
-        mailboxApiPort: DEFAULT_PORT_CONFIG.mailboxApiPort,
+        supabaseApiPort: ports.api,
+        supabaseStudioPort: ports.studio,
+        mailboxApiPort: ports.mailbox,
         mailboxPort: DEFAULT_PORT_CONFIG.mailboxPort,
         ormDbPort: DEFAULT_PORT_CONFIG.ormDbPort,
         stripeWebhookPath: DEFAULT_PORT_CONFIG.stripeWebhookPath,
@@ -377,33 +366,6 @@ async function checkPort(port: number) {
 
     socket.connect(port, '127.0.0.1');
   });
-}
-
-function parseTomlSectionPort(
-  content: string,
-  section: string,
-): number | undefined {
-  const lines = content.split('\n');
-  let inSection = false;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-
-    if (trimmed.startsWith('[')) {
-      inSection = trimmed === `[${section}]`;
-      continue;
-    }
-
-    if (inSection) {
-      const match = trimmed.match(/^port\s*=\s*(\d+)/);
-
-      if (match) {
-        return Number(match[1]);
-      }
-    }
-  }
-
-  return undefined;
 }
 
 function toErrorMessage(error: unknown) {

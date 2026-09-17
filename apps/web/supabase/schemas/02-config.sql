@@ -99,7 +99,14 @@ begin
 end
 $$ language plpgsql;
 
--- Automatically set user tracking on tables when a row is inserted or updated
+-- Automatically set user tracking on tables when a row is inserted or updated.
+-- created_by is immutable after insert. The one exception is the
+-- `on delete set null` cascade from auth.users, which arrives here as an UPDATE
+-- issued from inside the referential-integrity trigger (pg_trigger_depth() > 1)
+-- that clears a tracking column: it must pass through untouched. Re-asserting
+-- old.created_by would undo it and fail the user delete on the FK; stamping
+-- updated_by would misattribute the row, or write the deleted user's own id
+-- straight back in when the delete runs with their JWT.
 create
 or replace function public.trigger_set_user_tracking () returns trigger
 set
@@ -108,6 +115,14 @@ begin
     if TG_OP = 'INSERT' then
         new.created_by = auth.uid();
         new.updated_by = auth.uid();
+
+    elsif pg_trigger_depth() > 1
+        and ((new.created_by is null and old.created_by is not null)
+            or (new.updated_by is null and old.updated_by is not null)) then
+        -- referential-integrity cascade: keep the null it set, nothing else
+        if new.created_by is not null then
+            new.created_by = old.created_by;
+        end if;
 
     else
         new.updated_by = auth.uid();

@@ -99,11 +99,16 @@ export async function scanMonorepoEnv(
 }
 
 function parseEnvFile(content: string, source: string) {
-  const variables: Array<{ key: string; value: string; source: string }> = [];
+  const variables: Array<{
+    key: string;
+    value: string;
+    source: string;
+    line: number;
+  }> = [];
 
   const lines = content.split('\n');
 
-  for (const line of lines) {
+  for (const [index, line] of lines.entries()) {
     // Skip comments and empty lines
     if (line.trim().startsWith('#') || !line.trim()) {
       continue;
@@ -133,6 +138,7 @@ function parseEnvFile(content: string, source: string) {
         key: key.trim(),
         value: value.trim(),
         source,
+        line: index + 1,
       });
     }
   }
@@ -182,8 +188,14 @@ export function processEnvDefinitions(
       key: variable.key,
       value: variable.value,
       source: variable.source,
+      ...(variable.line !== undefined ? { line: variable.line } : {}),
     });
   }
+
+  // Same key defined more than once in one file: the last definition wins
+  // (matching dotenv parsing), and the earlier ones are almost always a
+  // mistake, so they are reported as a validation issue below.
+  const duplicateIssues: Record<string, string> = {};
 
   // Second pass: Determine effective values and override status
   for (const key in variableMap) {
@@ -221,6 +233,30 @@ export function processEnvDefinitions(
       if (conflictingDefs.length > 1) {
         varState.effectiveSource = `${varState.effectiveSource} (conflict)`;
       }
+    }
+
+    const bySource = new Map<string, number[]>();
+
+    for (const def of varState.definitions) {
+      const lines = bySource.get(def.source) ?? [];
+      lines.push(def.line ?? 0);
+      bySource.set(def.source, lines);
+    }
+
+    const duplicates = [...bySource.entries()].filter(
+      ([, lines]) => lines.length > 1,
+    );
+
+    if (duplicates.length > 0) {
+      duplicateIssues[key] = duplicates
+        .map(([source, lines]) => {
+          const where = lines.some((line) => line > 0)
+            ? ` (lines ${lines.filter(Boolean).join(', ')})`
+            : '';
+
+          return `Defined ${lines.length} times in ${source}${where}; the last definition wins. Remove the earlier ones.`;
+        })
+        .join(' ');
     }
   }
 
@@ -350,6 +386,15 @@ export function processEnvDefinitions(
           };
         }
       }
+    }
+
+    const duplicateIssue = duplicateIssues[key];
+
+    if (duplicateIssue) {
+      validation = {
+        success: false,
+        error: { issues: [...validation.error.issues, duplicateIssue] },
+      };
     }
 
     varState.validation = validation;

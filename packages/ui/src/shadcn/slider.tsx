@@ -1,6 +1,7 @@
-import { Slider as SliderPrimitive } from '@base-ui/react/slider';
+import { useMemo } from 'react';
 
-import { cn } from '#lib/utils';
+import { Slider as SliderPrimitive } from '@base-ui/react/slider';
+import { cn } from 'cn';
 
 function Slider({
   className,
@@ -10,11 +11,14 @@ function Slider({
   max = 100,
   ...props
 }: SliderPrimitive.Root.Props) {
-  const _values = Array.isArray(value)
-    ? value
-    : Array.isArray(defaultValue)
-      ? defaultValue
-      : [min, max];
+  const _values = useMemo(() => {
+    if (Array.isArray(value)) return value;
+    if (value !== undefined) return [value];
+    if (Array.isArray(defaultValue)) return defaultValue;
+    if (defaultValue !== undefined) return [defaultValue];
+
+    return [max]; // Default to single thumb
+  }, [value, defaultValue, max]);
 
   return (
     <SliderPrimitive.Root

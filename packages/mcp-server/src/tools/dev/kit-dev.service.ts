@@ -1,3 +1,4 @@
+import { DEFAULT_SUPABASE_PORTS } from '../../lib/supabase-config';
 import type {
   DevServiceId,
   DevServiceSelection,
@@ -48,9 +49,9 @@ export interface PortConfig {
 
 export const DEFAULT_PORT_CONFIG: PortConfig = {
   appPort: 3000,
-  supabaseApiPort: 54321,
-  supabaseStudioPort: 54323,
-  mailboxApiPort: 54324,
+  supabaseApiPort: DEFAULT_SUPABASE_PORTS.api,
+  supabaseStudioPort: DEFAULT_SUPABASE_PORTS.studio,
+  mailboxApiPort: DEFAULT_SUPABASE_PORTS.mailbox,
   mailboxPort: 8025,
   ormDbPort: 5432,
   stripeWebhookPath: '/api/billing/webhook',

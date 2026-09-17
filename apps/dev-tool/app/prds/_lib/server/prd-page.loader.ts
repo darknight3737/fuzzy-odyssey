@@ -1,74 +1,18 @@
 import 'server-only';
-import { PRDManager } from '@kit/mcp-server/prd-manager';
+import type { StructuredPRD } from '@kit/mcp-server/prd-manager';
 
-import { relative } from 'node:path';
+import { getPrdService } from './prd-loader';
 
-export interface CustomPhase {
-  id: string;
-  name: string;
-  description: string;
-  color: string;
-  order: number;
-  userStoryIds: string[];
-}
+/** The PRD document shape rendered by the PRD page components. */
+export type PRDData = StructuredPRD;
 
-export interface PRDData {
-  introduction: {
-    title: string;
-    overview: string;
-    lastUpdated: string;
-  };
-  problemStatement: {
-    problem: string;
-    marketOpportunity: string;
-    targetUsers: string[];
-  };
-  solutionOverview: {
-    description: string;
-    keyFeatures: string[];
-    successMetrics: string[];
-  };
-  userStories: Array<{
-    id: string;
-    title: string;
-    userStory: string;
-    businessValue: string;
-    acceptanceCriteria: string[];
-    priority: 'P0' | 'P1' | 'P2' | 'P3';
-    status:
-      | 'not_started'
-      | 'research'
-      | 'in_progress'
-      | 'review'
-      | 'completed'
-      | 'blocked';
-    notes?: string;
-    estimatedComplexity?: string;
-    dependencies?: string[];
-    completedAt?: string;
-  }>;
-  customPhases?: CustomPhase[];
-  metadata: {
-    version: string;
-    created: string;
-    lastUpdated: string;
-    approver: string;
-  };
-  progress: {
-    overall: number;
-    completed: number;
-    total: number;
-    blocked: number;
-  };
-}
+export type CustomPhase = StructuredPRD['customPhases'][number];
 
 export async function loadPRDPageData(filename: string): Promise<PRDData> {
   try {
-    PRDManager.setRootPath(relative(process.cwd(), '../..'));
-
-    const content = await PRDManager.getPRDContent(filename);
-
-    return JSON.parse(content) as PRDData;
+    // The service validates the file name at the filesystem boundary, so a
+    // traversal attempt in the route segment is rejected here.
+    return await getPrdService().load(filename);
   } catch (error) {
     console.error(`Failed to load PRD ${filename}:`, error);
 

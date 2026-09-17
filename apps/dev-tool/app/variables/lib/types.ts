@@ -10,6 +10,8 @@ export type EnvDefinition = {
   key: string;
   value: string;
   source: string;
+  /** 1-based line in the source file, when known. */
+  line?: number;
 };
 
 export type EnvVariableState = {

@@ -142,7 +142,7 @@ export class KitTranslationsService {
       let translated = 0;
 
       for (const compositeKey of baseKeys) {
-        const [namespace, key] = compositeKey.split(':');
+        const [namespace = '', key = ''] = compositeKey.split(':');
         const value = translations[locale]?.[namespace]?.[key];
 
         if (typeof value === 'string' && value.length > 0) {
@@ -470,14 +470,31 @@ function setNestedValue(
     const key = keys[i]!;
     const next = current[key];
 
-    if (!next || typeof next !== 'object') {
+    if (next === undefined || next === null) {
       current[key] = {};
+    } else if (typeof next !== 'object' || Array.isArray(next)) {
+      throw new Error(
+        `Cannot set "${keys.join('.')}": "${keys.slice(0, i + 1).join('.')}" is a translation value, not a group. Delete or rename it first.`,
+      );
     }
 
     current = current[key] as Record<string, unknown>;
   }
 
-  current[keys[keys.length - 1]!] = value;
+  const lastKey = keys[keys.length - 1]!;
+  const existing = current[lastKey];
+
+  if (
+    existing !== undefined &&
+    existing !== null &&
+    typeof existing === 'object'
+  ) {
+    throw new Error(
+      `Cannot set "${keys.join('.')}": it is a group of ${Object.keys(existing).length} translations, not a single value.`,
+    );
+  }
+
+  current[lastKey] = value;
 }
 
 function assertSinglePathSegment(name: string, value: string) {

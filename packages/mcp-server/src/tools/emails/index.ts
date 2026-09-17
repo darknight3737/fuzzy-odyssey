@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
+import { READ_ONLY_TOOL } from '../../lib/tool-response';
 import {
   type KitEmailsDeps,
   createKitEmailsDeps,
@@ -30,6 +31,7 @@ export function registerKitEmailTemplatesTools(
         'List project email template files (React Email + Supabase auth templates), not received inbox messages',
       inputSchema: KitEmailsListInputSchema,
       outputSchema: KitEmailsListOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async () => {
       try {
@@ -52,6 +54,7 @@ export function registerKitEmailTemplatesTools(
         'Read a project email template source file by template id, with extracted props and optional rendered HTML sample',
       inputSchema: KitEmailsReadInputSchema,
       outputSchema: KitEmailsReadOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async (input) => {
       try {

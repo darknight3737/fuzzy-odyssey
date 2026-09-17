@@ -44,6 +44,7 @@
   "createTeamSuccess": "Team created successfully",
   "createTeamError": "Team not created. Please try again.",
   "createTeamLoading": "Creating team...",
+  "duplicateNameError": "This name is the same as the current one. Please choose a different one.",
   "settingsPageLabel": "General",
   "createTeamDropdownLabel": "New team",
   "changeRole": "Change Role",

@@ -25,6 +25,13 @@ Before any Next.js work, find and read the relevant doc in `apps/web/node_module
 - **Personal Accounts**: `auth.users.id = accounts.id`
 - **Team Accounts**: Shared workspaces with members, roles, permissions
 - Data links to accounts via `account_id` foreign key
+- **Routes address a team by `slug`; mutations take the immutable `accountId`.**
+  Slugs are user-editable and reusable, so a slug captured when a form rendered
+  can point at a different team by the time it is submitted. Details and the
+  reason a client-supplied id is safe: `packages/next/AGENTS.md`.
+- Personal accounts have no membership row, so `has_role_on_account()` is false
+  for them. A table whose policies use only that helper is team-only — which is
+  usually what you want, but decide it deliberately.
 
 ## Key Patterns (Quick Reference)
 

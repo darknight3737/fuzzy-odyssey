@@ -42,6 +42,8 @@ export interface KitStatusDeps {
   executeCommand(command: string, args: string[]): Promise<CommandResult>;
   isPortOpen(port: number): Promise<boolean>;
   getNodeVersion(): string;
+  /** Ports from apps/web/supabase/config.toml (see lib/supabase-config). */
+  resolveSupabasePorts(): Promise<{ api: number; studio: number }>;
 }
 
 export function createKitStatusService(deps: KitStatusDeps) {
@@ -115,8 +117,8 @@ export class KitStatusService {
   }
 
   private async detectSupabaseService() {
-    const apiPort = 54321;
-    const studioPort = 54323;
+    const { api: apiPort, studio: studioPort } =
+      await this.deps.resolveSupabasePorts();
 
     const [apiRunning, studioRunning] = await Promise.all([
       this.deps.isPortOpen(apiPort),

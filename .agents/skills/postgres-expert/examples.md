@@ -24,7 +24,7 @@ alter table "public"."accounts" enable row level security;
 
 ## Account Memberships
 
-Location: `apps/web/supabase/schemas/04-accounts-memberships.sql`
+Location: `apps/web/supabase/schemas/05-memberships.sql`
 
 ```sql
 create table if not exists public.accounts_memberships (
@@ -33,8 +33,8 @@ create table if not exists public.accounts_memberships (
   account_role varchar(50) not null,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now(),
-  created_by uuid references auth.users(id),
-  updated_by uuid references auth.users(id),
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
   primary key (account_id, user_id)
 );
 

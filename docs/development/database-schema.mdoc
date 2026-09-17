@@ -127,11 +127,13 @@ CREATE TABLE IF NOT EXISTS public.notes (
   tags text[] DEFAULT '{}',
   metadata jsonb DEFAULT '{}',
   
-  -- Audit fields (always include these)
+  -- Audit fields (always include these). The user references use
+  -- ON DELETE SET NULL: the note belongs to the account and outlives its
+  -- author, so it must not block deleting that user.
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
-  created_by uuid REFERENCES auth.users(id),
-  updated_by uuid REFERENCES auth.users(id),
+  created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  updated_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   
   -- Data integrity constraints
   CONSTRAINT notes_title_length CHECK (length(title) >= 1),
@@ -165,9 +167,13 @@ CREATE INDEX idx_notes_tags ON public.notes USING gin(tags);
 -- Always enable RLS (NEVER skip this!)
 ALTER TABLE public.notes ENABLE ROW LEVEL SECURITY;
 
--- Revoke default permissions and grant explicitly
-REVOKE ALL ON public.notes FROM authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.notes TO authenticated, service_role;
+-- Revoke default permissions from all three API roles, then grant explicitly.
+-- service_role keeps full access; authenticated gets column-scoped UPDATE so a
+-- user can never rewrite id, account_id or the audit fields.
+REVOKE ALL ON public.notes FROM anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.notes TO service_role;
+GRANT SELECT, INSERT, DELETE ON public.notes TO authenticated;
+GRANT UPDATE (title, content, is_published, tags, metadata) ON public.notes TO authenticated;
 ```
 
 ### RLS Policies
@@ -245,17 +251,18 @@ CREATE POLICY "notes_delete" ON public.notes
 Add triggers for common patterns:
 
 ```sql
--- Automatically update timestamps
-CREATE TRIGGER notes_updated_at
-  BEFORE UPDATE ON public.notes
-  FOR EACH ROW
-  EXECUTE FUNCTION kit.trigger_set_timestamps();
-
--- Track who made changes
-CREATE TRIGGER notes_track_changes
+-- Automatically set timestamps
+CREATE TRIGGER notes_set_timestamps
   BEFORE INSERT OR UPDATE ON public.notes
   FOR EACH ROW
-  EXECUTE FUNCTION kit.trigger_set_user_tracking();
+  EXECUTE FUNCTION public.trigger_set_timestamps();
+
+-- Track who made changes. created_by is immutable after insert; updated_by
+-- follows the acting user.
+CREATE TRIGGER notes_set_user_tracking
+  BEFORE INSERT OR UPDATE ON public.notes
+  FOR EACH ROW
+  EXECUTE FUNCTION public.trigger_set_user_tracking();
 ```
 
 ## Advanced Patterns
@@ -273,7 +280,7 @@ CREATE TABLE IF NOT EXISTS public.note_categories (
   path ltree, -- efficient tree operations
   
   created_at timestamptz NOT NULL DEFAULT now(),
-  created_by uuid REFERENCES auth.users(id),
+  created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   
   -- Ensure hierarchy stays within account
   CONSTRAINT categories_same_account CHECK (
@@ -307,7 +314,7 @@ CREATE TABLE IF NOT EXISTS public.note_shares (
   max_views integer, -- optional view limit
   
   created_at timestamptz NOT NULL DEFAULT now(),
-  created_by uuid REFERENCES auth.users(id),
+  created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   
   -- Ensure token uniqueness
   CONSTRAINT share_token_format CHECK (share_token ~ '^[a-zA-Z0-9_-]{32,64}$')

@@ -83,18 +83,18 @@ The `project_members` table stores the relationship between projects and users:
 -- Project members table
 CREATE TABLE IF NOT EXISTS public.project_members (
   project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  account_id UUID NOT NULL REFERENCES public.accounts(id) ON DELETE CASCADE,
   role public.project_role NOT NULL DEFAULT 'member',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (project_id, user_id)
+  PRIMARY KEY (project_id, account_id)
 );
 ```
 
 Let's clarify the `project_members` table:
 
 - The `project_id` column is a foreign key referencing the `projects` table.
-- The `user_id` column is a foreign key referencing the `auth.users` table.
+- The `account_id` column references the member's *personal* account in `accounts`. A personal account's id equals the user's id, so `auth.uid()` compares directly against it, and a trigger below rejects team accounts.
 - The `role` column is an enum type that can have three values: `owner`, `admin`, or `member`.
 
 These columns ensure that each project has a unique owner, and that each member can have a role of `owner`, `admin`, or `member`.
@@ -106,7 +106,7 @@ To optimize query performance, let's add some indexes:
 ```sql
 CREATE INDEX projects_account_id ON public.projects (account_id);
 CREATE INDEX project_members_project_id ON public.project_members (project_id);
-CREATE INDEX project_members_user_id ON public.project_members (user_id);
+CREATE INDEX project_members_account_id ON public.project_members (account_id);
 ```
 
 We also need a unique index to ensure only one owner per project:
@@ -123,13 +123,29 @@ Set up default permissions. This is useful to make sure we can granularly contro
 alter table public.projects enable row level security;
 alter table public.project_members enable row level security;
 
--- Revoke all permissions by default
-REVOKE ALL ON public.projects FROM public, service_role;
-REVOKE ALL ON public.project_members FROM public, service_role;
+-- Revoke Supabase's default grants from all three API roles, then grant
+-- explicitly. service_role keeps full access; authenticated gets column-scoped
+-- UPDATE so a user can never rewrite account_id, project_id or the timestamps.
+revoke all on public.projects from anon, authenticated, service_role;
+revoke all on public.project_members from anon, authenticated, service_role;
 
--- Grant access to authenticated users
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.projects TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.project_members TO authenticated;
+grant select, insert, update, delete on public.projects to service_role;
+grant select, insert, update, delete on public.project_members to service_role;
+
+grant select, insert, delete on public.projects to authenticated;
+grant update (name, description) on public.projects to authenticated;
+
+grant select, insert, delete on public.project_members to authenticated;
+grant update (role) on public.project_members to authenticated;
+
+-- Keep updated_at current
+create trigger projects_set_timestamps
+  before insert or update on public.projects
+  for each row execute function public.trigger_set_timestamps();
+
+create trigger project_members_set_timestamps
+  before insert or update on public.project_members
+  for each row execute function public.trigger_set_timestamps();
 ```
 
 ## Functions
@@ -454,6 +470,14 @@ create policy update_project
   with check (
     public.can_edit_project((select auth.uid()), id)
   );
+
+-- Mirror the kit's MFA gate (13-mfa.sql): an unelevated session of a user
+-- with MFA enabled must not reach the table
+create policy restrict_mfa_projects
+  on public.projects
+  as restrictive
+  to authenticated
+  using (public.is_mfa_compliant());
 ```
 
 Alright, let's break down the policies:
@@ -517,6 +541,12 @@ create policy delete_project_members
       project_id
     )
   );
+
+create policy restrict_mfa_project_members
+  on public.project_members
+  as restrictive
+  to authenticated
+  using (public.is_mfa_compliant());
 ```
 
 Let's break down the policies:
@@ -537,9 +567,10 @@ This function adds the owner of the project as the first project member:
 ```sql
 CREATE OR REPLACE FUNCTION kit.add_project_owner()
 RETURNS TRIGGER
+SET search_path = ''
 AS $$
 BEGIN
-  INSERT INTO public.project_members (project_id, user_id, role)
+  INSERT INTO public.project_members (project_id, account_id, role)
   VALUES (NEW.id, auth.uid(), 'owner'::public.project_role);
 
   RETURN NEW;
@@ -550,12 +581,15 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER add_project_owner_on_insert
     AFTER INSERT ON public.projects
     FOR EACH ROW
-    EXECUTE PROCEDURE kit.add_project_owner();
+    EXECUTE FUNCTION kit.add_project_owner();
 ```
 
 ### Add Project Member
 
-This function adds a new member to a project:
+This function adds a new member to a project. It runs as `SECURITY DEFINER`
+because the caller cannot read another user's personal account under RLS, so
+the validation would otherwise always fail; the permission check inside the
+function (`is_project_admin`) is what authorizes the call:
 
 ```sql
 CREATE OR REPLACE FUNCTION public.add_project_member(
@@ -574,8 +608,8 @@ BEGIN
   FROM public.projects
   WHERE id = p_project_id;
 
-  -- check if the target user account is a personal account (not a team account)Add commentMore actions
-  -- Use security definer context to bypass RLS for this validation
+  -- check if the target user account is a personal account (not a team account).
+  -- This needs the security definer context: RLS hides other users' accounts
   select is_personal_account into v_is_personal_account
   from public.accounts
   where id = p_user_id;
@@ -602,14 +636,14 @@ BEGIN
   END IF;
 
   -- Add the new member (the trigger will enforce the team membership check)
-  INSERT INTO public.project_members (project_id, user_id, role)
+  INSERT INTO public.project_members (project_id, account_id, role)
   VALUES (p_project_id, p_user_id, p_role)
-  ON CONFLICT (project_id, user_id) DO UPDATE
+  ON CONFLICT (project_id, account_id) DO UPDATE
   SET role = EXCLUDED.role;
 
   RETURN TRUE;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION public.add_project_member TO authenticated;
 ```
@@ -621,6 +655,7 @@ This trigger function ensures that a user being added to a project is already a 
 ```sql
 CREATE OR REPLACE FUNCTION kit.check_project_member_in_team()
 RETURNS TRIGGER
+SET search_path = ''
 AS $$
 DECLARE
   v_account_id UUID;
@@ -630,7 +665,7 @@ BEGIN
   WHERE id = NEW.project_id
   INTO v_account_id;
 
-  -- check if the account being added is a personal account (not a team account)Add commentMore actions
+  -- check if the account being added is a personal account (not a team account)
   select is_personal_account into v_is_personal_account
   from public.accounts
   where id = new.account_id;
@@ -645,7 +680,7 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1 FROM public.accounts_memberships
-    WHERE account_id = v_account_id AND user_id = NEW.user_id
+    WHERE account_id = v_account_id AND user_id = NEW.account_id
   ) THEN
     RAISE EXCEPTION 'User must be a member of the team account to be added to the project';
   END IF;
@@ -702,7 +737,7 @@ SELECT * FROM public.projects
 WHERE id IN (
   SELECT project_id
   FROM public.project_members
-  WHERE user_id = auth.uid()
+  WHERE account_id = (select auth.uid())
 );
 ```
 
@@ -1026,6 +1061,19 @@ CREATE TABLE if not exists public.tasks (
   created_at timestamptz NOT NULL DEFAULT NOW(),
   updated_at timestamptz NOT NULL DEFAULT NOW()
 );
+
+-- Same privilege shape as the tables above: without explicit grants the table
+-- is unreachable from the API, and UPDATE stays column-scoped
+alter table public.tasks enable row level security;
+
+revoke all on public.tasks from anon, authenticated, service_role;
+grant select, insert, update, delete on public.tasks to service_role;
+grant select, insert, delete on public.tasks to authenticated;
+grant update (name, description) on public.tasks to authenticated;
+
+create trigger tasks_set_timestamps
+  before insert or update on public.tasks
+  for each row execute function public.trigger_set_timestamps();
 ```
 
 With this setup, you can now create Tasks that are related to a Project. You can also use the Supabase client to interact with the database, leveraging the SQL functions and RLS policies we set up earlier.
@@ -1092,16 +1140,21 @@ create table if not exists public.projects (
   updated_at timestamptz not null default now()
 );
 
--- revoke access by default to public.projects
-revoke all on public.projects from public, service_role;
--- grant access to authenticated users
-grant select, insert, update, delete on public.projects to authenticated;
+-- revoke Supabase's default grants, then grant explicitly (UPDATE column-scoped)
+revoke all on public.projects from anon, authenticated, service_role;
+grant select, insert, update, delete on public.projects to service_role;
+grant select, insert, delete on public.projects to authenticated;
+grant update (name, description) on public.projects to authenticated;
 
 -- indexes on public.projects
 create index projects_account_id on public.projects (account_id);
 
 -- RLS policies on public.projects
 alter table public.projects enable row level security;
+
+create trigger projects_set_timestamps
+  before insert or update on public.projects
+  for each row execute function public.trigger_set_timestamps();
 
 /*
 # public.project_members
@@ -1123,14 +1176,18 @@ create unique index projects_unique_owner on public.project_members (project_id)
 create index project_members_project_id on public.project_members (project_id);
 create index project_members_account_id on public.project_members (account_id);
 
--- revoke access by default to public.project_members
-revoke all on public.project_members from public, service_role;
-
--- grant access to authenticated users to public.project_members
-grant select, insert, update, delete on public.project_members to authenticated;
+-- revoke Supabase's default grants, then grant explicitly (UPDATE column-scoped)
+revoke all on public.project_members from anon, authenticated, service_role;
+grant select, insert, update, delete on public.project_members to service_role;
+grant select, insert, delete on public.project_members to authenticated;
+grant update (role) on public.project_members to authenticated;
 
 -- RLS policies on public.project_members
 alter table public.project_members enable row level security;
+
+create trigger project_members_set_timestamps
+  before insert or update on public.project_members
+  for each row execute function public.trigger_set_timestamps();
 
 -- public.is_project_member
 -- this function checks if a user is a member of a specific project
@@ -1374,6 +1431,13 @@ create policy update_project
     public.can_edit_project((select auth.uid()), id)
   );
 
+-- MFA gate, mirroring 13-mfa.sql
+create policy restrict_mfa_projects
+  on public.projects
+  as restrictive
+  to authenticated
+  using (public.is_mfa_compliant());
+
 -- SELECT(public.project_members)
 create policy select_project_members
   on public.project_members
@@ -1425,12 +1489,19 @@ create policy delete_project_members
     )
   );
 
+create policy restrict_mfa_project_members
+  on public.project_members
+  as restrictive
+  to authenticated
+  using (public.is_mfa_compliant());
+
 /*
 # FUNCTIONS
 */
 -- function to add owner of the project creator as the first project member
 create or replace function kit.add_project_owner()
 returns trigger
+set search_path = ''
 as $$
 begin
   insert into public.project_members (project_id, account_id, role)
@@ -1444,7 +1515,7 @@ $$ language plpgsql security definer;
 create trigger add_project_owner_on_insert
     after insert on public.projects
     for each row
-    execute procedure kit.add_project_owner();
+    execute function kit.add_project_owner();
 
 create or replace function public.add_project_member(
   p_project_id uuid,
@@ -1497,7 +1568,7 @@ begin
 
   return true;
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer;
 
 grant execute on function public.add_project_member to authenticated;
 
@@ -1506,6 +1577,7 @@ grant execute on function public.add_project_member to authenticated;
 -- is already a member of the associated team account and is a personal account
 create or replace function kit.check_project_member_in_team()
 returns trigger
+set search_path = ''
 as $$
 declare
   v_account_id uuid;

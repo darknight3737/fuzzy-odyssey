@@ -2,6 +2,10 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { execFileAsync } from '../../lib/process-utils';
 import {
+  IDEMPOTENT_MUTATING_TOOL,
+  READ_ONLY_TOOL,
+} from '../../lib/tool-response';
+import {
   type KitMailboxDeps,
   createKitMailboxService,
 } from './kit-mailbox.service';
@@ -31,6 +35,7 @@ export function registerKitEmailsTools(server: McpServer, rootPath?: string) {
         'List received emails from the local Mailpit inbox (runtime mailbox, not source templates)',
       inputSchema: KitEmailsListInputSchema,
       outputSchema: KitEmailsListOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async (input) => {
       try {
@@ -54,6 +59,7 @@ export function registerKitEmailsTools(server: McpServer, rootPath?: string) {
         'Read a received email from the local Mailpit inbox by message id (includes text/html/headers)',
       inputSchema: KitEmailsReadInputSchema,
       outputSchema: KitEmailsReadOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async (input) => {
       try {
@@ -77,6 +83,7 @@ export function registerKitEmailsTools(server: McpServer, rootPath?: string) {
         'Set read/unread status for a received email in the local Mailpit inbox',
       inputSchema: KitEmailsSetReadStatusInputSchema,
       outputSchema: KitEmailsSetReadStatusOutputSchema,
+      annotations: IDEMPOTENT_MUTATING_TOOL,
     },
     async (input) => {
       try {

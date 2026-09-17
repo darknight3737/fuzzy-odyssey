@@ -1,7 +1,9 @@
 import 'server-only';
-import { DatabaseTool } from '@kit/mcp-server/database';
-
-import { relative } from 'path';
+import {
+  createDatabaseDeps,
+  createDatabaseService,
+} from '@kit/mcp-server/database';
+import { resolveProjectRoot } from '@kit/mcp-server/resolve-root';
 
 export interface DatabaseTable {
   name: string;
@@ -38,8 +40,25 @@ export interface SchemaFile {
   functions?: string[];
 }
 
+type DatabaseService = ReturnType<typeof createDatabaseService>;
+
+// One service per process. The deps hold a lazily-opened postgres pool, so
+// the instance is pinned to globalThis to survive HMR module re-evaluation
+// in `next dev` without leaking a pool per reload.
+const globalStore = globalThis as typeof globalThis & {
+  __devToolDatabaseService?: DatabaseService;
+};
+
+export function getDatabaseService(): DatabaseService {
+  globalStore.__devToolDatabaseService ??= createDatabaseService(
+    createDatabaseDeps(resolveProjectRoot()),
+  );
+
+  return globalStore.__devToolDatabaseService;
+}
+
 export async function loadDatabaseToolsData() {
-  DatabaseTool.ROOT_PATH = relative(process.cwd(), '../..');
+  const databaseService = getDatabaseService();
 
   try {
     const [
@@ -48,13 +67,12 @@ export async function loadDatabaseToolsData() {
       functionsResponse,
       enumsResponse,
     ] = await Promise.all([
-      DatabaseTool.getSchemaFiles(),
-      DatabaseTool.getAllProjectTables(),
-      DatabaseTool.getFunctions(),
-      DatabaseTool.getAllEnums(),
+      databaseService.getSchemaFiles(),
+      databaseService.getTables(),
+      databaseService.getFunctions(),
+      databaseService.getEnums(),
     ]);
 
-    // Process schema files
     const schemaFiles: SchemaFile[] = schemaFilesResponse.map((file) => ({
       filename: file.name,
       topic: file.topic || 'general',
@@ -64,114 +82,39 @@ export async function loadDatabaseToolsData() {
       functions: file.functions,
     }));
 
-    // Process tables
-    const tables: DatabaseTable[] = tablesResponse.map((table) => ({
+    const tables: DatabaseTable[] = tablesResponse.tables.map((table) => ({
       name: table.name,
       schema: table.schema || 'public',
       sourceFile: table.sourceFile || 'unknown',
       topic: table.topic || 'general',
     }));
 
-    // Process functions - parse the structured function data
-    const functions: DatabaseFunction[] = functionsResponse.map((func: any) => {
-      // Determine category based on function name and purpose
-      let category = 'Utilities';
-      if (func.returnType === 'trigger') {
-        category = 'Triggers';
-      } else if (
-        func.name.includes('nonce') ||
-        func.name.includes('mfa') ||
-        func.name.includes('auth') ||
-        func.name.includes('aal2')
-      ) {
-        category = 'Authentication';
-      } else if (
-        func.name.includes('account') ||
-        func.name.includes('team') ||
-        func.name.includes('user')
-      ) {
-        category = 'Accounts';
-      } else if (
-        func.name.includes('permission') ||
-        func.name.includes('role') ||
-        func.name.includes('member')
-      ) {
-        category = 'Permissions';
-      } else if (
-        func.name.includes('invitation') ||
-        func.name.includes('invite')
-      ) {
-        category = 'Invitations';
-      } else if (
-        func.name.includes('billing') ||
-        func.name.includes('subscription') ||
-        func.name.includes('payment') ||
-        func.name.includes('order')
-      ) {
-        category = 'Billing';
-      }
-
-      return {
-        name: func.name,
-        signature: func.signature || func.name,
-        returnType: func.returnType || 'unknown',
-        purpose: func.purpose || 'Database function',
-        source: func.source || 'unknown',
-        isSecurityDefiner: func.isSecurityDefiner || false,
-        isTrigger: func.returnType === 'trigger',
-        category,
-      };
-    });
-
-    // Process enums
-    const enums: DatabaseEnum[] = Object.entries(enumsResponse).map(
-      ([name, data]: [string, any]) => {
-        let category = 'General';
-        let description = `Database enum type: ${name}`;
-
-        // Categorize enums based on name
-        if (name.includes('permission')) {
-          category = 'Security & Permissions';
-          description =
-            'Application-level permissions that can be assigned to roles for granular access control';
-        } else if (
-          name.includes('billing') ||
-          name.includes('payment') ||
-          name.includes('subscription')
-        ) {
-          category = 'Billing & Payments';
-          if (name === 'billing_provider') {
-            description =
-              'Supported payment processing providers for handling subscriptions and transactions';
-          } else if (name === 'payment_status') {
-            description =
-              'Status values for tracking the state of payment transactions';
-          } else if (name === 'subscription_status') {
-            description =
-              'Comprehensive status tracking for subscription lifecycle management';
-          } else if (name === 'subscription_item_type') {
-            description =
-              'Different pricing models for subscription line items and billing calculations';
-          }
-        } else if (name.includes('notification')) {
-          category = 'Notifications';
-          if (name === 'notification_channel') {
-            description =
-              'Available channels for delivering notifications to users';
-          } else if (name === 'notification_type') {
-            description =
-              'Classification types for different notification severity levels';
-          }
-        }
+    const functions: DatabaseFunction[] = functionsResponse.functions.map(
+      (func) => {
+        const signature = `${func.name}(${func.parameters
+          .map((param) => `${param.name} ${param.type}`)
+          .join(', ')})`;
 
         return {
-          name,
-          values: data.values || [],
-          sourceFile: data.sourceFile || 'database',
-          category,
-          description,
+          name: func.name,
+          signature,
+          returnType: func.returnType || 'unknown',
+          purpose: func.purpose || 'Database function',
+          source: func.sourceFile || 'unknown',
+          isSecurityDefiner: func.securityLevel === 'definer',
+          isTrigger: func.returnType === 'trigger',
+          category: categorizeFunction(func.name, func.returnType),
         };
       },
+    );
+
+    const enums: DatabaseEnum[] = Object.entries(enumsResponse).map(
+      ([name, data]) => ({
+        name,
+        values: data.values || [],
+        sourceFile: data.sourceFile || 'database',
+        ...describeEnum(name),
+      }),
     );
 
     return {
@@ -183,7 +126,6 @@ export async function loadDatabaseToolsData() {
   } catch (error) {
     console.error('Error loading database tools data:', error);
 
-    // Return empty data structures on error
     return {
       schemaFiles: [],
       tables: [],
@@ -191,4 +133,101 @@ export async function loadDatabaseToolsData() {
       enums: [],
     };
   }
+}
+
+function categorizeFunction(name: string, returnType: string) {
+  if (returnType === 'trigger') {
+    return 'Triggers';
+  }
+
+  if (
+    name.includes('nonce') ||
+    name.includes('mfa') ||
+    name.includes('auth') ||
+    name.includes('aal2')
+  ) {
+    return 'Authentication';
+  }
+
+  if (
+    name.includes('account') ||
+    name.includes('team') ||
+    name.includes('user')
+  ) {
+    return 'Accounts';
+  }
+
+  if (
+    name.includes('permission') ||
+    name.includes('role') ||
+    name.includes('member')
+  ) {
+    return 'Permissions';
+  }
+
+  if (name.includes('invitation') || name.includes('invite')) {
+    return 'Invitations';
+  }
+
+  if (
+    name.includes('billing') ||
+    name.includes('subscription') ||
+    name.includes('payment') ||
+    name.includes('order')
+  ) {
+    return 'Billing';
+  }
+
+  return 'Utilities';
+}
+
+function describeEnum(name: string) {
+  if (name.includes('permission')) {
+    return {
+      category: 'Security & Permissions',
+      description:
+        'Application-level permissions that can be assigned to roles for granular access control',
+    };
+  }
+
+  if (
+    name.includes('billing') ||
+    name.includes('payment') ||
+    name.includes('subscription')
+  ) {
+    const descriptions: Record<string, string> = {
+      billing_provider:
+        'Supported payment processing providers for handling subscriptions and transactions',
+      payment_status:
+        'Status values for tracking the state of payment transactions',
+      subscription_status:
+        'Comprehensive status tracking for subscription lifecycle management',
+      subscription_item_type:
+        'Different pricing models for subscription line items and billing calculations',
+    };
+
+    return {
+      category: 'Billing & Payments',
+      description: descriptions[name] ?? `Database enum type: ${name}`,
+    };
+  }
+
+  if (name.includes('notification')) {
+    const descriptions: Record<string, string> = {
+      notification_channel:
+        'Available channels for delivering notifications to users',
+      notification_type:
+        'Classification types for different notification severity levels',
+    };
+
+    return {
+      category: 'Notifications',
+      description: descriptions[name] ?? `Database enum type: ${name}`,
+    };
+  }
+
+  return {
+    category: 'General',
+    description: `Database enum type: ${name}`,
+  };
 }

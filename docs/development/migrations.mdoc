@@ -77,6 +77,15 @@ create table if not exists public.projects (
 -- Enable RLS
 alter table public.projects enable row level security;
 
+-- Privileges: the kit revokes Supabase's default grants on new tables, so a
+-- table without explicit grants is unreachable from the API. service_role gets
+-- full access; authenticated gets only the verbs the feature ships, with UPDATE
+-- scoped to user-editable columns.
+revoke all on public.projects from anon, authenticated, service_role;
+grant select, insert, update, delete on table public.projects to service_role;
+grant select, insert on table public.projects to authenticated;
+grant update (name, description, status) on table public.projects to authenticated;
+
 -- RLS policies
 create policy "Users can view their account's projects"
   on public.projects
@@ -95,10 +104,10 @@ create policy "Users with write permission can insert projects"
     public.has_permission(auth.uid(), account_id, 'projects.write'::app_permissions)
   );
 
--- Updated at trigger
-create trigger set_projects_updated_at
-  before update on public.projects
-  for each row execute function public.set_updated_at();
+-- Timestamps trigger
+create trigger projects_set_timestamps
+  before insert or update on public.projects
+  for each row execute function public.trigger_set_timestamps();
 ```
 
 ### Modifying an Existing Table
@@ -161,10 +170,15 @@ alter table public.projects enable row level security;
 -- ... policies and triggers
 ```
 
+The generated file omits two things the schema file has: the per-table `revoke`
+and any column-scoped `grant update (...)`. Copy both from the schema file into
+the migration, after the `create table`, before applying it.
+
 {% alert type="error" title="Always Review Generated Migrations" %}
 The diffing tool has [known caveats](https://supabase.com/docs/guides/local-development/declarative-database-schemas#known-caveats). Always review generated migrations before applying them. Check for:
 - Destructive operations (DROP statements)
 - Missing or incorrect constraints
+- Missing `revoke` and column-level grants (the diff never emits them)
 - Order of operations issues
 {% /alert %}
 

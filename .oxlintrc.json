@@ -44,7 +44,7 @@
   },
   "overrides": [
     {
-      "files": ["packages/ui/src/shadcn/**"],
+      "files": ["packages/ui/src/{shadcn,hooks}/**"],
       "rules": {
         "react/set-state-in-effect": "off",
         "react/incompatible-library": "off"

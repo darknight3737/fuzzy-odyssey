@@ -2,23 +2,20 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 import { resolveProjectRoot } from './resolve-root';
-import { registerComponentsTools } from './tools/components';
-import {
-  registerDatabaseResources,
-  registerDatabaseTools,
-} from './tools/database';
+import { registerComponentsTools } from './tools/components/index';
+import { registerDatabaseTools } from './tools/database/index';
 import { registerKitDbTools } from './tools/db/index';
 import { registerDepsUpgradeAdvisorTool } from './tools/deps-upgrade-advisor/index';
 import { registerKitDevTools } from './tools/dev/index';
 import { registerKitEmailTemplatesTools } from './tools/emails/index';
 import { registerKitEnvTools } from './tools/env/index';
 import { registerKitEmailsTools } from './tools/mailbox/index';
-import { registerGetMigrationsTools } from './tools/migrations';
-import { registerPRDTools } from './tools/prd-manager';
+import { registerGetMigrationsTools } from './tools/migrations/index';
+import { registerPRDTools } from './tools/prd-manager/index';
 import { registerKitPrerequisitesTool } from './tools/prerequisites/index';
-import { registerPromptsSystem } from './tools/prompts';
+import { registerPromptsSystem } from './tools/prompts/index';
 import { registerRunChecksTool } from './tools/run-checks/index';
-import { registerScriptsTools } from './tools/scripts';
+import { registerScriptsTools } from './tools/scripts/index';
 import { registerKitStatusTool } from './tools/status/index';
 import { registerKitTranslationsTools } from './tools/translations/index';
 
@@ -41,7 +38,6 @@ async function main() {
   registerKitEmailTemplatesTools(server, rootPath);
   registerKitTranslationsTools(server, rootPath);
   registerDatabaseTools(server, rootPath);
-  registerDatabaseResources(server, rootPath);
   registerComponentsTools(server, rootPath);
   registerScriptsTools(server, rootPath);
   registerRunChecksTool(server, rootPath);

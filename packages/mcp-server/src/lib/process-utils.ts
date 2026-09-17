@@ -38,13 +38,14 @@ export function execFileAsync(
   command: string,
   args: string[],
   options: ExecFileOptions = {},
-) {
+): Promise<{ stdout: string; stderr: string }> {
   const invocation = buildInvocation(command, args);
 
   return rawExecFileAsync(invocation.command, invocation.args, {
     ...options,
     ...invocation.options,
-  });
+    encoding: 'utf8',
+  }) as Promise<{ stdout: string; stderr: string }>;
 }
 
 /**

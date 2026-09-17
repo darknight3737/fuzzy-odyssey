@@ -1,6 +1,12 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import {
+  DESTRUCTIVE_TOOL,
+  IDEMPOTENT_MUTATING_TOOL,
+  MUTATING_TOOL,
+  READ_ONLY_TOOL,
+} from '../../lib/tool-response';
+import {
   type KitTranslationsDeps,
   createKitTranslationsDeps,
   createKitTranslationsService,
@@ -41,6 +47,7 @@ export function registerKitTranslationsTools(
       description: 'List translations across locales and namespaces',
       inputSchema: KitTranslationsListInputSchema,
       outputSchema: KitTranslationsListOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async () => {
       try {
@@ -62,6 +69,7 @@ export function registerKitTranslationsTools(
       description: 'Update a translation value in a locale namespace',
       inputSchema: KitTranslationsUpdateInputSchema,
       outputSchema: KitTranslationsUpdateOutputSchema,
+      annotations: IDEMPOTENT_MUTATING_TOOL,
     },
     async (input) => {
       try {
@@ -84,6 +92,7 @@ export function registerKitTranslationsTools(
       description: 'Get translation coverage statistics',
       inputSchema: KitTranslationsStatsInputSchema,
       outputSchema: KitTranslationsStatsOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async () => {
       try {
@@ -105,6 +114,7 @@ export function registerKitTranslationsTools(
       description: 'Create a new translation namespace across all locales',
       inputSchema: KitTranslationsAddNamespaceInputSchema,
       outputSchema: KitTranslationsAddNamespaceOutputSchema,
+      annotations: MUTATING_TOOL,
     },
     async (input) => {
       try {
@@ -128,6 +138,7 @@ export function registerKitTranslationsTools(
       description: 'Add a new locale with empty namespace files',
       inputSchema: KitTranslationsAddLocaleInputSchema,
       outputSchema: KitTranslationsAddLocaleOutputSchema,
+      annotations: MUTATING_TOOL,
     },
     async (input) => {
       try {
@@ -150,6 +161,7 @@ export function registerKitTranslationsTools(
       description: 'Remove a translation namespace from all locales',
       inputSchema: KitTranslationsRemoveNamespaceInputSchema,
       outputSchema: KitTranslationsRemoveNamespaceOutputSchema,
+      annotations: DESTRUCTIVE_TOOL,
     },
     async (input) => {
       try {
@@ -173,6 +185,7 @@ export function registerKitTranslationsTools(
       description: 'Remove a locale and all its translation files',
       inputSchema: KitTranslationsRemoveLocaleInputSchema,
       outputSchema: KitTranslationsRemoveLocaleOutputSchema,
+      annotations: DESTRUCTIVE_TOOL,
     },
     async (input) => {
       try {

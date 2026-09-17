@@ -8,12 +8,12 @@
   "type": "module",
   "main": "./build/index.cjs",
   "exports": {
-    "./database": "./src/tools/database.ts",
-    "./components": "./src/tools/components.ts",
-    "./migrations": "./src/tools/migrations.ts",
-    "./prd-manager": "./src/tools/prd-manager.ts",
-    "./prompts": "./src/tools/prompts.ts",
-    "./scripts": "./src/tools/scripts.ts",
+    "./database": "./src/tools/database/index.ts",
+    "./components": "./src/tools/components/index.ts",
+    "./migrations": "./src/tools/migrations/index.ts",
+    "./prd-manager": "./src/tools/prd-manager/index.ts",
+    "./prompts": "./src/tools/prompts/index.ts",
+    "./scripts": "./src/tools/scripts/index.ts",
     "./status": "./src/tools/status/index.ts",
     "./prerequisites": "./src/tools/prerequisites/index.ts",
     "./env": "./src/tools/env/index.ts",
@@ -24,12 +24,14 @@
     "./emails": "./src/tools/emails/index.ts",
     "./translations": "./src/tools/translations/index.ts",
     "./run-checks": "./src/tools/run-checks/index.ts",
-    "./deps-upgrade-advisor": "./src/tools/deps-upgrade-advisor/index.ts"
+    "./deps-upgrade-advisor": "./src/tools/deps-upgrade-advisor/index.ts",
+    "./resolve-root": "./src/resolve-root.ts"
   },
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
     "build": "tsup",
     "build:watch": "tsup --watch",
+    "typecheck": "tsc --noEmit",
     "test:unit": "vitest run"
   },
   "devDependencies": {
