@@ -172,7 +172,20 @@ function ImpersonateUserAuthSetter({
     refreshToken: string;
   };
 }>) {
-  useSetSession(tokens);
+  const { isError } = useSetSession(tokens);
+
+  if (isError) {
+    return (
+      <Alert variant={'destructive'}>
+        <AlertTitle>Error</AlertTitle>
+
+        <AlertDescription>
+          Failed to set up the impersonated session. Please reload the page
+          and try again.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return <LoadingOverlay>Setting up your session...</LoadingOverlay>;
 }
@@ -183,16 +196,29 @@ function useSetSession(tokens: { accessToken: string; refreshToken: string }) {
   return useQuery({
     queryKey: ['impersonate-user', tokens.accessToken, tokens.refreshToken],
     gcTime: 0,
+    staleTime: Infinity,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     queryFn: async () => {
-      await supabase.auth.signOut();
-
-      await supabase.auth.setSession({
+      // NB: do not call `signOut()` before swapping the session. It emits
+      // SIGNED_OUT, which the global auth listener handles by redirecting
+      // away from private routes like /admin - racing with the navigation
+      // below and intermittently leaving the admin signed out instead of
+      // impersonating. `setSession` replaces the stored session in place.
+      const { error } = await supabase.auth.setSession({
         refresh_token: tokens.refreshToken,
         access_token: tokens.accessToken,
       });
 
+      if (error) {
+        throw error;
+      }
+
       // use a hard refresh to avoid hitting cached pages
       window.location.replace('/home');
+
+      return true;
     },
   });
 }

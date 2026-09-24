@@ -101,13 +101,22 @@ jobs:
 
       - name: Stripe CLI
         run: |
-          docker run --add-host=host.docker.internal:host-gateway --rm -it --name=stripe -d stripe/stripe-cli:latest listen --forward-to http://host.docker.internal:3000/api/billing/webhook --skip-verify --api-key "$STRIPE_SECRET_KEY" --log-level debug &
+          docker run --add-host=host.docker.internal:host-gateway --name=stripe -d stripe/stripe-cli:v1.51.1 listen --all-snapshot --forward-to http://host.docker.internal:3000/api/billing/webhook --skip-verify --api-key "$STRIPE_SECRET_KEY" --log-level debug
+
+          # fail fast if the webhook forwarder never becomes ready
+          for i in $(seq 1 30); do
+            if docker logs stripe 2>&1 | grep -q "Ready!"; then exit 0; fi
+            sleep 1
+          done
+
+          docker logs stripe
+          exit 1
 
       - name: Run Next.js Production Build (test env)
         run: pnpm --filter web build:test
 
       - name: Run Next.js Server
-        run: pnpm --filter web start:test &
+        run: pnpm --filter web start:test > next-server.log 2>&1 &
 
       - name: Run Playwright tests
         run: |
@@ -116,6 +125,19 @@ jobs:
 
       - name: Run Supabase tests
         run: pnpm --filter web supabase:test
+
+      - name: Print Stripe CLI and Next.js server logs
+        if: always()
+        run: |
+          echo "::group::Stripe CLI image"
+          docker image inspect stripe/stripe-cli:v1.51.1 --format '{{.Id}} {{.Created}}' || true
+          echo "::endgroup::"
+          echo "::group::Stripe CLI logs"
+          docker logs stripe || true
+          echo "::endgroup::"
+          echo "::group::Next.js server logs"
+          cat next-server.log || true
+          echo "::endgroup::"
 
       - uses: actions/upload-artifact@v7
         if: always()
