@@ -77,6 +77,7 @@ function AccountSectionPlaceholder() {
 function AuthButtons() {
   return (
     <div
+      data-test={'site-header-auth-buttons'}
       className={'animate-in fade-in flex items-center gap-x-2 duration-500'}
     >
       <div className={'hidden md:flex'}>

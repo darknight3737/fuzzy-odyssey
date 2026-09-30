@@ -20,6 +20,7 @@ import {
 } from '@kit/ui/alert-dialog';
 import { Button } from '@kit/ui/button';
 import { Form } from '@kit/ui/form';
+import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
 import { DeletePersonalAccountSchema } from '../../schema/delete-personal-account.schema';
@@ -78,7 +79,14 @@ function DeleteAccountModal() {
 }
 
 function DeleteAccountForm(props: { email: string }) {
-  const { execute, isPending } = useAction(deletePersonalAccountAction);
+  const { execute, isPending, hasSucceeded, hasErrored } = useAction(
+    deletePersonalAccountAction,
+    {
+      // full page load to drop the client-side auth state (cached user, browser
+      // Supabase session) now that the server session is gone
+      onSuccess: () => window.location.assign('/'),
+    },
+  );
 
   const form = useForm({
     resolver: zodResolver(DeletePersonalAccountSchema),
@@ -115,6 +123,10 @@ function DeleteAccountForm(props: { email: string }) {
         className={'flex flex-col space-y-4'}
       >
         <div className={'flex flex-col space-y-6'}>
+          <If condition={hasErrored}>
+            <DeleteAccountErrorAlert />
+          </If>
+
           <div
             className={
               'border-destructive text-destructive rounded-md border p-4 text-sm'
@@ -140,11 +152,11 @@ function DeleteAccountForm(props: { email: string }) {
           <Button
             data-test={'confirm-delete-account-button'}
             type={'submit'}
-            disabled={isPending || !form.formState.isValid}
+            disabled={isPending || hasSucceeded || !form.formState.isValid}
             name={'action'}
             variant={'destructive'}
           >
-            {isPending ? (
+            {isPending || hasSucceeded ? (
               <Trans i18nKey={'account.deletingAccount'} />
             ) : (
               <Trans i18nKey={'account.deleteAccount'} />

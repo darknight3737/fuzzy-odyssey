@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { authActionClient } from '@kit/next/safe-action';
 import { verifyOtpForPurpose } from '@kit/otp/orchestration';
 import { getLogger } from '@kit/shared/logger';
+import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import { DeleteTeamAccountSchema } from '../../schema/delete-team-account.schema';
@@ -58,13 +59,19 @@ export const deleteTeamAccountAction = authActionClient
 
     logger.info(ctx, `Deleting team account...`);
 
-    await service.deleteTeamAccount(client, {
-      accountId: params.accountId,
-      userId: user.id,
-    });
+    // the admin client only removes the logo, after ownership is asserted above
+    // and the user-client delete has succeeded
+    await service.deleteTeamAccount(
+      { client, adminClient: getSupabaseServerAdminClient() },
+      {
+        accountId: params.accountId,
+        userId: user.id,
+      },
+    );
 
     logger.info(ctx, `Team account request successfully sent`);
 
     revalidatePath('/');
+
     redirect('/home');
   });

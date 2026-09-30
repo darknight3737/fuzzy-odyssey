@@ -55,6 +55,22 @@ function getSidebarNavigationTooltip(
   return t.has(label) ? t(label) : label;
 }
 
+// On mobile the sidebar is a Sheet whose state lives in the layout-level
+// SidebarProvider, which survives client navigations — so close it explicitly
+// when a link is followed, otherwise it covers the page that was navigated to.
+function useCloseMobileSidebarOnNavigate() {
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  return (event: React.MouseEvent<HTMLAnchorElement>) => {
+    const opensElsewhere =
+      event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+
+    if (isMobile && !opensElsewhere) {
+      setOpenMobile(false);
+    }
+  };
+}
+
 function MaybeCollapsible({
   enabled,
   defaultOpen,
@@ -160,6 +176,8 @@ function SidebarNavigationSubItems({
   currentLocale: ReturnType<typeof useLocale>;
   currentPath: string;
 }) {
+  const onNavigate = useCloseMobileSidebarOnNavigate();
+
   return (
     <If condition={items}>
       {(items) =>
@@ -193,7 +211,11 @@ function SidebarNavigationSubItems({
                   <SidebarMenuSubButton
                     isActive={isActive}
                     render={
-                      <Link className={linkClassName} href={child.path}>
+                      <Link
+                        className={linkClassName}
+                        href={child.path}
+                        onClick={onNavigate}
+                      >
                         {child.Icon}
 
                         <span className={spanClassName}>
@@ -227,6 +249,7 @@ function SidebarNavigationRouteChildItem({
 }) {
   const collapsible = Boolean('collapsible' in child && child.collapsible);
   const tooltip = getSidebarNavigationTooltip(open, t, child.label);
+  const onNavigate = useCloseMobileSidebarOnNavigate();
 
   const triggerItem = collapsible ? (
     <CollapsibleTrigger
@@ -280,6 +303,7 @@ function SidebarNavigationRouteChildItem({
                 'mx-auto gap-0! [&>svg]:flex-1': !open,
               })}
               href={path}
+              onClick={onNavigate}
             >
               {child.Icon}
 

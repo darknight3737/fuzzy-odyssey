@@ -18,6 +18,7 @@
     "./check-requires-mfa": "./src/check-requires-mfa.ts",
     "./passkey-errors": "./src/passkey-errors.ts",
     "./require-user": "./src/require-user.ts",
+    "./account-image": "./src/account-image.ts",
     "./hooks/*": "./src/hooks/*.ts",
     "./database": "./src/database.types.ts",
     "./auth": "./src/auth.ts",

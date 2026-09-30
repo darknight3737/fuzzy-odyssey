@@ -19,7 +19,7 @@ export function OauthProviderLogoImage({
     return (
       <Image
         decoding={'async'}
-        loading={'lazy'}
+        loading={'eager'}
         src={image}
         alt={`${providerId} logo`}
         width={width ?? DEFAULT_IMAGE_SIZE}

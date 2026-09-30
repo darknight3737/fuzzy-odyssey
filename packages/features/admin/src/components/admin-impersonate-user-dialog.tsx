@@ -180,8 +180,8 @@ function ImpersonateUserAuthSetter({
         <AlertTitle>Error</AlertTitle>
 
         <AlertDescription>
-          Failed to set up the impersonated session. Please reload the page
-          and try again.
+          Failed to set up the impersonated session. Please reload the page and
+          try again.
         </AlertDescription>
       </Alert>
     );

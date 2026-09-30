@@ -21,6 +21,7 @@ export function NotificationsPopover(params: {
 }) {
   const t = useTranslations();
   const locale = useLocale();
+  const [now] = useState(() => new Date().getTime());
 
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -50,16 +51,14 @@ export function NotificationsPopover(params: {
 
     let time: number;
 
-    const daysAgo = Math.floor(
-      (new Date().getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    const daysAgo = Math.floor((now - date.getTime()) / (1000 * 60 * 60 * 24));
 
     const formatter = new Intl.RelativeTimeFormat(locale, {
       numeric: 'auto',
     });
 
     if (daysAgo < 1) {
-      time = Math.floor((new Date().getTime() - date.getTime()) / (1000 * 60));
+      time = Math.floor((now - date.getTime()) / (1000 * 60));
 
       if (time < 5) {
         return t('common.justNow');
@@ -75,9 +74,7 @@ export function NotificationsPopover(params: {
     }
 
     const unit = (() => {
-      const minutesAgo = Math.floor(
-        (new Date().getTime() - date.getTime()) / (1000 * 60),
-      );
+      const minutesAgo = Math.floor((now - date.getTime()) / (1000 * 60));
 
       if (minutesAgo <= 60) {
         return 'minute';

@@ -6,12 +6,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { useTranslations } from 'next-intl';
 
+import {
+  ACCOUNT_IMAGE_BUCKET,
+  getAccountImageFileName,
+} from '@kit/supabase/account-image';
 import { useSupabase } from '@kit/supabase/hooks/use-supabase';
 import { ImageUploader } from '@kit/ui/image-uploader';
 import { toast } from '@kit/ui/sonner';
 import { Trans } from '@kit/ui/trans';
-
-const AVATARS_BUCKET = 'account_image';
 
 export function UpdateTeamAccountImage(props: {
   account: {
@@ -101,7 +103,7 @@ export function UpdateTeamAccountImage(props: {
 }
 
 function deleteProfilePhoto(client: SupabaseClient, url: string) {
-  const bucket = client.storage.from(AVATARS_BUCKET);
+  const bucket = client.storage.from(ACCOUNT_IMAGE_BUCKET);
   const fileName = url.split('/').pop()?.split('?')[0];
 
   if (!fileName) {
@@ -117,8 +119,8 @@ async function uploadUserProfilePhoto(
   userId: string,
 ) {
   const bytes = await photoFile.arrayBuffer();
-  const bucket = client.storage.from(AVATARS_BUCKET);
-  const fileName = getAvatarFileName(userId);
+  const bucket = client.storage.from(ACCOUNT_IMAGE_BUCKET);
+  const fileName = getAccountImageFileName(userId);
   const { nanoid } = await import('nanoid');
   const cacheBuster = nanoid(16);
 
@@ -128,13 +130,9 @@ async function uploadUserProfilePhoto(
   });
 
   if (!result.error) {
-    const url = bucket.getPublicUrl(userId).data.publicUrl;
+    const url = bucket.getPublicUrl(fileName).data.publicUrl;
     return `${url}?v=${cacheBuster}`;
   }
 
   throw result.error;
-}
-
-function getAvatarFileName(userId: string) {
-  return userId;
 }

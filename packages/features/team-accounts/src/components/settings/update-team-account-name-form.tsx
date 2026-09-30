@@ -42,15 +42,17 @@ export const UpdateTeamAccountNameForm = (props: {
   const t = useTranslations('teams');
 
   const form = useForm({
-    resolver: zodResolver(TeamNameFormSchema.refine(
-      (values) => {
-        return values.name !== props.account.name;
-      },
-      {
-        message: 'teams.duplicateNameError',
-        path: ['name'],
-      }
-    )),
+    resolver: zodResolver(
+      TeamNameFormSchema.refine(
+        (values) => {
+          return values.name !== props.account.name;
+        },
+        {
+          message: 'teams.duplicateNameError',
+          path: ['name'],
+        },
+      ),
+    ),
     defaultValues: {
       name: props.account.name,
       newSlug: '',

@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
 
 import { AuthPageObject } from '../authentication/auth.po';
+import {
+  createOwnedTeam,
+  getAccountImageStatus,
+  seedAccountImage,
+} from '../utils/account-image';
 import { AccountPageObject } from './account.po';
 
 test.describe('Account Settings', () => {
@@ -76,17 +81,49 @@ test.describe('Account Deletion', () => {
 
     const email = auth.createRandomEmail();
 
-    await auth.bootstrapUser({
+    const { user } = await auth.bootstrapUser({
       email,
       password: 'testingpassword',
       name: 'Test User',
     });
+
+    // the user's teams cascade away with the user, so their logos must go too
+    const teamId = await createOwnedTeam(user.id);
+
+    const images = [
+      user.id,
+      // naming used by older kit versions
+      `${user.id}.png`,
+      teamId,
+    ];
+
+    await seedAccountImage(user.id);
+    await seedAccountImage(user.id, `${user.id}.png`);
+    await seedAccountImage(teamId);
+
+    for (const image of images) {
+      expect(await getAccountImageStatus(image)).toBe(200);
+    }
 
     await auth.loginAsUser({ email, next: '/home/settings' });
 
     await account.deleteAccount(email);
 
     await page.waitForURL('/');
+
+    // the header must drop the signed-in state without a manual reload
+    await expect(
+      page.locator('[data-test="site-header-auth-buttons"]:visible'),
+    ).toBeVisible();
+
+    await expect(
+      page.locator('[data-test="account-dropdown-trigger"]:visible'),
+    ).toHaveCount(0);
+
+    // the images are removed from the public bucket
+    for (const image of images) {
+      await expect.poll(() => getAccountImageStatus(image)).not.toBe(200);
+    }
 
     await page.goto('/auth/sign-in');
 

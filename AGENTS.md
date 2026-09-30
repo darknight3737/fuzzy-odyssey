@@ -73,6 +73,10 @@ Before any Next.js work, find and read the relevant doc in `apps/web/node_module
 - Use `authActionClient` (from `@kit/next/safe-action`) to protect actions; compose extra checks via `next-safe-action`'s `.use()` middleware
 - Add page metadata to pages
 - Use `redirect` after server actions (avoid client router)
+  - Exception: an action that ends the auth session (e.g. deleting the account)
+    returns instead, and the client does `window.location.assign(...)` in
+    `onSuccess`. A server `redirect` is a soft navigation that keeps the
+    browser's cached user, so the UI still renders the session as signed in.
 
 ## Verification
 
@@ -84,3 +88,14 @@ After implementation, always run:
 4. Run adversarial reviewer skill /reviewer
 5. **If the change touched RLS or the database schema** — any policy, grant, `SECURITY DEFINER` function, view, migration, or file under `apps/web/supabase/` — also run the deep adversarial RLS review skill /rls-review to prove tenant isolation with pgTAP before merging.
 6. Use available **Skills** when relevant. If unavailable, continue with local `AGENTS.md`, source, tests, and package exports.
+
+<!-- BEGIN:turborepo-agent-rules -->
+
+# This is NOT the Turborepo you know
+
+Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
+
+Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
+
+This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
+<!-- END:turborepo-agent-rules -->
