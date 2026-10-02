@@ -74,7 +74,7 @@ export async function removeAccountImages(
 
     if (!names.length) {
       return {
-        error: listError
+        error: listError,
       };
     }
 

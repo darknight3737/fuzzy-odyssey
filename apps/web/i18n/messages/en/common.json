@@ -88,7 +88,9 @@
     "verifying": "Verifying...",
     "verifyCode": "Verify Code",
     "requestNewCode": "Request New Code",
-    "errorSendingCode": "Error sending code. Please try again."
+    "errorSendingCode": "Error sending code. Please try again.",
+    "invalidCodeHeading": "That code didn't work",
+    "invalidCodeDescription": "It may be from an older email, or it was mistyped. Request a new code and use the one in the latest email."
   },
   "cookieBanner": {
     "title": "Hey, we use cookies 🍪",

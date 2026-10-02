@@ -6,7 +6,11 @@ import { useAction } from 'next-safe-action/hooks';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { ErrorBoundary } from '@kit/monitoring/components';
-import { VerifyOtpForm } from '@kit/otp/components';
+import {
+  InvalidOtpAlert,
+  VerifyOtpForm,
+  isInvalidOtpError,
+} from '@kit/otp/components';
 import { useUser } from '@kit/supabase/hooks/use-user';
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
 import {
@@ -79,14 +83,12 @@ function DeleteAccountModal() {
 }
 
 function DeleteAccountForm(props: { email: string }) {
-  const { execute, isPending, hasSucceeded, hasErrored } = useAction(
-    deletePersonalAccountAction,
-    {
+  const { execute, reset, result, isPending, hasSucceeded, hasErrored } =
+    useAction(deletePersonalAccountAction, {
       // full page load to drop the client-side auth state (cached user, browser
       // Supabase session) now that the server session is gone
       onSuccess: () => window.location.assign('/'),
-    },
-  );
+    });
 
   const form = useForm({
     resolver: zodResolver(DeletePersonalAccountSchema),
@@ -96,6 +98,8 @@ function DeleteAccountForm(props: { email: string }) {
   });
 
   const { otp } = useWatch({ control: form.control });
+
+  const isInvalidOtp = isInvalidOtpError(result.serverError);
 
   if (!otp) {
     return (
@@ -124,7 +128,16 @@ function DeleteAccountForm(props: { email: string }) {
       >
         <div className={'flex flex-col space-y-6'}>
           <If condition={hasErrored}>
-            <DeleteAccountErrorAlert />
+            {isInvalidOtp ? (
+              <InvalidOtpAlert
+                onRequestNewCode={() => {
+                  reset();
+                  form.reset();
+                }}
+              />
+            ) : (
+              <DeleteAccountErrorAlert />
+            )}
           </If>
 
           <div
@@ -152,7 +165,12 @@ function DeleteAccountForm(props: { email: string }) {
           <Button
             data-test={'confirm-delete-account-button'}
             type={'submit'}
-            disabled={isPending || hasSucceeded || !form.formState.isValid}
+            disabled={
+              isPending ||
+              hasSucceeded ||
+              isInvalidOtp ||
+              !form.formState.isValid
+            }
             name={'action'}
             variant={'destructive'}
           >

@@ -187,7 +187,7 @@ export function VerifyOtpForm({
                 name="otp"
                 control={otpForm.control}
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full">
                     <FormControl className="mx-auto">
                       <InputOTP
                         maxLength={6}
@@ -209,19 +209,19 @@ export function VerifyOtpForm({
                       </InputOTP>
                     </FormControl>
 
-                    <FormDescription>
+                    <FormDescription className="text-center">
                       <Trans i18nKey="common.otp.enterCodeFromEmail" />
                     </FormDescription>
 
-                    <FormMessage />
+                    <FormMessage className="text-center" />
                   </FormItem>
                 )}
               />
 
-              <div className="flex w-full justify-between gap-2">
+              <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-between">
                 {CancelButton}
 
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <Button
                     type="button"
                     variant="ghost"

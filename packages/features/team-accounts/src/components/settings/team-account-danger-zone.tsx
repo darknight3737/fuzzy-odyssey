@@ -6,7 +6,11 @@ import { useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
 
 import { ErrorBoundary } from '@kit/monitoring/components';
-import { VerifyOtpForm } from '@kit/otp/components';
+import {
+  InvalidOtpAlert,
+  VerifyOtpForm,
+  isInvalidOtpError,
+} from '@kit/otp/components';
 import { useUser } from '@kit/supabase/hooks/use-user';
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
 import {
@@ -36,6 +40,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@kit/ui/form';
+import { If } from '@kit/ui/if';
 import { Input } from '@kit/ui/input';
 import { LoadingOverlay } from '@kit/ui/loading-overlay';
 import { Trans } from '@kit/ui/trans';
@@ -162,7 +167,9 @@ function DeleteTeamConfirmationForm({
 }) {
   const { data: user } = useUser();
 
-  const { execute, isPending } = useAction(deleteTeamAccountAction);
+  const { execute, reset, result, isPending, hasErrored } = useAction(
+    deleteTeamAccountAction,
+  );
 
   const form = useForm({
     mode: 'onChange',
@@ -178,6 +185,8 @@ function DeleteTeamConfirmationForm({
   });
 
   const { otp } = useWatch({ control: form.control });
+
+  const isInvalidOtp = isInvalidOtpError(result.serverError);
 
   if (!user?.email) {
     return <LoadingOverlay fullPage={false} />;
@@ -209,6 +218,19 @@ function DeleteTeamConfirmationForm({
             execute({ accountId: id, otp });
           }}
         >
+          <If condition={hasErrored}>
+            {isInvalidOtp ? (
+              <InvalidOtpAlert
+                onRequestNewCode={() => {
+                  reset();
+                  form.reset();
+                }}
+              />
+            ) : (
+              <DeleteTeamErrorMessage />
+            )}
+          </If>
+
           <div className={'flex flex-col space-y-2'}>
             <div
               className={
@@ -238,7 +260,7 @@ function DeleteTeamConfirmationForm({
             <Button
               type="submit"
               data-test={'delete-team-form-confirm-button'}
-              disabled={isPending}
+              disabled={isPending || isInvalidOtp}
               variant={'destructive'}
             >
               <Trans i18nKey={'teams.deleteTeam'} />
@@ -395,18 +417,24 @@ function LeaveTeamErrorAlert() {
   );
 }
 
+function DeleteTeamErrorMessage() {
+  return (
+    <Alert variant={'destructive'}>
+      <AlertTitle>
+        <Trans i18nKey={'teams.deleteTeamErrorHeading'} />
+      </AlertTitle>
+
+      <AlertDescription>
+        <Trans i18nKey={'common.genericError'} />
+      </AlertDescription>
+    </Alert>
+  );
+}
+
 function DeleteTeamErrorAlert() {
   return (
     <div className={'flex flex-col space-y-4'}>
-      <Alert variant={'destructive'}>
-        <AlertTitle>
-          <Trans i18nKey={'teams.deleteTeamErrorHeading'} />
-        </AlertTitle>
-
-        <AlertDescription>
-          <Trans i18nKey={'common.genericError'} />
-        </AlertDescription>
-      </Alert>
+      <DeleteTeamErrorMessage />
 
       <AlertDialogFooter>
         <AlertDialogCancel>

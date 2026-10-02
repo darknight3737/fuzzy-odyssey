@@ -1,16 +1,13 @@
 import 'server-only';
-
 import { SupabaseClient } from '@supabase/supabase-js';
 
 import * as z from 'zod';
 
 import { getLogger } from '@kit/shared/logger';
-
 import {
   getOwnedAccountIds,
   removeAccountImages,
 } from '@kit/supabase/account-image';
-
 import { Database } from '@kit/supabase/database';
 
 export function createAdminAuthUserService(
@@ -29,7 +26,7 @@ class AdminAuthUserService {
   constructor(
     private readonly client: SupabaseClient<Database>,
     private readonly adminClient: SupabaseClient<Database>,
-  ) { }
+  ) {}
 
   /**
    * Delete a user by deleting the user record and auth record.

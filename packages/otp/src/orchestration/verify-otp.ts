@@ -5,6 +5,7 @@ import type { Logger } from '@kit/shared/logger';
 import type { Database } from '@kit/supabase/database';
 
 import { createOtpApi } from '../api';
+import { INVALID_OTP_ERROR } from '../errors';
 
 /**
  * @name verifyOtpForPurpose
@@ -40,7 +41,7 @@ export async function verifyOtpForPurpose(params: {
       params.logger.error(params.ctx, 'Invalid OTP provided');
     }
 
-    throw new Error('Invalid OTP');
+    throw new Error(INVALID_OTP_ERROR);
   }
 
   if (result.user_id !== params.userId) {
