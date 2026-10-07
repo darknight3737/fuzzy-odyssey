@@ -106,6 +106,11 @@ runtime data has to sit behind a boundary.
    direct loads — so do NOT "fix" it by moving the guard behind a `<Suspense>`.
    Boundaries *inside* the guarded subtree are fine, since the guard has already
    resolved by then.
+10. The `(marketing)` layout exports `ensureStatic = 'navigation'`: every page
+    under it must prerender completely, or the build fails. Do NOT weaken or
+    remove it to fix a build — move the per-request page out of `(marketing)`.
+    The one exception is `ENABLE_STRICT_CSP=true`, where the root layout reads
+    the nonce per request; then it must be removed (see `docs/security/csp.mdoc`).
 
 ### Suspense fallbacks
 

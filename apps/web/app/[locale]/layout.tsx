@@ -75,7 +75,7 @@ function getRootClassName() {
  * flag that produces the nonce in the first place. A CSP nonce must be unique
  * per response and can never live in a cached static shell — enabling
  * `ENABLE_STRICT_CSP` therefore also requires `export const instant = false`
- * on this layout.
+ * on this layout, and removing `ensureStatic` from the marketing layout.
  */
 async function getCspNonce() {
   if (process.env.ENABLE_STRICT_CSP !== 'true') {

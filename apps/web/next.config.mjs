@@ -58,9 +58,12 @@ const config = {
   cacheComponents: true,
   partialPrefetching: true,
   experimental: {
+    globalNotFound: true,
     mdxRs: true,
     turbopackFileSystemCacheForDev: true,
     useTypeScriptCli: true,
+    turbopackRustReactCompiler: ENABLE_REACT_COMPILER,
+    turbopackGc: true,
     optimizePackageImports: [
       'recharts',
       'lucide-react',
