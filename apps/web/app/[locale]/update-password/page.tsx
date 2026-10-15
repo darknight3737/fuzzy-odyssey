@@ -1,4 +1,7 @@
+import { Suspense } from 'react';
+
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 
 import { getTranslations } from 'next-intl/server';
 
@@ -27,7 +30,24 @@ interface UpdatePasswordPageProps {
   }>;
 }
 
-async function UpdatePasswordPage(props: UpdatePasswordPageProps) {
+function UpdatePasswordPage(props: UpdatePasswordPageProps) {
+  return (
+    <AuthLayoutShell Logo={Logo}>
+      <Suspense fallback={null}>
+        <UpdatePasswordFormContainer searchParams={props.searchParams} />
+      </Suspense>
+    </AuthLayoutShell>
+  );
+}
+
+/** The proxy already gated this route; this check is defence in depth. */
+async function UpdatePasswordFormContainer({
+  searchParams,
+}: {
+  searchParams: UpdatePasswordPageProps['searchParams'];
+}) {
+  await connection();
+
   const client = getSupabaseServerClient();
 
   const result = await requireUser(client, {
@@ -40,14 +60,10 @@ async function UpdatePasswordPage(props: UpdatePasswordPageProps) {
     return redirect(result.redirectTo);
   }
 
-  const { callback } = await props.searchParams;
+  const { callback } = await searchParams;
   const redirectTo = getSafeRedirectPath(callback, pathsConfig.app.home);
 
-  return (
-    <AuthLayoutShell Logo={Logo}>
-      <UpdatePasswordForm redirectTo={redirectTo} />
-    </AuthLayoutShell>
-  );
+  return <UpdatePasswordForm redirectTo={redirectTo} />;
 }
 
 export default UpdatePasswordPage;

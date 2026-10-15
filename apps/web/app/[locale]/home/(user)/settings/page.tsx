@@ -1,9 +1,10 @@
-import { use } from 'react';
+import { Suspense } from 'react';
 
 import { getTranslations } from 'next-intl/server';
 
 import { PersonalAccountSettingsContainer } from '@kit/accounts/personal-account-settings';
 
+import { CardSkeleton, Delayed } from '~/components/skeletons/page-skeletons';
 import authConfig from '~/config/auth.config';
 import featureFlagsConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
@@ -44,19 +45,33 @@ export const generateMetadata = async () => {
 };
 
 function PersonalAccountSettingsPage() {
-  const user = use(requireUserInServerComponent());
-
   return (
     <div className={'flex w-full flex-1 flex-col lg:max-w-2xl'}>
       <AuthHashStatusListener />
 
-      <PersonalAccountSettingsContainer
-        userId={user.id}
-        features={features}
-        paths={paths}
-        providers={providers}
-      />
+      <Suspense
+        fallback={
+          <Delayed>
+            <CardSkeleton rows={4} />
+          </Delayed>
+        }
+      >
+        <PersonalAccountSettings />
+      </Suspense>
     </div>
+  );
+}
+
+async function PersonalAccountSettings() {
+  const user = await requireUserInServerComponent();
+
+  return (
+    <PersonalAccountSettingsContainer
+      userId={user.id}
+      features={features}
+      paths={paths}
+      providers={providers}
+    />
   );
 }
 

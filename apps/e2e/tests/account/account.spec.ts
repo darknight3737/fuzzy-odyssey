@@ -38,7 +38,9 @@ test.describe('Account Settings', () => {
 
     await Promise.all([request, response]);
 
-    await page.locator('[data-test="workspace-dropdown-trigger"]').click();
+    await page
+      .locator('[data-test="workspace-dropdown-trigger"]:visible')
+      .click();
 
     await expect(account.getProfileName()).toHaveText(name);
   });

@@ -1,52 +1,92 @@
+import { Suspense } from 'react';
+
 import Link from 'next/link';
+
+import { getTranslations } from 'next-intl/server';
+
 import { SignInMethodsContainer } from '@kit/auth/sign-in';
+import { getSafeRedirectPath } from '@kit/shared/utils';
 import { Button } from '@kit/ui/button';
 import { Heading } from '@kit/ui/heading';
+import { Skeleton } from '@kit/ui/skeleton';
 import { Trans } from '@kit/ui/trans';
+
 import authConfig from '~/config/auth.config';
 import pathsConfig from '~/config/paths.config';
-import { getTranslations } from 'next-intl/server';
+
 interface SignInPageProps {
-    searchParams: Promise<{
-        invite_token?: string;
-        next?: string;
-    }>;
+  searchParams: Promise<{
+    next?: string;
+  }>;
 }
+
 export const generateMetadata = async () => {
-    const t = await getTranslations();
-    return {
-        title: t('auth.signIn'),
-    };
+  const t = await getTranslations('auth');
+
+  return {
+    title: t('signIn'),
+  };
 };
-async function SignInPage({ searchParams }: SignInPageProps) {
-    const { invite_token: inviteToken, next } = await searchParams;
-    const signUpPath = pathsConfig.auth.signUp +
-        (inviteToken ? `?invite_token=${inviteToken}` : '');
-    const paths = {
-        callback: pathsConfig.auth.callback,
-        returnPath: next?.startsWith('/') && !next.startsWith('//')
-            ? next
-            : pathsConfig.app.home,
-        joinTeam: pathsConfig.app.joinTeam,
-    };
-    return (<>
-      <div className={'flex flex-col items-center gap-1'}>
+
+function SignInPage({ searchParams }: SignInPageProps) {
+  return (
+    <>
+      <div className={'flex flex-col items-center gap-1.5'}>
         <Heading level={4} className={'tracking-tight'}>
-          <Trans i18nKey={'auth.signInHeading'}/>
+          <Trans i18nKey={'auth.signInHeading'} />
         </Heading>
 
         <p className={'text-muted-foreground text-sm'}>
-          <Trans i18nKey={'auth.signInSubheading'}/>
+          <Trans i18nKey={'auth.signInSubheading'} />
         </p>
       </div>
 
-      <SignInMethodsContainer captchaSiteKey={authConfig.captchaTokenSiteKey} paths={paths} providers={authConfig.providers}/>
+      <Suspense fallback={<AuthFormFallback />}>
+        <SignInMethods searchParams={searchParams} />
+      </Suspense>
 
       <div className={'flex justify-center'}>
-        <Button variant={'link'} size={'sm'} render={<Link href={signUpPath} prefetch={true}/>} nativeButton={false}>
-            <Trans i18nKey={'auth.doNotHaveAccountYet'}/>
-          </Button>
+        <Button
+          nativeButton={false}
+          variant={'link'}
+          size={'sm'}
+          render={
+            <Link href={pathsConfig.auth.signUp}>
+              <Trans i18nKey={'auth.doNotHaveAccountYet'} />
+            </Link>
+          }
+        />
       </div>
-    </>);
+    </>
+  );
 }
+
 export default SignInPage;
+
+function AuthFormFallback() {
+  return (
+    <div className={'flex w-full flex-col space-y-4'}>
+      <Skeleton className={'h-10 w-full'} />
+      <Skeleton className={'h-10 w-full'} />
+      <Skeleton className={'h-10 w-full'} />
+    </div>
+  );
+}
+
+async function SignInMethods({ searchParams }: SignInPageProps) {
+  const { next } = await searchParams;
+
+  const paths = {
+    callback: pathsConfig.auth.callback,
+    returnPath: getSafeRedirectPath(next, pathsConfig.app.home),
+    joinTeam: pathsConfig.app.joinTeam,
+  };
+
+  return (
+    <SignInMethodsContainer
+      paths={paths}
+      providers={authConfig.providers}
+      captchaSiteKey={authConfig.captchaTokenSiteKey}
+    />
+  );
+}

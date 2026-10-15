@@ -1,4 +1,7 @@
+import { Suspense } from 'react';
+
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 
 import { getTranslations } from 'next-intl/server';
 
@@ -6,6 +9,7 @@ import { MultiFactorChallengeContainer } from '@kit/auth/mfa';
 import { getSafeRedirectPath } from '@kit/shared/utils';
 import { checkRequiresMultiFactorAuthentication } from '@kit/supabase/check-requires-mfa';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { Skeleton } from '@kit/ui/skeleton';
 
 import pathsConfig from '~/config/paths.config';
 
@@ -23,7 +27,33 @@ export const generateMetadata = async () => {
   };
 };
 
-async function VerifyPage(props: Props) {
+function VerifyPage(props: Props) {
+  return (
+    <Suspense fallback={<ChallengeFallback />}>
+      <MultiFactorChallenge searchParams={props.searchParams} />
+    </Suspense>
+  );
+}
+
+export default VerifyPage;
+
+function ChallengeFallback() {
+  return (
+    <div className={'flex w-full flex-col space-y-4'}>
+      <Skeleton className={'h-10 w-full'} />
+      <Skeleton className={'h-10 w-full'} />
+    </div>
+  );
+}
+
+/**
+ * Reading the session is what makes this route per-request, so it sits behind
+ * the boundary: the auth card renders straight away and only the challenge
+ * itself waits.
+ */
+async function MultiFactorChallenge(props: Props) {
+  await connection();
+
   const client = getSupabaseServerClient();
 
   const { data } = await client.auth.getClaims();
@@ -50,5 +80,3 @@ async function VerifyPage(props: Props) {
     />
   );
 }
-
-export default VerifyPage;

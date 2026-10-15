@@ -48,6 +48,14 @@ export function CreateTeamAccountForm(props: {
         setError({ message: data.message });
       }
     },
+    // The action ends in a redirect, and that redirect no longer unmounts this
+    // dialog: Cache Components keeps the route we are leaving mounted so it can
+    // be restored instantly. Leaving the dialog open would mean it is still
+    // open, backdrop and all, whenever the user navigates back here. So close
+    // it explicitly once the navigation starts.
+    onNavigation: () => {
+      props.onClose?.();
+    },
     onError: () => {
       setError({});
     },

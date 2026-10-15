@@ -1,5 +1,8 @@
+import { Suspense } from 'react';
+
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 
 import { getTranslations } from 'next-intl/server';
 
@@ -32,7 +35,16 @@ type IdentitiesPageProps = {
  * @name IdentitiesPage
  * @description Displays linked accounts and available authentication methods.
  */
-async function IdentitiesPage(props: IdentitiesPageProps) {
+function IdentitiesPage(props: IdentitiesPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <IdentitiesPageContent searchParams={props.searchParams} />
+    </Suspense>
+  );
+}
+
+/** The proxy already gated this route; fetchData's check is defence in depth. */
+async function IdentitiesPageContent(props: IdentitiesPageProps) {
   const {
     nextPath,
     showPasswordOption,
@@ -87,6 +99,8 @@ export default IdentitiesPage;
 
 async function fetchData(props: IdentitiesPageProps) {
   const searchParams = await props.searchParams;
+  await connection();
+
   const client = getSupabaseServerClient();
   const auth = await requireUser(client);
 

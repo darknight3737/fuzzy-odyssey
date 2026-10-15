@@ -4,6 +4,8 @@ import { locale as localeRootParam } from 'next/root-params';
 
 import { getTranslations } from 'next-intl/server';
 
+import { ContentFallback } from '~/components/skeletons/page-skeletons';
+
 import { SitePageHeader } from '../(marketing)/_components/site-page-header';
 import { DocsCards } from './_components/docs-cards';
 import { getDocs } from './_lib/server/docs.loader';
@@ -24,7 +26,7 @@ function DocsPage() {
       </Suspense>
 
       <div className={'relative flex size-full justify-center overflow-y-auto'}>
-        <Suspense fallback={null}>
+        <Suspense fallback={<ContentFallback />}>
           <DocsCardsList />
         </Suspense>
       </div>

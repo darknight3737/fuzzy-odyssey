@@ -9,6 +9,13 @@ import { getSupabaseClientKeys } from '../get-supabase-client-keys';
 /**
  * @name getSupabaseServerClient
  * @description Creates a Supabase client for use in the Server.
+ *
+ * Constructing this runs GoTrue's initialize(), which checks session expiry
+ * with `Date.now()` — an unstable value that cannot be prerendered. Every
+ * caller on a render path must `await connection()` before this line.
+ * `requireUserInServerComponent` and the workspace loaders do it for the
+ * routes that go through them; pages building a client directly must do it
+ * themselves. Actions and route handlers never prerender, so they need nothing.
  */
 export function getSupabaseServerClient<GenericSchema = Database>() {
   const keys = getSupabaseClientKeys();

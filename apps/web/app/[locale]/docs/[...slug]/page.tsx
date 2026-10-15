@@ -6,6 +6,8 @@ import { notFound } from 'next/navigation';
 import { ContentRenderer, createCmsClient } from '@kit/cms';
 import { cn } from '@kit/ui/utils';
 
+import { ContentFallback } from '~/components/skeletons/page-skeletons';
+
 const getPageBySlug = cache(pageLoader);
 
 interface DocumentationPageProps {
@@ -38,7 +40,7 @@ export async function generateMetadata({
 
 function DocumentationPage({ params }: DocumentationPageProps) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<ContentFallback />}>
       <DocumentationContent params={params} />
     </Suspense>
   );

@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
 
+import { connection } from 'next/server';
+
 import { PlusCircle } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
@@ -103,6 +105,8 @@ async function MembersPageHeader({ params }: { params: Params }) {
 }
 
 async function MembersCard({ params }: { params: Params }) {
+  await connection();
+
   const client = getSupabaseServerClient();
   const slug = (await params).account;
 
@@ -159,6 +163,8 @@ async function MembersCard({ params }: { params: Params }) {
 }
 
 async function InvitationsCard({ params }: { params: Params }) {
+  await connection();
+
   const client = getSupabaseServerClient();
   const slug = (await params).account;
 

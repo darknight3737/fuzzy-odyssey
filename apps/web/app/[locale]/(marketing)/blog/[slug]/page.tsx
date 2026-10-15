@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation';
 
 import { createCmsClient } from '@kit/cms';
 
+import { ContentFallback } from '~/components/skeletons/page-skeletons';
+
 import { Post } from '../../blog/_components/post';
 
 interface BlogPageProps {
@@ -59,7 +61,7 @@ export async function generateMetadata({
 
 function BlogPost({ params }: BlogPageProps) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<ContentFallback />}>
       <BlogPostContent params={params} />
     </Suspense>
   );

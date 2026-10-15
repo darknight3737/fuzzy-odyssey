@@ -9,6 +9,8 @@ import { getLogger } from '@kit/shared/logger';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
+import { ContentFallback } from '~/components/skeletons/page-skeletons';
+
 // local imports
 import { SitePageHeader } from '../_components/site-page-header';
 import { BlogPagination } from './_components/blog-pagination';
@@ -74,7 +76,7 @@ function BlogPage(props: BlogPageProps) {
       </Suspense>
 
       <div className={'container flex flex-col space-y-6 py-8'}>
-        <Suspense fallback={null}>
+        <Suspense fallback={<ContentFallback />}>
           <BlogPosts searchParams={props.searchParams} />
         </Suspense>
       </div>

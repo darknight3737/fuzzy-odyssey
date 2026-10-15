@@ -10,9 +10,7 @@ export function MobileModeToggle(props: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
 
   const toggleTheme = () => {
-    const next = resolvedTheme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    setCookieTheme(next);
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   };
 
   return (
@@ -28,8 +26,4 @@ export function MobileModeToggle(props: { className?: string }) {
       <span className="sr-only">Toggle theme</span>
     </Button>
   );
-}
-
-function setCookieTheme(theme: string) {
-  document.cookie = `theme=${theme}; path=/; max-age=31536000`;
 }

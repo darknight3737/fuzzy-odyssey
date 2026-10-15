@@ -205,7 +205,7 @@ test.describe('Team Accounts', () => {
     await page.click('[data-test="create-team-trigger"]');
 
     await page.fill(
-      '[data-test="create-team-form"] [data-test="team-name-input"]',
+      '[data-test="create-team-form"]:visible [data-test="team-name-input"]',
       'テストチーム',
     );
 
@@ -214,11 +214,13 @@ test.describe('Team Accounts', () => {
 
     // Test invalid slug with uppercase
     await page.fill(
-      '[data-test="create-team-form"] [data-test="team-slug-input"]',
+      '[data-test="create-team-form"]:visible [data-test="team-slug-input"]',
       'Invalid-Slug',
     );
 
-    await page.click('[data-test="create-team-form"] button:last-child');
+    await page.click(
+      '[data-test="create-team-form"]:visible button:last-child',
+    );
 
     await expect(
       page.getByText(
@@ -229,11 +231,13 @@ test.describe('Team Accounts', () => {
 
     // Test invalid slug with non-Latin characters
     await page.fill(
-      '[data-test="create-team-form"] [data-test="team-slug-input"]',
+      '[data-test="create-team-form"]:visible [data-test="team-slug-input"]',
       'тест-slug',
     );
 
-    await page.click('[data-test="create-team-form"] button:last-child');
+    await page.click(
+      '[data-test="create-team-form"]:visible button:last-child',
+    );
 
     await expect(
       page.getByText(

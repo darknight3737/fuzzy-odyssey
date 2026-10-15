@@ -1,5 +1,8 @@
+import { Suspense } from 'react';
+
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { connection } from 'next/server';
 
 import { ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
@@ -47,7 +50,16 @@ export const generateMetadata = async () => {
   };
 };
 
-async function JoinTeamAccountPage(props: JoinTeamAccountPageProps) {
+function JoinTeamAccountPage(props: JoinTeamAccountPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <JoinTeamAccountContent searchParams={props.searchParams} />
+    </Suspense>
+  );
+}
+
+/** The proxy already gated auth; the checks below are defence in depth. */
+async function JoinTeamAccountContent(props: JoinTeamAccountPageProps) {
   const searchParams = await props.searchParams;
   const token = searchParams.invite_token;
 
@@ -73,6 +85,8 @@ async function JoinTeamAccountPage(props: JoinTeamAccountPageProps) {
   if (!token) {
     notFound();
   }
+
+  await connection();
 
   const client = getSupabaseServerClient();
   const auth = await requireUser(client);

@@ -1,6 +1,8 @@
 import 'server-only';
 import { cache } from 'react';
 
+import { connection } from 'next/server';
+
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { createTeamAccountsApi } from '@kit/team-accounts/api';
 
@@ -10,7 +12,9 @@ import { createTeamAccountsApi } from '@kit/team-accounts/api';
  */
 export const loadTeamAccountBillingPage = cache(teamAccountBillingPageLoader);
 
-function teamAccountBillingPageLoader(accountId: string) {
+async function teamAccountBillingPageLoader(accountId: string) {
+  await connection();
+
   const client = getSupabaseServerClient();
   const api = createTeamAccountsApi(client);
 
