@@ -1,6 +1,7 @@
-import { Suspense, cache } from 'react';
+import { Suspense } from 'react';
 
 import type { Metadata } from 'next';
+import { cacheLife } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 import { createCmsClient } from '@kit/cms';
@@ -13,12 +14,34 @@ interface BlogPageProps {
   params: Promise<{ slug: string }>;
 }
 
-const getPostBySlug = cache(postLoader);
+/**
+ * No React `cache()` wrapper: `use cache` already dedupes, and across requests
+ * rather than just within one. Combining them throws at build time.
+ */
+async function getPostBySlug(slug: string) {
+  'use cache';
+  cacheLife('hours');
 
-async function postLoader(slug: string) {
   const client = await createCmsClient();
 
   return client.getContentItemBySlug({ slug, collection: 'posts' });
+}
+
+/**
+ * Must return at least one param under Cache Components. Slugs not returned are
+ * still served — Next renders the shell and upgrades it in the background.
+ */
+export async function generateStaticParams() {
+  'use cache';
+  cacheLife('hours');
+
+  const client = await createCmsClient();
+  const { items } = await client.getContentItems({
+    collection: 'posts',
+    content: false,
+  });
+
+  return items.map((item) => ({ slug: item.slug }));
 }
 
 export async function generateMetadata({

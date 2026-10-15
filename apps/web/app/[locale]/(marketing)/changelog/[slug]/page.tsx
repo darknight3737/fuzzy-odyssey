@@ -1,6 +1,7 @@
-import { Suspense, cache } from 'react';
+import { Suspense } from 'react';
 
 import type { Metadata } from 'next';
+import { cacheLife } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 import { createCmsClient } from '@kit/cms';
@@ -13,9 +14,23 @@ interface ChangelogEntryPageProps {
   params: Promise<{ slug: string }>;
 }
 
-const getChangelogData = cache(changelogEntryLoader);
+export async function generateStaticParams() {
+  'use cache';
+  cacheLife('hours');
 
-async function changelogEntryLoader(slug: string) {
+  const client = await createCmsClient();
+  const { items } = await client.getContentItems({
+    collection: 'changelog',
+    content: false,
+  });
+
+  return items.map((item) => ({ slug: item.slug }));
+}
+
+async function getChangelogData(slug: string) {
+  'use cache';
+  cacheLife('hours');
+
   const client = await createCmsClient();
 
   const [entry, allEntries] = await Promise.all([
