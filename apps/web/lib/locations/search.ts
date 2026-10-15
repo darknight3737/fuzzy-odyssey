@@ -1,6 +1,10 @@
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
-import { LOCATION_SUGGESTIONS, type LocationSuggestion, searchLocationSuggestions } from './data';
+import {
+  LOCATION_SUGGESTIONS,
+  type LocationSuggestion,
+  searchLocationSuggestions,
+} from './data';
 
 type LocationSearchResult = {
   id: string;
@@ -28,9 +32,7 @@ export async function searchLocations(
   const { data: dbLocations } = await client
     .from('locations')
     .select('id, name, slug, type')
-    .or(
-      `name.ilike.%${trimmedQuery}%,slug.ilike.%${trimmedQuery}%`,
-    )
+    .or(`name.ilike.%${trimmedQuery}%,slug.ilike.%${trimmedQuery}%`)
     .order('name')
     .limit(limit);
 
@@ -76,7 +78,9 @@ export async function searchLocations(
  * Get all locations for filter dropdown
  * Returns DB locations + common suggestions
  */
-export async function getAllLocationsForFilter(): Promise<LocationSearchResult[]> {
+export async function getAllLocationsForFilter(): Promise<
+  LocationSearchResult[]
+> {
   const client = getDirectoryClient();
 
   // Get all DB locations
@@ -118,4 +122,3 @@ export async function getAllLocationsForFilter(): Promise<LocationSearchResult[]
   // Combine: DB locations first, then suggestions
   return [...dbResults, ...suggestionResults].slice(0, 500); // Limit to 500 total
 }
-

@@ -8,7 +8,7 @@ import { defaultLocale } from './default-locale';
  */
 export const locales: string[] = [
   defaultLocale,
-  ...['pt', 'en'].filter(locale => locale !== defaultLocale),
+  ...['pt', 'en'].filter((locale) => locale !== defaultLocale),
   // Add other locales here as needed
   // Example: 'es', 'fr', 'de', etc.
   // Uncomment the locales below to enable them:

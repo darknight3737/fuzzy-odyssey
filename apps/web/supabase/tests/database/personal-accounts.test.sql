@@ -26,7 +26,7 @@ set local role anon;
 
 SELECT throws_ok(
    $$ select * from public.accounts order by created_at desc limit 1 $$,
-    'permission denied for schema public'
+    'permission denied for table accounts'
 );
 
 -- the primary owner should be able to see the personal account

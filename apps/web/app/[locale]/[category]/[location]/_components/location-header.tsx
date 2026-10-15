@@ -31,7 +31,7 @@ export function LocationHeader({
         />
       </h1>
 
-      <p className={'mb-4 text-lg text-muted-foreground'}>
+      <p className={'text-muted-foreground mb-4 text-lg'}>
         <Trans
           i18nKey={'location.description'}
           values={{
@@ -49,6 +49,3 @@ export function LocationHeader({
     </div>
   );
 }
-
-
-

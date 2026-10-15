@@ -83,15 +83,22 @@ async function loadMessages(locale: string) {
           `./messages/${locale}/${namespace}.json`
         );
 
-        const fallback = locale === 'en' ? {} : (await import(`./messages/en/${namespace}.json`)).default;
-        loadedMessages[namespace] = {...fallback, ...namespaceMessages.default};
-      } catch (error) {
-        console.warn(
-          `Failed to load namespace "${namespace}" for locale "${locale}":`,
-          error,
-        );
+        const fallback =
+          locale === 'en'
+            ? {}
+            : (await import(`./messages/en/${namespace}.json`)).default;
+        loadedMessages[namespace] = {
+          ...fallback,
+          ...namespaceMessages.default,
+        };
+      } catch {
+        if (isDevelopment)
+          console.warn(`Using English fallback for ${locale}/${namespace}`);
         // Set empty object as fallback
-        loadedMessages[namespace] = locale === 'en' ? {} : (await import(`./messages/en/${namespace}.json`)).default;
+        loadedMessages[namespace] =
+          locale === 'en'
+            ? {}
+            : (await import(`./messages/en/${namespace}.json`)).default;
       }
     }),
   );

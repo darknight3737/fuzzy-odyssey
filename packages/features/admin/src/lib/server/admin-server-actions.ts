@@ -182,7 +182,7 @@ export const resetPasswordAction = adminActionClient
   });
 
 function revalidateAdmin() {
-  revalidatePath(`/admin/accounts/[id]`, 'page');
+  revalidatePath(`/[locale]/admin/accounts/[id]`, 'page');
 }
 
 function getAdminAuthService() {

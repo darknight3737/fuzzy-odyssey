@@ -1,16 +1,16 @@
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
-import { parseLocationSlug } from './utils';
 import {
   getOrCreateLocationBySlug,
   generateCountrySlug,
   getCountryName,
 } from './server';
+import { parseLocationSlug } from './utils';
 
 /**
  * Assigns a business to a location, creating the location hierarchy if needed
  * Per PRD: Auto-assigns parent locations (country, state) when business selects a city
- * 
+ *
  * @param businessId - The business ID
  * @param locationSlug - The location slug (e.g., "sao-paulo-sp-br")
  * @param isPrimary - Whether this is the primary location for the business
@@ -111,4 +111,3 @@ export async function assignBusinessToLocation(
 
   return { success: true, locationId: location.id };
 }
-

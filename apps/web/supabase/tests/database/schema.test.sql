@@ -26,7 +26,7 @@ select tests.rls_enabled('public', 'order_items');
 select tests.rls_enabled('public', 'roles');
 select tests.rls_enabled('public', 'role_permissions');
 
-SELECT schema_privs_are('public', 'anon', Array [NULL], 'Anon should not have access to public schema');
+SELECT schema_privs_are('public', 'anon', Array ['USAGE'], 'Public directory visitors may access the public schema');
 
 -- set the role to anonymous for verifying access tests
 set role anon;

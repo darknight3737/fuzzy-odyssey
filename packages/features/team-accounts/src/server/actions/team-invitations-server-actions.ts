@@ -228,7 +228,7 @@ export const renewInvitationAction = authActionClient
   });
 
 function revalidateMemberPage() {
-  revalidatePath('/home/[account]/members', 'page');
+  revalidatePath('/[locale]/home/[account]/members', 'page');
 }
 
 /**

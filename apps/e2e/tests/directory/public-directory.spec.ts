@@ -7,8 +7,8 @@ test('a busca da home abre resultados que não são indexáveis', async ({
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
     'O próximo passo',
   );
-  await page.locator('#provider-search').fill('Marketing');
-  await page.locator('[data-test="homepage-search"]').click();
+  await page.locator('#provider-search:visible').fill('Marketing');
+  await page.locator('[data-test="homepage-search"]:visible').click();
   await expect(page).toHaveURL(/\/search\?q=Marketing/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
     'Marketing',

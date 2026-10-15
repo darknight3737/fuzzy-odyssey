@@ -14,7 +14,7 @@ export function AppLogo({
   const mark = (
     <span
       className={cn(
-        'inline-block text-2xl font-semibold lowercase tracking-tight',
+        'inline-block text-2xl font-semibold tracking-tight lowercase',
         className,
       )}
     >

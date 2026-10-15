@@ -6,7 +6,7 @@ type BusinessRatingProps = {
 export function BusinessRating({ rating, reviewCount }: BusinessRatingProps) {
   if (rating === null) {
     return (
-      <div className={'flex items-center gap-2 text-sm text-muted-foreground'}>
+      <div className={'text-muted-foreground flex items-center gap-2 text-sm'}>
         <span>No reviews yet</span>
       </div>
     );
@@ -38,10 +38,9 @@ export function BusinessRating({ rating, reviewCount }: BusinessRatingProps) {
           ))}
         </div>
       </div>
-      <span className={'text-sm text-muted-foreground'}>
+      <span className={'text-muted-foreground text-sm'}>
         ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
       </span>
     </div>
   );
 }
-

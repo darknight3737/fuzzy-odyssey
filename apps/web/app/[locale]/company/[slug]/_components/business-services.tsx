@@ -28,7 +28,7 @@ export function BusinessServices({ services }: BusinessServicesProps) {
             </CardHeader>
 
             <CardContent>
-              <p className={'mb-3 text-sm text-muted-foreground'}>
+              <p className={'text-muted-foreground mb-3 text-sm'}>
                 {service.description}
               </p>
 
@@ -64,6 +64,3 @@ export function BusinessServices({ services }: BusinessServicesProps) {
     </div>
   );
 }
-
-
-

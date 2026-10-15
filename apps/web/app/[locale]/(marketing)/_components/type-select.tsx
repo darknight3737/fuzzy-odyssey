@@ -2,7 +2,13 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@kit/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@kit/ui/select';
 
 type Props = {
   defaultValue: 'services' | 'software';
@@ -39,7 +45,3 @@ export function TypeSelect({ defaultValue }: Props) {
     </Select>
   );
 }
-
-
-
-

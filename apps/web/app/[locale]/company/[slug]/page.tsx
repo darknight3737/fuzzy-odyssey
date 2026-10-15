@@ -1,13 +1,14 @@
 import { Suspense } from 'react';
-import { connection } from 'next/server';
+
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { connection } from 'next/server';
 
-import { getDirectoryClient } from '~/lib/supabase/directory-client';
 import { If } from '@kit/ui/if';
 
 import appConfig from '~/config/app.config';
 import { pageMetadata, safeWebsite, serializeJsonLd } from '~/lib/seo';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { BusinessHeader } from './_components/business-header';
 import { BusinessInfo } from './_components/business-info';
@@ -19,7 +20,6 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props) {
-  await connection();
   await connection();
   const { slug } = await params;
   const client = getDirectoryClient();
@@ -42,6 +42,7 @@ export async function generateMetadata({ params }: Props) {
 }
 
 async function BusinessProfilePage({ params }: Props) {
+  await connection();
   const { slug } = await params;
   const client = getDirectoryClient();
 
@@ -122,4 +123,16 @@ async function BusinessProfilePage({ params }: Props) {
   );
 }
 
-export default BusinessProfilePage;
+export default function Page(props: Props) {
+  return (
+    <Suspense
+      fallback={
+        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
+          Carregando…
+        </div>
+      }
+    >
+      <BusinessProfilePage {...props} />
+    </Suspense>
+  );
+}

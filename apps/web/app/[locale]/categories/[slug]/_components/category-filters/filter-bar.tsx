@@ -1,7 +1,8 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Plus } from 'lucide-react';
 
@@ -55,7 +56,11 @@ export function FilterBar({
 
   return (
     <>
-      <div className={'mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between'}>
+      <div
+        className={
+          'mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between'
+        }
+      >
         {/* Left side: Filters */}
         <div className={'flex flex-wrap items-center gap-3'}>
           <LocationFilter locations={locations} />
@@ -80,7 +85,7 @@ export function FilterBar({
 
         {/* Right side: Count and Sort */}
         <div className={'flex items-center gap-4'}>
-          <span className={'text-sm text-muted-foreground'}>
+          <span className={'text-muted-foreground text-sm'}>
             {businessCount} {businessCount === 1 ? 'agency' : 'agencies'}
           </span>
           <Select
@@ -111,4 +116,3 @@ export function FilterBar({
     </>
   );
 }
-

@@ -1,12 +1,12 @@
 import { Suspense } from 'react';
-import { connection } from 'next/server';
+
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-
-import { getDirectoryClient } from '~/lib/supabase/directory-client';
+import { connection } from 'next/server';
 
 import { getAllLocationsForFilter } from '~/lib/locations/search';
 import { pageMetadata } from '~/lib/seo';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { BusinessGridWrapper } from './_components/business-grid-wrapper';
 import { FilterBar } from './_components/category-filters/filter-bar';
@@ -32,7 +32,6 @@ type Props = {
 
 export async function generateMetadata({ params, searchParams }: Props) {
   await connection();
-  await connection();
   const { slug } = await params;
 
   // Use cached category fetch to avoid duplicate query
@@ -55,6 +54,7 @@ export async function generateMetadata({ params, searchParams }: Props) {
 }
 
 async function CategoryPage({ params, searchParams }: Props) {
+  await connection();
   const { slug } = await params;
   const filters = await searchParams;
   // Fetch category and locations in parallel
@@ -126,4 +126,16 @@ async function CategoryPage({ params, searchParams }: Props) {
   );
 }
 
-export default CategoryPage;
+export default function Page(props: Props) {
+  return (
+    <Suspense
+      fallback={
+        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
+          Carregando…
+        </div>
+      }
+    >
+      <CategoryPage {...props} />
+    </Suspense>
+  );
+}

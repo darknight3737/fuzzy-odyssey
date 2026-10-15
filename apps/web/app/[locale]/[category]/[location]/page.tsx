@@ -1,15 +1,14 @@
 import { Suspense } from 'react';
-import { connection } from 'next/server';
+
 import type { Metadata } from 'next';
-
 import { notFound, permanentRedirect } from 'next/navigation';
-
-import { getDirectoryClient } from '~/lib/supabase/directory-client';
+import { connection } from 'next/server';
 
 import appConfig from '~/config/app.config';
 import { resolveCategoryFromSlug } from '~/lib/categories/server';
 import { getBusinessesByLocationSlug } from '~/lib/locations/server';
 import { parseLocationSlug } from '~/lib/locations/utils';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { BusinessGrid } from '../../categories/[slug]/_components/business-grid';
 import { LocationBreadcrumbs } from './_components/location-breadcrumbs';
@@ -30,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = await resolveCategoryFromSlug(categorySlug);
 
   if (!category) {
-  await connection();
+    await connection();
     return { title: 'Not Found' };
   }
 
@@ -73,6 +72,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 async function CategoryLocationPage({ params }: Props) {
+  await connection();
   const { category: categorySlug, location: locationSlug } = await params;
 
   // Validate location slug format
@@ -129,4 +129,16 @@ async function CategoryLocationPage({ params }: Props) {
   );
 }
 
-export default CategoryLocationPage;
+export default function Page(props: Props) {
+  return (
+    <Suspense
+      fallback={
+        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
+          Carregando…
+        </div>
+      }
+    >
+      <CategoryLocationPage {...props} />
+    </Suspense>
+  );
+}

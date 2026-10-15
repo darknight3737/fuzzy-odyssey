@@ -41,7 +41,10 @@ export function BusinessEditor({ values }: { values: BusinessProfileInput }) {
           try {
             const result = await updateBusinessAction(data);
             setMessage(
-              result?.data?.success ? 'Informações salvas com sucesso.' : result?.data?.error || 'Não foi possível concluir. Confira os dados e tente novamente.',
+              result?.data?.success
+                ? 'Informações salvas com sucesso.'
+                : result?.data?.error ||
+                    'Não foi possível concluir. Confira os dados e tente novamente.',
             );
           } catch {
             setMessage('Não foi possível salvar. Tente novamente.');

@@ -3,10 +3,9 @@ import Link from 'next/link';
 
 import { ArrowRight, Building2, Check, Compass, Search } from 'lucide-react';
 
-import { getDirectoryClient } from '~/lib/supabase/directory-client';
-
 import appConfig from '~/config/app.config';
 import { pageMetadata, serializeJsonLd } from '~/lib/seo';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 export const metadata = pageMetadata(
   'Selletive — Encontre o próximo parceiro da sua empresa',
@@ -53,7 +52,7 @@ async function Home() {
       <section className="border-b bg-[#f6f5f1] text-[#172b26]">
         <div className="container mx-auto grid gap-16 px-6 py-20 lg:grid-cols-[1.3fr_1fr] lg:py-28">
           <div>
-            <p className="mb-6 text-xs font-semibold uppercase tracking-[.2em]">
+            <p className="mb-6 text-xs font-semibold tracking-[.2em] uppercase">
               Boas parcerias começam aqui
             </p>
             <h1 className="max-w-3xl font-serif text-5xl leading-[1.08] tracking-tight md:text-7xl">
@@ -142,7 +141,7 @@ async function Home() {
       <section className="container mx-auto px-6 py-20">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-5">
           <div>
-            <p className="text-muted-foreground mb-3 text-xs uppercase tracking-widest">
+            <p className="text-muted-foreground mb-3 text-xs tracking-widest uppercase">
               Encontre sua especialidade
             </p>
             <h2 className="font-serif text-4xl">Do desafio à solução.</h2>
@@ -238,7 +237,7 @@ async function Home() {
       </section>
       <section className="container mx-auto flex flex-col items-start justify-between gap-8 px-6 py-20 md:flex-row md:items-center">
         <div>
-          <p className="text-muted-foreground mb-3 text-xs uppercase tracking-widest">
+          <p className="text-muted-foreground mb-3 text-xs tracking-widest uppercase">
             Para quem faz acontecer
           </p>
           <h2 className="font-serif text-4xl">

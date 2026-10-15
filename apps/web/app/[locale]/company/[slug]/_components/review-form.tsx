@@ -39,7 +39,11 @@ export function ReviewForm({ businessId }: { businessId: string }) {
                 content: String(data.get('content')),
               });
               if (result?.data?.success) setSent(true);
-              else setMessage(result?.data?.error || 'Não foi possível concluir. Confira os dados e tente novamente.');
+              else
+                setMessage(
+                  result?.data?.error ||
+                    'Não foi possível concluir. Confira os dados e tente novamente.',
+                );
             } catch {
               setMessage(
                 'Não foi possível enviar. Confira os campos e tente novamente.',

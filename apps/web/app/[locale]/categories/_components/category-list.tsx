@@ -19,11 +19,7 @@ export function CategoryList({ categories }: CategoryListProps) {
     <div className={'grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'}>
       {categories.map((category) => (
         <Link key={category.id} href={`/categories/${category.slug}`}>
-          <Card
-            className={
-              'transition-shadow hover:shadow-lg'
-            }
-          >
+          <Card className={'transition-shadow hover:shadow-lg'}>
             <CardHeader>
               <CardTitle className={'flex items-center gap-3'}>
                 {category.icon && (
@@ -35,7 +31,7 @@ export function CategoryList({ categories }: CategoryListProps) {
 
             {category.description && (
               <CardContent>
-                <p className={'text-sm text-muted-foreground'}>
+                <p className={'text-muted-foreground text-sm'}>
                   {category.description}
                 </p>
               </CardContent>
@@ -46,6 +42,3 @@ export function CategoryList({ categories }: CategoryListProps) {
     </div>
   );
 }
-
-
-

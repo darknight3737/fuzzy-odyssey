@@ -30,7 +30,7 @@ export const removeMemberFromAccountAction = authActionClient
     });
 
     // revalidate all pages that depend on the account
-    revalidatePath('/home/[account]', 'layout');
+    revalidatePath('/[locale]/home/[account]', 'layout');
 
     return { success: true };
   });
@@ -52,7 +52,7 @@ export const updateMemberRoleAction = authActionClient
     await service.updateMemberRole(data, adminClient, user.id);
 
     // revalidate all pages that depend on the account
-    revalidatePath('/home/[account]', 'layout');
+    revalidatePath('/[locale]/home/[account]', 'layout');
 
     return { success: true };
   });
@@ -118,7 +118,7 @@ export const transferOwnershipAction = authActionClient
     await service.transferOwnership(data, adminClient);
 
     // revalidate all pages that depend on the account
-    revalidatePath('/home/[account]', 'layout');
+    revalidatePath('/[locale]/home/[account]', 'layout');
 
     logger.info(ctx, 'Team ownership transferred successfully');
 

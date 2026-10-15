@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
-import { connection } from 'next/server';
+
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
-
 
 import { BusinessEditor } from './_components/business-editor';
 
@@ -63,5 +63,15 @@ async function ManageBusinessPage({
   );
 }
 export default function Page(props: Parameters<typeof ManageBusinessPage>[0]) {
-  return <Suspense fallback={<div role="status" className="container mx-auto min-h-96 px-6 py-12">Carregando…</div>}><ManageBusinessPage {...props} /></Suspense>;
+  return (
+    <Suspense
+      fallback={
+        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
+          Carregando…
+        </div>
+      }
+    >
+      <ManageBusinessPage {...props} />
+    </Suspense>
+  );
 }

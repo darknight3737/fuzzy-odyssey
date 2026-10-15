@@ -1,5 +1,7 @@
 # Avaliação de atualização do Makerkit
 
+> Avaliação histórica, anterior à autorização para migrar. A migração para 4.1.6 foi implementada posteriormente; consulte [o relatório da migração](MAKERKIT-V4-MIGRATION.md) para o estado atual, testes e recuperação.
+
 Data da avaliação: 15 de outubro de 2026.
 
 ## Decisão

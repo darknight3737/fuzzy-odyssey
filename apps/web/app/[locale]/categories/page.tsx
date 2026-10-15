@@ -1,9 +1,11 @@
 import { Suspense } from 'react';
+
 import { connection } from 'next/server';
-import { getDirectoryClient } from '~/lib/supabase/directory-client';
+
 import { Trans } from '@kit/ui/trans';
 
 import { pageMetadata } from '~/lib/seo';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { CategoryList } from './_components/category-list';
 
@@ -37,5 +39,15 @@ async function CategoriesPage() {
 }
 
 export default function Page() {
-  return <Suspense fallback={<div role="status" className="container mx-auto min-h-96 px-6 py-12">Carregando…</div>}><CategoriesPage /></Suspense>;
+  return (
+    <Suspense
+      fallback={
+        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
+          Carregando…
+        </div>
+      }
+    >
+      <CategoriesPage />
+    </Suspense>
+  );
 }

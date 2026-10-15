@@ -17,6 +17,7 @@ import pathsConfig from '~/config/paths.config';
 interface SignInPageProps {
   searchParams: Promise<{
     next?: string;
+    invite_token?: string;
   }>;
 }
 
@@ -44,18 +45,9 @@ function SignInPage({ searchParams }: SignInPageProps) {
         <SignInMethods searchParams={searchParams} />
       </Suspense>
 
-      <div className={'flex justify-center'}>
-        <Button
-          nativeButton={false}
-          variant={'link'}
-          size={'sm'}
-          render={
-            <Link href={pathsConfig.auth.signUp}>
-              <Trans i18nKey={'auth.doNotHaveAccountYet'} />
-            </Link>
-          }
-        />
-      </div>
+      <Suspense fallback={null}>
+        <SignUpLink searchParams={searchParams} />
+      </Suspense>
     </>
   );
 }
@@ -73,11 +65,16 @@ function AuthFormFallback() {
 }
 
 async function SignInMethods({ searchParams }: SignInPageProps) {
-  const { next } = await searchParams;
+  const { next, invite_token } = await searchParams;
 
   const paths = {
     callback: pathsConfig.auth.callback,
-    returnPath: getSafeRedirectPath(next, pathsConfig.app.home),
+    returnPath: getSafeRedirectPath(
+      next,
+      invite_token
+        ? `/join?invite_token=${encodeURIComponent(invite_token)}`
+        : pathsConfig.app.home,
+    ),
     joinTeam: pathsConfig.app.joinTeam,
   };
 
@@ -87,5 +84,31 @@ async function SignInMethods({ searchParams }: SignInPageProps) {
       providers={authConfig.providers}
       captchaSiteKey={authConfig.captchaTokenSiteKey}
     />
+  );
+}
+
+async function SignUpLink({ searchParams }: SignInPageProps) {
+  const { next, invite_token } = await searchParams;
+  const returnPath = getSafeRedirectPath(
+    next,
+    invite_token
+      ? `/join?invite_token=${encodeURIComponent(invite_token)}`
+      : pathsConfig.app.home,
+  );
+  return (
+    <div className="flex justify-center">
+      <Button
+        nativeButton={false}
+        variant="link"
+        size="sm"
+        render={
+          <Link
+            href={`${pathsConfig.auth.signUp}?next=${encodeURIComponent(returnPath)}`}
+          >
+            <Trans i18nKey="auth.doNotHaveAccountYet" />
+          </Link>
+        }
+      />
+    </div>
   );
 }

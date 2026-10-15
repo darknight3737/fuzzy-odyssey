@@ -27,10 +27,6 @@
     "clean": "git clean -xdf .turbo node_modules",
     "typecheck": "tsc --noEmit"
   },
-  "scripts": {
-    "clean": "git clean -xdf .turbo node_modules",
-    "typecheck": "tsc --noEmit"
-  },
   "dependencies": {
     "nanoid": "catalog:"
   },

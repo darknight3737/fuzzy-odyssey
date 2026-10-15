@@ -14,13 +14,10 @@ export function CategoryHeader({ category }: CategoryHeaderProps) {
       <h1 className={'mb-2 text-4xl font-bold'}>{category.name}</h1>
 
       {category.description && (
-        <p className={'text-lg text-muted-foreground'}>
+        <p className={'text-muted-foreground text-lg'}>
           {category.description}
         </p>
       )}
     </div>
   );
 }
-
-
-

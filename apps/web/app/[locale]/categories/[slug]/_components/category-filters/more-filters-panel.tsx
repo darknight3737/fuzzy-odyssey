@@ -1,11 +1,11 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { X } from 'lucide-react';
 
-import { Badge } from '@kit/ui/badge';
 import { Button } from '@kit/ui/button';
 import { Checkbox } from '@kit/ui/checkbox';
 import {
@@ -39,20 +39,9 @@ const LANGUAGES = [
   'Greek',
 ];
 
-const TEAM_SIZE_OPTIONS = [
-  '< 10',
-  '10-50',
-  '50-100',
-  '100-250',
-  '250+',
-];
+const TEAM_SIZE_OPTIONS = ['< 10', '10-50', '50-100', '100-250', '250+'];
 
-const FOUNDED_YEAR_OPTIONS = [
-  'Before 2000',
-  '2000-2010',
-  '2010-2020',
-  '2020+',
-];
+const FOUNDED_YEAR_OPTIONS = ['Before 2000', '2000-2010', '2010-2020', '2020+'];
 
 type MoreFiltersPanelProps = {
   open: boolean;
@@ -197,7 +186,7 @@ export function MoreFiltersPanel({
                 </Button>
               ))}
             </div>
-            <p className={'mt-2 text-sm text-muted-foreground'}>
+            <p className={'text-muted-foreground mt-2 text-sm'}>
               Note: Rating filter is available in the main filter bar
             </p>
           </div>
@@ -240,7 +229,9 @@ export function MoreFiltersPanel({
               />
               <label
                 htmlFor="works-remotely"
-                className={'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'}
+                className={
+                  'text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                }
               >
                 Remote work available
               </label>
@@ -260,7 +251,9 @@ export function MoreFiltersPanel({
                   key={year}
                   variant={foundedYear === year ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setFoundedYear(foundedYear === year ? '' : year)}
+                  onClick={() =>
+                    setFoundedYear(foundedYear === year ? '' : year)
+                  }
                 >
                   {year}
                 </Button>
@@ -285,4 +278,3 @@ export function MoreFiltersPanel({
     </Sheet>
   );
 }
-

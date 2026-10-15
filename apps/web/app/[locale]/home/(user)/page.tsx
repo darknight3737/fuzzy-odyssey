@@ -1,9 +1,9 @@
 import { Suspense } from 'react';
-import { connection } from 'next/server';
+
 import Link from 'next/link';
+import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
-
 
 export const metadata = {
   title: 'Minhas empresas | Selletive',
@@ -40,7 +40,7 @@ async function UserHomePage() {
         <div className="grid gap-5 md:grid-cols-2">
           {businesses.map((b) => (
             <article key={b.id} className="rounded-2xl border p-7">
-              <span className="text-muted-foreground text-xs uppercase tracking-widest">
+              <span className="text-muted-foreground text-xs tracking-widest uppercase">
                 {b.tier}
               </span>
               <h2 className="mt-3 text-xl font-semibold">{b.name}</h2>
@@ -83,5 +83,15 @@ async function UserHomePage() {
   );
 }
 export default function Page() {
-  return <Suspense fallback={<div role="status" className="container mx-auto min-h-96 px-6 py-12">Carregando…</div>}><UserHomePage /></Suspense>;
+  return (
+    <Suspense
+      fallback={
+        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
+          Carregando…
+        </div>
+      }
+    >
+      <UserHomePage />
+    </Suspense>
+  );
 }

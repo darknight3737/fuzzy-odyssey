@@ -21,7 +21,7 @@ export const leaveTeamAccountAction = authActionClient
       userId: user.id,
     });
 
-    revalidatePath('/home/[account]', 'layout');
+    revalidatePath('/[locale]/home/[account]', 'layout');
 
     redirect('/home');
   });

@@ -1,6 +1,5 @@
-import { Suspense } from 'react';
-import { connection } from 'next/server';
 import Link from 'next/link';
+import { connection } from 'next/server';
 
 import { AdminGuard } from '@kit/admin/components/admin-guard';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';

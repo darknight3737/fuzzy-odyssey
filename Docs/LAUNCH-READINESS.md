@@ -66,14 +66,14 @@ Associe categorias/localidades reais. Descrições específicas, serviços demon
 
 ## Verificação
 
-- TypeScript verificado com `tsc --noEmit` em `apps/web`.
-- ESLint nos arquivos TypeScript alterados e formatação com Prettier.
+- Makerkit 4.1.6: TypeScript verificado nos 32 pacotes do monorepo.
+- Lint e formatação com Oxc (`pnpm lint:fix`, `pnpm format:fix`).
 - Compilação de produção do Next.js, usando variáveis locais de QA.
 - Testes Playwright em `apps/e2e/tests/directory/public-directory.spec.ts`: busca da home, ausência de overflow no celular, HTTP 404 e sitemap.
 - Navegador Chromium real nas páginas públicas, em desktop e celular.
 - Regressões SQL em `apps/web/supabase/checks/directory-claim-security.sql`: anonimato, domínio incorreto, e-mail não confirmado, claim válido/repetido, troca de propriedade, autoverificação, edição autorizada/não autorizada, autoavaliação, privacidade do e-mail e moderação.
 
-O ambiente completo do Supabase excedeu o disco durante a extração da imagem. As migrações foram verificadas em PostgreSQL 15 isolado, com estruturas mínimas de Auth/Storage; a extensão `pg_cron` não foi exercitada. O PostgREST real foi usado para a navegação e a persistência do contato. Cadastro, confirmação por e-mail, recuperação de senha, MFA e OAuth ainda precisam de validação com um projeto Supabase real antes de publicar.
+Na migração para v4, todas as migrações foram aplicadas a um PostgreSQL 17 isolado, com GoTrue e PostgREST reais. Cadastro, confirmação por e-mail, sessão, reivindicação, edição persistida e perfil público passaram no Chromium. Os cinco testes Playwright do diretório e 355 verificações pgTAP passaram. Storage foi representado por uma estrutura SQL mínima; o serviço Storage e `pg_cron` não foram exercitados. Recuperação de senha, MFA no navegador, OAuth e pagamentos externos ainda precisam de validação no ambiente definitivo. Consulte [o relatório da migração](MAKERKIT-V4-MIGRATION.md) para limites e recuperação.
 
 ## Dependências externas e pendências de lançamento
 

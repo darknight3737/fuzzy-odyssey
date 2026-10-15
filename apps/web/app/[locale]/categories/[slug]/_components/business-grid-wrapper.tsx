@@ -1,7 +1,8 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
+
+import { useSearchParams } from 'next/navigation';
 
 import { BusinessGrid } from './business-grid';
 import { BusinessGridSkeleton } from './business-grid-skeleton';
@@ -37,11 +38,11 @@ export function BusinessGridWrapper({ businesses }: BusinessGridWrapperProps) {
 
   useEffect(() => {
     const currentParams = searchParams.toString();
-    
+
     // Detect if search params changed (filter applied)
     if (currentParams !== previousParams) {
       setPreviousParams(currentParams);
-      
+
       // Use transition to show loading state
       startTransition(() => {
         setDisplayBusinesses(businesses);
@@ -59,4 +60,3 @@ export function BusinessGridWrapper({ businesses }: BusinessGridWrapperProps) {
 
   return <BusinessGrid businesses={displayBusinesses} />;
 }
-

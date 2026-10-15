@@ -1,12 +1,12 @@
 import { Suspense } from 'react';
-import { connection } from 'next/server';
+
 import Link from 'next/link';
+import { connection } from 'next/server';
 
 import { z } from 'zod';
 
-import { getDirectoryClient } from '~/lib/supabase/directory-client';
-
 import { pageMetadata } from '~/lib/seo';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { SearchResultsList } from './_components/search-results-list';
 
@@ -165,5 +165,15 @@ async function SearchPage({ searchParams }: Props) {
   );
 }
 export default function Page(props: Parameters<typeof SearchPage>[0]) {
-  return <Suspense fallback={<div role="status" className="container mx-auto min-h-96 px-6 py-12">Carregando…</div>}><SearchPage {...props} /></Suspense>;
+  return (
+    <Suspense
+      fallback={
+        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
+          Carregando…
+        </div>
+      }
+    >
+      <SearchPage {...props} />
+    </Suspense>
+  );
 }

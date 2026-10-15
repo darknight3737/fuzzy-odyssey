@@ -38,7 +38,7 @@ type MessagesResponse = {
  * Mailbox class for interacting with the Mailpit mailbox API.
  */
 export class Mailbox {
-  static URL = 'http://127.0.0.1:54324';
+  static URL = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324';
 
   /**
    * Subjects the OTP mailer may use. The kit ships English only, so

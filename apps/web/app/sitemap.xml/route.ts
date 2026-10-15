@@ -1,11 +1,10 @@
-import { getDirectoryClient } from '~/lib/supabase/directory-client';
-
 import {
   SITEMAP_PAGE_SIZE,
   absoluteUrl,
   xmlEscape,
   xmlResponse,
 } from '~/lib/sitemaps';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 export async function GET() {
   const client = getDirectoryClient();
