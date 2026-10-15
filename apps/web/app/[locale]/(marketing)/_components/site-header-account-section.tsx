@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { PersonalAccountDropdown } from '@kit/accounts/personal-account-dropdown';
 import { useSignOut } from '@kit/supabase/hooks/use-sign-out';
-import { JWTUserData } from '@kit/supabase/types';
+import { useUser } from '@kit/supabase/hooks/use-user';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from '@kit/ui/dropdown-menu';
 import { Trans } from '@kit/ui/trans';
 import pathsConfig from '~/config/paths.config';
@@ -14,9 +14,8 @@ const paths = {
 const features = {
     enableThemeToggle: false,
 };
-export function SiteHeaderAccountSection({ user, }: {
-    user: JWTUserData | null;
-}) {
+export function SiteHeaderAccountSection() {
+    const {data: user} = useUser();
     const signOut = useSignOut();
     if (user) {
         return (<PersonalAccountDropdown showProfileName={false} paths={paths} features={features} user={user} signOutRequested={() => signOut.mutateAsync()}/>);

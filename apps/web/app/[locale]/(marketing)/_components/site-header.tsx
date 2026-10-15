@@ -3,7 +3,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Menu, Search } from 'lucide-react';
-import { JWTUserData } from '@kit/supabase/types';
 import { Button } from '@kit/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from '@kit/ui/dropdown-menu';
 import { Input } from '@kit/ui/input';
