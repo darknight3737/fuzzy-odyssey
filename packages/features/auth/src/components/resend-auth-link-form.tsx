@@ -13,15 +13,21 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
+  FormMessage,
 } from '@kit/ui/form';
-import { Input } from '@kit/ui/input';
+import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
-import { useCaptchaToken } from '../captcha/client';
+import { useCaptcha } from '../captcha/client';
+import { EmailInput } from './email-input';
 
-export function ResendAuthLinkForm(props: { redirectPath?: string }) {
-  const resendLink = useResendLink();
+export function ResendAuthLinkForm(props: {
+  redirectPath?: string;
+  captchaSiteKey?: string;
+}) {
+  const captcha = useCaptcha({ siteKey: props.captchaSiteKey });
+  const resendLink = useResendLink(captcha.token);
+  const captchaLoading = !captcha.isReady;
 
   const form = useForm({
     resolver: zodResolver(z.object({ email: z.string().email() })),
@@ -52,40 +58,55 @@ export function ResendAuthLinkForm(props: { redirectPath?: string }) {
       <form
         className={'flex flex-col space-y-2'}
         onSubmit={form.handleSubmit((data) => {
-          return resendLink.mutate({
+          const promise = resendLink.mutateAsync({
             email: data.email,
             redirectPath: props.redirectPath,
           });
+
+          promise.finally(() => {
+            captcha.reset();
+          });
+
+          return promise;
         })}
       >
         <FormField
+          name={'email'}
           render={({ field }) => {
             return (
               <FormItem>
-                <FormLabel>
-                  <Trans i18nKey={'common:emailAddress'} />
-                </FormLabel>
-
                 <FormControl>
-                  <Input type="email" required {...field} />
+                  <EmailInput data-test="email-input" {...field} />
                 </FormControl>
+
+                <FormMessage />
               </FormItem>
             );
           }}
-          name={'email'}
         />
 
-        <Button disabled={resendLink.isPending}>
-          <Trans i18nKey={'auth:resendLink'} defaults={'Resend Link'} />
+        <Button disabled={resendLink.isPending || captchaLoading}>
+          <If condition={captchaLoading}>
+            <Trans i18nKey={'auth:verifyingCaptcha'} />
+          </If>
+
+          <If condition={resendLink.isPending && !captchaLoading}>
+            <Trans i18nKey={'auth:resendingLink'} />
+          </If>
+
+          <If condition={!resendLink.isPending && !captchaLoading}>
+            <Trans i18nKey={'auth:resendLink'} defaults={'Resend Link'} />
+          </If>
         </Button>
       </form>
+
+      {captcha.field}
     </Form>
   );
 }
 
-function useResendLink() {
+function useResendLink(captchaToken: string) {
   const supabase = useSupabase();
-  const { captchaToken } = useCaptchaToken();
 
   const mutationFn = async (props: {
     email: string;

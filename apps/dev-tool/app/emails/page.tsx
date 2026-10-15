@@ -1,6 +1,11 @@
 import Link from 'next/link';
 
 import {
+  createKitEmailsDeps,
+  createKitEmailsService,
+} from '@kit/mcp-server/emails';
+import { findWorkspaceRoot } from '@kit/mcp-server/env';
+import {
   CardButton,
   CardButtonHeader,
   CardButtonTitle,
@@ -12,7 +17,16 @@ export const metadata = {
   title: 'Emails',
 };
 
+const CATEGORY_LABELS: Record<string, string> = {
+  'supabase-auth': 'Supabase Auth Emails',
+  transactional: 'Transactional Emails',
+};
+
 export default async function EmailsPage() {
+  const rootPath = findWorkspaceRoot(process.cwd());
+  const service = createKitEmailsService(createKitEmailsDeps(rootPath));
+  const { templates, categories } = await service.list();
+
   return (
     <Page style={'custom'}>
       <PageHeader
@@ -22,73 +36,31 @@ export default async function EmailsPage() {
       />
 
       <PageBody className={'gap-y-8'}>
-        <div className={'flex flex-col space-y-4'}>
-          <Heading level={5}>Supabase Auth Emails</Heading>
+        {categories.map((category) => {
+          const categoryTemplates = templates.filter(
+            (t) => t.category === category,
+          );
 
-          <div className={'grid grid-cols-1 gap-4 md:grid-cols-4'}>
-            <CardButton asChild>
-              <Link href={'/emails/confirm-email'}>
-                <CardButtonHeader>
-                  <CardButtonTitle>Confirm Email</CardButtonTitle>
-                </CardButtonHeader>
-              </Link>
-            </CardButton>
+          return (
+            <div key={category} className={'flex flex-col space-y-4'}>
+              <Heading level={5}>
+                {CATEGORY_LABELS[category] ?? category}
+              </Heading>
 
-            <CardButton asChild>
-              <Link href={'/emails/change-email-address-email'}>
-                <CardButtonHeader>
-                  <CardButtonTitle>Change Email Address Email</CardButtonTitle>
-                </CardButtonHeader>
-              </Link>
-            </CardButton>
-
-            <CardButton asChild>
-              <Link href={'/emails/reset-password-email'}>
-                <CardButtonHeader>
-                  <CardButtonTitle>Reset Password Email</CardButtonTitle>
-                </CardButtonHeader>
-              </Link>
-            </CardButton>
-
-            <CardButton asChild>
-              <Link href={'/emails/magic-link-email'}>
-                <CardButtonHeader>
-                  <CardButtonTitle>Magic Link Email</CardButtonTitle>
-                </CardButtonHeader>
-              </Link>
-            </CardButton>
-          </div>
-        </div>
-
-        <div className={'flex flex-col space-y-4'}>
-          <Heading level={5}>Transactional Emails</Heading>
-
-          <div className={'grid grid-cols-1 gap-4 md:grid-cols-4'}>
-            <CardButton asChild>
-              <Link href={'/emails/account-delete-email'}>
-                <CardButtonHeader>
-                  <CardButtonTitle>Account Delete Email</CardButtonTitle>
-                </CardButtonHeader>
-              </Link>
-            </CardButton>
-
-            <CardButton asChild>
-              <Link href={'/emails/invite-email'}>
-                <CardButtonHeader>
-                  <CardButtonTitle>Invite Email</CardButtonTitle>
-                </CardButtonHeader>
-              </Link>
-            </CardButton>
-
-            <CardButton asChild>
-              <Link href={'/emails/otp-email'}>
-                <CardButtonHeader>
-                  <CardButtonTitle>OTP Email</CardButtonTitle>
-                </CardButtonHeader>
-              </Link>
-            </CardButton>
-          </div>
-        </div>
+              <div className={'grid grid-cols-1 gap-4 md:grid-cols-4'}>
+                {categoryTemplates.map((template) => (
+                  <CardButton key={template.id} asChild>
+                    <Link href={`/emails/${template.id}`}>
+                      <CardButtonHeader>
+                        <CardButtonTitle>{template.name}</CardButtonTitle>
+                      </CardButtonHeader>
+                    </Link>
+                  </CardButton>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </PageBody>
     </Page>
   );

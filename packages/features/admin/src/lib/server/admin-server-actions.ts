@@ -43,13 +43,9 @@ export const banUserAction = adminAction(
         };
       }
 
-      logger.info({ userId }, `Super Admin has successfully banned user`);
-
       revalidateAdmin();
 
-      return {
-        success: true,
-      };
+      logger.info({ userId }, `Super Admin has successfully banned user`);
     },
     {
       schema: BanUserSchema,
@@ -82,10 +78,6 @@ export const reactivateUserAction = adminAction(
       revalidateAdmin();
 
       logger.info({ userId }, `Super Admin has successfully reactivated user`);
-
-      return {
-        success: true,
-      };
     },
     {
       schema: ReactivateUserSchema,
@@ -246,7 +238,8 @@ function getAdminAuthService() {
 }
 
 function getAdminAccountsService() {
+  const client = getSupabaseServerClient();
   const adminClient = getSupabaseServerAdminClient();
 
-  return createAdminAccountsService(adminClient);
+  return createAdminAccountsService(adminClient, client);
 }

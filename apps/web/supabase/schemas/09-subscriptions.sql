@@ -51,6 +51,7 @@ comment on column public.subscriptions.billing_customer_id is 'The billing custo
 -- Revoke all on subscriptions table from authenticated and service_role
 revoke all on public.subscriptions
 from
+  anon,
   authenticated,
   service_role;
 
@@ -68,6 +69,11 @@ select
 
 -- Indexes on the subscriptions table
 create index ix_subscriptions_account_id on public.subscriptions (account_id);
+
+-- Triggers for subscriptions table
+create trigger subscriptions_set_timestamps
+before insert or update on public.subscriptions
+for each row execute function public.trigger_set_timestamps();
 
 -- Enable RLS on subscriptions table
 alter table public.subscriptions enable row level security;
@@ -297,6 +303,7 @@ comment on column public.subscription_items.updated_at is 'The last update date 
 -- Revoke all access to subscription_items table for authenticated users and service_role
 revoke all on public.subscription_items
 from
+  anon,
   authenticated,
   service_role;
 
@@ -313,6 +320,11 @@ delete on table public.subscription_items to service_role;
 -- Indexes
 -- Indexes on the subscription_items table
 create index ix_subscription_items_subscription_id on public.subscription_items (subscription_id);
+
+-- Triggers for subscription_items table
+create trigger subscription_items_set_timestamps
+before insert or update on public.subscription_items
+for each row execute function public.trigger_set_timestamps();
 
 -- RLS
 alter table public.subscription_items enable row level security;

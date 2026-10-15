@@ -31,13 +31,9 @@ export async function GET(
       '/cookie-policy',
     ].map((path) => ({ path }));
   else if (kind === 'companies' || kind === 'categories') {
-    let query = client
-      .from(kind === 'companies' ? 'businesses' : 'categories')
-      .select('slug,updated_at')
-      .order('slug')
-      .range(start, end);
-    if (kind === 'categories') query = query.eq('is_active', true);
-    const { data, error } = await query;
+    const {data,error} = kind === 'companies'
+      ? await client.from('businesses').select('slug,updated_at').order('slug').range(start,end)
+      : await client.from('categories').select('slug,updated_at').eq('is_active',true).order('slug').range(start,end);
     if (error) return new Response('Unavailable', { status: 503 });
     paths = (data ?? []).map((row) => ({
       path: `/${kind === 'companies' ? 'company' : 'categories'}/${row.slug}`,

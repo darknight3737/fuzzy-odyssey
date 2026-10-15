@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { redirect } from 'next/navigation';
+
 import { SupabaseClient } from '@supabase/supabase-js';
 
 import { z } from 'zod';
@@ -9,6 +11,7 @@ import { getProductPlanPair } from '@kit/billing';
 import { getBillingGatewayProvider } from '@kit/billing-gateway';
 import { getLogger } from '@kit/shared/logger';
 import { requireUser } from '@kit/supabase/require-user';
+import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 
 import appConfig from '~/config/app.config';
 import billingConfig from '~/config/billing.config';
@@ -70,6 +73,20 @@ class UserBillingService {
     }
 
     const { plan } = getProductPlanPair(billingConfig, planId);
+
+    // Determine trial eligibility at the identity level: if the user already
+    // has billing history on any account they own (personal or team), do not
+    // grant another trial. This prevents farming free trials by creating
+    // additional accounts. Uses the admin client to read across the user's own
+    // accounts, scoped to the authenticated user id.
+    const ownerHasBillingHistory = await createAccountsApi(
+      getSupabaseServerAdminClient(),
+    ).ownerHasBillingHistory(accountId);
+
+    const checkoutPlan = ownerHasBillingHistory
+      ? { ...plan, trialDays: undefined }
+      : plan;
+
     const logger = await getLogger();
 
     logger.info(
@@ -82,30 +99,23 @@ class UserBillingService {
       `User requested a personal account checkout session. Contacting provider...`,
     );
 
+    let checkoutToken: string | null | undefined;
+    let url: string | null | undefined;
+
     try {
       // call the payment gateway to create the checkout session
-      const { checkoutToken } = await service.createCheckoutSession({
+      const checkout = await service.createCheckoutSession({
         returnUrl,
         accountId,
         customerEmail: user.email,
         customerId,
-        plan,
+        plan: checkoutPlan,
         variantQuantities: [],
         enableDiscountField: product.enableDiscountField,
       });
 
-      logger.info(
-        {
-          userId: user.id,
-        },
-        `Checkout session created. Returning checkout token to client...`,
-      );
-
-      // return the checkout token to the client
-      // so we can call the payment gateway to complete the checkout
-      return {
-        checkoutToken,
-      };
+      checkoutToken = checkout.checkoutToken;
+      url = checkout.url;
     } catch (error) {
       logger.error(
         {
@@ -118,8 +128,39 @@ class UserBillingService {
         `Checkout session not created due to an error`,
       );
 
-      throw new Error(`Failed to create a checkout session`);
+      throw new Error(`Failed to create a checkout session`, { cause: error });
     }
+
+    if (!url && !checkoutToken) {
+      throw new Error(
+        'Checkout session returned neither a URL nor a checkout token',
+      );
+    }
+
+    // if URL provided, we redirect to the provider's hosted page
+    if (url) {
+      logger.info(
+        {
+          userId: user.id,
+        },
+        `Checkout session created. Redirecting to hosted page...`,
+      );
+
+      redirect(url);
+    }
+
+    logger.info(
+      {
+        userId: user.id,
+      },
+      `Checkout session created. Returning checkout token to client...`,
+    );
+
+    // return the checkout token to the client
+    // so we can call the payment gateway to complete the checkout
+    return {
+      checkoutToken,
+    };
   }
 
   /**
@@ -177,6 +218,7 @@ class UserBillingService {
 
       throw new Error(
         `Encountered an error creating the Billing Portal session`,
+        { cause: error },
       );
     }
 

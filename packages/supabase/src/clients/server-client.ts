@@ -14,7 +14,15 @@ import { getSupabaseClientKeys } from '../get-supabase-client-keys';
 export function getSupabaseServerClient<GenericSchema = Database>() {
   const keys = getSupabaseClientKeys();
 
+  // Mark every consumer as request-bound as soon as the server client is created.
+  void cookies();
+
   return createServerClient<GenericSchema>(keys.url, keys.publicKey, {
+    cookieOptions: {
+      // Mark session cookies as Secure in production (HTTPS). Gated to
+      // production so local dev over http://localhost keeps working.
+      secure: process.env.NODE_ENV === 'production',
+    },
     cookies: {
       async getAll() {
         const cookieStore = await cookies();

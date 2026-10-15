@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
-
-import { useRouter } from 'next/navigation';
+import { useEffect, useEffectEvent } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
@@ -43,11 +41,9 @@ export function MultiFactorChallengeContainer({
     redirectPath: string;
   };
 }>) {
-  const router = useRouter();
-
   const verifyMFAChallenge = useVerifyMFAChallenge({
     onSuccess: () => {
-      router.replace(paths.redirectPath);
+      window.location.replace(paths.redirectPath);
     },
   });
 
@@ -227,12 +223,16 @@ function FactorsListContainer({
 
   const isSuccess = factors && !isLoading && !error;
 
+  const signOutFn = useEffectEvent(() => {
+    void signOut.mutateAsync();
+  });
+
   useEffect(() => {
     // If there is an error, sign out
     if (error) {
-      void signOut.mutateAsync();
+      void signOutFn();
     }
-  }, [error, signOut]);
+  }, [error]);
 
   useEffect(() => {
     // If there is only one factor, select it automatically

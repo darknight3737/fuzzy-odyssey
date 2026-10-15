@@ -1,17 +1,19 @@
+import { defineConfig } from '@eslint/config-helpers';
 import eslint from '@eslint/js';
-import turboConfig from 'eslint-config-turbo/flat';
-import tsEsLint from 'typescript-eslint';
+import turbo from 'eslint-config-turbo';
 
-import nextConfig from './nextjs.js';
+import { nextEslintConfig, rules as nextjsEslintRules } from './nextjs.js';
 
-export default tsEsLint.config(
+export default defineConfig(
   eslint.configs.recommended,
-  nextConfig,
-  turboConfig,
+  ...nextEslintConfig,
   {
+    plugins: {
+      turbo,
+    },
     settings: {
       react: {
-        version: '19.0',
+        version: '19.2',
       },
     },
     languageOptions: {
@@ -22,6 +24,8 @@ export default tsEsLint.config(
   },
   {
     rules: {
+      ...nextjsEslintRules,
+      'no-undef': 'off',
       '@typescript-eslint/triple-slash-reference': 'off',
       'react/react-in-jsx-scope': 'off',
       'import/no-anonymous-default-export': 'off',
@@ -43,6 +47,7 @@ export default tsEsLint.config(
       '@typescript-eslint/non-nullable-type-assertion-style': 'off',
       '@typescript-eslint/only-throw-error': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      'preserve-caught-error': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },

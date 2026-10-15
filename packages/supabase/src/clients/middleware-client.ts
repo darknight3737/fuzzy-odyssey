@@ -20,6 +20,11 @@ export function createMiddlewareClient<GenericSchema = Database>(
   const keys = getSupabaseClientKeys();
 
   return createServerClient<GenericSchema>(keys.url, keys.publicKey, {
+    cookieOptions: {
+      // Mark session cookies as Secure in production (HTTPS). Gated to
+      // production so local dev over http://localhost keeps working.
+      secure: process.env.NODE_ENV === 'production',
+    },
     cookies: {
       getAll() {
         return request.cookies.getAll();

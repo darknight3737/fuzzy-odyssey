@@ -43,9 +43,17 @@ export async function initializeI18nClient(
       {
         ...settings,
         detection: {
-          order: ['htmlTag', 'cookie', 'navigator'],
+          order: ['cookie', 'htmlTag', 'navigator'],
           caches: ['cookie'],
           lookupCookie: 'lang',
+          cookieMinutes: 60 * 24 * 365, // 1 year
+          cookieOptions: {
+            sameSite: 'lax',
+            secure:
+              typeof window !== 'undefined' &&
+              window.location.protocol === 'https:',
+            path: '/',
+          },
         },
         interpolation: {
           escapeValue: false,

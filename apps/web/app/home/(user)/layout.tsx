@@ -1,6 +1,7 @@
 import { use } from 'react';
 
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 import { z } from 'zod';
 
@@ -32,9 +33,15 @@ function UserHomeLayout({ children }: React.PropsWithChildren) {
 
 export default withI18n(UserHomeLayout);
 
-function SidebarLayout({ children }: React.PropsWithChildren) {
-  const workspace = use(loadUserWorkspace());
-  const state = use(getLayoutState());
+async function SidebarLayout({ children }: React.PropsWithChildren) {
+  const [workspace, state] = await Promise.all([
+    loadUserWorkspace().catch(() => null),
+    getLayoutState(),
+  ]);
+
+  if (!workspace) {
+    redirect('/');
+  }
 
   return (
     <UserWorkspaceContextProvider value={workspace}>

@@ -4,7 +4,7 @@ export function checkPendingMigrations() {
   try {
     console.info('\x1b[34m%s\x1b[0m', 'Checking for pending migrations...');
 
-    const output = execSync('pnpm --filter web supabase migration list', {
+    const output = execSync('pnpm --filter web supabase migrations list', {
       encoding: 'utf-8',
       stdio: 'pipe',
     });
@@ -16,7 +16,8 @@ export function checkPendingMigrations() {
 
     const pendingMigrations = migrationLines
       .filter((line) => {
-        const [local, remote] = line.split('│').map((s) => s.trim());
+        const [local, remote] = line.split('|').map((s) => s.trim());
+
         return local !== '' && remote === '';
       })
       .map((line) => (line.split('│')[0] ?? '').trim());

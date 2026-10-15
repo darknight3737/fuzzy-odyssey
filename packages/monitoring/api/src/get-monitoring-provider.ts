@@ -7,12 +7,26 @@ const MONITORING_PROVIDERS = [
 ] as const;
 
 export const MONITORING_PROVIDER = z
-  .enum(MONITORING_PROVIDERS)
+  .enum(MONITORING_PROVIDERS, {
+    errorMap: () => ({ message: 'Invalid monitoring provider' }),
+  })
   .optional()
   .transform((value) => value || undefined);
 
 export type MonitoringProvider = z.infer<typeof MONITORING_PROVIDER>;
 
 export function getMonitoringProvider() {
-  return MONITORING_PROVIDER.parse(process.env.NEXT_PUBLIC_MONITORING_PROVIDER);
+  const provider = MONITORING_PROVIDER.safeParse(
+    process.env.NEXT_PUBLIC_MONITORING_PROVIDER,
+  );
+
+  if (!provider.success) {
+    console.error(
+      `Error: Invalid monitoring provider\n\n${provider.error.message}.\n\nWill fallback to console service.\nPlease review the variable NEXT_PUBLIC_MONITORING_PROVIDER`,
+    );
+
+    return;
+  }
+
+  return provider.data;
 }

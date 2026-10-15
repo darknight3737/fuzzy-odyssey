@@ -20,7 +20,7 @@ import { If } from '@kit/ui/if';
 import { Input } from '@kit/ui/input';
 import { Trans } from '@kit/ui/trans';
 
-import { useCaptchaToken } from '../captcha/client';
+import { useCaptcha } from '../captcha/client';
 import { AuthErrorAlert } from './auth-error-alert';
 
 const PasswordResetSchema = z.object({
@@ -29,15 +29,17 @@ const PasswordResetSchema = z.object({
 
 export function PasswordResetRequestContainer(params: {
   redirectPath: string;
+  captchaSiteKey?: string;
 }) {
   const { t } = useTranslation('auth');
   const resetPasswordMutation = useRequestResetPassword();
-  const { captchaToken, resetCaptchaToken } = useCaptchaToken();
+  const captcha = useCaptcha({ siteKey: params.captchaSiteKey });
+  const captchaLoading = !captcha.isReady;
 
   const error = resetPasswordMutation.error;
   const success = resetPasswordMutation.data;
 
-  const form = useForm<z.infer<typeof PasswordResetSchema>>({
+  const form = useForm({
     resolver: zodResolver(PasswordResetSchema),
     defaultValues: {
       email: '',
@@ -67,10 +69,10 @@ export function PasswordResetRequestContainer(params: {
                 .mutateAsync({
                   email,
                   redirectTo,
-                  captchaToken,
+                  captchaToken: captcha.token,
                 })
                 .catch(() => {
-                  resetCaptchaToken();
+                  captcha.reset();
                 });
             })}
             className={'w-full'}
@@ -100,10 +102,28 @@ export function PasswordResetRequestContainer(params: {
                 )}
               />
 
-              <Button disabled={resetPasswordMutation.isPending} type="submit">
-                <Trans i18nKey={'auth:passwordResetLabel'} />
+              <Button
+                disabled={resetPasswordMutation.isPending || captchaLoading}
+                type="submit"
+              >
+                <If
+                  condition={
+                    !resetPasswordMutation.isPending && !captchaLoading
+                  }
+                >
+                  <Trans i18nKey={'auth:passwordResetLabel'} />
+                </If>
+
+                <If condition={resetPasswordMutation.isPending}>
+                  <Trans i18nKey={'auth:passwordResetLabel'} />
+                </If>
+
+                <If condition={captchaLoading}>
+                  <Trans i18nKey={'auth:verifyingCaptcha'} />
+                </If>
               </Button>
             </div>
+            {captcha.field}
           </form>
         </Form>
       </If>

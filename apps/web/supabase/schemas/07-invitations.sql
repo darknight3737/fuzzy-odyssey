@@ -16,6 +16,10 @@ create table if not exists
     created_at timestamptz default current_timestamp not null,
     updated_at timestamptz default current_timestamp not null,
     expires_at timestamptz default current_timestamp + interval '7 days' not null,
+    constraint invitations_expires_after_created check (expires_at > created_at),
+    constraint invitations_email_format check (
+      email ~* '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'
+    ),
     unique (email, account_id)
   );
 
@@ -36,20 +40,58 @@ comment on column public.invitations.email is 'The email of the user being invit
 -- Indexes on the invitations table
 create index ix_invitations_account_id on public.invitations (account_id);
 
+-- Triggers for invitations table
+create trigger invitations_set_timestamps
+before insert or update on public.invitations
+for each row execute function public.trigger_set_timestamps();
+
 -- Revoke all on invitations table from authenticated and service_role
 revoke all on public.invitations
 from
+  anon,
   authenticated,
   service_role;
 
--- Open up access to invitations table for authenticated users and service_role
+-- service_role retains full access (used by the admin client for the accept route)
 grant
 select
 ,
   insert,
 update,
-delete on table public.invitations to authenticated,
-service_role;
+delete on table public.invitations to service_role;
+
+-- id is a serial, so INSERT needs nextval() on its sequence. usage, not update:
+-- update would also permit setval(). authenticated has no INSERT here, so it
+-- needs nothing.
+grant usage on sequence public.invitations_id_seq to service_role;
+
+-- Authenticated users may update/delete (gated by RLS) but may NOT:
+--   * INSERT: invitations are only created by add_invitations_to_account,
+--     which runs with the service_role client (there is no INSERT policy);
+--   * read the invite_token column: it is a credential and must not be
+--     exposed via the data API to members of the inviting account. The accept
+--     route reads it with the service_role (admin) client. This is
+--     defense-in-depth on top of the signed-link check (see
+--     @kit/team-accounts/invitation-signature).
+grant delete on table public.invitations to authenticated;
+
+-- authenticated may only UPDATE the invitation role and expiry. Identity and
+-- delivery columns (id, email, account_id, invited_by, invite_token,
+-- created_at) are never user-updatable. Enforced by Postgres up front.
+grant update (role, expires_at) on table public.invitations to authenticated;
+
+grant
+select
+  (
+    id,
+    email,
+    account_id,
+    invited_by,
+    role,
+    created_at,
+    updated_at,
+    expires_at
+  ) on table public.invitations to authenticated;
 
 -- Enable RLS on the invitations table
 alter table public.invitations enable row level security;
@@ -91,36 +133,9 @@ select
   to authenticated using (public.has_role_on_account (account_id));
 
 -- INSERT(invitations):
--- Users can create invitations to users of an account they are
--- a member of and have the 'invites.manage' permission AND the target role is not higher than the user's role
-create policy invitations_create_self on public.invitations for insert to authenticated
-with
-  check (
-    public.is_set ('enable_team_accounts')
-    and public.has_permission (
-      (
-        select
-          auth.uid ()
-      ),
-      account_id,
-      'invites.manage'::public.app_permissions
-    )
-    and (public.has_more_elevated_role (
-      (
-        select
-          auth.uid ()
-      ),
-      account_id,
-      role
-    ) or public.has_same_role_hierarchy_level(
-      (
-        select
-          auth.uid ()
-      ),
-      account_id,
-      role
-    ))
-  );
+-- Invitations are created through server actions using admin client.
+-- Permission and role hierarchy checks are enforced in the server action.
+-- No RLS policy needed for INSERT.
 
 -- UPDATE(invitations):
 -- Users can update invitations to users of an account they are a member of and have the 'invites.manage' permission AND
@@ -285,11 +300,13 @@ begin
         invitation.created_at,
         invitation.updated_at,
         invitation.expires_at,
-        account.name,
-        account.email
+        inviter.name,
+        inviter.email
     from
         public.invitations as invitation
         join public.accounts as account on invitation.account_id = account.id
+        -- the inviter's personal account shares its id with the auth user
+        left join public.accounts as inviter on invitation.invited_by = inviter.id
     where
         account.slug = account_slug;
 
@@ -306,7 +323,8 @@ service_role;
 create
 or replace function public.add_invitations_to_account (
   account_slug text,
-  invitations public.invitation[]
+  invitations public.invitation[],
+  invited_by uuid
 ) returns public.invitations[]
 set
   search_path = '' as $$
@@ -335,7 +353,10 @@ begin
                 from
                     public.accounts
                 where
-                    slug = account_slug), auth.uid(), role, invite_token)
+                    slug = account_slug),
+            invited_by,
+            role,
+            invite_token)
     returning
         * into new_invitation;
 
@@ -350,5 +371,4 @@ end;
 $$ language plpgsql;
 
 grant
-execute on function public.add_invitations_to_account (text, public.invitation[]) to authenticated,
-service_role;
+execute on function public.add_invitations_to_account (text, public.invitation[], uuid) to service_role;

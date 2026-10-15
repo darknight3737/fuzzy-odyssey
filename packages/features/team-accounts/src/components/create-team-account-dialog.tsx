@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 
 import { isRedirectError } from 'next/dist/client/components/redirect-error';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { useForm, useWatch } from 'react-hook-form';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
 import { Button } from '@kit/ui/button';
@@ -30,7 +29,10 @@ import { If } from '@kit/ui/if';
 import { Input } from '@kit/ui/input';
 import { Trans } from '@kit/ui/trans';
 
-import { CreateTeamSchema } from '../schema/create-team.schema';
+import {
+  CreateTeamSchema,
+  NON_LATIN_REGEX,
+} from '../schema/create-team.schema';
 import { createTeamAccountAction } from '../server/actions/create-team-account-server-actions';
 
 export function CreateTeamAccountDialog(
@@ -62,15 +64,23 @@ export function CreateTeamAccountDialog(
 }
 
 function CreateOrganizationAccountForm(props: { onClose: () => void }) {
-  const [error, setError] = useState<boolean>();
+  const [error, setError] = useState<{ message?: string } | undefined>();
   const [pending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof CreateTeamSchema>>({
+  const form = useForm({
     defaultValues: {
       name: '',
+      slug: '',
     },
     resolver: zodResolver(CreateTeamSchema),
   });
+
+  const nameValue = useWatch({ control: form.control, name: 'name' });
+
+  const showSlugField = useMemo(
+    () => NON_LATIN_REGEX.test(nameValue ?? ''),
+    [nameValue],
+  );
 
   return (
     <Form {...form}>
@@ -79,14 +89,14 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
         onSubmit={form.handleSubmit((data) => {
           startTransition(async () => {
             try {
-              const { error } = await createTeamAccountAction(data);
+              const result = await createTeamAccountAction(data);
 
-              if (error) {
-                setError(true);
+              if (result.error) {
+                setError({ message: result.message });
               }
-            } catch (error) {
-              if (!isRedirectError(error)) {
-                setError(true);
+            } catch (e) {
+              if (!isRedirectError(e)) {
+                setError({});
               }
             }
           });
@@ -94,7 +104,7 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
       >
         <div className={'flex flex-col space-y-4'}>
           <If condition={error}>
-            <CreateOrganizationErrorAlert />
+            <CreateOrganizationErrorAlert message={error?.message} />
           </If>
 
           <FormField
@@ -108,7 +118,7 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
 
                   <FormControl>
                     <Input
-                      data-test={'create-team-name-input'}
+                      data-test={'team-name-input'}
                       required
                       minLength={2}
                       maxLength={50}
@@ -126,6 +136,38 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
               );
             }}
           />
+
+          <If condition={showSlugField}>
+            <FormField
+              name={'slug'}
+              render={({ field }) => {
+                return (
+                  <FormItem>
+                    <FormLabel>
+                      <Trans i18nKey={'teams:teamSlugLabel'} />
+                    </FormLabel>
+
+                    <FormControl>
+                      <Input
+                        data-test={'team-slug-input'}
+                        required
+                        minLength={2}
+                        maxLength={50}
+                        placeholder={'my-team'}
+                        {...field}
+                      />
+                    </FormControl>
+
+                    <FormDescription>
+                      <Trans i18nKey={'teams:teamSlugDescription'} />
+                    </FormDescription>
+
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+          </If>
 
           <div className={'flex justify-end space-x-2'}>
             <Button
@@ -151,7 +193,7 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
   );
 }
 
-function CreateOrganizationErrorAlert() {
+function CreateOrganizationErrorAlert(props: { message?: string }) {
   return (
     <Alert variant={'destructive'}>
       <AlertTitle>
@@ -159,7 +201,11 @@ function CreateOrganizationErrorAlert() {
       </AlertTitle>
 
       <AlertDescription>
-        <Trans i18nKey={'teams:createTeamErrorMessage'} />
+        {props.message ? (
+          <Trans i18nKey={props.message} defaults={props.message} />
+        ) : (
+          <Trans i18nKey={'teams:createTeamErrorMessage'} />
+        )}
       </AlertDescription>
     </Alert>
   );

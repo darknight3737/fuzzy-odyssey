@@ -54,7 +54,7 @@ async function SignInPage({ searchParams }: SignInPageProps) {
       </div>
 
       <SignInMethodsContainer
-        inviteToken={inviteToken}
+        captchaSiteKey={authConfig.captchaTokenSiteKey}
         paths={paths}
         providers={authConfig.providers}
       />

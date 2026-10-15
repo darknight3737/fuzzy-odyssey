@@ -41,17 +41,41 @@ alter table "public"."accounts" enable row level security;
 -- Revoke all on accounts table from authenticated and service_role
 revoke all on public.accounts
 from
+  anon,
   authenticated,
   service_role;
 
 -- Open up access to accounts
+-- authenticated has no INSERT: accounts are only created by the
+-- kit.setup_new_user trigger and the create_team_account function (both
+-- SECURITY DEFINER), so the role never inserts rows directly.
+grant
+select
+,
+  delete on table public.accounts to authenticated;
+
 grant
 select
 ,
   insert,
-update,
-delete on table public.accounts to authenticated,
-service_role;
+  delete on table public.accounts to service_role;
+
+-- service_role retains full-table UPDATE (system-managed and identity columns)
+grant
+update on table public.accounts to service_role;
+
+-- authenticated may only UPDATE genuinely user-editable columns.
+-- Identity columns (id, primary_owner_user_id, is_personal_account, email) are
+-- guarded by kit.protect_account_fields and must never change. System-managed
+-- columns (created_at/updated_at, created_by/updated_by) are written only by
+-- triggers or the service_role. Note that `slug` IS user-editable: renaming a
+-- team updates it directly (see team-details-server-actions).
+-- Enforced by Postgres before RLS or the trigger run (defense-in-depth).
+-- NOTE: BEFORE triggers that mutate timestamps/tracking on NEW keep working,
+-- because column privileges are checked against the statement's SET list, not
+-- against columns a trigger writes.
+grant
+update (name, slug, picture_url, public_data) on table public.accounts to authenticated;
 
 -- constraint that conditionally allows nulls on the slug ONLY if
 --  personal_account is true
@@ -76,6 +100,15 @@ create index if not exists ix_accounts_is_personal_account on public.accounts (i
 create unique index unique_personal_account on public.accounts (primary_owner_user_id)
 where
   is_personal_account = true;
+
+-- Triggers for accounts table
+create trigger accounts_set_timestamps
+before insert or update on public.accounts
+for each row execute function public.trigger_set_timestamps();
+
+create trigger accounts_set_user_tracking
+before insert or update on public.accounts
+for each row execute function public.trigger_set_user_tracking();
 
 -- RLS on the accounts table
 -- UPDATE(accounts):
@@ -174,17 +207,15 @@ create
 or replace function kit.protect_account_fields () returns trigger as $$
 begin
     if current_user in('authenticated', 'anon') then
-	if new.id <> old.id or new.is_personal_account <>
-	    old.is_personal_account or new.primary_owner_user_id <>
-	    old.primary_owner_user_id or new.email <> old.email then
+        if new.id is distinct from old.id
+            or new.is_personal_account is distinct from old.is_personal_account
+            or new.primary_owner_user_id is distinct from old.primary_owner_user_id
+            or new.email is distinct from old.email then
             raise exception 'You do not have permission to update this field';
-
         end if;
-
     end if;
 
     return NEW;
-
 end
 $$ language plpgsql
 set
@@ -213,37 +244,6 @@ $$ language plpgsql;
 
 grant
 execute on function public.get_upper_system_role () to service_role;
-
--- Function "kit.add_current_user_to_new_account"
--- Trigger to add the current user to a new account as the primary owner
-create
-or replace function kit.add_current_user_to_new_account () returns trigger language plpgsql security definer
-set
-  search_path = '' as $$
-begin
-    if new.primary_owner_user_id = auth.uid() then
-        insert into public.accounts_memberships(
-            account_id,
-            user_id,
-            account_role)
-        values(
-            new.id,
-            auth.uid(),
-            public.get_upper_system_role());
-
-    end if;
-
-    return NEW;
-
-end;
-
-$$;
-
--- trigger the function whenever a new account is created
-create trigger "add_current_user_to_new_account"
-after insert on public.accounts for each row
-when (new.is_personal_account = false)
-execute function kit.add_current_user_to_new_account ();
 
 -- create a trigger to update the account email when the primary owner email is updated
 create
@@ -461,54 +461,74 @@ execute procedure kit.setup_new_user ();
  * -------------------------------------------------------
  */
 -- Function "public.create_team_account"
--- Create a team account if team accounts are enabled
+-- Create a team account with membership in a single transaction
+-- Called by service_role only (Policies API enforced in application layer)
 create
-or replace function public.create_team_account (account_name text) returns public.accounts
+or replace function public.create_team_account (
+    account_name text,
+    user_id uuid,
+    account_slug text default null
+) returns public.accounts
+language plpgsql
+security definer
 set
   search_path = '' as $$
 declare
     new_account public.accounts;
+    owner_role varchar(50);
 begin
     if (not public.is_set('enable_team_accounts')) then
         raise exception 'Team accounts are not enabled';
     end if;
 
+    -- Get the highest system role for the owner
+    select public.get_upper_system_role() into owner_role;
+
+    -- Insert the new team account
+    -- The slug will be auto-generated from name by the "set_slug_from_account_name"
+    -- trigger if account_slug is null
     insert into public.accounts(
         name,
-        is_personal_account)
+        slug,
+        is_personal_account,
+        primary_owner_user_id)
     values (
         account_name,
-        false)
-returning
-    * into new_account;
+        account_slug,
+        false,
+        user_id)
+    returning * into new_account;
+
+    -- Create membership for the owner (atomic with account creation)
+    insert into public.accounts_memberships(
+        account_id,
+        user_id,
+        account_role)
+    values (
+        new_account.id,
+        user_id,
+        coalesce(owner_role, 'owner'));
 
     return new_account;
 
 end;
 
-$$ language plpgsql;
+$$;
 
 grant
-execute on function public.create_team_account (text) to authenticated,
-service_role;
+execute on function public.create_team_account (text, uuid, text) to service_role;
 
 -- RLS(public.accounts)
--- Authenticated users can create team accounts
-create policy create_org_account on public.accounts for insert to authenticated
-with
-  check (
-    public.is_set ('enable_team_accounts')
-    and public.accounts.is_personal_account = false
-  );
-
--- RLS(public.accounts)
--- Authenticated users can delete team accounts
+-- The primary owner can delete team accounts. Personal accounts are excluded:
+-- they are deleted through the admin flow (auth.admin.deleteUser cascades to
+-- the account row), never directly by their owner.
 create policy delete_team_account
     on public.accounts
     for delete
     to authenticated
     using (
         auth.uid() = primary_owner_user_id
+        and is_personal_account = false
     );
 
 -- Functions "public.get_account_members"

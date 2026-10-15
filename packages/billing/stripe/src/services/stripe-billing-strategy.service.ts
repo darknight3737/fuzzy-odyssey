@@ -26,9 +26,7 @@ import { createStripeSubscriptionPayloadBuilderService } from './stripe-subscrip
  * @class StripeBillingStrategyService
  * @implements {BillingStrategyProviderService}
  */
-export class StripeBillingStrategyService
-  implements BillingStrategyProviderService
-{
+export class StripeBillingStrategyService implements BillingStrategyProviderService {
   private readonly namespace = 'billing.stripe';
 
   /**
@@ -50,9 +48,9 @@ export class StripeBillingStrategyService
 
     logger.info(ctx, 'Creating checkout session...');
 
-    const { client_secret } = await createStripeCheckout(stripe, params);
+    const { client_secret, url } = await createStripeCheckout(stripe, params);
 
-    if (!client_secret) {
+    if (!client_secret && !url) {
       logger.error(ctx, 'Failed to create checkout session');
 
       throw new Error('Failed to create checkout session');
@@ -60,7 +58,10 @@ export class StripeBillingStrategyService
 
     logger.info(ctx, 'Checkout session created successfully');
 
-    return { checkoutToken: client_secret };
+    return {
+      checkoutToken: client_secret,
+      url,
+    };
   }
 
   /**
@@ -176,7 +177,7 @@ export class StripeBillingStrategyService
         'Failed to retrieve checkout session',
       );
 
-      throw new Error('Failed to retrieve checkout session');
+      throw new Error('Failed to retrieve checkout session', { cause: error });
     }
   }
 
@@ -220,7 +221,7 @@ export class StripeBillingStrategyService
         'Failed to report usage',
       );
 
-      throw new Error('Failed to report usage');
+      throw new Error('Failed to report usage', { cause: error });
     }
 
     return {
@@ -279,7 +280,7 @@ export class StripeBillingStrategyService
         'Failed to report usage',
       );
 
-      throw new Error('Failed to report usage');
+      throw new Error('Failed to report usage', { cause: error });
     }
   }
 
@@ -319,7 +320,7 @@ export class StripeBillingStrategyService
     } catch (error) {
       logger.error({ ...ctx, error }, 'Failed to update subscription');
 
-      throw new Error('Failed to update subscription');
+      throw new Error('Failed to update subscription', { cause: error });
     }
   }
 
@@ -359,7 +360,7 @@ export class StripeBillingStrategyService
     } catch (error) {
       logger.error({ ...ctx, error }, 'Failed to retrieve plan');
 
-      throw new Error('Failed to retrieve plan');
+      throw new Error('Failed to retrieve plan', { cause: error });
     }
   }
 
@@ -406,7 +407,8 @@ export class StripeBillingStrategyService
         lineItems,
         status: subscription.status,
         currency: subscription.currency,
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        cancelAtPeriodEnd:
+          subscriptionPayloadBuilder.getCancelAtPeriodEnd(subscription),
         periodStartsAt,
         periodEndsAt,
         trialStartsAt: subscription.trial_start,
@@ -415,7 +417,7 @@ export class StripeBillingStrategyService
     } catch (error) {
       logger.error({ ...ctx, error }, 'Failed to retrieve subscription');
 
-      throw new Error('Failed to retrieve subscription');
+      throw new Error('Failed to retrieve subscription', { cause: error });
     }
   }
 

@@ -6,6 +6,8 @@ import { createBillingGatewayService } from '@kit/billing-gateway';
 import { getLogger } from '@kit/shared/logger';
 import { Database } from '@kit/supabase/database';
 
+import { createTeamAccountsApi } from '../api';
+
 export function createAccountPerSeatBillingService(
   client: SupabaseClient<Database>,
 ) {
@@ -44,7 +46,8 @@ class AccountPerSeatBillingService {
           subscription_items !inner (
             quantity,
             id,
-            type
+            type,
+            variant_id
           )
         `,
       )
@@ -83,82 +86,40 @@ class AccountPerSeatBillingService {
 
   /**
    * @name increaseSeats
-   * @description Increases the number of seats for an account.
+   * @description Increases the number of seats for an account by reconciling
+   * the per-seat quantity to the current member count.
    * @param accountId
    */
   async increaseSeats(accountId: string) {
-    const logger = await getLogger();
-    const subscription = await this.getPerSeatSubscriptionItem(accountId);
-
-    if (!subscription) {
-      return;
-    }
-
-    const subscriptionItems = subscription.subscription_items.filter((item) => {
-      return item.type === 'per_seat';
-    });
-
-    if (!subscriptionItems.length) {
-      return;
-    }
-
-    const billingGateway = createBillingGatewayService(subscription.provider);
-
-    const ctx = {
-      name: this.namespace,
-      accountId,
-      subscriptionItems,
-    };
-
-    logger.info(ctx, `Increasing seats for account ${accountId}...`);
-
-    const promises = subscriptionItems.map(async (item) => {
-      try {
-        logger.info(
-          {
-            name: this.namespace,
-            accountId,
-            subscriptionItemId: item.id,
-            quantity: item.quantity + 1,
-          },
-          `Updating subscription item...`,
-        );
-
-        await billingGateway.updateSubscriptionItem({
-          subscriptionId: subscription.id,
-          subscriptionItemId: item.id,
-          quantity: item.quantity + 1,
-        });
-
-        logger.info(
-          {
-            name: this.namespace,
-            accountId,
-            subscriptionItemId: item.id,
-            quantity: item.quantity + 1,
-          },
-          `Subscription item updated successfully`,
-        );
-      } catch (error) {
-        logger.error(
-          {
-            ...ctx,
-            error,
-          },
-          `Failed to increase seats for account ${accountId}`,
-        );
-      }
-    });
-
-    await Promise.all(promises);
+    return this.reconcileSeatsToMembersCount(accountId);
   }
 
   /**
    * @name decreaseSeats
-   * @description Decreases the number of seats for an account.
+   * @description Decreases the number of seats for an account by reconciling
+   * the per-seat quantity to the current member count.
    * @param accountId
    */
   async decreaseSeats(accountId: string) {
+    return this.reconcileSeatsToMembersCount(accountId);
+  }
+
+  /**
+   * @name reconcileSeatsToMembersCount
+   * @description Sets the per-seat subscription quantity to the account's
+   * current member count.
+   *
+   * We intentionally compute the authoritative seat count from live membership
+   * rather than mutating a cached quantity by ±1. The local
+   * `subscription_items.quantity` is only reconciled asynchronously by the
+   * provider webhook, so a ±1 delta off a stale value loses updates under
+   * concurrent or rapid sequential membership changes, durably under-counting
+   * paid seats. The membership row is always committed before this runs (an
+   * invitation is accepted / a member removed before the seat update), so the
+   * member count is accurate, and the provider write is an absolute set.
+   * @param accountId
+   */
+  private async reconcileSeatsToMembersCount(accountId: string) {
     const logger = await getLogger();
     const subscription = await this.getPerSeatSubscriptionItem(accountId);
 
@@ -174,15 +135,22 @@ class AccountPerSeatBillingService {
       return;
     }
 
+    const api = createTeamAccountsApi(this.client);
+    const quantity = (await api.getMembersCount(accountId)) ?? 1;
+
+    const billingGateway = createBillingGatewayService(subscription.provider);
+
     const ctx = {
       name: this.namespace,
       accountId,
       subscriptionItems,
+      quantity,
     };
 
-    logger.info(ctx, `Decreasing seats for account ${accountId}...`);
-
-    const billingGateway = createBillingGatewayService(subscription.provider);
+    logger.info(
+      ctx,
+      `Reconciling seats for account ${accountId} to member count...`,
+    );
 
     const promises = subscriptionItems.map(async (item) => {
       try {
@@ -191,7 +159,7 @@ class AccountPerSeatBillingService {
             name: this.namespace,
             accountId,
             subscriptionItemId: item.id,
-            quantity: item.quantity - 1,
+            quantity,
           },
           `Updating subscription item...`,
         );
@@ -199,7 +167,7 @@ class AccountPerSeatBillingService {
         await billingGateway.updateSubscriptionItem({
           subscriptionId: subscription.id,
           subscriptionItemId: item.id,
-          quantity: item.quantity - 1,
+          quantity,
         });
 
         logger.info(
@@ -207,7 +175,7 @@ class AccountPerSeatBillingService {
             name: this.namespace,
             accountId,
             subscriptionItemId: item.id,
-            quantity: item.quantity - 1,
+            quantity,
           },
           `Subscription item updated successfully`,
         );
@@ -217,7 +185,7 @@ class AccountPerSeatBillingService {
             ...ctx,
             error,
           },
-          `Failed to decrease seats for account ${accountId}`,
+          `Failed to reconcile seats for account ${accountId}`,
         );
       }
     });

@@ -16,7 +16,9 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "noUncheckedSideEffectImports": false,
+    "types": ["node"]
   },
   "exclude": ["node_modules", "build", "dist", ".next"]
 }

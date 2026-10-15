@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -30,6 +31,8 @@ export const deleteTeamAccountAction = enhanceAction(
       purpose: `delete-team-account-${params.accountId}`,
       userId: user.id,
       token: params.otp,
+      // allow a few honest retries while still bounding brute-force attempts
+      maxVerificationAttempts: 5,
     });
 
     if (!otpResult.valid) {
@@ -56,6 +59,8 @@ export const deleteTeamAccountAction = enhanceAction(
     });
 
     logger.info(ctx, `Team account request successfully sent`);
+
+    revalidatePath('/', 'layout');
 
     return redirect('/home');
   },

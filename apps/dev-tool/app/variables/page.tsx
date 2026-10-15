@@ -1,12 +1,12 @@
 import { use } from 'react';
 
-import {
-  processEnvDefinitions,
-  scanMonorepoEnv,
-} from '@/app/variables/lib/env-scanner';
 import { EnvMode } from '@/app/variables/lib/types';
 
-import { AppBreadcrumbs } from '@kit/ui/app-breadcrumbs';
+import {
+  createKitEnvDeps,
+  createKitEnvService,
+  findWorkspaceRoot,
+} from '@kit/mcp-server/env';
 import { Page, PageBody, PageHeader } from '@kit/ui/page';
 
 import { AppEnvironmentVariablesManager } from './components/app-environment-variables-manager';
@@ -21,7 +21,7 @@ export const metadata = {
 
 export default function VariablesPage({ searchParams }: VariablesPageProps) {
   const { mode = 'development' } = use(searchParams);
-  const apps = use(scanMonorepoEnv({ mode }));
+  const apps = use(loadEnvStates(mode));
 
   return (
     <Page style={'custom'}>
@@ -36,19 +36,18 @@ export default function VariablesPage({ searchParams }: VariablesPageProps) {
 
         <PageBody className={'overflow-hidden'}>
           <div className={'flex h-full flex-1 flex-col space-y-4'}>
-            {apps.map((app) => {
-              const appEnvState = processEnvDefinitions(app, mode);
-
-              return (
-                <AppEnvironmentVariablesManager
-                  key={app.appName}
-                  state={appEnvState}
-                />
-              );
-            })}
+            {apps.map((app) => (
+              <AppEnvironmentVariablesManager key={app.appName} state={app} />
+            ))}
           </div>
         </PageBody>
       </div>
     </Page>
   );
+}
+
+async function loadEnvStates(mode: EnvMode) {
+  const rootPath = findWorkspaceRoot(process.cwd());
+  const service = createKitEnvService(createKitEnvDeps(rootPath));
+  return service.getAppState(mode);
 }

@@ -32,6 +32,7 @@ create index ix_billing_customers_account_id on public.billing_customers (accoun
 -- Revoke all on billing_customers table from authenticated and service_role
 revoke all on public.billing_customers
 from
+  anon,
   authenticated,
   service_role;
 
@@ -42,6 +43,11 @@ select
   insert,
 update,
 delete on table public.billing_customers to service_role;
+
+-- id is a serial, so INSERT needs nextval() on its sequence. usage, not update:
+-- update would also permit setval(). authenticated has no INSERT here, so it
+-- needs nothing.
+grant usage on sequence public.billing_customers_id_seq to service_role;
 
 -- Open up access to billing_customers table for authenticated users
 grant

@@ -33,6 +33,7 @@ export function PersonalAccountSettingsContainer(
       enableAccountDeletion: boolean;
       enablePasswordUpdate: boolean;
       enableAccountLinking: boolean;
+      showLinkEmailOption: boolean;
     };
 
     paths: {
@@ -156,23 +157,27 @@ export function PersonalAccountSettingsContainer(
         </CardContent>
       </Card>
 
-      <If condition={props.features.enableAccountLinking}>
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <Trans i18nKey={'account:linkedAccounts'} />
-            </CardTitle>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <Trans i18nKey={'account:linkedAccounts'} />
+          </CardTitle>
 
-            <CardDescription>
-              <Trans i18nKey={'account:linkedAccountsDescription'} />
-            </CardDescription>
-          </CardHeader>
+          <CardDescription>
+            <Trans i18nKey={'account:linkedAccountsDescription'} />
+          </CardDescription>
+        </CardHeader>
 
-          <CardContent>
-            <LinkAccountsList providers={props.providers} />
-          </CardContent>
-        </Card>
-      </If>
+        <CardContent>
+          <LinkAccountsList
+            providers={props.providers}
+            enabled={props.features.enableAccountLinking}
+            showEmailOption={props.features.showLinkEmailOption}
+            showPasswordOption={props.features.enablePasswordUpdate}
+            redirectTo={'/home/settings'}
+          />
+        </CardContent>
+      </Card>
 
       <If condition={props.features.enableAccountDeletion}>
         <Card className={'border-destructive'}>

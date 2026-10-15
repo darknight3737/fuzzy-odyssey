@@ -63,6 +63,9 @@ export const deletePersonalAccountAction = enhanceAction(
       token: otp,
       userId: user.id,
       purpose: 'delete-personal-account',
+      // failed attempts are now counted (see verify_nonce); allow a few honest
+      // retries while still bounding brute-force attempts
+      maxVerificationAttempts: 5,
     });
 
     if (!otpResult.valid) {
@@ -85,8 +88,10 @@ export const deletePersonalAccountAction = enhanceAction(
     // delete the user's account and cancel all subscriptions
     await service.deletePersonalAccount({
       adminClient: getSupabaseServerAdminClient(),
-      userId: user.id,
-      userEmail: user.email ?? null,
+      account: {
+        id: user.id,
+        email: user.email ?? null,
+      },
     });
 
     // sign out the user after deleting their account

@@ -28,7 +28,7 @@ grant execute on function public.is_aal2() to authenticated;
 
 /*
 * public.is_super_admin
-* Check if the user is a super admin. 
+* Check if the user is a super admin.
 * A Super Admin is a user that has the role 'super-admin' and has MFA enabled.
 */
 create
@@ -140,6 +140,20 @@ create policy restrict_mfa_order_items
 -- Restrict access to orders if MFA is enabled
 create policy restrict_mfa_notifications
     on public.notifications
+    as restrictive
+    to authenticated
+    using (public.is_mfa_compliant());
+
+-- Restrict access to billing customers if MFA is enabled
+create policy restrict_mfa_billing_customers
+    on public.billing_customers
+    as restrictive
+    to authenticated
+    using (public.is_mfa_compliant());
+
+-- Restrict access to nonces if MFA is enabled
+create policy restrict_mfa_nonces
+    on public.nonces
     as restrictive
     to authenticated
     using (public.is_mfa_compliant());

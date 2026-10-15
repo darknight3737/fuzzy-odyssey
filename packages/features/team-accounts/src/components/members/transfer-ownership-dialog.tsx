@@ -16,6 +16,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@kit/ui/alert-dialog';
 import { Button } from '@kit/ui/button';
 import { Form } from '@kit/ui/form';
@@ -26,20 +27,22 @@ import { TransferOwnershipConfirmationSchema } from '../../schema/transfer-owner
 import { transferOwnershipAction } from '../../server/actions/team-members-server-actions';
 
 export function TransferOwnershipDialog({
-  isOpen,
-  setIsOpen,
+  children,
   targetDisplayName,
   accountId,
   userId,
 }: {
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  children: React.ReactNode;
   accountId: string;
   userId: string;
   targetDisplayName: string;
 }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
+
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -55,7 +58,7 @@ export function TransferOwnershipDialog({
           accountId={accountId}
           userId={userId}
           targetDisplayName={targetDisplayName}
-          setIsOpen={setIsOpen}
+          onSuccess={() => setOpen(false)}
         />
       </AlertDialogContent>
     </AlertDialog>
@@ -66,22 +69,18 @@ function TransferOrganizationOwnershipForm({
   accountId,
   userId,
   targetDisplayName,
-  setIsOpen,
+  onSuccess,
 }: {
   userId: string;
   accountId: string;
   targetDisplayName: string;
-  setIsOpen: (isOpen: boolean) => void;
+  onSuccess: () => unknown;
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<boolean>();
   const { data: user } = useUser();
 
-  const form = useForm<{
-    accountId: string;
-    userId: string;
-    otp: string;
-  }>({
+  const form = useForm({
     resolver: zodResolver(TransferOwnershipConfirmationSchema),
     defaultValues: {
       accountId,
@@ -122,7 +121,7 @@ function TransferOrganizationOwnershipForm({
             try {
               await transferOwnershipAction(data);
 
-              setIsOpen(false);
+              onSuccess();
             } catch {
               setError(true);
             }

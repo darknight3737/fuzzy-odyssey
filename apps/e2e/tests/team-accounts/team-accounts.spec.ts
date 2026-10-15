@@ -37,14 +37,6 @@ async function setupTeamWithMember(page: Page, memberRole = 'member') {
   // Sign up with the new member email and accept the invitation
   await invitations.auth.visitConfirmEmailLink(memberEmail);
 
-  await invitations.auth.signUp({
-    email: memberEmail,
-    password: 'password',
-    repeatPassword: 'password',
-  });
-
-  await invitations.auth.visitConfirmEmailLink(memberEmail);
-
   await invitations.acceptInvitation();
 
   await invitations.teamAccounts.openAccountsSelector();
@@ -56,12 +48,10 @@ async function setupTeamWithMember(page: Page, memberRole = 'member') {
 
   await page.goto('/auth/sign-in');
 
-  await invitations.auth.signIn({
+  await invitations.auth.loginAsUser({
     email: ownerEmail,
-    password: 'password',
+    next: '/home',
   });
-
-  await page.waitForURL('/home');
 
   // Navigate to the team members page
   await page.goto(`/home/${slug}/members`);
@@ -70,38 +60,32 @@ async function setupTeamWithMember(page: Page, memberRole = 'member') {
 }
 
 test.describe('Team Accounts', () => {
-  let page: Page;
-  let teamAccounts: TeamAccountsPageObject;
-
-  test.beforeAll(async ({ browser }) => {
-    page = await browser.newPage();
-    teamAccounts = new TeamAccountsPageObject(page);
+  test.beforeEach(async ({ page }) => {
+    const teamAccounts = new TeamAccountsPageObject(page);
+    await teamAccounts.setup();
   });
 
-  test('user can update their team name (and slug)', async () => {
-    await teamAccounts.setup();
-
-    const { teamName, slug } = teamAccounts.createTeamName();
+  test('user can update their team name', async ({ page }) => {
+    const teamAccounts = new TeamAccountsPageObject(page);
+    const newTeamName = `Updated-Team-${(Math.random() * 100000000).toFixed(0)}`;
 
     await teamAccounts.goToSettings();
 
-    const request = teamAccounts.updateName(teamName, slug);
+    // Update just the name (slug stays the same for Latin names)
+    await teamAccounts.updateTeamName(newTeamName);
 
-    // the slug should be updated to match the new team name
-    const newUrl = page.waitForURL(`**/home/${slug}/settings`);
-
-    await Promise.all([request, newUrl]);
+    await page.waitForTimeout(500);
 
     await teamAccounts.openAccountsSelector();
 
-    await expect(teamAccounts.getTeamFromSelector(teamName)).toBeVisible();
+    await expect(teamAccounts.getTeamFromSelector(newTeamName)).toBeVisible();
   });
 
   test('cannot create a Team account using reserved names', async ({
     page,
   }) => {
     const teamAccounts = new TeamAccountsPageObject(page);
-    await teamAccounts.setup();
+    await teamAccounts.createTeam();
 
     await teamAccounts.openAccountsSelector();
     await page.click('[data-test="create-team-account-trigger"]');
@@ -132,16 +116,16 @@ test.describe('Team Accounts', () => {
     await teamAccounts.tryCreateTeam('Test,Name');
     await expectError();
 
-    await teamAccounts.tryCreateTeam('Test Name/')
+    await teamAccounts.tryCreateTeam('Test Name/');
     await expectError();
 
-    await teamAccounts.tryCreateTeam('Test Name\\')
+    await teamAccounts.tryCreateTeam('Test Name\\');
     await expectError();
 
-    await teamAccounts.tryCreateTeam('Test Name:')
+    await teamAccounts.tryCreateTeam('Test Name:');
     await expectError();
 
-    await teamAccounts.tryCreateTeam('Test Name;')
+    await teamAccounts.tryCreateTeam('Test Name;');
     await expectError();
 
     await teamAccounts.tryCreateTeam('Test Name=');
@@ -189,6 +173,75 @@ test.describe('Team Accounts', () => {
     await teamAccounts.tryCreateTeam('Test Name]');
     await expectError();
   });
+
+  test('can create a Team account with non-Latin name when providing a slug', async ({
+    page,
+  }) => {
+    const teamAccounts = new TeamAccountsPageObject(page);
+    await teamAccounts.createTeam();
+
+    const random = (Math.random() * 100000000).toFixed(0);
+    const slug = `korean-team-${random}`;
+
+    // Create team with Korean name
+    await teamAccounts.createTeamWithNonLatinName('한국 팀', slug);
+
+    // Verify we're on the team page
+    await expect(page).toHaveURL(`/home/${slug}`);
+
+    // Verify team appears in selector
+    await teamAccounts.openAccountsSelector();
+    await expect(teamAccounts.getTeamFromSelector('한국 팀')).toBeVisible();
+  });
+
+  test('slug validation shows error for invalid characters', async ({
+    page,
+  }) => {
+    const teamAccounts = new TeamAccountsPageObject(page);
+    await teamAccounts.createTeam();
+
+    // Use non-Latin name to trigger the slug field visibility
+    await teamAccounts.openAccountsSelector();
+    await page.click('[data-test="create-team-account-trigger"]');
+
+    await page.fill(
+      '[data-test="create-team-form"] [data-test="team-name-input"]',
+      'テストチーム',
+    );
+
+    // Wait for slug field to appear (triggered by non-Latin name)
+    await expect(teamAccounts.getSlugField()).toBeVisible();
+
+    // Test invalid slug with uppercase
+    await page.fill(
+      '[data-test="create-team-form"] [data-test="team-slug-input"]',
+      'Invalid-Slug',
+    );
+
+    await page.click('[data-test="create-team-form"] button:last-child');
+
+    await expect(
+      page.getByText(
+        'Only English letters (a-z), numbers (0-9), and hyphens (-) are allowed',
+        { exact: true },
+      ),
+    ).toBeVisible();
+
+    // Test invalid slug with non-Latin characters
+    await page.fill(
+      '[data-test="create-team-form"] [data-test="team-slug-input"]',
+      'тест-slug',
+    );
+
+    await page.click('[data-test="create-team-form"] button:last-child');
+
+    await expect(
+      page.getByText(
+        'Only English letters (a-z), numbers (0-9), and hyphens (-) are allowed',
+        { exact: true },
+      ),
+    ).toBeVisible();
+  });
 });
 
 test.describe('Team Account Deletion', () => {
@@ -225,14 +278,11 @@ test.describe('Team Member Role Management', () => {
     // Update the member's role to admin
     await teamAccounts.updateMemberRole(memberEmail, 'owner');
 
-    // Wait for the page to fully load after the update
-    await page.waitForTimeout(1000);
-
-    // Verify the role was updated successfully
-    const updatedRoleBadge = page
-      .getByRole('row', { name: memberEmail })
-      .locator('[data-test="member-role-badge"]');
-    await expect(updatedRoleBadge).toHaveText('Owner');
+    await expect(
+      page
+        .getByRole('row', { name: memberEmail })
+        .locator('[data-test="member-role-badge"]'),
+    ).toHaveText('Owner');
   });
 });
 
@@ -249,17 +299,12 @@ test.describe('Team Ownership Transfer', () => {
     // Transfer ownership to the member
     await teamAccounts.transferOwnership(memberEmail, ownerEmail);
 
-    // Wait for the page to fully load after the transfer
-    await page.waitForTimeout(1000);
-
     // Verify the transfer was successful by checking if the primary owner badge
     // is now on the new owner's row
     const memberRow = page.getByRole('row', { name: memberEmail });
 
     // Check for the primary owner badge on the member's row
-    await expect(memberRow.locator('text=Primary Owner')).toBeVisible({
-      timeout: 5000,
-    });
+    await expect(memberRow.locator('text=Primary Owner')).toBeVisible();
 
     // The original owner should no longer have the primary owner badge
     const ownerRow = page.getByRole('row', { name: ownerEmail.split('@')[0] });

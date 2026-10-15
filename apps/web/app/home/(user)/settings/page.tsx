@@ -10,19 +10,26 @@ import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 import { withI18n } from '~/lib/i18n/with-i18n';
 import { requireUserInServerComponent } from '~/lib/server/require-user-in-server-component';
 
+// Show email option if password, magic link, or OTP is enabled
+const showEmailOption =
+  authConfig.providers.password ||
+  authConfig.providers.magicLink ||
+  authConfig.providers.otp;
+
 const features = {
-  enableAccountDeletion: featureFlagsConfig.enableAccountDeletion,
+  showLinkEmailOption: showEmailOption,
   enablePasswordUpdate: authConfig.providers.password,
+  enableAccountDeletion: featureFlagsConfig.enableAccountDeletion,
   enableAccountLinking: authConfig.enableIdentityLinking,
 };
 
 const providers = authConfig.providers.oAuth;
 
 const callbackPath = pathsConfig.auth.callback;
-const accountHomePath = pathsConfig.app.accountHome;
+const accountSettingsPath = pathsConfig.app.personalAccountSettings;
 
 const paths = {
-  callback: callbackPath + `?next=${accountHomePath}`,
+  callback: callbackPath + `?next=${accountSettingsPath}`,
 };
 
 export const generateMetadata = async () => {

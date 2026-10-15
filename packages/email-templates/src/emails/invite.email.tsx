@@ -21,6 +21,7 @@ import { EmailFooter } from '../components/footer';
 import { EmailHeader } from '../components/header';
 import { EmailHeading } from '../components/heading';
 import { EmailWrapper } from '../components/wrapper';
+import { escapeHtml } from '../lib/escape-html';
 import { initializeEmailI18n } from '../lib/i18n';
 
 interface Props {
@@ -42,24 +43,29 @@ export async function renderInviteEmail(props: Props) {
   });
 
   const previewText = `Join ${props.invitedUserEmail} on ${props.productName}`;
-  const subject = t(`${namespace}:subject`);
+  const subject = t(`subject`);
 
-  const heading = t(`${namespace}:heading`, {
+  const heading = t(`heading`, {
     teamName: props.teamName,
     productName: props.productName,
   });
 
-  const hello = t(`${namespace}:hello`, {
+  const hello = t(`hello`, {
     invitedUserEmail: props.invitedUserEmail,
   });
 
-  const mainText = t(`${namespace}:mainText`, {
-    inviter: props.inviter,
-    teamName: props.teamName,
-    productName: props.productName,
+  // `mainText` is rendered via `dangerouslySetInnerHTML`, so user-controlled
+  // values must be HTML-escaped before interpolation. The other fields below
+  // render through JSX (auto-escaped) and must NOT be escaped here to avoid
+  // double-escaping.
+  const mainText = t(`mainText`, {
+    inviter: escapeHtml(props.inviter),
+    teamName: escapeHtml(props.teamName),
+    productName: escapeHtml(props.productName),
+    strong: (chunks: string) => `<strong>${chunks}</strong>`,
   });
 
-  const joinTeam = t(`${namespace}:joinTeam`, {
+  const joinTeam = t(`joinTeam`, {
     teamName: props.teamName,
   });
 
@@ -103,12 +109,12 @@ export async function renderInviteEmail(props: Props) {
                 </Section>
               )}
 
-              <Section className="mb-[32px] mt-[32px] text-center">
+              <Section className="mt-[32px] mb-[32px] text-center">
                 <CtaButton href={props.link}>{joinTeam}</CtaButton>
               </Section>
 
               <Text className="text-[16px] leading-[24px] text-[#242424]">
-                {t(`${namespace}:copyPasteLink`)}{' '}
+                {t(`copyPasteLink`)}{' '}
                 <Link href={props.link} className="text-blue-600 no-underline">
                   {props.link}
                 </Link>
@@ -117,7 +123,7 @@ export async function renderInviteEmail(props: Props) {
               <Hr className="mx-0 my-[26px] w-full border border-solid border-[#eaeaea]" />
 
               <Text className="text-[12px] leading-[24px] text-[#666666]">
-                {t(`${namespace}:invitationIntendedFor`, {
+                {t(`invitationIntendedFor`, {
                   invitedUserEmail: props.invitedUserEmail,
                 })}
               </Text>

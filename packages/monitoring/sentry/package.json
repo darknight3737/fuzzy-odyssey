@@ -13,19 +13,18 @@
     ".": "./src/index.ts",
     "./provider": "./src/components/provider.tsx",
     "./config/client": "./src/sentry.client.config.ts",
-    "./config/server": "./src/sentry.client.server.ts"
+    "./config/server": "./src/sentry.server.config.ts"
   },
   "dependencies": {
-    "@sentry/nextjs": "^10.10.0",
-    "import-in-the-middle": "1.14.2"
+    "@sentry/nextjs": "catalog:"
   },
   "devDependencies": {
     "@kit/eslint-config": "workspace:*",
     "@kit/monitoring-core": "workspace:*",
     "@kit/prettier-config": "workspace:*",
     "@kit/tsconfig": "workspace:*",
-    "@types/react": "19.1.12",
-    "react": "19.1.1"
+    "@types/react": "catalog:",
+    "react": "catalog:"
   },
   "typesVersions": {
     "*": {

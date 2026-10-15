@@ -96,7 +96,9 @@ const SidebarProvider: React.FC<
       _setOpen(value);
 
       // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${open}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+      const secure =
+        typeof window !== 'undefined' && window.location.protocol === 'https:';
+      document.cookie = `${SIDEBAR_COOKIE_NAME}=${open}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}; SameSite=Lax${secure ? '; Secure' : ''}`;
     },
     [setOpenProp, open],
   );
@@ -677,6 +679,7 @@ const SidebarMenuSkeleton: React.FC<
 > = ({ className, showIcon = false, ...props }) => {
   // Random width between 50 to 90%.
   const width = React.useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity
     return `${Math.floor(Math.random() * 40) + 50}%`;
   }, []);
 

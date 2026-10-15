@@ -14,6 +14,7 @@ import { Heading } from '@kit/ui/heading';
 import { Trans } from '@kit/ui/trans';
 
 import { AppLogo } from '~/components/app-logo';
+import authConfig from '~/config/auth.config';
 import pathsConfig from '~/config/paths.config';
 import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 import { withI18n } from '~/lib/i18n/with-i18n';
@@ -21,7 +22,9 @@ import { withI18n } from '~/lib/i18n/with-i18n';
 interface JoinTeamAccountPageProps {
   searchParams: Promise<{
     invite_token?: string;
+    type?: 'invite' | 'magic-link';
     email?: string;
+    is_new_user?: string;
   }>;
 }
 
@@ -56,12 +59,12 @@ async function JoinTeamAccountPage(props: JoinTeamAccountPageProps) {
 
       const verifyMfaUrl = `${pathsConfig.auth.verifyMfa}?${urlParams.toString()}`;
 
-      // if the user needs to verify MFA, redirect them to the MFA verification page
+      // if the user needs to verify MFA
+      // redirect them to the MFA verification page
       redirect(verifyMfaUrl);
     } else {
       const urlParams = new URLSearchParams({
         invite_token: token,
-        email: searchParams.email ?? '',
       });
 
       const nextUrl = `${pathsConfig.auth.signUp}?${urlParams.toString()}`;
@@ -78,8 +81,19 @@ async function JoinTeamAccountPage(props: JoinTeamAccountPageProps) {
   // the user is logged in, we can now check if the token is valid
   const invitation = await api.getInvitation(adminClient, token);
 
-  // the invitation is not found or expired
   if (!invitation) {
+    return (
+      <AuthLayoutShell Logo={AppLogo}>
+        <InviteNotFoundOrExpired />
+      </AuthLayoutShell>
+    );
+  }
+
+  // the invitation is not found or expired or the email is not the same as the user's email (case insensitive)
+  const isInvitationValid =
+    invitation.email.toLowerCase() === auth.data.email?.toLowerCase();
+
+  if (!isInvitationValid) {
     return (
       <AuthLayoutShell Logo={AppLogo}>
         <InviteNotFoundOrExpired />
@@ -125,6 +139,28 @@ async function JoinTeamAccountPage(props: JoinTeamAccountPageProps) {
     invitation.account.slug,
   );
 
+  // Determine if we should show the account setup step (Step 2)
+  // Decision logic:
+  // 1. Only show for new accounts (is_new_user === 'true' or linkType === 'invite')
+  // 2. Only if we don't support email only auth (magic link or OTP)
+  // 3. Users can always skip and set up auth later in account settings
+  const linkType = searchParams.type;
+  const isNewUserParam = searchParams.is_new_user === 'true';
+
+  // if the app supports email only auth, we don't need to setup any other auth methods. In all other cases (passowrd, oauth), we need to setup at least one of them.
+  const supportsEmailOnlyAuth =
+    authConfig.providers.magicLink || authConfig.providers.otp;
+
+  const isNewAccount = isNewUserParam || linkType === 'invite';
+  const shouldSetupAccount = isNewAccount && !supportsEmailOnlyAuth;
+
+  // Determine redirect destination after joining:
+  // - If shouldSetupAccount: redirect to /identities with next param (Step 2)
+  // - Otherwise: redirect directly to team home (skip Step 2)
+  const nextPath = shouldSetupAccount
+    ? `/identities?next=${encodeURIComponent(accountHome)}`
+    : accountHome;
+
   const email = auth.data.email ?? '';
 
   return (
@@ -135,7 +171,7 @@ async function JoinTeamAccountPage(props: JoinTeamAccountPageProps) {
         invitation={invitation}
         paths={{
           signOutNext,
-          accountHome,
+          nextPath,
         }}
       />
     </AuthLayoutShell>

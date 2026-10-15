@@ -1,19 +1,27 @@
-import { Page, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
+import { AuthPageObject } from '../authentication/auth.po';
 import { UserBillingPageObject } from './user-billing.po';
 
 test.describe('User Billing', () => {
-  let page: Page;
-  let po: UserBillingPageObject;
+  test('user can subscribe and sees cancellation warning when flexible-mode webhook signals cancel_at', async ({
+    page,
+  }) => {
+    const po = new UserBillingPageObject(page);
+    const auth = new AuthPageObject(page);
 
-  test.beforeAll(async ({ browser }) => {
-    page = await browser.newPage();
-    po = new UserBillingPageObject(page);
+    const email = auth.createRandomEmail();
 
-    await po.setup();
-  });
+    await auth.bootstrapUser({
+      email,
+      name: 'Test Billing User',
+    });
 
-  test('user can subscribe to a plan', async ({ page }) => {
+    await auth.loginAsUser({
+      email,
+      next: '/home/billing',
+    });
+
     await po.billing.selectPlan(0);
     await po.billing.proceedToCheckout();
 
@@ -22,12 +30,15 @@ test.describe('User Billing', () => {
     await po.billing.stripe.submitForm();
 
     await expect(po.billing.successStatus()).toBeVisible({
-      timeout: 25_000,
+      timeout: 20_000,
     });
 
     await po.billing.returnToBilling();
 
     await expect(po.billing.getStatus()).toContainText('Active');
     await expect(po.billing.manageBillingButton()).toBeVisible();
+
+    // baseline: the cancellation warning should not be visible yet
+    await expect(po.billing.cancellationWarning()).toBeHidden();
   });
 });

@@ -15,11 +15,24 @@ export class TeamAccountsPageObject {
   }
 
   async setup(params = this.createTeamName()) {
-    const { email } = await this.auth.signUpFlow('/home');
+    const auth = new AuthPageObject(this.page);
+
+    const email = auth.createRandomEmail();
+
+    await auth.bootstrapUser({
+      email,
+      name: 'Test User',
+    });
+
+    await auth.loginAsUser({ email });
 
     await this.createTeam(params);
 
-    return { email, teamName: params.teamName, slug: params.slug };
+    return {
+      email: email,
+      teamName: params.teamName,
+      slug: params.slug,
+    };
   }
 
   getTeamFromSelector(teamName: string) {
@@ -78,21 +91,39 @@ export class TeamAccountsPageObject {
     }).toPass();
   }
 
-  async tryCreateTeam(teamName: string) {
-    await this.page.locator('[data-test="create-team-form"] input').fill('');
-    await this.page.waitForTimeout(200);
-    await this.page.locator('[data-test="create-team-form"] input').fill(teamName);
-
-    return this.page.click(
-      '[data-test="create-team-form"] button:last-child',
+  async tryCreateTeam(teamName: string, slug?: string) {
+    const nameInput = this.page.locator(
+      '[data-test="create-team-form"] [data-test="team-name-input"]',
     );
+
+    await nameInput.fill('');
+    await nameInput.fill(teamName);
+
+    // If slug is provided (for non-Latin names), fill the slug field
+    if (slug) {
+      const slugInput = this.page.locator(
+        '[data-test="create-team-form"] [data-test="team-slug-input"]',
+      );
+
+      await expect(slugInput).toBeVisible();
+      await slugInput.fill(slug);
+    }
+
+    return this.page.click('[data-test="create-team-form"] button:last-child');
   }
 
   async createTeam({ teamName, slug } = this.createTeamName()) {
     await this.openAccountsSelector();
 
     await this.page.click('[data-test="create-team-account-trigger"]');
-    await this.page.fill('[data-test="create-team-form"] input', teamName);
+
+    await this.page.fill(
+      '[data-test="create-team-form"] [data-test="team-name-input"]',
+      teamName,
+    );
+
+    // Slug field is only shown for non-Latin names, so we don't fill it for Latin names
+    // The database trigger will auto-generate the slug from the name
 
     const click = this.page.click(
       '[data-test="create-team-form"] button:last-child',
@@ -101,23 +132,77 @@ export class TeamAccountsPageObject {
     const response = this.page.waitForURL(`/home/${slug}`);
 
     await Promise.all([click, response]);
+
+    // Verify user landed on the team page
+    await expect(this.page).toHaveURL(`/home/${slug}`);
+
+    // Verify the team was created and appears in the selector
+    await this.openAccountsSelector();
+    await expect(this.getTeamFromSelector(teamName)).toBeVisible();
+
+    // Close the selector
+    await this.page.keyboard.press('Escape');
   }
 
-  async updateName(name: string, slug: string) {
+  async createTeamWithNonLatinName(teamName: string, slug: string) {
+    await this.openAccountsSelector();
+
+    await this.page.click('[data-test="create-team-account-trigger"]');
+
+    await this.page.fill(
+      '[data-test="create-team-form"] [data-test="team-name-input"]',
+      teamName,
+    );
+
+    // Wait for slug field to appear (triggered by non-Latin name)
+    await expect(this.getSlugField()).toBeVisible();
+
+    await this.page.fill(
+      '[data-test="create-team-form"] [data-test="team-slug-input"]',
+      slug,
+    );
+
+    const click = this.page.click(
+      '[data-test="create-team-form"] button:last-child',
+    );
+
+    const response = this.page.waitForURL(`/home/${slug}`);
+
+    await Promise.all([click, response]);
+
+    // Verify user landed on the team page
+    await expect(this.page).toHaveURL(`/home/${slug}`);
+
+    // Verify the team was created and appears in the selector
+    await this.openAccountsSelector();
+    await expect(this.getTeamFromSelector(teamName)).toBeVisible();
+
+    // Close the selector
+    await this.page.keyboard.press('Escape');
+  }
+
+  getSlugField() {
+    return this.page.locator(
+      '[data-test="create-team-form"] [data-test="team-slug-input"]',
+    );
+  }
+
+  async updateTeamName(name: string) {
     await expect(async () => {
       await this.page.fill(
         '[data-test="update-team-account-name-form"] input',
         name,
       );
 
-      const click = this.page.click(
-        '[data-test="update-team-account-name-form"] button',
-      );
-
-      // the slug should be updated to match the new team name
-      const response = this.page.waitForURL(`**/home/${slug}/settings`);
-
-      return Promise.all([click, response]);
+      await Promise.all([
+        this.page.click('[data-test="update-team-account-name-form"] button'),
+        this.page.waitForResponse((response) => {
+          return (
+            response.url().includes('settings') &&
+            response.request().method() === 'POST'
+          );
+        }),
+      ]);
     }).toPass();
   }
 
@@ -150,13 +235,18 @@ export class TeamAccountsPageObject {
       await this.page.click('[data-test="role-selector-trigger"]');
       await this.page.click(`[data-test="role-option-${newRole}"]`);
 
-      // Click the confirm button
-      const click = this.page.click('[data-test="confirm-update-member-role"]');
-
       // Wait for the update to complete and page to reload
-      const response = this.page.waitForURL('**/home/*/members');
+      const response = this.page.waitForResponse((response) => {
+        return (
+          response.url().includes('members') &&
+          response.request().method() === 'POST'
+        );
+      });
 
-      return Promise.all([click, response]);
+      return Promise.all([
+        this.page.click('[data-test="confirm-update-member-role"]'),
+        response,
+      ]);
     }).toPass();
   }
 
@@ -172,15 +262,13 @@ export class TeamAccountsPageObject {
       // Complete OTP verification
       await this.otp.completeOtpVerification(ownerEmail);
 
-      // Click the confirm button
-      const click = this.page.click(
-        '[data-test="confirm-transfer-ownership-button"]',
-      );
-
       // Wait for the transfer to complete and page to reload
-      const response = this.page.waitForURL('**/home/*/members');
+      const response = this.page.waitForResponse('**/members');
 
-      return Promise.all([click, response]);
+      return Promise.all([
+        this.page.click('[data-test="confirm-transfer-ownership-button"]'),
+        response,
+      ]);
     }).toPass();
   }
 

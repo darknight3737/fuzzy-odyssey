@@ -17,6 +17,7 @@ create table if not exists
 -- Revoke all on roles table from authenticated and service_role
 revoke all on public.roles
 from
+  anon,
   authenticated,
   service_role;
 

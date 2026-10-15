@@ -1,6 +1,10 @@
 'use server';
 
-import { loadEmailTemplate } from '@/app/emails/lib/email-loader';
+import {
+  createKitEmailsDeps,
+  createKitEmailsService,
+} from '@kit/mcp-server/emails';
+import { findWorkspaceRoot } from '@kit/mcp-server/env';
 
 export async function sendEmailAction(params: {
   template: string;
@@ -27,7 +31,10 @@ export async function sendEmailAction(params: {
     },
   });
 
-  const { html } = await loadEmailTemplate(params.template);
+  const rootPath = findWorkspaceRoot(process.cwd());
+  const service = createKitEmailsService(createKitEmailsDeps(rootPath));
+  const result = await service.read({ id: params.template });
+  const html = result.renderedHtml ?? result.source;
 
   return transporter.sendMail({
     html,

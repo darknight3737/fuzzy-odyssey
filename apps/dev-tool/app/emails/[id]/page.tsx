@@ -1,10 +1,12 @@
 import { EmailTesterForm } from '@/app/emails/[id]/components/email-tester-form';
-import { loadEmailTemplate } from '@/app/emails/lib/email-loader';
-import { getVariable } from '@/app/variables/lib/env-scanner';
-import { EnvMode } from '@/app/variables/lib/types';
 import { EnvModeSelector } from '@/components/env-mode-selector';
 import { IFrame } from '@/components/iframe';
 
+import {
+  createKitEmailsDeps,
+  createKitEmailsService,
+} from '@kit/mcp-server/emails';
+import { findWorkspaceRoot, getVariable } from '@kit/mcp-server/env';
 import { AppBreadcrumbs } from '@kit/ui/app-breadcrumbs';
 import { Button } from '@kit/ui/button';
 import {
@@ -14,6 +16,8 @@ import {
   DialogTrigger,
 } from '@kit/ui/dialog';
 import { Page, PageBody, PageHeader } from '@kit/ui/page';
+
+type EnvMode = 'development' | 'production';
 
 type EmailPageProps = React.PropsWithChildren<{
   params: Promise<{
@@ -31,25 +35,28 @@ export default async function EmailPage(props: EmailPageProps) {
   const { id } = await props.params;
   const mode = (await props.searchParams).mode ?? 'development';
 
-  const template = await loadEmailTemplate(id);
-  const emailSettings = await getEmailSettings(mode);
+  const rootPath = findWorkspaceRoot(process.cwd());
+  const service = createKitEmailsService(createKitEmailsDeps(rootPath));
 
-  const values: Record<string, string> = {
-    emails: 'Emails',
-    'invite-email': 'Invite Email',
-    'account-delete-email': 'Account Delete Email',
-    'confirm-email': 'Confirm Email',
-    'change-email-address-email': 'Change Email Address Email',
-    'reset-password-email': 'Reset Password Email',
-    'magic-link-email': 'Magic Link Email',
-    'otp-email': 'OTP Email',
-  };
+  const [result, { templates }, emailSettings] = await Promise.all([
+    service.read({ id }),
+    service.list(),
+    getEmailSettings(mode),
+  ]);
+
+  const html = result.renderedHtml ?? result.source;
+
+  const values: Record<string, string> = { emails: 'Emails' };
+
+  for (const t of templates) {
+    values[t.id] = t.name;
+  }
 
   return (
     <Page style={'custom'}>
       <PageHeader
         displaySidebarTrigger={false}
-        title={values[id]}
+        title={values[id] ?? id}
         description={<AppBreadcrumbs values={values} />}
       >
         <EnvModeSelector mode={mode} />
@@ -77,7 +84,7 @@ export default async function EmailPage(props: EmailPageProps) {
         <IFrame className={'flex flex-1 flex-col'}>
           <div
             className={'flex flex-1 flex-col'}
-            dangerouslySetInnerHTML={{ __html: template.html }}
+            dangerouslySetInnerHTML={{ __html: html }}
           />
         </IFrame>
       </PageBody>

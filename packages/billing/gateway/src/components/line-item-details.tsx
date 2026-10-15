@@ -17,10 +17,40 @@ export function LineItemDetails(
     lineItems: z.infer<typeof LineItemSchema>[];
     currency: string;
     selectedInterval?: string | undefined;
+    alwaysDisplayMonthlyPrice?: boolean;
   }>,
 ) {
-  const locale = useTranslation().i18n.language;
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language;
   const currencyCode = props?.currency.toLowerCase();
+
+  const shouldDisplayMonthlyPrice =
+    props.alwaysDisplayMonthlyPrice && props.selectedInterval === 'year';
+
+  const getUnitLabel = (unit: string | undefined, count: number) => {
+    if (!unit) {
+      return '';
+    }
+
+    const i18nKey = `billing:units.${unit}`;
+
+    if (!i18n.exists(i18nKey)) {
+      return unit;
+    }
+
+    return t(i18nKey, {
+      count,
+      defaultValue: unit,
+    });
+  };
+
+  const getDisplayCost = (cost: number, hasTiers: boolean) => {
+    if (shouldDisplayMonthlyPrice && !hasTiers) {
+      return cost / 12;
+    }
+
+    return cost;
+  };
 
   return (
     <div className={'flex flex-col space-y-1'}>
@@ -67,6 +97,12 @@ export function LineItemDetails(
           </If>
         );
 
+        const unit =
+          item.unit ?? (item.type === 'per_seat' ? 'member' : undefined);
+
+        const hasTiers = Boolean(item.tiers?.length);
+        const isDefaultSeatUnit = unit === 'member';
+
         const FlatFee = () => (
           <div className={'flex flex-col'}>
             <div className={cn(className, 'space-x-1')}>
@@ -98,7 +134,7 @@ export function LineItemDetails(
               <span className={'text-xs font-semibold'}>
                 {formatCurrency({
                   currencyCode,
-                  value: item.cost,
+                  value: getDisplayCost(item.cost, hasTiers),
                   locale,
                 })}
               </span>
@@ -115,14 +151,14 @@ export function LineItemDetails(
                     <Trans
                       i18nKey={'billing:perUnit'}
                       values={{
-                        unit: item.unit,
+                        unit: getUnitLabel(unit, 1),
                       }}
                     />
                   </span>
                 </span>
               </span>
 
-              <Tiers item={item} currency={props.currency} />
+              <Tiers item={item} currency={props.currency} unit={unit} />
             </If>
           </div>
         );
@@ -134,16 +170,26 @@ export function LineItemDetails(
                 <PlusSquare className={'w-3'} />
 
                 <span>
-                  <Trans i18nKey={'billing:perTeamMember'} />
+                  <If
+                    condition={Boolean(unit) && !isDefaultSeatUnit}
+                    fallback={<Trans i18nKey={'billing:perTeamMember'} />}
+                  >
+                    <Trans
+                      i18nKey={'billing:perUnitShort'}
+                      values={{
+                        unit: getUnitLabel(unit, 1),
+                      }}
+                    />
+                  </If>
                 </span>
 
-                <span>-</span>
-
                 <If condition={!item.tiers?.length}>
+                  <span>-</span>
+
                   <span className={'font-semibold'}>
                     {formatCurrency({
                       currencyCode,
-                      value: item.cost,
+                      value: getDisplayCost(item.cost, hasTiers),
                       locale,
                     })}
                   </span>
@@ -154,7 +200,7 @@ export function LineItemDetails(
             <SetupFee />
 
             <If condition={item.tiers?.length}>
-              <Tiers item={item} currency={props.currency} />
+              <Tiers item={item} currency={props.currency} unit={unit} />
             </If>
           </div>
         );
@@ -171,7 +217,7 @@ export function LineItemDetails(
                       <Trans
                         i18nKey={'billing:perUnit'}
                         values={{
-                          unit: item.unit,
+                          unit: getUnitLabel(unit, 1),
                         }}
                       />
                     </span>
@@ -184,7 +230,7 @@ export function LineItemDetails(
                 <span className={'font-semibold'}>
                   {formatCurrency({
                     currencyCode,
-                    value: item.cost,
+                    value: getDisplayCost(item.cost, hasTiers),
                     locale,
                   })}
                 </span>
@@ -195,7 +241,7 @@ export function LineItemDetails(
 
             {/* If there are tiers, we render them as a list */}
             <If condition={item.tiers?.length}>
-              <Tiers item={item} currency={props.currency} />
+              <Tiers item={item} currency={props.currency} unit={unit} />
             </If>
           </div>
         );
@@ -219,12 +265,31 @@ export function LineItemDetails(
 function Tiers({
   currency,
   item,
+  unit,
 }: {
   currency: string;
   item: z.infer<typeof LineItemSchema>;
+  unit?: string;
 }) {
-  const unit = item.unit;
-  const locale = useTranslation().i18n.language;
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language;
+
+  // Helper to safely convert tier values to numbers for pluralization
+  // Falls back to plural form (2) for 'unlimited' values
+  const getSafeCount = (value: number | 'unlimited' | string): number => {
+    if (value === 'unlimited') return 2;
+    const num = typeof value === 'number' ? value : Number(value);
+    return Number.isNaN(num) ? 2 : num;
+  };
+
+  const getUnitLabel = (count: number) => {
+    if (!unit) return '';
+
+    return t(`billing:units.${unit}`, {
+      count,
+      defaultValue: unit,
+    });
+  };
 
   const tiers = item.tiers?.map((tier, index) => {
     const tiersLength = item.tiers?.length ?? 0;
@@ -239,6 +304,13 @@ function Tiers({
           : previousTier.upTo + 1 || 0;
 
     const upTo = tier.upTo;
+    const previousTierUpTo =
+      typeof previousTier?.upTo === 'number' ? previousTier.upTo : undefined;
+    const currentTierUpTo = typeof upTo === 'number' ? upTo : undefined;
+    const rangeCount =
+      previousTierUpTo !== undefined && currentTierUpTo !== undefined
+        ? currentTierUpTo - previousTierUpTo
+        : undefined;
     const isIncluded = tier.cost === 0;
 
     return (
@@ -257,8 +329,8 @@ function Tiers({
               <Trans
                 i18nKey={'billing:andAbove'}
                 values={{
-                  unit,
-                  previousTier: (Number(previousTierFrom) as number) - 1,
+                  unit: getUnitLabel(getSafeCount(previousTierFrom) - 1),
+                  previousTier: getSafeCount(previousTierFrom) - 1,
                 }}
               />
             </span>
@@ -268,7 +340,7 @@ function Tiers({
               <Trans
                 i18nKey={'billing:forEveryUnit'}
                 values={{
-                  unit,
+                  unit: getUnitLabel(1),
                 }}
               />
             </span>
@@ -277,7 +349,13 @@ function Tiers({
         <If condition={!isLastTier}>
           <If condition={isIncluded}>
             <span>
-              <Trans i18nKey={'billing:includedUpTo'} values={{ unit, upTo }} />
+              <Trans
+                i18nKey={'billing:includedUpTo'}
+                values={{
+                  unit: getUnitLabel(getSafeCount(upTo)),
+                  upTo,
+                }}
+              />
             </span>
           </If>{' '}
           <If condition={!isIncluded}>
@@ -291,7 +369,12 @@ function Tiers({
             <span>
               <Trans
                 i18nKey={'billing:fromPreviousTierUpTo'}
-                values={{ previousTierFrom, unit, upTo }}
+                values={{
+                  previousTierFrom,
+                  unit: getUnitLabel(1),
+                  unitPlural: getUnitLabel(getSafeCount(rangeCount ?? upTo)),
+                  upTo: rangeCount ?? upTo,
+                }}
               />
             </span>
           </If>

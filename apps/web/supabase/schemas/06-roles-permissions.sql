@@ -4,7 +4,7 @@
  * We create the schema for the role permissions. Role permissions are the permissions for a role.
  * For example, the 'owner' role might have the 'roles.manage' permission.
  * -------------------------------------------------------
- 
+
  */
 -- Create table for roles permissions
 create table if not exists
@@ -27,6 +27,7 @@ create index ix_role_permissions_role on public.role_permissions (role);
 -- Revoke all on role_permissions table from authenticated and service_role
 revoke all on public.role_permissions
 from
+  anon,
   authenticated,
   service_role;
 

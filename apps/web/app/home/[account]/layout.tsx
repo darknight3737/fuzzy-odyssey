@@ -1,6 +1,7 @@
 import { use } from 'react';
 
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 import { z } from 'zod';
 
@@ -35,14 +36,20 @@ function TeamWorkspaceLayout({ children, params }: TeamWorkspaceLayoutProps) {
   return <HeaderLayout account={account}>{children}</HeaderLayout>;
 }
 
-function SidebarLayout({
+async function SidebarLayout({
   account,
   children,
 }: React.PropsWithChildren<{
   account: string;
 }>) {
-  const data = use(loadTeamWorkspace(account));
-  const state = use(getLayoutState(account));
+  const [data, state] = await Promise.all([
+    loadTeamWorkspace(account),
+    getLayoutState(account),
+  ]);
+
+  if (!data) {
+    redirect('/');
+  }
 
   const accounts = data.accounts.map(({ name, slug, picture_url }) => ({
     label: name,

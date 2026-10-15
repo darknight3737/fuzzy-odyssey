@@ -26,14 +26,13 @@ import { getLogger } from '@kit/shared/logger';
 import { createLemonSqueezyBillingPortalSession } from './create-lemon-squeezy-billing-portal-session';
 import { createLemonSqueezyCheckout } from './create-lemon-squeezy-checkout';
 import { createLemonSqueezySubscriptionPayloadBuilderService } from './lemon-squeezy-subscription-payload-builder.service';
+import { getSubscriptionIntervalType } from './subscription-interval';
 
 /**
  * @name LemonSqueezyBillingStrategyService
  * @description This class is used to create a billing strategy for Lemon Squeezy
  */
-export class LemonSqueezyBillingStrategyService
-  implements BillingStrategyProviderService
-{
+export class LemonSqueezyBillingStrategyService implements BillingStrategyProviderService {
   private readonly namespace = 'billing.lemon-squeezy';
 
   /**
@@ -56,8 +55,6 @@ export class LemonSqueezyBillingStrategyService
     const { data: response, error } = await createLemonSqueezyCheckout(params);
 
     if (error ?? !response?.data.id) {
-      console.log(error);
-
       logger.error(
         {
           ...ctx,
@@ -105,7 +102,9 @@ export class LemonSqueezyBillingStrategyService
         'Failed to create billing portal session',
       );
 
-      throw new Error('Failed to create billing portal session');
+      throw new Error('Failed to create billing portal session', {
+        cause: error,
+      });
     }
 
     logger.info(ctx, 'Billing portal session created successfully');
@@ -142,7 +141,7 @@ export class LemonSqueezyBillingStrategyService
           'Failed to cancel subscription',
         );
 
-        throw new Error('Failed to cancel subscription');
+        throw new Error('Failed to cancel subscription', { cause: error });
       }
 
       logger.info(ctx, 'Subscription cancelled successfully');
@@ -395,8 +394,10 @@ export class LemonSqueezyBillingStrategyService
     const endsAt = subscription.ends_at;
     const renewsAt = subscription.renews_at;
     const trialEndsAt = subscription.trial_ends_at;
-    const intervalCount = subscription.billing_anchor;
-    const interval = intervalCount === 1 ? 'month' : 'year';
+
+    // `billing_anchor` is a day-of-month (1-31), not an interval count. Derive
+    // the interval from the renewal date, consistent with the webhook handler.
+    const { interval, intervalCount } = getSubscriptionIntervalType(renewsAt);
 
     const subscriptionItemId =
       data.data.attributes.first_subscription_item?.id.toString() as string;

@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { ChevronDownIcon, Loader2Icon } from 'lucide-react';
+import { ChevronDownIcon } from 'lucide-react';
 import { Subject, debounceTime } from 'rxjs';
 
 import { Button } from '@kit/ui/button';
@@ -32,31 +32,8 @@ import {
 } from '@kit/ui/table';
 import { cn } from '@kit/ui/utils';
 
-import {
-  translateWithAIAction,
-  updateTranslationAction,
-} from '../lib/server-actions';
-import type { TranslationData, Translations } from '../lib/translations-loader';
-
-function flattenTranslations(
-  obj: TranslationData,
-  prefix = '',
-  result: Record<string, string> = {},
-) {
-  for (const [key, value] of Object.entries(obj)) {
-    const newKey = prefix ? `${prefix}.${key}` : key;
-
-    if (typeof value === 'string') {
-      result[newKey] = value;
-    } else {
-      flattenTranslations(value, newKey, result);
-    }
-  }
-
-  return result;
-}
-
-type FlattenedTranslations = Record<string, Record<string, string>>;
+import { updateTranslationAction } from '../lib/server-actions';
+import type { Translations } from '../lib/translations-loader';
 
 export function TranslationsComparison({
   translations,
@@ -64,7 +41,6 @@ export function TranslationsComparison({
   translations: Translations;
 }) {
   const [search, setSearch] = useState('');
-  const [isTranslating, setIsTranslating] = useState(false);
 
   // Create RxJS Subject for handling translation updates
   const subject$ = useMemo(
@@ -78,35 +54,24 @@ export function TranslationsComparison({
     [],
   );
 
-  const locales = Object.keys(translations);
-  const baseLocale = locales[0]!;
-  const namespaces = Object.keys(translations[baseLocale] || {});
+  const { base_locale, locales, namespaces } = translations;
 
   const [selectedLocales, setSelectedLocales] = useState<Set<string>>(
     new Set(locales),
   );
 
-  // Flatten translations for the selected namespace
-  const flattenedTranslations: FlattenedTranslations = {};
-
   const [selectedNamespace, setSelectedNamespace] = useState(
-    namespaces[0] as string,
+    namespaces[0] ?? '',
   );
-
-  for (const locale of locales) {
-    const namespaceData = translations[locale]?.[selectedNamespace];
-
-    if (namespaceData) {
-      flattenedTranslations[locale] = flattenTranslations(namespaceData);
-    } else {
-      flattenedTranslations[locale] = {};
-    }
-  }
 
   // Get all unique keys across all translations
   const allKeys = Array.from(
     new Set(
-      Object.values(flattenedTranslations).flatMap((data) => Object.keys(data)),
+      locales.flatMap((locale) =>
+        Object.keys(
+          translations.translations[locale]?.[selectedNamespace] ?? {},
+        ),
+      ),
     ),
   ).sort();
 
@@ -132,60 +97,6 @@ export function TranslationsComparison({
     setSelectedLocales(newSelectedLocales);
   };
 
-  const handleTranslateWithAI = useCallback(async () => {
-    try {
-      setIsTranslating(true);
-
-      // Get missing translations for the selected namespace
-      const missingTranslations: Record<string, string> = {};
-      const baseTranslations = flattenedTranslations[baseLocale] ?? {};
-
-      for (const locale of visibleLocales) {
-        if (locale === baseLocale) continue;
-
-        const localeTranslations = flattenedTranslations[locale] ?? {};
-
-        for (const [key, value] of Object.entries(baseTranslations)) {
-          if (!localeTranslations[key]) {
-            missingTranslations[key] = value;
-          }
-        }
-
-        if (Object.keys(missingTranslations).length > 0) {
-          await translateWithAIAction({
-            sourceLocale: baseLocale,
-            targetLocale: locale,
-            namespace: selectedNamespace,
-            translations: missingTranslations,
-          });
-
-          toast.success(`Translated missing strings to ${locale}`);
-        }
-      }
-    } catch (error) {
-      toast.error('Failed to translate: ' + (error as Error).message);
-    } finally {
-      setIsTranslating(false);
-    }
-  }, [flattenedTranslations, baseLocale, visibleLocales, selectedNamespace]);
-
-  // Calculate if there are any missing translations
-  const hasMissingTranslations = useMemo(() => {
-    if (!flattenedTranslations || !baseLocale || !visibleLocales) return false;
-
-    const baseTranslations = flattenedTranslations[baseLocale] ?? {};
-
-    return visibleLocales.some((locale) => {
-      if (locale === baseLocale) return false;
-
-      const localeTranslations = flattenedTranslations[locale] ?? {};
-
-      return Object.keys(baseTranslations).some(
-        (key) => !localeTranslations[key],
-      );
-    });
-  }, [flattenedTranslations, baseLocale, visibleLocales]);
-
   // Set up subscription to handle debounced updates
   useEffect(() => {
     const subscription = subject$.pipe(debounceTime(500)).subscribe((props) => {
@@ -201,7 +112,7 @@ export function TranslationsComparison({
     return () => subscription.unsubscribe();
   }, [subject$]);
 
-  if (locales.length === 0) {
+  if (locales.length === 0 || !base_locale) {
     return <div>No translations found</div>;
   }
 
@@ -262,22 +173,6 @@ export function TranslationsComparison({
               </SelectContent>
             </Select>
           </div>
-
-          <div>
-            <Button
-              onClick={handleTranslateWithAI}
-              disabled={isTranslating || !hasMissingTranslations}
-            >
-              {isTranslating ? (
-                <>
-                  <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-                  Translating...
-                </>
-              ) : (
-                'Translate missing with AI'
-              )}
-            </Button>
-          </div>
         </div>
       </div>
 
@@ -302,12 +197,16 @@ export function TranslationsComparison({
                 </TableCell>
 
                 {visibleLocales.map((locale) => {
-                  const translations = flattenedTranslations[locale] ?? {};
+                  const translationsForLocale =
+                    translations.translations[locale]?.[selectedNamespace] ??
+                    {};
 
                   const baseTranslations =
-                    flattenedTranslations[baseLocale] ?? {};
+                    translations.translations[base_locale]?.[
+                      selectedNamespace
+                    ] ?? {};
 
-                  const value = translations[key];
+                  const value = translationsForLocale[key];
                   const baseValue = baseTranslations[key];
                   const isMissing = !value;
                   const isDifferent = value !== baseValue;

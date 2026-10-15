@@ -15,7 +15,7 @@ class UserService {
 }
 
 export function createUserService() {
-    return new UserService();
+  return new UserService();
 }
 ```
 
@@ -66,12 +66,12 @@ type ButtonProps = {
   onClick?: () => void;
 };
 
-function Button({ 
-  variant, 
-  size = 'md', 
-  children, 
-  disabled = false, 
-  onClick 
+function Button({
+  variant,
+  size = 'md',
+  children,
+  disabled = false,
+  onClick
 }: ButtonProps) {
   // Component implementation
 }
@@ -88,7 +88,7 @@ function Button({
 // Container component (manages data)
 function UserProfileContainer() {
   const userData = useUserData();
-  
+
   if (userData.isLoading) {
     return <LoadingSpinner />;
   }
@@ -96,7 +96,7 @@ function UserProfileContainer() {
   if (userData.error) {
     return <ErrorMessage error={userData.error} />;
   }
-  
+
   return <UserProfilePresenter data={userData.data} />;
 }
 
@@ -1607,7 +1607,7 @@ import { useTranslation } from 'react-i18next';
 
 export function MyComponent() {
   const { t } = useTranslation('common');
-  
+
   return <h1>{t('homeTabLabel')}</h1>;
 }
 ```
@@ -1622,8 +1622,8 @@ import { Trans } from '@kit/ui/trans';
 export function MyComponent() {
   return (
     <div>
-      <Trans 
-        i18nKey="teams:inviteAlertBody" 
+      <Trans
+        i18nKey="teams:inviteAlertBody"
         values={{ accountName: 'My Team' }}
       />
     </div>

@@ -36,6 +36,7 @@ comment on column public.orders.billing_customer_id is 'The billing customer ID 
 -- Revoke all access to orders table for authenticated users and service_role
 revoke all on public.orders
 from
+  anon,
   authenticated,
   service_role;
 
@@ -54,6 +55,11 @@ delete on table public.orders to service_role;
 -- Indexes
 -- Indexes on the orders table
 create index ix_orders_account_id on public.orders (account_id);
+
+-- Triggers for orders table
+create trigger orders_set_timestamps
+before insert or update on public.orders
+for each row execute function public.trigger_set_timestamps();
 
 -- RLS
 alter table public.orders enable row level security;
@@ -116,6 +122,7 @@ comment on column public.order_items.updated_at is 'The last update date of the 
 -- Revoke all access to order_items table for authenticated users and service_role
 revoke all on public.order_items
 from
+  anon,
   authenticated,
   service_role;
 
@@ -129,6 +136,11 @@ grant insert, update, delete on table public.order_items to service_role;
 
 -- Indexes on the order_items table
 create index ix_order_items_order_id on public.order_items (order_id);
+
+-- Triggers for order_items table
+create trigger order_items_set_timestamps
+before insert or update on public.order_items
+for each row execute function public.trigger_set_timestamps();
 
 -- RLS
 alter table public.order_items enable row level security;

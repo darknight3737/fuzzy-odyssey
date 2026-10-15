@@ -17,7 +17,6 @@ import {
   FormItem,
   FormMessage,
 } from '@kit/ui/form';
-import { Input } from '@kit/ui/input';
 import {
   InputOTP,
   InputOTPGroup,
@@ -27,16 +26,17 @@ import {
 import { Spinner } from '@kit/ui/spinner';
 import { Trans } from '@kit/ui/trans';
 
-import { useCaptchaToken } from '../captcha/client';
+import { useCaptcha } from '../captcha/client';
 import { useLastAuthMethod } from '../hooks/use-last-auth-method';
 import { AuthErrorAlert } from './auth-error-alert';
+import { EmailInput } from './email-input';
 
 const EmailSchema = z.object({ email: z.string().email() });
 const OtpSchema = z.object({ token: z.string().min(6).max(6) });
 
 type OtpSignInContainerProps = {
   shouldCreateUser: boolean;
-  inviteToken?: string;
+  captchaSiteKey?: string;
 };
 
 export function OtpSignInContainer(props: OtpSignInContainerProps) {
@@ -80,25 +80,16 @@ export function OtpSignInContainer(props: OtpSignInContainerProps) {
     recordAuthMethod('otp', { email });
 
     // on sign ups we redirect to the app home
-    const inviteToken = props.inviteToken;
     const next = params.get('next') ?? '/home';
 
-    if (inviteToken) {
-      const params = new URLSearchParams({
-        invite_token: inviteToken,
-        next,
-      });
-
-      router.replace(`/join?${params.toString()}`);
-    } else {
-      router.replace(next);
-    }
+    router.replace(next);
   };
 
   if (isEmailStep) {
     return (
       <OtpEmailForm
         shouldCreateUser={shouldCreateUser}
+        captchaSiteKey={props.captchaSiteKey}
         onSendOtp={(email) => {
           otpForm.setValue('email', email, {
             shouldValidate: true,
@@ -185,12 +176,14 @@ export function OtpSignInContainer(props: OtpSignInContainerProps) {
 
 function OtpEmailForm({
   shouldCreateUser,
+  captchaSiteKey,
   onSendOtp,
 }: {
   shouldCreateUser: boolean;
+  captchaSiteKey?: string;
   onSendOtp: (email: string) => void;
 }) {
-  const { captchaToken, resetCaptchaToken } = useCaptchaToken();
+  const captcha = useCaptcha({ siteKey: captchaSiteKey });
   const signInMutation = useSignInWithOtp();
 
   const emailForm = useForm({
@@ -201,10 +194,10 @@ function OtpEmailForm({
   const handleSendOtp = async ({ email }: z.infer<typeof EmailSchema>) => {
     await signInMutation.mutateAsync({
       email,
-      options: { captchaToken, shouldCreateUser },
+      options: { captchaToken: captcha.token, shouldCreateUser },
     });
 
-    resetCaptchaToken();
+    captcha.reset();
     onSendOtp(email);
   };
 
@@ -221,13 +214,7 @@ function OtpEmailForm({
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input
-                  required
-                  type="email"
-                  placeholder="email@example.com"
-                  data-test="otp-email-input"
-                  {...field}
-                />
+                <EmailInput data-test="otp-email-input" {...field} />
               </FormControl>
 
               <FormMessage />
@@ -250,6 +237,8 @@ function OtpEmailForm({
           )}
         </Button>
       </form>
+
+      {captcha.field}
     </Form>
   );
 }

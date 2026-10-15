@@ -37,8 +37,19 @@ CREATE TABLE IF NOT EXISTS public.nonces (
 CREATE INDEX IF NOT EXISTS idx_nonces_status ON public.nonces (client_token, user_id, purpose, expires_at)
   WHERE used_at IS NULL AND revoked = FALSE;
 
+-- Optimized index for verify_nonce function query pattern
+-- Matches filter order: purpose → expires_at → user_id
+CREATE INDEX IF NOT EXISTS idx_nonces_verify_lookup ON public.nonces (purpose, expires_at DESC, user_id)
+  WHERE used_at IS NULL AND revoked = FALSE;
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.nonces ENABLE ROW LEVEL SECURITY;
+
+-- Nothing is granted back: this table is RPC-only (see the note on the policies
+-- below). Without this, Supabase's default privileges leave all three roles
+-- holding TRUNCATE, which bypasses RLS -- and for service_role it would be the
+-- only write it can perform here.
+REVOKE ALL ON public.nonces FROM anon, authenticated, service_role;
 
 -- RLS policies
 -- Users can view their own nonces for verification
@@ -134,6 +145,7 @@ $$;
 grant execute on function public.create_nonce to service_role;
 
 -- Create a function to verify a nonce
+-- Create a function to verify a nonce
 create or replace function public.verify_nonce (
     p_token TEXT,
     p_purpose TEXT,
@@ -147,52 +159,108 @@ create or replace function public.verify_nonce (
         SEARCH_PATH to '' as $$
 DECLARE
     v_nonce          RECORD;
-    v_matching_count INTEGER;
+    v_exhausted      BOOLEAN;
+    v_max_attempts   INTEGER := least(greatest(coalesce(p_max_verification_attempts, 5), 1), 10);
 BEGIN
-    -- Count how many matching tokens exist before verification attempt
-    SELECT COUNT(*)
-    INTO v_matching_count
-    FROM public.nonces
-    WHERE purpose = p_purpose;
+    -- SECURITY: authenticated callers may only act on their own (or anonymous)
+    -- tokens. Without this pin a user could pass another user's id and burn or
+    -- revoke that user's active tokens via failed attempts. The caller's role
+    -- is read from the JWT claim, falling back to the role GUC set by SET
+    -- ROLE: inside a SECURITY DEFINER function current_user is the function
+    -- owner, never the caller, so neither is usable here. The service_role
+    -- client keeps the ability to verify on behalf of any user.
+    IF coalesce(auth.jwt() ->> 'role', current_setting('role', true)) = 'authenticated' THEN
+        p_user_id := (select auth.uid());
+    END IF;
 
-    -- Update verification attempt counter and tracking info for all matching tokens
-    UPDATE public.nonces
-    SET verification_attempts        = verification_attempts + 1,
-        last_verification_at         = NOW(),
-        last_verification_ip         = COALESCE(p_ip, last_verification_ip),
-        last_verification_user_agent = COALESCE(p_user_agent, last_verification_user_agent)
-    WHERE client_token = extensions.crypt(p_token, client_token)
-      AND purpose = p_purpose;
+    -- Find and update the nonce in a single operation
+    -- First filter by indexed columns to reduce candidate rows, then do bcrypt comparison
+    WITH candidate_nonces AS (
+        -- Use index to filter candidates by purpose, user_id, expiry, status
+        SELECT id, client_token, user_id, purpose, metadata, scopes,
+               verification_attempts, expires_at, used_at, revoked
+        FROM public.nonces
+        WHERE purpose = p_purpose
+          AND used_at IS NULL
+          AND NOT revoked
+          AND expires_at > NOW()
+          -- Only apply user_id filter if the token was created for a specific user
+          AND (
+            -- Case 1: Anonymous token (user_id is NULL in DB)
+            (user_id IS NULL)
+                OR
+                -- Case 2: User-specific token (check if user_id matches)
+            (user_id = p_user_id)
+            )
+        ORDER BY created_at DESC
+        -- Safety net: Limit to 100 most recent candidates to cap worst-case performance
+        -- In production, auto-revocation keeps this low, but this protects against edge cases
+        LIMIT 100
+            -- CRITICAL: Lock rows to prevent race conditions in concurrent verifications
+            -- SKIP LOCKED ensures other requests fail fast instead of waiting
+            FOR UPDATE SKIP LOCKED
+    ),
+         -- SECURITY: Count this verification attempt against ALL active candidate
+         -- nonces for this purpose/user, regardless of whether the supplied token
+         -- matches. Counting only successful matches (the previous behaviour) meant
+         -- wrong guesses were never recorded, so the attempt cap never tripped and
+         -- the token was unboundedly brute-forceable.
+         -- NOTE: create_nonce defaults revoke_previous=true, so there is normally a
+         -- single active nonce per (purpose, user_id). If a caller ever issues
+         -- multiple concurrent nonces for the same purpose+user, a failed guess
+         -- counts against all of them together.
+         updated_nonces AS (
+             UPDATE public.nonces n
+                 SET verification_attempts        = n.verification_attempts + 1,
+                     last_verification_at         = NOW(),
+                     last_verification_ip         = COALESCE(p_ip, n.last_verification_ip),
+                     last_verification_user_agent = COALESCE(p_user_agent, n.last_verification_user_agent)
+                 FROM candidate_nonces c
+                 WHERE n.id = c.id
+                 RETURNING n.*
+         ),
+         matched_nonce AS (
+             -- Now do the expensive bcrypt comparison only on the (incremented) candidates
+             SELECT *
+             FROM updated_nonces
+             WHERE client_token = extensions.crypt(p_token, client_token)
+             LIMIT 1
+         )
+    SELECT * INTO v_nonce FROM matched_nonce;
 
-    -- Find the nonce by token and purpose
-    -- Modified to handle user-specific tokens better
-    SELECT *
-    INTO v_nonce
-    FROM public.nonces
-    WHERE client_token = extensions.crypt(p_token, client_token)
-      AND purpose = p_purpose
-      -- Only apply user_id filter if the token was created for a specific user
-      AND (
-        -- Case 1: Anonymous token (user_id is NULL in DB)
-        (user_id IS NULL)
-            OR
-            -- Case 2: User-specific token (check if user_id matches)
-        (user_id = p_user_id)
-        )
-      AND used_at IS NULL
-      AND NOT revoked
-      AND expires_at > NOW();
-
-    -- Check if nonce exists
+    -- No token matched. The attempt has been counted on the active candidate
+    -- nonce(s); revoke any that have now exceeded the cap so further guesses
+    -- fail fast (the candidate set is no longer eligible on the next call).
     IF v_nonce.id IS NULL THEN
+        WITH exhausted AS (
+            UPDATE public.nonces
+                SET revoked        = TRUE,
+                    revoked_reason = 'Maximum verification attempts exceeded'
+                WHERE purpose = p_purpose
+                    AND used_at IS NULL
+                    AND NOT revoked
+                    AND ((user_id IS NULL) OR (user_id = p_user_id))
+                    AND verification_attempts > v_max_attempts
+                RETURNING id
+        )
+        SELECT count(*) > 0 INTO v_exhausted FROM exhausted;
+
+        IF v_exhausted THEN
+            RETURN jsonb_build_object(
+                    'valid', false,
+                    'message', 'Token revoked due to too many verification attempts',
+                    'max_attempts_exceeded', true
+                   );
+        END IF;
+
         RETURN jsonb_build_object(
                 'valid', false,
                 'message', 'Invalid or expired token'
                );
     END IF;
 
-    -- Check if max verification attempts exceeded
-    IF p_max_verification_attempts > 0 AND v_nonce.verification_attempts > p_max_verification_attempts THEN
+    -- Check if max verification attempts exceeded (using the incremented value)
+    IF v_nonce.verification_attempts > v_max_attempts THEN
         -- Automatically revoke the token
         UPDATE public.nonces
         SET revoked        = TRUE,

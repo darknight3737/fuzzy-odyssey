@@ -13,17 +13,15 @@
 @import './shadcn-ui.css';
 @import './markdoc.css';
 @import './makerkit.css';
-
-/* plugins - update the below if you add a new plugin */
-@plugin "tailwindcss-animate";
+@import 'tw-animate-css';
 
 /* content sources - update the below if you add a new path */
-@source "../../../packages/*/src/**/*.{ts,tsx}";
-@source "../../../packages/features/*/src/**/*.{ts,tsx}";
-@source "../../../packages/billing/*/src/**/*.{ts,tsx}";
-@source "../../../packages/plugins/*/src/**/*.{ts,tsx}";
-@source "../../../packages/cms/*/src/**/*.{ts,tsx}";
-@source "../{app,components,config,lib}/**/*.{ts,tsx}";
+@source '../../../packages/*/src/**/*.{ts,tsx}';
+@source '../../../packages/features/*/src/**/*.{ts,tsx}';
+@source '../../../packages/billing/*/src/**/*.{ts,tsx}';
+@source '../../../packages/plugins/*/src/**/*.{ts,tsx}';
+@source '../../../packages/cms/*/src/**/*.{ts,tsx}';
+@source '../{app,components,config,lib}/**/*.{ts,tsx}';
 
 /* variants - update the below if you add a new variant */
 @variant dark (&:where(.dark, .dark *));
@@ -34,6 +32,15 @@
     font-feature-settings:
       'rlig' 1,
       'calt' 1;
+  }
+
+  html,
+  body {
+    scroll-padding-top: 56px;
+  }
+
+  [id] {
+    scroll-margin-top: 56px;
   }
 
   *,
@@ -47,14 +54,5 @@
   input::placeholder,
   textarea::placeholder {
     color: theme(--color-muted-foreground);
-  }
-}
-@layer base {
-  :focus-visible {
-    outline: 2px solid #597665;
-    outline-offset: 4px;
-  }
-  main {
-    min-width: 0;
   }
 }

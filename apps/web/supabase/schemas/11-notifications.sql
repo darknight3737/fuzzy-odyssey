@@ -43,17 +43,29 @@ comment on column notifications.created_at is 'The creation date for the notific
 -- Revoke all access to notifications table for authenticated users and service_role
 revoke all on public.notifications
 from
+  anon,
   authenticated,
   service_role;
 
 -- Open up relevant access to notifications table for authenticated users and service_role
 grant
 select
-,
-update on table public.notifications to authenticated,
+  on table public.notifications to authenticated,
 service_role;
 
-grant insert on table public.notifications to service_role;
+-- service_role retains full-table UPDATE
+grant
+update on table public.notifications to service_role;
+
+-- authenticated may only toggle the dismissed flag. Every other column
+-- (account_id, type, body, link, channel, expires_at, created_at) is
+-- system-managed. Enforced by Postgres up front, on top of the
+-- kit.update_notification_dismissed_status trigger.
+grant
+update (dismissed) on table public.notifications to authenticated;
+
+grant insert,
+delete on table public.notifications to service_role;
 
 -- enable realtime
 alter publication supabase_realtime

@@ -1,13 +1,17 @@
 import 'server-only';
 
+import { redirect } from 'next/navigation';
+
 import { SupabaseClient } from '@supabase/supabase-js';
 
 import { z } from 'zod';
 
+import { createAccountsApi } from '@kit/accounts/api';
 import { LineItemSchema } from '@kit/billing';
 import { getBillingGatewayProvider } from '@kit/billing-gateway';
 import { getLogger } from '@kit/shared/logger';
 import { requireUser } from '@kit/supabase/require-user';
+import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { createTeamAccountsApi } from '@kit/team-accounts/api';
 
@@ -83,6 +87,21 @@ class TeamBillingService {
     // so we can assign the correct checkout data
     const { plan, product } = getPlanDetails(params.productId, params.planId);
 
+    // Determine trial eligibility at the identity level: if the user already
+    // has billing history on any account they own, do not grant another trial.
+    // This prevents farming free trials by creating additional accounts (the
+    // per-account customer-id check below only suppresses trials on accounts
+    // that have been billed before). Uses the admin client to read across the
+    // user's own accounts, scoped to the authenticated user id after the
+    // billing.manage permission check above.
+    const ownerHasBillingHistory = await createAccountsApi(
+      getSupabaseServerAdminClient(),
+    ).ownerHasBillingHistory(userId);
+
+    const checkoutPlan = ownerHasBillingHistory
+      ? { ...plan, trialDays: undefined }
+      : plan;
+
     // find the customer ID for the account if it exists
     // (eg. if the account has been billed before)
     const customerId = await api.getCustomerId(accountId);
@@ -107,11 +126,14 @@ class TeamBillingService {
       `Creating checkout session...`,
     );
 
+    let checkoutToken: string | null | undefined;
+    let url: string | null | undefined;
+
     try {
       // call the payment gateway to create the checkout session
-      const { checkoutToken } = await service.createCheckoutSession({
+      const checkout = await service.createCheckoutSession({
         accountId,
-        plan,
+        plan: checkoutPlan,
         returnUrl,
         customerEmail,
         customerId,
@@ -119,11 +141,8 @@ class TeamBillingService {
         enableDiscountField: product.enableDiscountField,
       });
 
-      // return the checkout token to the client
-      // so we can call the payment gateway to complete the checkout
-      return {
-        checkoutToken,
-      };
+      checkoutToken = checkout.checkoutToken;
+      url = checkout.url;
     } catch (error) {
       logger.error(
         {
@@ -133,8 +152,32 @@ class TeamBillingService {
         `Error creating the checkout session`,
       );
 
-      throw new Error(`Checkout not created`);
+      throw new Error(`Checkout not created`, { cause: error });
     }
+
+    if (!url && !checkoutToken) {
+      throw new Error(
+        'Checkout session returned neither a URL nor a checkout token',
+      );
+    }
+
+    // if URL provided, we redirect to the provider's hosted page
+    if (url) {
+      logger.info(
+        {
+          userId: user.id,
+        },
+        `Checkout session created. Redirecting to hosted page...`,
+      );
+
+      redirect(url);
+    }
+
+    // return the checkout token to the client
+    // so we can call the payment gateway to complete the checkout
+    return {
+      checkoutToken,
+    };
   }
 
   /**
@@ -234,7 +277,7 @@ class TeamBillingService {
         `Billing Portal session was not created`,
       );
 
-      throw new Error(`Error creating Billing Portal`);
+      throw new Error(`Error creating Billing Portal`, { cause: error });
     }
   }
 

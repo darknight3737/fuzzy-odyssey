@@ -53,19 +53,27 @@ export class InvitationsPageObject {
       }
     }
 
-    await form.locator('button[type="submit"]').click();
+    await Promise.all([
+      form.locator('button[type="submit"]').click(),
+      this.page.waitForResponse((response) => {
+        return (
+          response.url().includes('/members') &&
+          response.request().method() === 'POST'
+        );
+      }),
+    ]);
   }
 
   navigateToMembers() {
     return expect(async () => {
       await this.page
-          .locator('a', {
-            hasText: 'Members',
-          })
-          .click();
+        .locator('a', {
+          hasText: 'Members',
+        })
+        .click();
 
       await this.page.waitForURL('**/home/*/members');
-    }).toPass()
+    }).toPass();
   }
 
   async openInviteForm() {
@@ -127,6 +135,39 @@ export class InvitationsPageObject {
     });
 
     await Promise.all([click, response]);
+
+    // wait for animation to complete
+    await this.page.waitForTimeout(500);
+
+    // skip authentication setup
+    const continueButton = this.page.locator('[data-test="continue-button"]');
+
+    if (
+      await continueButton.isVisible({
+        timeout: 1000,
+      })
+    ) {
+      await continueButton.click();
+
+      // Handle confirmation dialog that appears when skipping without adding auth
+      const confirmationDialog = this.page.locator(
+        '[data-test="no-auth-method-dialog"]',
+      );
+
+      if (
+        await confirmationDialog.isVisible({
+          timeout: 2000,
+        })
+      ) {
+        console.log('Confirmation dialog appeared, clicking Continue...');
+        await this.page
+          .locator('[data-test="no-auth-dialog-continue"]')
+          .click();
+      }
+    }
+
+    // wait for redirect to account home
+    await this.page.waitForURL(new RegExp('/home/[a-z0-9-]+'));
   }
 
   private getInviteForm() {

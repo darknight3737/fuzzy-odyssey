@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Bell, CircleAlert, Info, TriangleAlert, XIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { Database } from '@kit/supabase/database';
 import { Button } from '@kit/ui/button';
 import { If } from '@kit/ui/if';
 import { Popover, PopoverContent, PopoverTrigger } from '@kit/ui/popover';
@@ -13,38 +12,29 @@ import { Separator } from '@kit/ui/separator';
 import { cn } from '@kit/ui/utils';
 
 import { useDismissNotification, useFetchNotifications } from '../hooks';
-
-type Notification = Database['public']['Tables']['notifications']['Row'];
-
-type PartialNotification = Pick<
-  Notification,
-  'id' | 'body' | 'dismissed' | 'type' | 'created_at' | 'link'
->;
+import { Notification } from '../types';
 
 export function NotificationsPopover(params: {
   realtime: boolean;
   accountIds: string[];
-  onClick?: (notification: PartialNotification) => void;
+  onClick?: (notification: Notification) => void;
 }) {
   const { i18n, t } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState<PartialNotification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const onNotifications = useCallback(
-    (notifications: PartialNotification[]) => {
-      setNotifications((existing) => {
-        const unique = new Set(existing.map((notification) => notification.id));
+  const onNotifications = useCallback((notifications: Notification[]) => {
+    setNotifications((existing) => {
+      const unique = new Set(existing.map((notification) => notification.id));
 
-        const notificationsFiltered = notifications.filter(
-          (notification) => !unique.has(notification.id),
-        );
+      const notificationsFiltered = notifications.filter(
+        (notification) => !unique.has(notification.id),
+      );
 
-        return [...notificationsFiltered, ...existing];
-      });
-    },
-    [],
-  );
+      return [...notificationsFiltered, ...existing];
+    });
+  }, []);
 
   const dismissNotification = useDismissNotification();
 
@@ -126,7 +116,7 @@ export function NotificationsPopover(params: {
 
           <span
             className={cn(
-              `fade-in animate-in zoom-in absolute right-1 top-1 mt-0 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[0.65rem] text-white`,
+              `fade-in animate-in zoom-in absolute top-1 right-1 mt-0 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[0.65rem] text-white`,
               {
                 hidden: !notifications.length,
               },
@@ -186,7 +176,7 @@ export function NotificationsPopover(params: {
               <div
                 key={notification.id.toString()}
                 className={cn(
-                  'min-h-18 flex flex-col items-start justify-center gap-y-1 px-3 py-2',
+                  'flex min-h-18 flex-col items-start justify-center gap-y-1 px-3 py-2',
                 )}
                 onClick={() => {
                   if (params.onClick) {

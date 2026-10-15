@@ -57,7 +57,7 @@ async function SignUpPage({ searchParams }: Props) {
       <SignUpMethodsContainer
         providers={authConfig.providers}
         displayTermsCheckbox={authConfig.displayTermsCheckbox}
-        inviteToken={inviteToken}
+        captchaSiteKey={authConfig.captchaTokenSiteKey}
         paths={signUpPaths}
       />
 

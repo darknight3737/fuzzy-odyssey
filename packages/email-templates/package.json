@@ -10,16 +10,20 @@
   },
   "prettier": "@kit/prettier-config",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./registry": "./src/registry.ts"
   },
   "dependencies": {
-    "@react-email/components": "0.5.1"
+    "@react-email/components": "catalog:"
   },
   "devDependencies": {
     "@kit/eslint-config": "workspace:*",
     "@kit/i18n": "workspace:*",
     "@kit/prettier-config": "workspace:*",
-    "@kit/tsconfig": "workspace:*"
+    "@kit/tsconfig": "workspace:*",
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "typesVersions": {
     "*": {
