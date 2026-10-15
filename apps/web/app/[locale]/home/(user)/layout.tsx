@@ -117,9 +117,7 @@ async function redirectIfTeamsOnly(
 
       const team = preferred ?? firstTeam;
 
-      redirect(
-        pathsConfig.app.accountHome.replace('[account]', team.value!),
-      );
+      redirect(pathsConfig.app.accountHome.replace('[account]', team.value!));
     } else {
       redirect(pathsConfig.app.createTeam);
     }

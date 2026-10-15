@@ -112,13 +112,13 @@ export function NotificationsPopover(params: {
   return (
     <Popover modal open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        render={<Button className={'relative h-8 w-8'} variant={'ghost'} />}
+        render={<Button size="icon-lg" variant="ghost" className="relative" />}
       >
-        <Bell className={'h-3.5 w-3.5'} />
+        <Bell className={'size-4 min-h-3 min-w-3'} />
 
         <span
           className={cn(
-            `fade-in animate-in zoom-in absolute top-1 right-1 mt-0 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[0.65rem] text-white`,
+            `fade-in animate-in zoom-in absolute top-1 right-1 mt-0 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[0.6rem] text-white`,
             {
               hidden: !notifications.length,
             },
@@ -129,7 +129,7 @@ export function NotificationsPopover(params: {
       </PopoverTrigger>
 
       <PopoverContent
-        className={'flex w-full max-w-96 flex-col lg:min-w-64'}
+        className={'flex w-full max-w-96 flex-col gap-0 lg:min-w-64'}
         align={'start'}
         sideOffset={10}
       >
@@ -143,11 +143,7 @@ export function NotificationsPopover(params: {
           <div className={'text-sm'}>{t('common.noNotifications')}</div>
         </If>
 
-        <div
-          className={
-            'flex max-h-[60vh] flex-col divide-y divide-gray-100 overflow-y-auto dark:divide-gray-800'
-          }
-        >
+        <div className={'flex max-h-[60vh] flex-col overflow-y-auto'}>
           {notifications.map((notification) => {
             const maxChars = 100;
 
@@ -162,11 +158,11 @@ export function NotificationsPopover(params: {
             const Icon = () => {
               switch (notification.type) {
                 case 'warning':
-                  return <TriangleAlert className={'h-4 text-yellow-500'} />;
+                  return <TriangleAlert className={'size-3 text-yellow-500'} />;
                 case 'error':
-                  return <CircleAlert className={'text-destructive h-4'} />;
+                  return <CircleAlert className={'text-destructive size-3'} />;
                 default:
-                  return <Info className={'h-4 text-blue-500'} />;
+                  return <Info className={'size-3 text-blue-500'} />;
               }
             };
 
@@ -174,7 +170,7 @@ export function NotificationsPopover(params: {
               <div
                 key={notification.id.toString()}
                 className={cn(
-                  'flex min-h-18 flex-col items-start justify-center gap-y-1 px-3 py-2',
+                  'flex min-h-14 flex-col items-start justify-center gap-y-1 px-1',
                 )}
                 onClick={() => {
                   if (params.onClick) {
@@ -183,15 +179,11 @@ export function NotificationsPopover(params: {
                 }}
               >
                 <div className={'flex w-full items-start justify-between'}>
-                  <div
-                    className={'flex items-start justify-start gap-x-3 py-2'}
-                  >
-                    <div className={'py-0.5'}>
-                      <Icon />
-                    </div>
+                  <div className={'flex items-start justify-start gap-x-1.5'}>
+                    <div className={'flex flex-col'}>
+                      <div className={'flex items-center gap-x-2 text-sm'}>
+                        <Icon />
 
-                    <div className={'flex flex-col space-y-1'}>
-                      <div className={'text-sm'}>
                         <If condition={notification.link} fallback={body}>
                           {(link) => (
                             <a href={link} className={'hover:underline'}>
@@ -207,7 +199,7 @@ export function NotificationsPopover(params: {
                     </div>
                   </div>
 
-                  <div className={'py-2'}>
+                  <div className={'ml-2'}>
                     <Button
                       className={'max-h-6 max-w-6'}
                       size={'icon'}

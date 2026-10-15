@@ -1,12 +1,12 @@
-import { getLocale } from "next-intl/server";
+import { getLocale } from 'next-intl/server';
 
-import { SidebarInset, SidebarProvider } from "@kit/ui/sidebar";
+import { SidebarInset, SidebarProvider } from '@kit/ui/sidebar';
 
+import { DocsHeader } from './_components/docs-header';
 // local imports
-import { DocsNavigation } from "./_components/docs-navigation";
-import { getDocs } from "./_lib/server/docs.loader";
-import { buildDocumentationTree } from "./_lib/utils";
-import { DocsHeader } from "./_components/docs-header";
+import { DocsNavigation } from './_components/docs-navigation';
+import { getDocs } from './_lib/server/docs.loader';
+import { buildDocumentationTree } from './_lib/utils';
 
 type DocsLayoutProps = React.PropsWithChildren<{
   params: Promise<{ locale?: string }>;
@@ -24,7 +24,7 @@ async function DocsLayout({ children, params }: DocsLayoutProps) {
       defaultOpen={true}
       style={
         {
-          "--sidebar-width": "300px",
+          '--sidebar-width': '300px',
         } as React.CSSProperties
       }
     >

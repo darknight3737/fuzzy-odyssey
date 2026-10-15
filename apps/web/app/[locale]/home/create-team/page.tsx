@@ -1,5 +1,3 @@
-import { use } from 'react';
-
 import { redirect } from 'next/navigation';
 
 import { createAccountsApi } from '@kit/accounts/api';
@@ -12,8 +10,8 @@ import { requireUserInServerComponent } from '~/lib/server/require-user-in-serve
 
 import { CreateFirstTeamForm } from './_components/create-first-team-form';
 
-function CreateTeamPage() {
-  const data = use(loadData());
+async function CreateTeamPage() {
+  const data = await loadData();
 
   if (data.redirectTo) {
     redirect(data.redirectTo);

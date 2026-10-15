@@ -3,15 +3,9 @@ import { getTranslations } from 'next-intl/server';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { createTeamAccountsApi } from '@kit/team-accounts/api';
 import { TeamAccountSettingsContainer } from '@kit/team-accounts/components';
-import { AppBreadcrumbs } from '@kit/ui/app-breadcrumbs';
-import { PageBody } from '@kit/ui/page';
-import { Trans } from '@kit/ui/trans';
 
 import featuresFlagConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
-
-// local imports
-import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
 
 export const generateMetadata = async () => {
   const t = await getTranslations('teams');
@@ -48,23 +42,13 @@ async function TeamAccountSettingsPage(props: TeamAccountSettingsPageProps) {
   };
 
   return (
-    <>
-      <TeamAccountLayoutPageHeader
-        account={account.slug}
-        title={<Trans i18nKey={'teams.settings.pageTitle'} />}
-        description={<AppBreadcrumbs />}
+    <div className={'flex max-w-2xl flex-1 flex-col'}>
+      <TeamAccountSettingsContainer
+        account={account}
+        paths={paths}
+        features={features}
       />
-
-      <PageBody>
-        <div className={'flex max-w-2xl flex-1 flex-col'}>
-          <TeamAccountSettingsContainer
-            account={account}
-            paths={paths}
-            features={features}
-          />
-        </div>
-      </PageBody>
-    </>
+    </div>
   );
 }
 

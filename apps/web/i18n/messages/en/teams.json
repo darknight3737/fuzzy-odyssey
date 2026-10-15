@@ -18,6 +18,7 @@
   "billing": {
     "pageTitle": "Billing"
   },
+  "switchWorkspace": "Switch Workspace",
   "yourTeams": "Your Teams ({teamsCount})",
   "createTeam": "Create a Team",
   "creatingTeam": "Creating Team...",

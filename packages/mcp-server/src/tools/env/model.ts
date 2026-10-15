@@ -416,6 +416,17 @@ export const envVariables: EnvVariableModel[] = [
     },
   },
   {
+    name: 'NEXT_PUBLIC_ENABLE_TEAMS_ACCOUNTS_ONLY',
+    displayName: 'Enable Teams Accounts Only',
+    description:
+      'When enabled, disables personal accounts and only allows team accounts.',
+    category: 'Features',
+    type: 'boolean',
+    validate: ({ value }) => {
+      return z.coerce.boolean().optional().safeParse(value);
+    },
+  },
+  {
     name: 'NEXT_PUBLIC_ENABLE_NOTIFICATIONS',
     displayName: 'Enable Notifications',
     description: 'Controls the notification system.',
