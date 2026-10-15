@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 
 import dynamic from 'next/dynamic';
 
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { TriangleAlert } from 'lucide-react';
 
 import { PlanPicker } from '@kit/billing-gateway/components';
 import { useAppEvents } from '@kit/shared/events';
@@ -67,11 +67,11 @@ export function PersonalAccountCheckoutForm(props: {
       <Card>
         <CardHeader>
           <CardTitle>
-            <Trans i18nKey={'common:planCardLabel'} />
+            <Trans i18nKey={'billing.planCardLabel'} />
           </CardTitle>
 
           <CardDescription>
-            <Trans i18nKey={'common:planCardDescription'} />
+            <Trans i18nKey={'billing.planCardDescription'} />
           </CardDescription>
         </CardHeader>
 
@@ -114,14 +114,14 @@ export function PersonalAccountCheckoutForm(props: {
 function ErrorAlert() {
   return (
     <Alert variant={'destructive'}>
-      <ExclamationTriangleIcon className={'h-4'} />
+      <TriangleAlert className={'h-4'} />
 
       <AlertTitle>
-        <Trans i18nKey={'common:planPickerAlertErrorTitle'} />
+        <Trans i18nKey={'billing.planPickerAlertErrorTitle'} />
       </AlertTitle>
 
       <AlertDescription>
-        <Trans i18nKey={'common:planPickerAlertErrorDescription'} />
+        <Trans i18nKey={'billing.planPickerAlertErrorDescription'} />
       </AlertDescription>
     </Alert>
   );

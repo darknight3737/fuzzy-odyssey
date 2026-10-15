@@ -5,7 +5,6 @@ import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { If } from '@kit/ui/if';
 
 import appConfig from '~/config/app.config';
-import { withI18n } from '~/lib/i18n/with-i18n';
 import { pageMetadata, safeWebsite, serializeJsonLd } from '~/lib/seo';
 
 import { BusinessHeader } from './_components/business-header';
@@ -119,4 +118,4 @@ async function BusinessProfilePage({ params }: Props) {
   );
 }
 
-export default withI18n(BusinessProfilePage);
+export default BusinessProfilePage;

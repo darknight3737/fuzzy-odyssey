@@ -17,7 +17,7 @@ Create validation schema in `_lib/schemas/`:
 
 ```typescript
 // _lib/schemas/feature.schema.ts
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const CreateFeatureSchema = z.object({
   name: z.string().min(1, 'Name is required'),

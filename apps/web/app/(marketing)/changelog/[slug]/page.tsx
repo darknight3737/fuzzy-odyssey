@@ -6,8 +6,6 @@ import { notFound } from 'next/navigation';
 
 import { createCmsClient } from '@kit/cms';
 
-import { withI18n } from '~/lib/i18n/with-i18n';
-
 import { ChangelogDetail } from '../_components/changelog-detail';
 
 interface ChangelogEntryPageProps {
@@ -107,4 +105,4 @@ async function ChangelogEntryPage({ params }: ChangelogEntryPageProps) {
   );
 }
 
-export default withI18n(ChangelogEntryPage);
+export default ChangelogEntryPage;

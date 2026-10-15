@@ -1,6 +1,6 @@
 'use client';
 
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { TriangleAlert } from 'lucide-react';
 
 import { useCaptureException } from '@kit/monitoring/hooks';
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
@@ -25,20 +25,20 @@ export default function BillingErrorPage({
       <PageBody>
         <div className={'flex flex-col space-y-4'}>
           <Alert variant={'destructive'}>
-            <ExclamationTriangleIcon className={'h-4'} />
+            <TriangleAlert className={'h-4'} />
 
             <AlertTitle>
-              <Trans i18nKey={'billing:planPickerAlertErrorTitle'} />
+              <Trans i18nKey={'billing.planPickerAlertErrorTitle'} />
             </AlertTitle>
 
             <AlertDescription>
-              <Trans i18nKey={'billing:planPickerAlertErrorDescription'} />
+              <Trans i18nKey={'billing.planPickerAlertErrorDescription'} />
             </AlertDescription>
           </Alert>
 
           <div>
             <Button variant={'outline'} onClick={reset}>
-              <Trans i18nKey={'common:retry'} />
+              <Trans i18nKey={'common.retry'} />
             </Button>
           </div>
         </div>

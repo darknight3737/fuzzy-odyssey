@@ -27,7 +27,7 @@ export function SearchResultsList({ businesses }: SearchResultsListProps) {
       <div className={'py-12 text-center'}>
         <p className={'text-muted-foreground'}>
           <Trans
-            i18nKey={'search:noResults'}
+            i18nKey={'search.noResults'}
             defaults={'No businesses found. Try adjusting your search.'}
           />
         </p>

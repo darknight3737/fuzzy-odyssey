@@ -38,11 +38,12 @@ const FormSchema = z.object({
   confirmation: z.custom<string>((value) => value === 'CONFIRM'),
 });
 
-export function AdminResetPasswordDialog(
-  props: React.PropsWithChildren<{
-    userId: string;
-  }>,
-) {
+export function AdminResetPasswordDialog(props: {
+  userId: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children?: React.ReactNode;
+}) {
   const form = useForm({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -76,8 +77,21 @@ export function AdminResetPasswordDialog(
   });
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>{props.children}</AlertDialogTrigger>
+    <AlertDialog
+      open={props.open}
+      onOpenChange={(open) => {
+        if (!open) {
+          form.reset();
+          setError(null);
+          setSuccess(false);
+        }
+
+        props.onOpenChange?.(open);
+      }}
+    >
+      {props.children && (
+        <AlertDialogTrigger render={props.children as React.ReactElement} />
+      )}
 
       <AlertDialogContent>
         <AlertDialogHeader>

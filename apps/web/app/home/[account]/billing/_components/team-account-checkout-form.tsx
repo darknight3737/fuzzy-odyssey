@@ -64,11 +64,11 @@ export function TeamAccountCheckoutForm(params: {
     <Card>
       <CardHeader>
         <CardTitle>
-          <Trans i18nKey={'billing:manageTeamPlan'} />
+          <Trans i18nKey={'billing.manageTeamPlan'} />
         </CardTitle>
 
         <CardDescription>
-          <Trans i18nKey={'billing:manageTeamPlanDescription'} />
+          <Trans i18nKey={'billing.manageTeamPlanDescription'} />
         </CardDescription>
       </CardHeader>
 

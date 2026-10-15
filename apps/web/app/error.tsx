@@ -25,10 +25,10 @@ const ErrorPage = ({
       <SiteHeader user={user.data} />
 
       <ErrorPageContent
-        statusCode={'common:errorPageHeading'}
-        heading={'common:genericError'}
-        subtitle={'common:genericErrorSubHeading'}
-        backLabel={'common:goBack'}
+        statusCode={'common.errorPageHeading'}
+        heading={'common.genericError'}
+        subtitle={'common.genericErrorSubHeading'}
+        backLabel={'common.goBack'}
         reset={reset}
       />
     </div>

@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 import { ClaimButton } from './_components/claim-button';
 
@@ -86,4 +85,4 @@ async function ClaimBusinessPage({
     </main>
   );
 }
-export default withI18n(ClaimBusinessPage);
+export default ClaimBusinessPage;

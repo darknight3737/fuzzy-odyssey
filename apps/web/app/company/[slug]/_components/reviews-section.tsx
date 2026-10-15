@@ -27,7 +27,7 @@ export function ReviewsSection({ reviews, businessId }: ReviewsSectionProps) {
     <div className={'mb-8'}>
       <h2 className={'mb-4 text-2xl font-bold'}>
         <Trans
-          i18nKey={'business:reviewsTitle'}
+          i18nKey={'business.reviewsTitle'}
           defaults={'Reviews'}
           values={{ count: approvedReviews.length }}
         />
@@ -38,7 +38,7 @@ export function ReviewsSection({ reviews, businessId }: ReviewsSectionProps) {
           <CardContent className={'py-8 text-center'}>
             <p className={'text-muted-foreground'}>
               <Trans
-                i18nKey={'business:noReviews'}
+                i18nKey={'business.noReviews'}
                 defaults={'No reviews yet. Be the first to review!'}
               />
             </p>

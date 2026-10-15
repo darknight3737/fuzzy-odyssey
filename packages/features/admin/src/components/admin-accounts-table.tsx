@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -21,7 +23,6 @@ import {
 } from '@kit/ui/dropdown-menu';
 import { DataTable } from '@kit/ui/enhanced-data-table';
 import { Form, FormControl, FormField, FormItem } from '@kit/ui/form';
-import { If } from '@kit/ui/if';
 import { Input } from '@kit/ui/input';
 import {
   Select,
@@ -105,6 +106,12 @@ function AccountsTableFilters(props: {
 
   const type = useWatch({ control: form.control, name: 'type' });
 
+  const options = {
+    all: 'All Accounts',
+    team: 'Team',
+    personal: 'Personal',
+  };
+
   return (
     <Form {...form}>
       <form
@@ -128,16 +135,20 @@ function AccountsTableFilters(props: {
           }}
         >
           <SelectTrigger>
-            <SelectValue placeholder={'Account Type'} />
+            <SelectValue placeholder={'Account Type'}>
+              {(value: keyof typeof options) => options[value]}
+            </SelectValue>
           </SelectTrigger>
 
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Account Type</SelectLabel>
 
-              <SelectItem value={'all'}>All accounts</SelectItem>
-              <SelectItem value={'team'}>Team</SelectItem>
-              <SelectItem value={'personal'}>Personal</SelectItem>
+              {Object.entries(options).map(([key, value]) => (
+                <SelectItem key={key} value={key}>
+                  {value}
+                </SelectItem>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -157,6 +168,8 @@ function AccountsTableFilters(props: {
             </FormItem>
           )}
         />
+
+        <button type="submit" hidden />
       </form>
     </Form>
   );
@@ -194,75 +207,143 @@ function getColumns(): ColumnDef<Account>[] {
     {
       id: 'created_at',
       header: 'Created At',
-      accessorKey: 'created_at',
+      cell: ({ row }) => {
+        return new Date(row.original.created_at!).toLocaleDateString(
+          undefined,
+          {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          },
+        );
+      },
     },
     {
       id: 'updated_at',
       header: 'Updated At',
-      accessorKey: 'updated_at',
+      cell: ({ row }) => {
+        return row.original.updated_at
+          ? new Date(row.original.updated_at).toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : '-';
+      },
     },
     {
       id: 'actions',
       header: '',
-      cell: ({ row }) => {
-        const isPersonalAccount = row.original.is_personal_account;
-        const userId = row.original.id;
-
-        return (
-          <div className={'flex justify-end'}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant={'outline'} size={'icon'}>
-                  <EllipsisVertical className={'h-4'} />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align={'end'}>
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-                  <DropdownMenuItem>
-                    <Link
-                      className={'h-full w-full'}
-                      href={`/admin/accounts/${userId}`}
-                    >
-                      View
-                    </Link>
-                  </DropdownMenuItem>
-
-                  <If condition={isPersonalAccount}>
-                    <AdminResetPasswordDialog userId={userId}>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        Send Reset Password link
-                      </DropdownMenuItem>
-                    </AdminResetPasswordDialog>
-
-                    <AdminImpersonateUserDialog userId={userId}>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        Impersonate User
-                      </DropdownMenuItem>
-                    </AdminImpersonateUserDialog>
-
-                    <AdminDeleteUserDialog userId={userId}>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        Delete Personal Account
-                      </DropdownMenuItem>
-                    </AdminDeleteUserDialog>
-                  </If>
-
-                  <If condition={!isPersonalAccount}>
-                    <AdminDeleteAccountDialog accountId={row.original.id}>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        Delete Team Account
-                      </DropdownMenuItem>
-                    </AdminDeleteAccountDialog>
-                  </If>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
+      cell: ({ row }) => <ActionsCell account={row.original} />,
     },
   ];
+}
+
+type ActiveDialog =
+  | 'reset-password'
+  | 'impersonate'
+  | 'delete-user'
+  | 'delete-account'
+  | null;
+
+function ActionsCell({ account }: { account: Account }) {
+  const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
+  const isPersonalAccount = account.is_personal_account;
+
+  return (
+    <div className={'flex justify-end'}>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button variant={'outline'} size={'icon'}>
+              <EllipsisVertical className={'h-4'} />
+            </Button>
+          }
+        />
+
+        <DropdownMenuContent className="min-w-52">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+            <DropdownMenuItem
+              render={
+                <Link
+                  className={'h-full w-full'}
+                  href={`/admin/accounts/${account.id}`}
+                >
+                  View
+                </Link>
+              }
+            />
+
+            {isPersonalAccount && (
+              <>
+                <DropdownMenuItem
+                  onClick={() => setActiveDialog('reset-password')}
+                >
+                  Send Reset Password link
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => setActiveDialog('impersonate')}
+                >
+                  Impersonate User
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setActiveDialog('delete-user')}
+                >
+                  Delete Personal Account
+                </DropdownMenuItem>
+              </>
+            )}
+
+            {!isPersonalAccount && (
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setActiveDialog('delete-account')}
+              >
+                Delete Team Account
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {isPersonalAccount && (
+        <>
+          <AdminResetPasswordDialog
+            userId={account.id}
+            open={activeDialog === 'reset-password'}
+            onOpenChange={(open) => !open && setActiveDialog(null)}
+          />
+
+          <AdminImpersonateUserDialog
+            userId={account.id}
+            open={activeDialog === 'impersonate'}
+            onOpenChange={(open) => !open && setActiveDialog(null)}
+          />
+
+          <AdminDeleteUserDialog
+            userId={account.id}
+            open={activeDialog === 'delete-user'}
+            onOpenChange={(open) => !open && setActiveDialog(null)}
+          />
+        </>
+      )}
+
+      {!isPersonalAccount && (
+        <AdminDeleteAccountDialog
+          accountId={account.id}
+          open={activeDialog === 'delete-account'}
+          onOpenChange={(open) => !open && setActiveDialog(null)}
+        />
+      )}
+    </div>
+  );
 }

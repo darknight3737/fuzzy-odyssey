@@ -2,13 +2,12 @@ import { cache } from 'react';
 
 import type { Metadata } from 'next';
 
+import { getLocale, getTranslations } from 'next-intl/server';
+
 import { createCmsClient } from '@kit/cms';
 import { getLogger } from '@kit/shared/logger';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
-
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 import { SitePageHeader } from '../_components/site-page-header';
 import { ChangelogEntry } from './_components/changelog-entry';
@@ -23,7 +22,8 @@ const CHANGELOG_ENTRIES_PER_PAGE = 50;
 export const generateMetadata = async (
   props: ChangelogPageProps,
 ): Promise<Metadata> => {
-  const { t, resolvedLanguage } = await createI18nServerInstance();
+  const t = await getTranslations('marketing');
+  const resolvedLanguage = await getLocale();
   const searchParams = await props.searchParams;
   const limit = CHANGELOG_ENTRIES_PER_PAGE;
 
@@ -33,8 +33,8 @@ export const generateMetadata = async (
   const { total } = await getContentItems(resolvedLanguage, limit, offset);
 
   return {
-    title: t('marketing:changelog'),
-    description: t('marketing:changelogSubtitle'),
+    title: t('changelog'),
+    description: t('changelogSubtitle'),
     pagination: {
       previous: page > 0 ? `/changelog?page=${page - 1}` : undefined,
       next: offset + limit < total ? `/changelog?page=${page + 1}` : undefined,
@@ -66,7 +66,8 @@ const getContentItems = cache(
 );
 
 async function ChangelogPage(props: ChangelogPageProps) {
-  const { t, resolvedLanguage: language } = await createI18nServerInstance();
+  const t = await getTranslations('marketing');
+  const language = await getLocale();
   const searchParams = await props.searchParams;
 
   const limit = CHANGELOG_ENTRIES_PER_PAGE;
@@ -82,14 +83,14 @@ async function ChangelogPage(props: ChangelogPageProps) {
   return (
     <>
       <SitePageHeader
-        title={t('marketing:changelog')}
-        subtitle={t('marketing:changelogSubtitle')}
+        title={t('changelog')}
+        subtitle={t('changelogSubtitle')}
       />
 
       <div className="container flex max-w-4xl flex-col space-y-12 py-12">
         <If
           condition={entries.length > 0}
-          fallback={<Trans i18nKey="marketing:noChangelogEntries" />}
+          fallback={<Trans i18nKey="marketing.noChangelogEntries" />}
         >
           <div className="space-y-0">
             {entries.map((entry, index) => {
@@ -114,4 +115,4 @@ async function ChangelogPage(props: ChangelogPageProps) {
   );
 }
 
-export default withI18n(ChangelogPage);
+export default ChangelogPage;

@@ -21,7 +21,6 @@ import { EmailFooter } from '../components/footer';
 import { EmailHeader } from '../components/header';
 import { EmailHeading } from '../components/heading';
 import { EmailWrapper } from '../components/wrapper';
-import { escapeHtml } from '../lib/escape-html';
 import { initializeEmailI18n } from '../lib/i18n';
 
 interface Props {
@@ -54,14 +53,10 @@ export async function renderInviteEmail(props: Props) {
     invitedUserEmail: props.invitedUserEmail,
   });
 
-  // `mainText` is rendered via `dangerouslySetInnerHTML`, so user-controlled
-  // values must be HTML-escaped before interpolation. The other fields below
-  // render through JSX (auto-escaped) and must NOT be escaped here to avoid
-  // double-escaping.
   const mainText = t(`mainText`, {
-    inviter: escapeHtml(props.inviter),
-    teamName: escapeHtml(props.teamName),
-    productName: escapeHtml(props.productName),
+    inviter: props.inviter,
+    teamName: props.teamName,
+    productName: props.productName,
     strong: (chunks: string) => `<strong>${chunks}</strong>`,
   });
 

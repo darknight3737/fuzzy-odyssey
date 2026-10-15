@@ -5,7 +5,6 @@ import { ArrowRight, Building2, Check, Compass, Search } from 'lucide-react';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import appConfig from '~/config/app.config';
-import { withI18n } from '~/lib/i18n/with-i18n';
 import { pageMetadata, serializeJsonLd } from '~/lib/seo';
 
 export const metadata = pageMetadata(
@@ -256,4 +255,4 @@ async function Home() {
     </main>
   );
 }
-export default withI18n(Home);
+export default Home;

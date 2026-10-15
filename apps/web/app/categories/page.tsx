@@ -1,7 +1,6 @@
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { Trans } from '@kit/ui/trans';
 
-import { withI18n } from '~/lib/i18n/with-i18n';
 import { pageMetadata } from '~/lib/seo';
 
 import { CategoryList } from './_components/category-list';
@@ -26,7 +25,7 @@ async function CategoriesPage() {
   return (
     <div className={'container mx-auto py-8'}>
       <h1 className={'mb-6 text-4xl font-bold'}>
-        <Trans i18nKey={'categories:heading'} defaults={'Browse Categories'} />
+        <Trans i18nKey={'categories.heading'} defaults={'Browse Categories'} />
       </h1>
 
       <CategoryList categories={categories ?? []} />
@@ -34,4 +33,4 @@ async function CategoriesPage() {
   );
 }
 
-export default withI18n(CategoriesPage);
+export default CategoriesPage;

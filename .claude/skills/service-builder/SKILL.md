@@ -23,7 +23,7 @@ Start with the input/output types. These are plain TypeScript — no framework t
 
 ```typescript
 // _lib/schemas/project.schema.ts
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const CreateProjectSchema = z.object({
   name: z.string().min(1),

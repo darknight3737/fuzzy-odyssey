@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
-import { withI18n } from '~/lib/i18n/with-i18n';
 import { getAllLocationsForFilter } from '~/lib/locations/search';
 import { pageMetadata } from '~/lib/seo';
 
@@ -123,4 +122,4 @@ async function CategoryPage({ params, searchParams }: Props) {
   );
 }
 
-export default withI18n(CategoryPage);
+export default CategoryPage;

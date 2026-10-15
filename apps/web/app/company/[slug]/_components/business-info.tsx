@@ -31,7 +31,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
       <Card className={'md:col-span-2'}>
         <CardHeader>
           <CardTitle>
-            <Trans i18nKey={'business:aboutTitle'} defaults={'About'} />
+            <Trans i18nKey={'business.aboutTitle'} defaults={'About'} />
           </CardTitle>
         </CardHeader>
 
@@ -46,7 +46,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
             {business.website && (
               <div>
                 <strong className={'text-sm'}>
-                  <Trans i18nKey={'business:website'} defaults={'Website:'} />
+                  <Trans i18nKey={'business.website'} defaults={'Website:'} />
                 </strong>{' '}
                 <a
                   href={safeWebsite(business.website)}
@@ -62,7 +62,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
             {business.phone && (
               <div>
                 <strong className={'text-sm'}>
-                  <Trans i18nKey={'business:phone'} defaults={'Phone:'} />
+                  <Trans i18nKey={'business.phone'} defaults={'Phone:'} />
                 </strong>{' '}
                 <a href={`tel:${business.phone}`} className={'text-primary'}>
                   {business.phone}
@@ -73,7 +73,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
             {business.email && (
               <div>
                 <strong className={'text-sm'}>
-                  <Trans i18nKey={'business:email'} defaults={'Email:'} />
+                  <Trans i18nKey={'business.email'} defaults={'Email:'} />
                 </strong>{' '}
                 <a href={`mailto:${business.email}`} className={'text-primary'}>
                   {business.email}
@@ -87,7 +87,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
       <Card>
         <CardHeader>
           <CardTitle>
-            <Trans i18nKey={'business:detailsTitle'} defaults={'Details'} />
+            <Trans i18nKey={'business.detailsTitle'} defaults={'Details'} />
           </CardTitle>
         </CardHeader>
 
@@ -97,7 +97,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
               <div>
                 <strong className={'mb-2 block text-sm'}>
                   <Trans
-                    i18nKey={'business:categories'}
+                    i18nKey={'business.categories'}
                     defaults={'Categories:'}
                   />
                 </strong>
@@ -120,7 +120,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
               <div>
                 <strong className={'mb-2 block text-sm'}>
                   <Trans
-                    i18nKey={'business:locations'}
+                    i18nKey={'business.locations'}
                     defaults={'Locations:'}
                   />
                 </strong>
@@ -141,7 +141,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
           {business.employee_count && (
             <div>
               <strong className={'text-sm'}>
-                <Trans i18nKey={'business:employees'} defaults={'Employees:'} />
+                <Trans i18nKey={'business.employees'} defaults={'Employees:'} />
               </strong>{' '}
               {business.employee_count}
             </div>
@@ -150,7 +150,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
           {business.founded_year && (
             <div>
               <strong className={'text-sm'}>
-                <Trans i18nKey={'business:founded'} defaults={'Founded:'} />
+                <Trans i18nKey={'business.founded'} defaults={'Founded:'} />
               </strong>{' '}
               {business.founded_year}
             </div>
@@ -160,7 +160,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
             <div>
               <Badge variant={'secondary'}>
                 <Trans
-                  i18nKey={'business:worksRemotely'}
+                  i18nKey={'business.worksRemotely'}
                   defaults={'Works Remotely'}
                 />
               </Badge>
@@ -172,7 +172,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
               <div>
                 <strong className={'mb-2 block text-sm'}>
                   <Trans
-                    i18nKey={'business:languages'}
+                    i18nKey={'business.languages'}
                     defaults={'Languages:'}
                   />
                 </strong>

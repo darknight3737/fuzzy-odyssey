@@ -1,4 +1,5 @@
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { TriangleAlert } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 import { resolveProductPlan } from '@kit/billing-gateway';
 import {
@@ -14,8 +15,6 @@ import { Trans } from '@kit/ui/trans';
 import { cn } from '@kit/ui/utils';
 
 import billingConfig from '~/config/billing.config';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 // local imports
 import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
@@ -29,8 +28,8 @@ interface TeamAccountBillingPageProps {
 }
 
 export const generateMetadata = async () => {
-  const i18n = await createI18nServerInstance();
-  const title = i18n.t('teams:billing.pageTitle');
+  const t = await getTranslations('teams');
+  const title = t('billing.pageTitle');
 
   return {
     title,
@@ -67,7 +66,7 @@ async function TeamAccountBillingPage({ params }: TeamAccountBillingPageProps) {
     <>
       <TeamAccountLayoutPageHeader
         account={account}
-        title={<Trans i18nKey={'common:routes.billing'} />}
+        title={<Trans i18nKey={'common.routes.billing'} />}
         description={<AppBreadcrumbs />}
       />
 
@@ -118,19 +117,19 @@ async function TeamAccountBillingPage({ params }: TeamAccountBillingPageProps) {
   );
 }
 
-export default withI18n(TeamAccountBillingPage);
+export default TeamAccountBillingPage;
 
 function CannotManageBillingAlert() {
   return (
     <Alert variant={'warning'}>
-      <ExclamationTriangleIcon className={'h-4'} />
+      <TriangleAlert className={'h-4'} />
 
       <AlertTitle>
-        <Trans i18nKey={'billing:cannotManageBillingAlertTitle'} />
+        <Trans i18nKey={'billing.cannotManageBillingAlertTitle'} />
       </AlertTitle>
 
       <AlertDescription>
-        <Trans i18nKey={'billing:cannotManageBillingAlertDescription'} />
+        <Trans i18nKey={'billing.cannotManageBillingAlertDescription'} />
       </AlertDescription>
     </Alert>
   );

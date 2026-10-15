@@ -556,8 +556,8 @@ function MyFeaturePage() {
   return (
     <>
       <MyFeatureHeader
-        title={<Trans i18nKey={'common:routes.myFeature'} />}
-        description={<Trans i18nKey={'common:myFeatureDescription'} />}
+        title={<Trans i18nKey={'common.routes.myFeature'} />}
+        description={<Trans i18nKey={'common.myFeatureDescription'} />}
       />
 
       <PageBody>
@@ -829,40 +829,40 @@ import { ProfileAvatar } from '@kit/ui/profile-avatar';
 
 ## Core Shadcn UI Components
 
-| Component | Description | Import Path |
-|-----------|-------------|-------------|
-| `Accordion` | Expandable/collapsible content sections | `@kit/ui/accordion` [accordion.tsx](mdc:packages/ui/src/shadcn/accordion.tsx) |
-| `AlertDialog` | Modal dialog for important actions | `@kit/ui/alert-dialog` [alert-dialog.tsx](mdc:packages/ui/src/shadcn/alert-dialog.tsx) |
-| `Alert` | Status/notification messages | `@kit/ui/alert` [alert.tsx](mdc:packages/ui/src/shadcn/alert.tsx) |
-| `Avatar` | User profile images with fallback | `@kit/ui/avatar` [avatar.tsx](mdc:packages/ui/src/shadcn/avatar.tsx) |
-| `Badge` | Small status indicators | `@kit/ui/badge` [badge.tsx](mdc:packages/ui/src/shadcn/badge.tsx) |
-| `Breadcrumb` | Navigation path indicators | `@kit/ui/breadcrumb` [breadcrumb.tsx](mdc:packages/ui/src/shadcn/breadcrumb.tsx) |
-| `Button` | Clickable action elements | `@kit/ui/button` [button.tsx](mdc:packages/ui/src/shadcn/button.tsx) |
-| `Calendar` | Date picker and date display | `@kit/ui/calendar` [calendar.tsx](mdc:packages/ui/src/shadcn/calendar.tsx) |
-| `Card` | Container for grouped content | `@kit/ui/card` [card.tsx](mdc:packages/ui/src/shadcn/card.tsx) |
-| `Checkbox` | Selection input | `@kit/ui/checkbox` [checkbox.tsx](mdc:packages/ui/src/shadcn/checkbox.tsx) |
-| `Command` | Command palette interface | `@kit/ui/command` [command.tsx](mdc:packages/ui/src/shadcn/command.tsx) |
-| `DataTable` | Table | `@kit/ui/data-table` [data-table.tsx](mdc:packages/ui/src/shadcn/data-table.tsx) |
-| `Dialog` | Modal window for focused interactions | `@kit/ui/dialog` [dialog.tsx](mdc:packages/ui/src/shadcn/dialog.tsx) |
-| `DropdownMenu` | Menu triggered by a button | `@kit/ui/dropdown-menu` [dropdown-menu.tsx](mdc:packages/ui/src/shadcn/dropdown-menu.tsx) |
-| `Form` | Form components with validation | `@kit/ui/form` [form.tsx](mdc:packages/ui/src/shadcn/form.tsx) |
-| `Input` | Text input field | `@kit/ui/input` [input.tsx](mdc:packages/ui/src/shadcn/input.tsx) |
-| `Input OTP` | OTP Text input field | `@kit/ui/input-otp` [input-otp.tsx](mdc:packages/ui/src/shadcn/input-otp.tsx) |
-| `Label` | Text label for form elements | `@kit/ui/label` [label.tsx](mdc:packages/ui/src/shadcn/label.tsx) |
-| `NavigationMenu` | Hierarchical navigation component | `@kit/ui/navigation-menu` [navigation-menu.tsx](mdc:packages/ui/src/shadcn/navigation-menu.tsx) |
-| `Popover` | Floating content triggered by interaction | `@kit/ui/popover` [popover.tsx](mdc:packages/ui/src/shadcn/popover.tsx) |
-| `RadioGroup` | Radio button selection group | `@kit/ui/radio-group` [radio-group.tsx](mdc:packages/ui/src/shadcn/radio-group.tsx) |
-| `ScrollArea` | Customizable scrollable area | `@kit/ui/scroll-area` [scroll-area.tsx](mdc:packages/ui/src/shadcn/scroll-area.tsx) |
-| `Select` | Dropdown selection menu | `@kit/ui/select` [select.tsx](mdc:packages/ui/src/shadcn/select.tsx) |
-| `Separator` | Visual divider between content | `@kit/ui/separator` [separator.tsx](mdc:packages/ui/src/shadcn/separator.tsx) |
-| `Sheet` | Sliding panel from screen edge | `@kit/ui/sheet` [sheet.tsx](mdc:packages/ui/src/shadcn/sheet.tsx) |
-| `Sidebar` | Advanced sidebar navigation | `@kit/ui/shadcn-sidebar` [sidebar.tsx](mdc:packages/ui/src/shadcn/sidebar.tsx) |
-| `Skeleton` | Loading placeholder | `@kit/ui/skeleton` [skeleton.tsx](mdc:packages/ui/src/shadcn/skeleton.tsx) |
-| `Switch` | Toggle control | `@kit/ui/switch` [switch.tsx](mdc:packages/ui/src/shadcn/switch.tsx) |
-| `Toast` | Toaster | `@kit/ui/sonner` [sonner.tsx](mdc:packages/ui/src/shadcn/sonner.tsx) |
-| `Tabs` | Tab-based navigation | `@kit/ui/tabs` [tabs.tsx](mdc:packages/ui/src/shadcn/tabs.tsx) |
-| `Textarea` | Multi-line text input | `@kit/ui/textarea` [textarea.tsx](mdc:packages/ui/src/shadcn/textarea.tsx) |
-| `Tooltip` | Contextual information on hover | `@kit/ui/tooltip` [tooltip.tsx](mdc:packages/ui/src/shadcn/tooltip.tsx) |
+| Component        | Description                               | Import Path                                                                                     |
+|------------------|-------------------------------------------|-------------------------------------------------------------------------------------------------|
+| `Accordion`      | Expandable/collapsible content sections   | `@kit/ui/accordion` [accordion.tsx](mdc:packages/ui/src/shadcn/accordion.tsx)                   |
+| `AlertDialog`    | Modal dialog for important actions        | `@kit/ui/alert-dialog` [alert-dialog.tsx](mdc:packages/ui/src/shadcn/alert-dialog.tsx)          |
+| `Alert`          | Status/notification messages              | `@kit/ui/alert` [alert.tsx](mdc:packages/ui/src/shadcn/alert.tsx)                               |
+| `Avatar`         | User profile images with fallback         | `@kit/ui/avatar` [avatar.tsx](mdc:packages/ui/src/shadcn/avatar.tsx)                            |
+| `Badge`          | Small status indicators                   | `@kit/ui/badge` [badge.tsx](mdc:packages/ui/src/shadcn/badge.tsx)                               |
+| `Breadcrumb`     | Navigation path indicators                | `@kit/ui/breadcrumb` [breadcrumb.tsx](mdc:packages/ui/src/shadcn/breadcrumb.tsx)                |
+| `Button`         | Clickable action elements                 | `@kit/ui/button` [button.tsx](mdc:packages/ui/src/shadcn/button.tsx)                            |
+| `Calendar`       | Date picker and date display              | `@kit/ui/calendar` [calendar.tsx](mdc:packages/ui/src/shadcn/calendar.tsx)                      |
+| `Card`           | Container for grouped content             | `@kit/ui/card` [card.tsx](mdc:packages/ui/src/shadcn/card.tsx)                                  |
+| `Checkbox`       | Selection input                           | `@kit/ui/checkbox` [checkbox.tsx](mdc:packages/ui/src/shadcn/checkbox.tsx)                      |
+| `Command`        | Command palette interface                 | `@kit/ui/command` [command.tsx](mdc:packages/ui/src/shadcn/command.tsx)                         |
+| `DataTable`      | Table                                     | `@kit/ui/data-table` [data-table.tsx](mdc:packages/ui/src/shadcn/data-table.tsx)                |
+| `Dialog`         | Modal window for focused interactions     | `@kit/ui/dialog` [dialog.tsx](mdc:packages/ui/src/shadcn/dialog.tsx)                            |
+| `DropdownMenu`   | Menu triggered by a button                | `@kit/ui/dropdown-menu` [dropdown-menu.tsx](mdc:packages/ui/src/shadcn/dropdown-menu.tsx)       |
+| `Form`           | Form components with validation           | `@kit/ui/form` [form.tsx](mdc:packages/ui/src/shadcn/form.tsx)                                  |
+| `Input`          | Text input field                          | `@kit/ui/input` [input.tsx](mdc:packages/ui/src/shadcn/input.tsx)                               |
+| `Input OTP`      | OTP Text input field                      | `@kit/ui/input-otp` [input-otp.tsx](mdc:packages/ui/src/shadcn/input-otp.tsx)                   |
+| `Label`          | Text label for form elements              | `@kit/ui/label` [label.tsx](mdc:packages/ui/src/shadcn/label.tsx)                               |
+| `NavigationMenu` | Hierarchical navigation component         | `@kit/ui/navigation-menu` [navigation-menu.tsx](mdc:packages/ui/src/shadcn/navigation-menu.tsx) |
+| `Popover`        | Floating content triggered by interaction | `@kit/ui/popover` [popover.tsx](mdc:packages/ui/src/shadcn/popover.tsx)                         |
+| `RadioGroup`     | Radio button selection group              | `@kit/ui/radio-group` [radio-group.tsx](mdc:packages/ui/src/shadcn/radio-group.tsx)             |
+| `ScrollArea`     | Customizable scrollable area              | `@kit/ui/scroll-area` [scroll-area.tsx](mdc:packages/ui/src/shadcn/scroll-area.tsx)             |
+| `Select`         | Dropdown selection menu                   | `@kit/ui/select` [select.tsx](mdc:packages/ui/src/shadcn/select.tsx)                            |
+| `Separator`      | Visual divider between content            | `@kit/ui/separator` [separator.tsx](mdc:packages/ui/src/shadcn/separator.tsx)                   |
+| `Sheet`          | Sliding panel from screen edge            | `@kit/ui/sheet` [sheet.tsx](mdc:packages/ui/src/shadcn/sheet.tsx)                               |
+| `Sidebar`        | Advanced sidebar navigation               | `@kit/ui/sidebar` [sidebar.tsx](mdc:packages/ui/src/shadcn/sidebar.tsx)                         |
+| `Skeleton`       | Loading placeholder                       | `@kit/ui/skeleton` [skeleton.tsx](mdc:packages/ui/src/shadcn/skeleton.tsx)                      |
+| `Switch`         | Toggle control                            | `@kit/ui/switch` [switch.tsx](mdc:packages/ui/src/shadcn/switch.tsx)                            |
+| `Toast`          | Toaster                                   | `@kit/ui/sonner` [sonner.tsx](mdc:packages/ui/src/shadcn/sonner.tsx)                            |
+| `Tabs`           | Tab-based navigation                      | `@kit/ui/tabs` [tabs.tsx](mdc:packages/ui/src/shadcn/tabs.tsx)                                  |
+| `Textarea`       | Multi-line text input                     | `@kit/ui/textarea` [textarea.tsx](mdc:packages/ui/src/shadcn/textarea.tsx)                      |
+| `Tooltip`        | Contextual information on hover           | `@kit/ui/tooltip` [tooltip.tsx](mdc:packages/ui/src/shadcn/tooltip.tsx)                         |
 
 ## Makerkit-specific Components
 

@@ -41,7 +41,7 @@ export function AdminReactivateUserDialog(
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>{props.children}</AlertDialogTrigger>
+      <AlertDialogTrigger render={props.children as React.ReactElement} />
 
       <AlertDialogContent>
         <AlertDialogHeader>

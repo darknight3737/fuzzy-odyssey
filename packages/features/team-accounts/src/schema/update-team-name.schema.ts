@@ -23,7 +23,7 @@ export const TeamNameFormSchema = z
       return true;
     },
     {
-      message: 'teams:slugRequiredForNonLatinName',
+      message: 'teams.slugRequiredForNonLatinName',
       path: ['newSlug'],
     },
   );

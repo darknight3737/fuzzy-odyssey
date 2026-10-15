@@ -2,7 +2,6 @@ import Link from 'next/link';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 export const metadata = {
   title: 'Minhas empresas | Selletive',
@@ -80,4 +79,4 @@ async function UserHomePage() {
     </main>
   );
 }
-export default withI18n(UserHomePage);
+export default UserHomePage;

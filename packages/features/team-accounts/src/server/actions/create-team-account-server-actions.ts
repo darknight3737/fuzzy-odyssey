@@ -61,7 +61,7 @@ export const createTeamAccountAction = enhanceAction(
     if (error === 'duplicate_slug') {
       return {
         error: true,
-        message: 'teams:duplicateSlugError',
+        message: 'teams.duplicateSlugError',
       };
     }
 

@@ -1,4 +1,5 @@
 import { PlusCircle } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import {
@@ -19,9 +20,6 @@ import { If } from '@kit/ui/if';
 import { PageBody } from '@kit/ui/page';
 import { Trans } from '@kit/ui/trans';
 
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
-
 // local imports
 import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
 import { loadMembersPageData } from './_lib/server/members-page.loader';
@@ -31,8 +29,8 @@ interface TeamAccountMembersPageProps {
 }
 
 export const generateMetadata = async () => {
-  const i18n = await createI18nServerInstance();
-  const title = i18n.t('teams:members.pageTitle');
+  const t = await getTranslations('teams');
+  const title = t('members.pageTitle');
 
   return {
     title,
@@ -55,7 +53,7 @@ async function TeamAccountMembersPage({ params }: TeamAccountMembersPageProps) {
   return (
     <>
       <TeamAccountLayoutPageHeader
-        title={<Trans i18nKey={'common:routes.members'} />}
+        title={<Trans i18nKey={'common.routes.members'} />}
         description={<AppBreadcrumbs />}
         account={account.slug}
       />
@@ -66,11 +64,11 @@ async function TeamAccountMembersPage({ params }: TeamAccountMembersPageProps) {
             <CardHeader className={'flex flex-row justify-between'}>
               <div className={'flex flex-col space-y-1.5'}>
                 <CardTitle>
-                  <Trans i18nKey={'common:accountMembers'} />
+                  <Trans i18nKey={'common.accountMembers'} />
                 </CardTitle>
 
                 <CardDescription>
-                  <Trans i18nKey={'common:membersTabDescription'} />
+                  <Trans i18nKey={'common.membersTabDescription'} />
                 </CardDescription>
               </div>
 
@@ -80,10 +78,10 @@ async function TeamAccountMembersPage({ params }: TeamAccountMembersPageProps) {
                   accountSlug={account.slug}
                 >
                   <Button size={'sm'} data-test={'invite-members-form-trigger'}>
-                    <PlusCircle className={'mr-2 w-4'} />
+                    <PlusCircle className={'w-4'} />
 
                     <span>
-                      <Trans i18nKey={'teams:inviteMembersButton'} />
+                      <Trans i18nKey={'teams.inviteMembersButton'} />
                     </span>
                   </Button>
                 </InviteMembersDialogContainer>
@@ -106,11 +104,11 @@ async function TeamAccountMembersPage({ params }: TeamAccountMembersPageProps) {
             <CardHeader className={'flex flex-row justify-between'}>
               <div className={'flex flex-col space-y-1.5'}>
                 <CardTitle>
-                  <Trans i18nKey={'teams:pendingInvitesHeading'} />
+                  <Trans i18nKey={'teams.pendingInvitesHeading'} />
                 </CardTitle>
 
                 <CardDescription>
-                  <Trans i18nKey={'teams:pendingInvitesDescription'} />
+                  <Trans i18nKey={'teams.pendingInvitesDescription'} />
                 </CardDescription>
               </div>
             </CardHeader>
@@ -132,4 +130,4 @@ async function TeamAccountMembersPage({ params }: TeamAccountMembersPageProps) {
   );
 }
 
-export default withI18n(TeamAccountMembersPage);
+export default TeamAccountMembersPage;

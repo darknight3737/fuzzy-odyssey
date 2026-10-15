@@ -3,7 +3,7 @@ import { use } from 'react';
 import { cookies } from 'next/headers';
 
 import { Page, PageMobileNavigation, PageNavigation } from '@kit/ui/page';
-import { SidebarProvider } from '@kit/ui/shadcn-sidebar';
+import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AdminSidebar } from '~/admin/_components/admin-sidebar';
 import { AdminMobileNavigation } from '~/admin/_components/mobile-navigation';
@@ -37,9 +37,9 @@ export default function AdminLayout(props: React.PropsWithChildren) {
 
 async function getLayoutState() {
   const cookieStore = await cookies();
-  const sidebarOpenCookie = cookieStore.get('sidebar:state');
+  const sidebarOpenCookie = cookieStore.get('sidebar_state');
 
   return {
-    open: sidebarOpenCookie?.value !== 'true',
+    open: sidebarOpenCookie?.value === 'true',
   };
 }

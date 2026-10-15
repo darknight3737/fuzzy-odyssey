@@ -207,11 +207,10 @@ export class TeamAccountsPageObject {
   }
 
   async deleteAccount(email: string) {
+    await this.page.click('[data-test="delete-team-trigger"]');
+    await this.otp.completeOtpVerification(email);
+
     await expect(async () => {
-      await this.page.click('[data-test="delete-team-trigger"]');
-
-      await this.otp.completeOtpVerification(email);
-
       const click = this.page.click(
         '[data-test="delete-team-form-confirm-button"]',
       );

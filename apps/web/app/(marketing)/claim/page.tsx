@@ -2,7 +2,6 @@ import Link from 'next/link';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
-import { withI18n } from '~/lib/i18n/with-i18n';
 import { pageMetadata } from '~/lib/seo';
 
 export const metadata = pageMetadata(
@@ -83,4 +82,4 @@ async function ClaimPage({
     </main>
   );
 }
-export default withI18n(ClaimPage);
+export default ClaimPage;

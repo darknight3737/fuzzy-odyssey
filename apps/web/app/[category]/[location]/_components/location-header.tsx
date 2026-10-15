@@ -25,7 +25,7 @@ export function LocationHeader({
     <div className={'mb-8'}>
       <h1 className={'mb-2 text-4xl font-bold'}>
         <Trans
-          i18nKey={'location:heading'}
+          i18nKey={'location.heading'}
           values={{ category: category.name, location: location.name }}
           defaults={`Best ${category.name} in ${location.name}`}
         />
@@ -33,7 +33,7 @@ export function LocationHeader({
 
       <p className={'mb-4 text-lg text-muted-foreground'}>
         <Trans
-          i18nKey={'location:description'}
+          i18nKey={'location.description'}
           values={{
             category: category.name,
             location: location.name,

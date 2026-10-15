@@ -1,13 +1,13 @@
 import { use } from 'react';
 
+import { getTranslations } from 'next-intl/server';
+
 import { PersonalAccountSettingsContainer } from '@kit/accounts/personal-account-settings';
 import { PageBody } from '@kit/ui/page';
 
 import authConfig from '~/config/auth.config';
 import featureFlagsConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 import { requireUserInServerComponent } from '~/lib/server/require-user-in-server-component';
 
 // Show email option if password, magic link, or OTP is enabled
@@ -33,8 +33,8 @@ const paths = {
 };
 
 export const generateMetadata = async () => {
-  const i18n = await createI18nServerInstance();
-  const title = i18n.t('account:settingsTab');
+  const t = await getTranslations('account');
+  const title = t('settingsTab');
 
   return {
     title,
@@ -58,4 +58,4 @@ function PersonalAccountSettingsPage() {
   );
 }
 
-export default withI18n(PersonalAccountSettingsPage);
+export default PersonalAccountSettingsPage;

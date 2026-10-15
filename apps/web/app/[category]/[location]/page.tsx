@@ -6,7 +6,6 @@ import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import appConfig from '~/config/app.config';
 import { resolveCategoryFromSlug } from '~/lib/categories/server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 import { getBusinessesByLocationSlug } from '~/lib/locations/server';
 import { parseLocationSlug } from '~/lib/locations/utils';
 
@@ -127,4 +126,4 @@ async function CategoryLocationPage({ params }: Props) {
   );
 }
 
-export default withI18n(CategoryLocationPage);
+export default CategoryLocationPage;

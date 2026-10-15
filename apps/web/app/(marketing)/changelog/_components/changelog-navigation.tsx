@@ -24,8 +24,8 @@ function NavLink({ entry, direction }: NavLinkProps) {
 
   const Icon = isPrevious ? ChevronLeft : ChevronRight;
   const i18nKey = isPrevious
-    ? 'marketing:changelogNavigationPrevious'
-    : 'marketing:changelogNavigationNext';
+    ? 'marketing.changelogNavigationPrevious'
+    : 'marketing.changelogNavigationNext';
 
   return (
     <Link

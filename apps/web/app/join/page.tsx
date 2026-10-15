@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
 import { ArrowLeft } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 import { AuthLayoutShell } from '@kit/auth/shared';
 import { MultiFactorAuthError, requireUser } from '@kit/supabase/require-user';
@@ -16,8 +17,6 @@ import { Trans } from '@kit/ui/trans';
 import { AppLogo } from '~/components/app-logo';
 import authConfig from '~/config/auth.config';
 import pathsConfig from '~/config/paths.config';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 interface JoinTeamAccountPageProps {
   searchParams: Promise<{
@@ -29,10 +28,10 @@ interface JoinTeamAccountPageProps {
 }
 
 export const generateMetadata = async () => {
-  const i18n = await createI18nServerInstance();
+  const t = await getTranslations('teams');
 
   return {
-    title: i18n.t('teams:joinTeamAccount'),
+    title: t('joinTeamAccount'),
   };
 };
 
@@ -178,25 +177,29 @@ async function JoinTeamAccountPage(props: JoinTeamAccountPageProps) {
   );
 }
 
-export default withI18n(JoinTeamAccountPage);
+export default JoinTeamAccountPage;
 
 function InviteNotFoundOrExpired() {
   return (
     <div className={'flex flex-col space-y-4'}>
       <Heading level={6}>
-        <Trans i18nKey={'teams:inviteNotFoundOrExpired'} />
+        <Trans i18nKey={'teams.inviteNotFoundOrExpired'} />
       </Heading>
 
       <p className={'text-muted-foreground text-sm'}>
-        <Trans i18nKey={'teams:inviteNotFoundOrExpiredDescription'} />
+        <Trans i18nKey={'teams.inviteNotFoundOrExpiredDescription'} />
       </p>
 
-      <Button asChild className={'w-full'} variant={'outline'}>
-        <Link href={pathsConfig.app.home}>
-          <ArrowLeft className={'mr-2 w-4'} />
-          <Trans i18nKey={'teams:backToHome'} />
-        </Link>
-      </Button>
+      <Button
+        render={
+          <Link href={pathsConfig.app.home}>
+            <ArrowLeft className={'mr-2 w-4'} />
+            <Trans i18nKey={'teams.backToHome'} />
+          </Link>
+        }
+        className={'w-full'}
+        variant={'outline'}
+      />
     </div>
   );
 }

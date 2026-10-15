@@ -12,7 +12,8 @@ export function TypeSelect({ defaultValue }: Props) {
   const router = useRouter();
   const params = useSearchParams();
 
-  const handleChange = (value: string) => {
+  const handleChange = (value: string | null) => {
+    if (!value) return;
     const next = new URLSearchParams(Array.from(params.entries()));
 
     if (value === 'services') {

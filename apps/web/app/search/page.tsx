@@ -4,7 +4,6 @@ import { z } from 'zod';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
-import { withI18n } from '~/lib/i18n/with-i18n';
 import { pageMetadata } from '~/lib/seo';
 
 import { SearchResultsList } from './_components/search-results-list';
@@ -162,4 +161,4 @@ async function SearchPage({ searchParams }: Props) {
     </main>
   );
 }
-export default withI18n(SearchPage);
+export default SearchPage;

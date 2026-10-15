@@ -42,18 +42,19 @@ export function CreateTeamAccountDialog(
   }>,
 ) {
   return (
-    <Dialog open={props.isOpen} onOpenChange={props.setIsOpen}>
-      <DialogContent
-        onEscapeKeyDown={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+    <Dialog
+      open={props.isOpen}
+      onOpenChange={props.setIsOpen}
+      disablePointerDismissal
+    >
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            <Trans i18nKey={'teams:createTeamModalHeading'} />
+            <Trans i18nKey={'teams.createTeamModalHeading'} />
           </DialogTitle>
 
           <DialogDescription>
-            <Trans i18nKey={'teams:createTeamModalDescription'} />
+            <Trans i18nKey={'teams.createTeamModalDescription'} />
           </DialogDescription>
         </DialogHeader>
 
@@ -113,7 +114,7 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
               return (
                 <FormItem>
                   <FormLabel>
-                    <Trans i18nKey={'teams:teamNameLabel'} />
+                    <Trans i18nKey={'teams.teamNameLabel'} />
                   </FormLabel>
 
                   <FormControl>
@@ -128,7 +129,7 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
                   </FormControl>
 
                   <FormDescription>
-                    <Trans i18nKey={'teams:teamNameDescription'} />
+                    <Trans i18nKey={'teams.teamNameDescription'} />
                   </FormDescription>
 
                   <FormMessage />
@@ -144,7 +145,7 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
                 return (
                   <FormItem>
                     <FormLabel>
-                      <Trans i18nKey={'teams:teamSlugLabel'} />
+                      <Trans i18nKey={'teams.teamSlugLabel'} />
                     </FormLabel>
 
                     <FormControl>
@@ -159,7 +160,7 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
                     </FormControl>
 
                     <FormDescription>
-                      <Trans i18nKey={'teams:teamSlugDescription'} />
+                      <Trans i18nKey={'teams.teamSlugDescription'} />
                     </FormDescription>
 
                     <FormMessage />
@@ -176,14 +177,18 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
               disabled={pending}
               onClick={props.onClose}
             >
-              <Trans i18nKey={'common:cancel'} />
+              <Trans i18nKey={'common.cancel'} />
             </Button>
 
-            <Button data-test={'confirm-create-team-button'} disabled={pending}>
+            <Button
+              type="submit"
+              data-test={'confirm-create-team-button'}
+              disabled={pending}
+            >
               {pending ? (
-                <Trans i18nKey={'teams:creatingTeam'} />
+                <Trans i18nKey={'teams.creatingTeam'} />
               ) : (
-                <Trans i18nKey={'teams:createTeamSubmitLabel'} />
+                <Trans i18nKey={'teams.createTeamSubmitLabel'} />
               )}
             </Button>
           </div>
@@ -197,14 +202,14 @@ function CreateOrganizationErrorAlert(props: { message?: string }) {
   return (
     <Alert variant={'destructive'}>
       <AlertTitle>
-        <Trans i18nKey={'teams:createTeamErrorHeading'} />
+        <Trans i18nKey={'teams.createTeamErrorHeading'} />
       </AlertTitle>
 
       <AlertDescription>
         {props.message ? (
           <Trans i18nKey={props.message} defaults={props.message} />
         ) : (
-          <Trans i18nKey={'teams:createTeamErrorMessage'} />
+          <Trans i18nKey={'teams.createTeamErrorMessage'} />
         )}
       </AlertDescription>
     </Alert>

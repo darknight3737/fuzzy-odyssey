@@ -3,7 +3,6 @@ import { notFound, redirect } from 'next/navigation';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 import { BusinessEditor } from './_components/business-editor';
 
@@ -60,4 +59,4 @@ async function ManageBusinessPage({
     </main>
   );
 }
-export default withI18n(ManageBusinessPage);
+export default ManageBusinessPage;

@@ -86,6 +86,7 @@ export function FilterBar({
           <Select
             value={currentSort}
             onValueChange={(sort) => {
+              if (!sort) return;
               const params = new URLSearchParams(searchParams.toString());
               params.set('sort', sort);
               router.push(`?${params.toString()}`);

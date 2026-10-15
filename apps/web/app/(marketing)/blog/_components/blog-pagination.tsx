@@ -25,7 +25,7 @@ export function BlogPagination(props: {
           }}
         >
           <ArrowLeft className={'mr-2 h-4'} />
-          <Trans i18nKey={'marketing:blogPaginationPrevious'} />
+          <Trans i18nKey={'marketing.blogPaginationPrevious'} />
         </Button>
       </If>
 
@@ -36,7 +36,7 @@ export function BlogPagination(props: {
             navigate(props.currentPage + 1);
           }}
         >
-          <Trans i18nKey={'marketing:blogPaginationNext'} />
+          <Trans i18nKey={'marketing.blogPaginationNext'} />
           <ArrowRight className={'ml-2 h-4'} />
         </Button>
       </If>

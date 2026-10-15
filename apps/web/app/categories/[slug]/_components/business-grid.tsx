@@ -35,7 +35,7 @@ export function BusinessGrid({ businesses }: BusinessGridProps) {
       <div className={'py-12 text-center'}>
         <p className={'text-muted-foreground'}>
           <Trans
-            i18nKey={'categories:noBusinesses'}
+            i18nKey={'categories.noBusinesses'}
             defaults={'No businesses found in this category.'}
           />
         </p>

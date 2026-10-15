@@ -100,12 +100,12 @@ function DeleteTeamContainer(props: {
     <div className={'flex flex-col space-y-4'}>
       <div className={'flex flex-col space-y-1'}>
         <span className={'text-sm font-medium'}>
-          <Trans i18nKey={'teams:deleteTeam'} />
+          <Trans i18nKey={'teams.deleteTeam'} />
         </span>
 
         <p className={'text-muted-foreground text-sm'}>
           <Trans
-            i18nKey={'teams:deleteTeamDescription'}
+            i18nKey={'teams.deleteTeamDescription'}
             values={{
               teamName: props.account.name,
             }}
@@ -115,25 +115,27 @@ function DeleteTeamContainer(props: {
 
       <div>
         <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              data-test={'delete-team-trigger'}
-              type={'button'}
-              variant={'destructive'}
-            >
-              <Trans i18nKey={'teams:deleteTeam'} />
-            </Button>
-          </AlertDialogTrigger>
+          <AlertDialogTrigger
+            render={
+              <Button
+                data-test={'delete-team-trigger'}
+                type={'button'}
+                variant={'destructive'}
+              >
+                <Trans i18nKey={'teams.deleteTeam'} />
+              </Button>
+            }
+          />
 
-          <AlertDialogContent onEscapeKeyDown={(e) => e.preventDefault()}>
+          <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                <Trans i18nKey={'teams:deletingTeam'} />
+                <Trans i18nKey={'teams.deletingTeam'} />
               </AlertDialogTitle>
 
               <AlertDialogDescription>
                 <Trans
-                  i18nKey={'teams:deletingTeamDescription'}
+                  i18nKey={'teams.deletingTeamDescription'}
                   values={{
                     teamName: props.account.name,
                   }}
@@ -188,7 +190,7 @@ function DeleteTeamConfirmationForm({
         onSuccess={(otp) => form.setValue('otp', otp, { shouldValidate: true })}
         CancelButton={
           <AlertDialogCancel className={'m-0'}>
-            <Trans i18nKey={'common:cancel'} />
+            <Trans i18nKey={'common.cancel'} />
           </AlertDialogCancel>
         }
       />
@@ -211,7 +213,7 @@ function DeleteTeamConfirmationForm({
             >
               <div>
                 <Trans
-                  i18nKey={'teams:deleteTeamDisclaimer'}
+                  i18nKey={'teams.deleteTeamDisclaimer'}
                   values={{
                     teamName: name,
                   }}
@@ -219,7 +221,7 @@ function DeleteTeamConfirmationForm({
               </div>
 
               <div className={'text-sm'}>
-                <Trans i18nKey={'common:modalConfirmationQuestion'} />
+                <Trans i18nKey={'common.modalConfirmationQuestion'} />
               </div>
             </div>
 
@@ -229,7 +231,7 @@ function DeleteTeamConfirmationForm({
 
           <AlertDialogFooter>
             <AlertDialogCancel>
-              <Trans i18nKey={'common:cancel'} />
+              <Trans i18nKey={'common.cancel'} />
             </AlertDialogCancel>
 
             <DeleteTeamSubmitButton />
@@ -245,11 +247,12 @@ function DeleteTeamSubmitButton() {
 
   return (
     <Button
+      type="submit"
       data-test={'delete-team-form-confirm-button'}
       disabled={pending}
       variant={'destructive'}
     >
-      <Trans i18nKey={'teams:deleteTeam'} />
+      <Trans i18nKey={'teams.deleteTeam'} />
     </Button>
   );
 }
@@ -278,7 +281,7 @@ function LeaveTeamContainer(props: {
     <div className={'flex flex-col space-y-4'}>
       <p className={'text-muted-foreground text-sm'}>
         <Trans
-          i18nKey={'teams:leaveTeamDescription'}
+          i18nKey={'teams.leaveTeamDescription'}
           values={{
             teamName: props.account.name,
           }}
@@ -286,26 +289,26 @@ function LeaveTeamContainer(props: {
       </p>
 
       <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <div>
+        <AlertDialogTrigger
+          render={
             <Button
               data-test={'leave-team-button'}
               type={'button'}
               variant={'destructive'}
             >
-              <Trans i18nKey={'teams:leaveTeam'} />
+              <Trans i18nKey={'teams.leaveTeam'} />
             </Button>
-          </div>
-        </AlertDialogTrigger>
+          }
+        />
 
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              <Trans i18nKey={'teams:leavingTeamModalHeading'} />
+              <Trans i18nKey={'teams.leavingTeamModalHeading'} />
             </AlertDialogTitle>
 
             <AlertDialogDescription>
-              <Trans i18nKey={'teams:leavingTeamModalDescription'} />
+              <Trans i18nKey={'teams.leavingTeamModalDescription'} />
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -327,7 +330,7 @@ function LeaveTeamContainer(props: {
                     return (
                       <FormItem>
                         <FormLabel>
-                          <Trans i18nKey={'teams:leaveTeamInputLabel'} />
+                          <Trans i18nKey={'teams.leaveTeamInputLabel'} />
                         </FormLabel>
 
                         <FormControl>
@@ -344,7 +347,7 @@ function LeaveTeamContainer(props: {
                         </FormControl>
 
                         <FormDescription>
-                          <Trans i18nKey={'teams:leaveTeamInputDescription'} />
+                          <Trans i18nKey={'teams.leaveTeamInputDescription'} />
                         </FormDescription>
 
                         <FormMessage />
@@ -355,7 +358,7 @@ function LeaveTeamContainer(props: {
 
                 <AlertDialogFooter>
                   <AlertDialogCancel>
-                    <Trans i18nKey={'common:cancel'} />
+                    <Trans i18nKey={'common.cancel'} />
                   </AlertDialogCancel>
 
                   <LeaveTeamSubmitButton />
@@ -378,7 +381,7 @@ function LeaveTeamSubmitButton() {
       disabled={pending}
       variant={'destructive'}
     >
-      <Trans i18nKey={'teams:leaveTeam'} />
+      <Trans i18nKey={'teams.leaveTeam'} />
     </Button>
   );
 }
@@ -388,17 +391,17 @@ function LeaveTeamErrorAlert() {
     <div className={'flex flex-col space-y-4'}>
       <Alert variant={'destructive'}>
         <AlertTitle>
-          <Trans i18nKey={'teams:leaveTeamErrorHeading'} />
+          <Trans i18nKey={'teams.leaveTeamErrorHeading'} />
         </AlertTitle>
 
         <AlertDescription>
-          <Trans i18nKey={'common:genericError'} />
+          <Trans i18nKey={'common.genericError'} />
         </AlertDescription>
       </Alert>
 
       <AlertDialogFooter>
         <AlertDialogCancel>
-          <Trans i18nKey={'common:cancel'} />
+          <Trans i18nKey={'common.cancel'} />
         </AlertDialogCancel>
       </AlertDialogFooter>
     </div>
@@ -410,17 +413,17 @@ function DeleteTeamErrorAlert() {
     <div className={'flex flex-col space-y-4'}>
       <Alert variant={'destructive'}>
         <AlertTitle>
-          <Trans i18nKey={'teams:deleteTeamErrorHeading'} />
+          <Trans i18nKey={'teams.deleteTeamErrorHeading'} />
         </AlertTitle>
 
         <AlertDescription>
-          <Trans i18nKey={'common:genericError'} />
+          <Trans i18nKey={'common.genericError'} />
         </AlertDescription>
       </Alert>
 
       <AlertDialogFooter>
         <AlertDialogCancel>
-          <Trans i18nKey={'common:cancel'} />
+          <Trans i18nKey={'common.cancel'} />
         </AlertDialogCancel>
       </AlertDialogFooter>
     </div>
@@ -432,11 +435,11 @@ function DangerZoneCard({ children }: React.PropsWithChildren) {
     <Card className={'border-destructive border'}>
       <CardHeader>
         <CardTitle>
-          <Trans i18nKey={'teams:settings.dangerZone'} />
+          <Trans i18nKey={'teams.settings.dangerZone'} />
         </CardTitle>
 
         <CardDescription>
-          <Trans i18nKey={'teams:settings.dangerZoneDescription'} />
+          <Trans i18nKey={'teams.settings.dangerZoneDescription'} />
         </CardDescription>
       </CardHeader>
 

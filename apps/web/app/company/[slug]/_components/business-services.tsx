@@ -17,7 +17,7 @@ export function BusinessServices({ services }: BusinessServicesProps) {
   return (
     <div className={'mb-8'}>
       <h2 className={'mb-4 text-2xl font-bold'}>
-        <Trans i18nKey={'business:servicesTitle'} defaults={'Services'} />
+        <Trans i18nKey={'business.servicesTitle'} defaults={'Services'} />
       </h2>
 
       <div className={'grid gap-4 md:grid-cols-2'}>
@@ -37,7 +37,7 @@ export function BusinessServices({ services }: BusinessServicesProps) {
                   <div>
                     <strong>
                       <Trans
-                        i18nKey={'business:priceRange'}
+                        i18nKey={'business.priceRange'}
                         defaults={'Price:'}
                       />
                     </strong>{' '}
@@ -49,7 +49,7 @@ export function BusinessServices({ services }: BusinessServicesProps) {
                   <div>
                     <strong>
                       <Trans
-                        i18nKey={'business:deliveryTime'}
+                        i18nKey={'business.deliveryTime'}
                         defaults={'Delivery:'}
                       />
                     </strong>{' '}

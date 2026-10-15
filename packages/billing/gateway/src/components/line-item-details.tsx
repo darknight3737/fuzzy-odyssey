@@ -1,7 +1,7 @@
 'use client';
 
 import { PlusSquare } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useLocale, useTranslations } from 'next-intl';
 import * as z from 'zod';
 
 import type { LineItemSchema } from '@kit/billing';
@@ -20,8 +20,8 @@ export function LineItemDetails(
     alwaysDisplayMonthlyPrice?: boolean;
   }>,
 ) {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.language;
+  const t = useTranslations('billing');
+  const locale = useLocale();
   const currencyCode = props?.currency.toLowerCase();
 
   const shouldDisplayMonthlyPrice =
@@ -32,16 +32,16 @@ export function LineItemDetails(
       return '';
     }
 
-    const i18nKey = `billing:units.${unit}`;
+    const i18nKey = `units.${unit}` as never;
 
-    if (!i18n.exists(i18nKey)) {
+    if (!t.has(i18nKey)) {
       return unit;
     }
 
     return t(i18nKey, {
       count,
       defaultValue: unit,
-    });
+    } as never);
   };
 
   const getDisplayCost = (cost: number, hasTiers: boolean) => {
@@ -82,7 +82,7 @@ export function LineItemDetails(
 
                 <span>
                   <Trans
-                    i18nKey={'billing:setupFee'}
+                    i18nKey={'billing.setupFee'}
                     values={{
                       setupFee: formatCurrency({
                         currencyCode,
@@ -111,18 +111,18 @@ export function LineItemDetails(
                   <PlusSquare className={'w-3'} />
 
                   <span>
-                    <Trans i18nKey={'billing:basePlan'} />
+                    <Trans i18nKey={'billing.basePlan'} />
                   </span>
                 </span>
 
                 <span>
                   <If
                     condition={props.selectedInterval}
-                    fallback={<Trans i18nKey={'billing:lifetime'} />}
+                    fallback={<Trans i18nKey={'billing.lifetime'} />}
                   >
                     (
                     <Trans
-                      i18nKey={`billing:billingInterval.${props.selectedInterval}`}
+                      i18nKey={`billing.billingInterval.${props.selectedInterval}`}
                     />
                     )
                   </If>
@@ -149,7 +149,7 @@ export function LineItemDetails(
                 <span className={'flex gap-x-2 text-sm'}>
                   <span>
                     <Trans
-                      i18nKey={'billing:perUnit'}
+                      i18nKey={'billing.perUnit'}
                       values={{
                         unit: getUnitLabel(unit, 1),
                       }}
@@ -172,10 +172,10 @@ export function LineItemDetails(
                 <span>
                   <If
                     condition={Boolean(unit) && !isDefaultSeatUnit}
-                    fallback={<Trans i18nKey={'billing:perTeamMember'} />}
+                    fallback={<Trans i18nKey={'billing.perTeamMember'} />}
                   >
                     <Trans
-                      i18nKey={'billing:perUnitShort'}
+                      i18nKey={'billing.perUnitShort'}
                       values={{
                         unit: getUnitLabel(unit, 1),
                       }}
@@ -215,7 +215,7 @@ export function LineItemDetails(
                   <span className={'flex space-x-1'}>
                     <span>
                       <Trans
-                        i18nKey={'billing:perUnit'}
+                        i18nKey={'billing.perUnit'}
                         values={{
                           unit: getUnitLabel(unit, 1),
                         }}
@@ -271,8 +271,8 @@ function Tiers({
   unit?: string;
   item: z.output<typeof LineItemSchema>;
 }) {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.language;
+  const t = useTranslations('billing');
+  const locale = useLocale();
 
   // Helper to safely convert tier values to numbers for pluralization
   // Falls back to plural form (2) for 'unlimited' values
@@ -285,10 +285,13 @@ function Tiers({
   const getUnitLabel = (count: number) => {
     if (!unit) return '';
 
-    return t(`billing:units.${unit}`, {
-      count,
-      defaultValue: unit,
-    });
+    return t(
+      `units.${unit}` as never,
+      {
+        count,
+        defaultValue: unit,
+      } as never,
+    );
   };
 
   const tiers = item.tiers?.map((tier, index) => {
@@ -327,7 +330,7 @@ function Tiers({
           <If condition={tiersLength > 1}>
             <span>
               <Trans
-                i18nKey={'billing:andAbove'}
+                i18nKey={'billing.andAbove'}
                 values={{
                   unit: getUnitLabel(getSafeCount(previousTierFrom) - 1),
                   previousTier: getSafeCount(previousTierFrom) - 1,
@@ -338,7 +341,7 @@ function Tiers({
           <If condition={tiersLength === 1}>
             <span>
               <Trans
-                i18nKey={'billing:forEveryUnit'}
+                i18nKey={'billing.forEveryUnit'}
                 values={{
                   unit: getUnitLabel(1),
                 }}
@@ -350,7 +353,7 @@ function Tiers({
           <If condition={isIncluded}>
             <span>
               <Trans
-                i18nKey={'billing:includedUpTo'}
+                i18nKey={'billing.includedUpTo'}
                 values={{
                   unit: getUnitLabel(getSafeCount(upTo)),
                   upTo,
@@ -368,7 +371,7 @@ function Tiers({
             </span>{' '}
             <span>
               <Trans
-                i18nKey={'billing:fromPreviousTierUpTo'}
+                i18nKey={'billing.fromPreviousTierUpTo'}
                 values={{
                   previousTierFrom,
                   unit: getUnitLabel(1),

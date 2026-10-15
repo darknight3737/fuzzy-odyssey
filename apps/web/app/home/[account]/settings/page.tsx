@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { createTeamAccountsApi } from '@kit/team-accounts/api';
 import { TeamAccountSettingsContainer } from '@kit/team-accounts/components';
@@ -7,14 +9,13 @@ import { Trans } from '@kit/ui/trans';
 
 import featuresFlagConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 
 // local imports
 import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
 
 export const generateMetadata = async () => {
-  const i18n = await createI18nServerInstance();
-  const title = i18n.t('teams:settings:pageTitle');
+  const t = await getTranslations('teams');
+  const title = t('settings.pageTitle');
 
   return {
     title,
@@ -50,7 +51,7 @@ async function TeamAccountSettingsPage(props: TeamAccountSettingsPageProps) {
     <>
       <TeamAccountLayoutPageHeader
         account={account.slug}
-        title={<Trans i18nKey={'teams:settings.pageTitle'} />}
+        title={<Trans i18nKey={'teams.settings.pageTitle'} />}
         description={<AppBreadcrumbs />}
       />
 

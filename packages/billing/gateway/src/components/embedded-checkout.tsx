@@ -38,8 +38,6 @@ export function EmbeddedCheckout(
           checkoutToken={props.checkoutToken}
         />
       </Suspense>
-
-      <BlurryBackdrop />
     </>
   );
 }
@@ -70,15 +68,4 @@ function CheckoutSelector(
     default:
       throw new Error(`Unsupported provider: ${props.provider as string}`);
   }
-}
-
-function BlurryBackdrop() {
-  return (
-    <div
-      className={
-        'bg-background/30 fixed top-0 left-0 w-full backdrop-blur-sm' +
-        ' !m-0 h-full'
-      }
-    />
-  );
 }

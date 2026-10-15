@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { resolveProductPlan } from '@kit/billing-gateway';
 import {
   BillingPortalCard,
@@ -10,8 +12,6 @@ import { PageBody } from '@kit/ui/page';
 import { Trans } from '@kit/ui/trans';
 
 import billingConfig from '~/config/billing.config';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 import { requireUserInServerComponent } from '~/lib/server/require-user-in-server-component';
 
 // local imports
@@ -21,8 +21,8 @@ import { PersonalAccountCheckoutForm } from './_components/personal-account-chec
 import { loadPersonalAccountBillingPageData } from './_lib/server/personal-account-billing-page.loader';
 
 export const generateMetadata = async () => {
-  const i18n = await createI18nServerInstance();
-  const title = i18n.t('account:billingTab');
+  const t = await getTranslations('account');
+  const title = t('billingTab');
 
   return {
     title,
@@ -57,7 +57,7 @@ async function PersonalAccountBillingPage() {
   return (
     <>
       <HomeLayoutPageHeader
-        title={<Trans i18nKey={'common:routes.billing'} />}
+        title={<Trans i18nKey={'common.routes.billing'} />}
         description={<AppBreadcrumbs />}
       />
 
@@ -105,7 +105,7 @@ async function PersonalAccountBillingPage() {
   );
 }
 
-export default withI18n(PersonalAccountBillingPage);
+export default PersonalAccountBillingPage;
 
 function CustomerBillingPortalForm() {
   return (

@@ -1,11 +1,13 @@
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
+
+import { getMessages } from 'next-intl/server';
+import { PublicEnvScript } from 'next-runtime-env';
 
 import { Toaster } from '@kit/ui/sonner';
 import { cn } from '@kit/ui/utils';
 
 import { RootProviders } from '~/components/root-providers';
 import { getFontsClassName } from '~/lib/fonts';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 import { generateRootMetadata } from '~/lib/root-metadata';
 import { getRootTheme } from '~/lib/root-theme';
 
@@ -20,19 +22,28 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [theme, nonce, i18n] = await Promise.all([
+  const [theme, nonce, messages] = await Promise.all([
     getRootTheme(),
     getCspNonce(),
-    createI18nServerInstance(),
+    getMessages(),
   ]);
 
   const className = getRootClassName(theme);
-  const language = i18n.language;
+  const locale = (await cookies()).get('lang')?.value || 'en';
 
   return (
-    <html lang={language} className={className}>
+    <html lang={locale} className={className}>
+      <head>
+        <PublicEnvScript nonce={nonce} />
+      </head>
+
       <body>
-        <RootProviders theme={theme} lang={language} nonce={nonce}>
+        <RootProviders
+          theme={theme}
+          locale={locale}
+          nonce={nonce}
+          messages={messages}
+        >
           {children}
         </RootProviders>
 

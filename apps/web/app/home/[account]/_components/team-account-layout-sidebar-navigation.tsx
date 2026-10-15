@@ -1,7 +1,7 @@
 import * as z from 'zod';
 
 import { NavigationConfigSchema } from '@kit/ui/navigation-schema';
-import { SidebarNavigation } from '@kit/ui/shadcn-sidebar';
+import { SidebarNavigation } from '@kit/ui/sidebar-navigation';
 
 export function TeamAccountLayoutSidebarNavigation({
   config,

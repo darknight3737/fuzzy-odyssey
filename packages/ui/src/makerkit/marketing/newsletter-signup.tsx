@@ -16,7 +16,7 @@ import {
 import { Input } from '../../shadcn/input';
 
 const NewsletterFormSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.email(),
 });
 
 type NewsletterFormValues = z.output<typeof NewsletterFormSchema>;
@@ -49,13 +49,13 @@ export function NewsletterSignup({
           className="flex flex-col gap-y-3"
         >
           <FormField
-            control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormControl>
-                  <Input placeholder={placeholder} {...field} />
-                </FormControl>
+                <FormControl
+                  render={<Input placeholder={placeholder} {...field} />}
+                />
+
                 <FormMessage />
               </FormItem>
             )}

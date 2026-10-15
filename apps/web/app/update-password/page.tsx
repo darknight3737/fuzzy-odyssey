@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 
+import { getTranslations } from 'next-intl/server';
+
 import { UpdatePasswordForm } from '@kit/auth/password-reset';
 import { AuthLayoutShell } from '@kit/auth/shared';
 import { getSafeRedirectPath } from '@kit/shared/utils';
@@ -8,14 +10,12 @@ import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import { AppLogo } from '~/components/app-logo';
 import pathsConfig from '~/config/paths.config';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 export const generateMetadata = async () => {
-  const { t } = await createI18nServerInstance();
+  const t = await getTranslations('auth');
 
   return {
-    title: t('auth:updatePassword'),
+    title: t('updatePassword'),
   };
 };
 
@@ -48,4 +48,4 @@ async function UpdatePasswordPage(props: UpdatePasswordPageProps) {
   );
 }
 
-export default withI18n(UpdatePasswordPage);
+export default UpdatePasswordPage;

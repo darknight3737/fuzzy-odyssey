@@ -7,11 +7,10 @@ import * as z from 'zod';
 
 import { UserWorkspaceContextProvider } from '@kit/accounts/components';
 import { Page, PageMobileNavigation, PageNavigation } from '@kit/ui/page';
-import { SidebarProvider } from '@kit/ui/shadcn-sidebar';
+import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
 import { personalAccountNavigationConfig } from '~/config/personal-account-navigation.config';
-import { withI18n } from '~/lib/i18n/with-i18n';
 
 // home imports
 import { HomeMenuNavigation } from './_components/home-menu-navigation';
@@ -31,7 +30,7 @@ function UserHomeLayout({ children }: React.PropsWithChildren) {
   return <HeaderLayout>{children}</HeaderLayout>;
 }
 
-export default withI18n(UserHomeLayout);
+export default UserHomeLayout;
 
 async function SidebarLayout({ children }: React.PropsWithChildren) {
   const [workspace, state] = await Promise.all([
@@ -102,10 +101,10 @@ async function getLayoutState() {
   const LayoutStyleSchema = z.enum(['sidebar', 'header', 'custom']);
 
   const layoutStyleCookie = cookieStore.get('layout-style');
-  const sidebarOpenCookie = cookieStore.get('sidebar:state');
+  const sidebarOpenCookie = cookieStore.get('sidebar_state');
 
   const sidebarOpen = sidebarOpenCookie
-    ? sidebarOpenCookie.value === 'false'
+    ? sidebarOpenCookie.value === 'true'
     : !personalAccountNavigationConfig.sidebarCollapsed;
 
   const parsedStyle = LayoutStyleSchema.safeParse(layoutStyleCookie?.value);

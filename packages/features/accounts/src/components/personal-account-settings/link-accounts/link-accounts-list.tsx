@@ -116,9 +116,9 @@ export function LinkAccountsList(props: LinkAccountsListProps) {
     const promise = unlinkMutation.mutateAsync(identity);
 
     toast.promise(promise, {
-      loading: <Trans i18nKey={'account:unlinkingAccount'} />,
-      success: <Trans i18nKey={'account:accountUnlinked'} />,
-      error: <Trans i18nKey={'account:unlinkAccountError'} />,
+      loading: <Trans i18nKey={'account.unlinkingAccount'} />,
+      success: <Trans i18nKey={'account.accountUnlinked'} />,
+      error: <Trans i18nKey={'account.unlinkAccountError'} />,
     });
   };
 
@@ -133,9 +133,9 @@ export function LinkAccountsList(props: LinkAccountsListProps) {
     });
 
     toast.promise(promise, {
-      loading: <Trans i18nKey={'account:linkingAccount'} />,
-      success: <Trans i18nKey={'account:accountLinked'} />,
-      error: <Trans i18nKey={'account:linkAccountError'} />,
+      loading: <Trans i18nKey={'account.linkingAccount'} />,
+      success: <Trans i18nKey={'account.accountLinked'} />,
+      error: <Trans i18nKey={'account.linkAccountError'} />,
     });
   };
 
@@ -153,11 +153,11 @@ export function LinkAccountsList(props: LinkAccountsListProps) {
         <div className="space-y-2.5">
           <div>
             <h3 className="text-foreground text-sm font-medium">
-              <Trans i18nKey={'account:linkedMethods'} />
+              <Trans i18nKey={'account.linkedMethods'} />
             </h3>
 
             <p className="text-muted-foreground text-xs">
-              <Trans i18nKey={'account:alreadyLinkedMethodsDescription'} />
+              <Trans i18nKey={'account.alreadyLinkedMethodsDescription'} />
             </p>
           </div>
 
@@ -189,28 +189,30 @@ export function LinkAccountsList(props: LinkAccountsListProps) {
                 <ItemActions>
                   <If condition={hasMultipleIdentities}>
                     <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={unlinkMutation.isPending}
-                        >
-                          <If condition={unlinkMutation.isPending}>
-                            <Spinner className="mr-2 h-3 w-3" />
-                          </If>
-                          <Trans i18nKey={'account:unlinkAccount'} />
-                        </Button>
-                      </AlertDialogTrigger>
+                      <AlertDialogTrigger
+                        render={
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={unlinkMutation.isPending}
+                          >
+                            <If condition={unlinkMutation.isPending}>
+                              <Spinner className="mr-2 h-3 w-3" />
+                            </If>
+                            <Trans i18nKey={'account.unlinkAccount'} />
+                          </Button>
+                        }
+                      />
 
                       <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>
-                            <Trans i18nKey={'account:confirmUnlinkAccount'} />
+                            <Trans i18nKey={'account.confirmUnlinkAccount'} />
                           </AlertDialogTitle>
 
                           <AlertDialogDescription>
                             <Trans
-                              i18nKey={'account:unlinkAccountConfirmation'}
+                              i18nKey={'account.unlinkAccountConfirmation'}
                               values={{ provider: identity.provider }}
                             />
                           </AlertDialogDescription>
@@ -218,14 +220,14 @@ export function LinkAccountsList(props: LinkAccountsListProps) {
 
                         <AlertDialogFooter>
                           <AlertDialogCancel>
-                            <Trans i18nKey={'common:cancel'} />
+                            <Trans i18nKey={'common.cancel'} />
                           </AlertDialogCancel>
 
                           <AlertDialogAction
                             onClick={() => handleUnlinkAccount(identity)}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           >
-                            <Trans i18nKey={'account:unlinkAccount'} />
+                            <Trans i18nKey={'account.unlinkAccount'} />
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -247,11 +249,11 @@ export function LinkAccountsList(props: LinkAccountsListProps) {
         <div className="space-y-2.5">
           <div>
             <h3 className="text-foreground text-sm font-medium">
-              <Trans i18nKey={'account:availableMethods'} />
+              <Trans i18nKey={'account.availableMethods'} />
             </h3>
 
             <p className="text-muted-foreground text-xs">
-              <Trans i18nKey={'account:availableMethodsDescription'} />
+              <Trans i18nKey={'account.availableMethodsDescription'} />
             </p>
           </div>
 
@@ -285,7 +287,7 @@ export function LinkAccountsList(props: LinkAccountsListProps) {
 
                   <ItemDescription>
                     <Trans
-                      i18nKey={'account:linkAccountDescription'}
+                      i18nKey={'account.linkAccountDescription'}
                       values={{ provider }}
                     />
                   </ItemDescription>
@@ -303,7 +305,7 @@ function NoAccountsAvailable() {
   return (
     <div>
       <span className="text-muted-foreground text-xs">
-        <Trans i18nKey={'account:noAccountsAvailable'} />
+        <Trans i18nKey={'account.noAccountsAvailable'} />
       </span>
     </div>
   );
@@ -314,38 +316,41 @@ function UpdateEmailDialog(props: { redirectTo: string }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Item variant="outline" role="button" className="hover:bg-muted/50">
-          <ItemMedia>
-            <div className="text-muted-foreground flex h-5 w-5 items-center justify-center">
-              <OauthProviderLogoImage providerId={'email'} />
-            </div>
-          </ItemMedia>
-
-          <ItemContent>
-            <ItemHeader>
-              <div className="flex flex-col">
-                <ItemTitle className="text-sm font-medium">
-                  <Trans i18nKey={'account:setEmailAddress'} />
-                </ItemTitle>
-
-                <ItemDescription>
-                  <Trans i18nKey={'account:setEmailDescription'} />
-                </ItemDescription>
+      <DialogTrigger
+        nativeButton={false}
+        render={
+          <Item variant="outline" role="button" className="hover:bg-muted/50">
+            <ItemMedia>
+              <div className="text-muted-foreground flex h-5 w-5 items-center justify-center">
+                <OauthProviderLogoImage providerId={'email'} />
               </div>
-            </ItemHeader>
-          </ItemContent>
-        </Item>
-      </DialogTrigger>
+            </ItemMedia>
+
+            <ItemContent>
+              <ItemHeader>
+                <div className="flex flex-col">
+                  <ItemTitle className="text-sm font-medium">
+                    <Trans i18nKey={'account.setEmailAddress'} />
+                  </ItemTitle>
+
+                  <ItemDescription>
+                    <Trans i18nKey={'account.setEmailDescription'} />
+                  </ItemDescription>
+                </div>
+              </ItemHeader>
+            </ItemContent>
+          </Item>
+        }
+      />
 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            <Trans i18nKey={'account:setEmailAddress'} />
+            <Trans i18nKey={'account.setEmailAddress'} />
           </DialogTitle>
 
           <DialogDescription>
-            <Trans i18nKey={'account:setEmailDescription'} />
+            <Trans i18nKey={'account.setEmailDescription'} />
           </DialogDescription>
         </DialogHeader>
 
@@ -377,34 +382,38 @@ function UpdatePasswordDialog(props: {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild data-test="open-password-dialog-trigger">
-        <Item variant="outline" role="button" className="hover:bg-muted/50">
-          <ItemMedia>
-            <div className="text-muted-foreground flex h-5 w-5 items-center justify-center">
-              <OauthProviderLogoImage providerId={'password'} />
-            </div>
-          </ItemMedia>
-
-          <ItemContent>
-            <ItemHeader>
-              <div className="flex flex-col">
-                <ItemTitle className="text-sm font-medium">
-                  <Trans i18nKey={'account:linkEmailPassword'} />
-                </ItemTitle>
-
-                <ItemDescription>
-                  <Trans i18nKey={'account:updatePasswordDescription'} />
-                </ItemDescription>
+      <DialogTrigger
+        nativeButton={false}
+        data-test="open-password-dialog-trigger"
+        render={
+          <Item variant="outline" role="button" className="hover:bg-muted/50">
+            <ItemMedia>
+              <div className="text-muted-foreground flex h-5 w-5 items-center justify-center">
+                <OauthProviderLogoImage providerId={'password'} />
               </div>
-            </ItemHeader>
-          </ItemContent>
-        </Item>
-      </DialogTrigger>
+            </ItemMedia>
+
+            <ItemContent>
+              <ItemHeader>
+                <div className="flex flex-col">
+                  <ItemTitle className="text-sm font-medium">
+                    <Trans i18nKey={'account.linkEmailPassword'} />
+                  </ItemTitle>
+
+                  <ItemDescription>
+                    <Trans i18nKey={'account.updatePasswordDescription'} />
+                  </ItemDescription>
+                </div>
+              </ItemHeader>
+            </ItemContent>
+          </Item>
+        }
+      />
 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            <Trans i18nKey={'account:linkEmailPassword'} />
+            <Trans i18nKey={'account.linkEmailPassword'} />
           </DialogTitle>
         </DialogHeader>
 
