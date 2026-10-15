@@ -21,7 +21,8 @@ import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
 import billingConfig from '~/config/billing.config';
-import { createPersonalAccountCheckoutSession } from '~/home/(user)/billing/_lib/server/server-actions';
+
+import { createPersonalAccountCheckoutSession } from '../_lib/server/server-actions';
 
 const EmbeddedCheckout = dynamic(
   async () => {
@@ -42,7 +43,7 @@ export function PersonalAccountCheckoutForm(props: {
   const [error, setError] = useState(false);
   const appEvents = useAppEvents();
 
-  const [checkoutToken, setCheckoutToken] = useState<string | undefined>(
+  const [checkoutToken, setCheckoutToken] = useState<string | undefined | null>(
     undefined,
   );
 

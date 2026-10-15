@@ -2,7 +2,7 @@
   "extends": "@kit/tsconfig/base.json",
   "compilerOptions": {
     "paths": {
-      "~/*": ["./app/*"],
+      "~/*": ["./app/[locale]/*", "./app/*"],
       "~/config/*": ["./config/*"],
       "~/components/*": ["./components/*"],
       "~/lib/*": ["./lib/*"]

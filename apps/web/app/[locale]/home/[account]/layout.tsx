@@ -56,6 +56,8 @@ async function SidebarLayout({
     image: picture_url,
   }));
 
+  console.log(state);
+
   return (
     <TeamAccountWorkspaceContextProvider value={data}>
       <SidebarProvider defaultOpen={state.open}>

@@ -1,12 +1,14 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { CsrfError, createCsrfProtect } from "@edge-csrf/nextjs";
+import { CsrfError, createCsrfProtect } from '@edge-csrf/nextjs';
+import createNextIntlMiddleware from 'next-intl/middleware';
 
-import { isSuperAdmin } from "@kit/admin";
-import { getSafeRedirectPath } from "@kit/shared/utils";
-import { checkRequiresMultiFactorAuthentication } from "@kit/supabase/check-requires-mfa";
-import { createMiddlewareClient } from "@kit/supabase/middleware-client";
+import { isSuperAdmin } from '@kit/admin';
+import { routing } from '@kit/i18n/routing';
+import { getSafeRedirectPath } from '@kit/shared/utils';
+import { checkRequiresMultiFactorAuthentication } from '@kit/supabase/check-requires-mfa';
+import { createMiddlewareClient } from '@kit/supabase/middleware-client';
 
 import appConfig from "~/config/app.config";
 import pathsConfig from "~/config/paths.config";
@@ -18,22 +20,28 @@ export const config = {
   matcher: ["/((?!_next/static|_next/image|images|locales|assets|sitemap.xml|robots.txt|api/*).*)"],
 };
 
+// create i18n middleware once at module scope
+const handleI18nRouting = createNextIntlMiddleware(routing);
+
 const getUser = (request: NextRequest, response: NextResponse) => {
   const supabase = createMiddlewareClient(request, response);
 
   return supabase.auth.getClaims();
 };
 
-export async function proxy(request: NextRequest) {
-  const secureHeaders = await createResponseWithSecureHeaders();
-  const response = NextResponse.next(secureHeaders);
+export default async function proxy(request: NextRequest) {
+  // run next-intl middleware first to get the i18n-aware response
+  const response = handleI18nRouting(request);
+
+  // apply secure headers on top of the i18n response
+  const secureHeadersResponse = await createResponseWithSecureHeaders(response);
 
   // set a unique request ID for each request
   // this helps us log and trace requests
   setRequestId(request);
 
   // apply CSRF protection for mutating requests
-  const csrfResponse = await withCsrfMiddleware(request, response);
+  const csrfResponse = await withCsrfMiddleware(request, secureHeadersResponse);
 
   // Resolve missing directory URLs before streaming begins, preserving a true
   // HTTP 404 for crawlers instead of a streamed 200 with an error screen.
@@ -99,8 +107,8 @@ async function withCsrfMiddleware(request: NextRequest, response: NextResponse) 
   } catch (error) {
     // if there is a CSRF error, return a 403 response
     if (error instanceof CsrfError) {
-      return NextResponse.json("Invalid CSRF token", {
-        status: 401,
+      return NextResponse.json('Invalid CSRF token', {
+        status: 403,
       });
     }
 
@@ -214,9 +222,12 @@ async function getPatterns() {
  * Match URL patterns to specific handlers.
  * @param url
  */
+let cachedPatterns: Awaited<ReturnType<typeof getPatterns>> | null = null;
+
 async function matchUrlPattern(url: string) {
-  const patterns = await getPatterns();
-  const input = url.split("?")[0];
+  cachedPatterns ??= await getPatterns();
+  const patterns = cachedPatterns;
+  const input = url.split('?')[0];
 
   for (const pattern of patterns) {
     const patternResult = pattern.pattern.exec(input);
@@ -240,17 +251,25 @@ function setRequestId(request: Request) {
  * @description Create a middleware with enhanced headers applied (if applied).
  * This is disabled by default. To enable set ENABLE_STRICT_CSP=true
  */
-async function createResponseWithSecureHeaders() {
-  const enableStrictCsp = process.env.ENABLE_STRICT_CSP ?? "false";
+async function createResponseWithSecureHeaders(response: NextResponse) {
+  const enableStrictCsp = process.env.ENABLE_STRICT_CSP ?? 'false';
 
   // we disable ENABLE_STRICT_CSP by default
-  if (enableStrictCsp === "false") {
-    return {};
+  if (enableStrictCsp === 'false') {
+    return response;
   }
 
-  const { createCspResponse } = await import("./lib/create-csp-response");
+  const { createCspResponse } = await import('./lib/create-csp-response');
+  const cspResponse = await createCspResponse();
 
-  return createCspResponse();
+  // set the CSP headers on the i18n response
+  if (cspResponse) {
+    for (const [key, value] of cspResponse.headers.entries()) {
+      response.headers.set(key, value);
+    }
+  }
+
+  return response;
 }
 
 async function isMissingDirectoryPage(
@@ -259,6 +278,7 @@ async function isMissingDirectoryPage(
 ) {
   if (!['GET', 'HEAD'].includes(request.method)) return false;
   const segments = request.nextUrl.pathname.split('/').filter(Boolean);
+  if (routing.locales.includes(segments[0] as never)) segments.shift();
   if (segments.length !== 2) return false;
   const [first, second] = segments;
   if (!first || !second) return false;
