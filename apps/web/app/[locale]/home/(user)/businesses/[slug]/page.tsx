@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import { connection } from 'next/server';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
@@ -15,6 +17,7 @@ async function ManageBusinessPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  await connection();
   const { slug } = await params;
   const client = getSupabaseServerClient();
   const {
@@ -59,4 +62,6 @@ async function ManageBusinessPage({
     </main>
   );
 }
-export default ManageBusinessPage;
+export default function Page(props: Parameters<typeof ManageBusinessPage>[0]) {
+  return <Suspense fallback={<div role="status" className="container mx-auto min-h-96 px-6 py-12">Carregando…</div>}><ManageBusinessPage {...props} /></Suspense>;
+}

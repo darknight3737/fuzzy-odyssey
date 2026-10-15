@@ -1,24 +1,6 @@
-import { requireUser } from '@kit/supabase/require-user';
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
-
 import { SiteFooter } from '~/(marketing)/_components/site-footer';
 import { SiteHeader } from '~/(marketing)/_components/site-header';
 
-async function SearchLayout(props: React.PropsWithChildren) {
-  const client = getSupabaseServerClient();
-
-  // Get user if authenticated, but don't require it
-  const { data: user } = await requireUser(client, { verifyMfa: false });
-
-  return (
-    <div className={'flex min-h-[100vh] flex-col'}>
-      <SiteHeader user={user} />
-
-      {props.children}
-
-      <SiteFooter />
-    </div>
-  );
+export default function DirectoryLayout({children}: React.PropsWithChildren) {
+  return <div className="flex min-h-screen flex-col"><SiteHeader />{children}<SiteFooter /></div>;
 }
-
-export default SearchLayout;

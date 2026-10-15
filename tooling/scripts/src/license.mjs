@@ -26,9 +26,15 @@ async function checkLicense() {
 
   gitEmail = runGitCommand('config', 'user.email');
 
-  if (!gitUser || !gitEmail) {
+  if (!gitUser) {
     throw new Error(
       "Please set the git user name with the command 'git config user.username <username>'. The username needs to match the GitHub username in your Makerkit organization.",
+    );
+  }
+
+  if (!gitEmail) {
+    throw new Error(
+      "Please set the git email with the command 'git config --global user.email <email>'.",
     );
   }
 

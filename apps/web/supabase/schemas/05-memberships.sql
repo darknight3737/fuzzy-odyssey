@@ -13,8 +13,8 @@ create table if not exists
     account_role varchar(50) references public.roles (name) not null,
     created_at timestamptz default current_timestamp not null,
     updated_at timestamptz default current_timestamp not null,
-    created_by uuid references auth.users,
-    updated_by uuid references auth.users,
+    created_by uuid references auth.users on delete set null,
+    updated_by uuid references auth.users on delete set null,
     primary key (user_id, account_id)
   );
 
@@ -108,17 +108,21 @@ or replace trigger prevent_account_owner_membership_delete_check before delete o
 execute function kit.prevent_account_owner_membership_delete ();
 
 -- Function "kit.prevent_memberships_update"
--- Trigger to prevent updates to account memberships with the exception of the account_role
+-- Trigger to prevent re-parenting a membership: the identity columns are
+-- immutable. Everything else (account_role, timestamps, user tracking) may
+-- change, including the `on delete set null` cascade from auth.users, which
+-- runs as an UPDATE on created_by/updated_by and must not be rejected here.
 create
 or replace function kit.prevent_memberships_update () returns trigger
 set
   search_path = '' as $$
 begin
-    if new.account_role <> old.account_role then
-        return new;
+    if new.user_id is distinct from old.user_id
+        or new.account_id is distinct from old.account_id then
+        raise exception 'Membership identity columns cannot be updated';
     end if;
 
-    raise exception 'Only the account_role can be updated';
+    return new;
 
 end; $$ language plpgsql;
 

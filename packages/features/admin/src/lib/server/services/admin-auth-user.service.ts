@@ -3,6 +3,11 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 import * as z from 'zod';
 
+import { getLogger } from '@kit/shared/logger';
+import {
+  getOwnedAccountIds,
+  removeAccountImages,
+} from '@kit/supabase/account-image';
 import { Database } from '@kit/supabase/database';
 
 export function createAdminAuthUserService(
@@ -30,11 +35,37 @@ class AdminAuthUserService {
   async deleteUser(userId: string) {
     await this.assertUserIsNotCurrentSuperAdmin(userId);
 
+    // the user's teams cascade away with the user, so collect their ids
+    // (and the personal account's) while the rows still exist
+    const ownedAccounts = await getOwnedAccountIds(this.adminClient, userId);
+
     const deleteUserResponse =
       await this.adminClient.auth.admin.deleteUser(userId);
 
     if (deleteUserResponse.error) {
       throw new Error(`Error deleting user record or auth record.`);
+    }
+
+    const logger = await getLogger();
+
+    if (ownedAccounts.error) {
+      logger.error(
+        { userId, error: ownedAccounts.error },
+        'Failed to list owned accounts. Only the personal image will be removed',
+      );
+    }
+
+    // images live in a public bucket, so they stay fetchable unless removed
+    // explicitly. The user is already gone, so failures are logged, not thrown.
+    const accountIds = ownedAccounts.data ?? [userId];
+
+    const { error } = await removeAccountImages(this.adminClient, accountIds);
+
+    if (error) {
+      logger.error(
+        { userId, accountIds, error },
+        'Failed to remove account images',
+      );
     }
   }
 
@@ -106,6 +137,7 @@ class AdminAuthUserService {
 
     const hash = new URL(location).hash.substring(1);
     const query = new URLSearchParams(hash);
+
     const accessToken = query.get('access_token');
     const refreshToken = query.get('refresh_token');
 
@@ -187,7 +219,7 @@ class AdminAuthUserService {
     }
 
     // Get the site URL from environment variable
-    const siteUrl = z.string().url().parse(process.env.NEXT_PUBLIC_SITE_URL);
+    const siteUrl = z.url().parse(process.env.NEXT_PUBLIC_SITE_URL);
 
     const redirectTo = `${siteUrl}/update-password`;
 

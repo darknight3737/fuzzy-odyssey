@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { DatabaseIcon, KeyIcon, LinkIcon, TableIcon } from 'lucide-react';
 
+import type { TableInfo } from '@kit/mcp-server/database';
 import { Badge } from '@kit/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
 import {
@@ -16,38 +17,9 @@ import { Separator } from '@kit/ui/separator';
 
 import { getTableDetailsAction } from '../_lib/server/table-server-actions';
 
-interface TableColumn {
-  name: string;
-  type: string;
-  nullable: boolean;
-  defaultValue: string | null;
-  isPrimaryKey: boolean;
-  isForeignKey: boolean;
-  referencedTable: string | null;
-  referencedColumn: string | null;
-}
-
-interface TableInfo {
-  name: string;
-  schema: string;
-  sourceFile: string;
-  topic: string;
-  columns: TableColumn[];
-  foreignKeys: Array<{
-    name: string;
-    columns: string[];
-    referencedTable: string;
-    referencedColumns: string[];
-    onDelete: string;
-    onUpdate: string;
-  }>;
-  indexes: Array<{
-    name: string;
-    columns: string[];
-    unique: boolean;
-    type: string;
-  }>;
-}
+// Use the service's own types so the browser cannot drift from what
+// getTableDetailsAction actually returns.
+type TableColumn = TableInfo['columns'][number];
 
 interface TableSummary {
   name: string;

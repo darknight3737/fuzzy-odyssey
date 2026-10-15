@@ -1,6 +1,6 @@
 import { cache } from 'react';
 
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 type FilterParams = {
   categoryId: string;
@@ -37,7 +37,7 @@ type BusinessWithRating = {
 export async function getFilteredBusinesses(
   params: FilterParams,
 ): Promise<BusinessWithRating[]> {
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
 
   const { data: categoryTree } = await client
     .from('categories')

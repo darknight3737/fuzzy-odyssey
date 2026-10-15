@@ -20,6 +20,7 @@ export const TeamNameFormSchema = z
       if (containsNonLatinCharacters(data.name)) {
         return !!data.newSlug;
       }
+
       return true;
     },
     {

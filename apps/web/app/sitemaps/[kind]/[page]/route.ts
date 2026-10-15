@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import {
   SITEMAP_PAGE_SIZE,
@@ -17,7 +17,7 @@ export async function GET(
   const pageNumber = Number(page),
     start = pageNumber * SITEMAP_PAGE_SIZE,
     end = start + SITEMAP_PAGE_SIZE - 1;
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
   let paths: Array<{ path: string; updated?: string | null }> = [];
   if (kind === 'static' && pageNumber === 0)
     paths = [

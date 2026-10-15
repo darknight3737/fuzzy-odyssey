@@ -17,6 +17,8 @@ export type EnvDefinition = {
   key: string;
   value: string;
   source: string;
+  /** 1-based line in the source file; absent for synthetic definitions. */
+  line?: number;
 };
 
 export type EnvVariableState = {
@@ -49,6 +51,7 @@ export type EnvFileInfo = {
   variables: Array<{
     key: string;
     value: string;
+    line?: number;
     source: string;
   }>;
 };

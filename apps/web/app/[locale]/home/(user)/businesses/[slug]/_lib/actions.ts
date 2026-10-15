@@ -1,5 +1,5 @@
 'use server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { authActionClient } from '@kit/next/safe-action';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { BusinessProfileSchema } from '~/lib/business/schema';
@@ -17,6 +17,7 @@ export const updateBusinessAction = authActionClient.inputSchema(BusinessProfile
             success: false,
             error: 'Não foi possível salvar. Confira as informações e tente novamente.',
         };
+    updateTag('directory');
     revalidatePath(`/company/${slug}`);
     revalidatePath(`/home/businesses/${slug}`);
     revalidatePath('/');

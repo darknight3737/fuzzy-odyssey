@@ -36,6 +36,7 @@
   "updateProfileLoading": "Updating profile...",
   "name": "Your Name",
   "nameDescription": "Update your name to be displayed on your profile",
+  "duplicateNameError": "Please choose a different name",
   "emailLabel": "Email Address",
   "accountImage": "Your Profile Picture",
   "accountImageDescription": "Please choose a photo to upload as your profile picture.",

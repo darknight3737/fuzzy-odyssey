@@ -1,9 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
-
 import test, { Page, expect } from '@playwright/test';
 
 import { AUTH_STATES } from '../utils/auth-state';
 import { Mailbox } from '../utils/mailbox';
+import { getSupabaseAdminClient } from '../utils/supabase-admin-client';
 
 const MFA_KEY = 'NHOHJVGPO3R3LKVPRMNIYLCDMBHUM2SE';
 
@@ -177,10 +176,7 @@ export class AuthPageObject {
     password?: string;
     name: string;
   }) {
-    const client = createClient(
-      'http://127.0.0.1:54321',
-      'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
-    );
+    const client = getSupabaseAdminClient();
 
     const { data, error } = await client.auth.admin.createUser({
       email,

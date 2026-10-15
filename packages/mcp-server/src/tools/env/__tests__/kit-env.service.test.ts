@@ -859,3 +859,38 @@ describe('processEnvDefinitions — CAPTCHA conditional dependency', () => {
     expect(captchaSecret).toBeUndefined();
   });
 });
+
+describe('processEnvDefinitions same-file duplicates', () => {
+  it('keeps every definition with its line, lets the last one win, and reports it', () => {
+    const envInfo = {
+      appName: 'web',
+      filePath: '/repo/apps/web',
+      variables: [
+        {
+          key: 'STRIPE_WEBHOOK_SECRET',
+          value: 'first',
+          source: '.env.local',
+          line: 3,
+        },
+        {
+          key: 'STRIPE_WEBHOOK_SECRET',
+          value: 'second',
+          source: '.env.local',
+          line: 44,
+        },
+      ],
+    };
+
+    const result = processEnvDefinitions(envInfo, 'development');
+    const variable = result.variables['STRIPE_WEBHOOK_SECRET'];
+
+    expect(variable).toBeDefined();
+    expect(variable!.definitions.map((def) => def.line)).toEqual([3, 44]);
+    expect(variable!.effectiveValue).toBe('second');
+    expect(variable!.effectiveSource).toBe('.env.local (conflict)');
+    expect(variable!.validation.success).toBe(false);
+    expect(variable!.validation.error.issues).toContain(
+      'Defined 2 times in .env.local (lines 3, 44); the last definition wins. Remove the earlier ones.',
+    );
+  });
+});

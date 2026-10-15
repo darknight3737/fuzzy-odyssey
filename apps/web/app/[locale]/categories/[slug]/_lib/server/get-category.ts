@@ -1,13 +1,13 @@
 import { cache } from 'react';
 
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 /**
  * Cached function to fetch category by slug
  * Uses React cache() to deduplicate requests within the same render
  */
 export const getCategoryBySlug = cache(async (slug: string) => {
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
 
   const { data, error } = await client
     .from('categories')

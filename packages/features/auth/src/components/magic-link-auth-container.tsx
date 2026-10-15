@@ -26,6 +26,7 @@ import { Trans } from '@kit/ui/trans';
 import { useCaptcha } from '../captcha/client';
 import { useLastAuthMethod } from '../hooks/use-last-auth-method';
 import { EmailInput } from './email-input';
+import { LastAuthMethodHint } from './last-auth-method-hint';
 import { TermsAndConditionsFormField } from './terms-and-conditions-form-field';
 
 export function MagicLinkAuthContainer({
@@ -135,6 +136,7 @@ export function MagicLinkAuthContainer({
           {captcha.field}
 
           <Button
+            className={'relative'}
             type="submit"
             disabled={signInWithOtpMutation.isPending || captchaLoading}
           >
@@ -149,6 +151,11 @@ export function MagicLinkAuthContainer({
             <If condition={!signInWithOtpMutation.isPending && !captchaLoading}>
               <Trans i18nKey={'auth.sendEmailLink'} />
             </If>
+
+            <LastAuthMethodHint
+              type="magic_link"
+              className="absolute right-0 translate-x-[50%] translate-y-[-50%]"
+            />
           </Button>
         </div>
       </form>

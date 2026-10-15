@@ -33,12 +33,7 @@ import {
 } from '@kit/ui/input-group';
 import { toast } from '@kit/ui/sonner';
 import { Spinner } from '@kit/ui/spinner';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@kit/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@kit/ui/tooltip';
 import { Trans } from '@kit/ui/trans';
 
 import { InviteMembersSchema } from '../../schema/invite-members.schema';
@@ -252,32 +247,30 @@ function InviteMembersForm({
                   />
 
                   <div className={'flex items-end justify-end'}>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Button
-                              variant={'ghost'}
-                              size={'icon'}
-                              type={'button'}
-                              disabled={fieldArray.fields.length <= 1}
-                              data-test={'remove-invite-button'}
-                              aria-label={t('removeInviteButtonLabel')}
-                              onClick={() => {
-                                fieldArray.remove(index);
-                                form.clearErrors(emailInputName);
-                              }}
-                            >
-                              <X className={'h-4'} />
-                            </Button>
-                          }
-                        />
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            variant={'ghost'}
+                            size={'icon'}
+                            type={'button'}
+                            disabled={fieldArray.fields.length <= 1}
+                            data-test={'remove-invite-button'}
+                            aria-label={t('removeInviteButtonLabel')}
+                            onClick={() => {
+                              fieldArray.remove(index);
+                              form.clearErrors(emailInputName);
+                            }}
+                          >
+                            <X className={'h-4'} />
+                          </Button>
+                        }
+                      />
 
-                        <TooltipContent>
-                          {t('removeInviteButtonLabel')}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                      <TooltipContent>
+                        {t('removeInviteButtonLabel')}
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </div>
               </div>

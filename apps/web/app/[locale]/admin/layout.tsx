@@ -27,7 +27,7 @@ export default function AdminLayout(props: React.PropsWithChildren) {
           <AdminSidebar />
         </PageNavigation>
 
-        <PageMobileNavigation className={'md:hidden'}>
+        <PageMobileNavigation>
           <div>
             <AppLogo />
           </div>

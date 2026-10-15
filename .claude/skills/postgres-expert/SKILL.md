@@ -1,6 +1,6 @@
 ---
-name: postgres-supabase-expert
-description: Create, review, optimize, or test PostgreSQL and Supabase database code including SQL code, schemas, migrations, functions, triggers, RLS policies, and PgTAP tests. Use when writing and designing schemas, reviewing SQL for safety, writing migrations, implementing row-level security, or optimizing queries. Invoke with /postgres-supabase-expert or when user mentions database, SQL, migrations, RLS, or schema design.
+name: postgres-expert
+description: Create, review, optimize, or test PostgreSQL and Supabase database code including SQL code, schemas, migrations, functions, triggers, RLS policies, and PgTAP tests. Use when writing and designing schemas, reviewing SQL for safety, writing migrations, implementing row-level security, or optimizing queries. Invoke with /postgres-expert or when user mentions database, SQL, migrations, RLS, or schema design.
 ---
 
 # PostgreSQL & Supabase Database Expert

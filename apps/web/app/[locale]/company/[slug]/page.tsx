@@ -1,7 +1,9 @@
+import { Suspense } from 'react';
+import { connection } from 'next/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 import { If } from '@kit/ui/if';
 
 import appConfig from '~/config/app.config';
@@ -17,8 +19,10 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props) {
+  await connection();
+  await connection();
   const { slug } = await params;
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
 
   const { data: business, error } = await client
     .from('businesses')
@@ -39,7 +43,7 @@ export async function generateMetadata({ params }: Props) {
 
 async function BusinessProfilePage({ params }: Props) {
   const { slug } = await params;
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
 
   const { data: business, error } = await client
     .from('businesses')

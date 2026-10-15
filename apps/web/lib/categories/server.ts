@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 /**
  * Resolves a category slug (could be alias) to the primary category
@@ -10,7 +10,7 @@ export async function resolveCategoryFromSlug(slug: string): Promise<{
   slug: string;
   description: string | null;
 } | null> {
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
 
   // First, try to find in categories table
   const { data: category } = await client

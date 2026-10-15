@@ -41,11 +41,18 @@ CREATE TABLE public.plan_entitlements (
   UNIQUE (variant_id, feature)
 );
 
-revoke all on public.plan_entitlements from public;
+-- Revoke Supabase's default grants from all three API roles, then grant
+-- explicitly. Entitlements are managed by the service role; users only read.
+revoke all on public.plan_entitlements from anon, authenticated, service_role;
+
+grant select, insert, update, delete on public.plan_entitlements to service_role;
+grant select on public.plan_entitlements to authenticated;
 
 alter table public.plan_entitlements enable row level security;
 
-grant select on public.plan_entitlements to authenticated;
+create trigger plan_entitlements_set_timestamps
+  before insert or update on public.plan_entitlements
+  for each row execute function public.trigger_set_timestamps();
 
 create policy select_plan_entitlements
     on public.plan_entitlements
@@ -70,10 +77,18 @@ CREATE TABLE public.feature_usage (
   UNIQUE (account_id, feature)
 );
 
-revoke all on public.feature_usage from public;
+-- Usage rows are written by the service role (see update_feature_usage
+-- below); users only read their own account's row.
+revoke all on public.feature_usage from anon, authenticated, service_role;
+
+grant select, insert, update, delete on public.feature_usage to service_role;
 grant select on public.feature_usage to authenticated;
 
 alter table public.feature_usage enable row level security;
+
+create trigger feature_usage_set_timestamps
+  before insert or update on public.feature_usage
+  for each row execute function public.trigger_set_timestamps();
 
 create policy select_feature_usage
     on public.feature_usage
@@ -94,7 +109,9 @@ Use a trigger to ensure that as soon as an account is created, a corresponding r
 ```sql {% title="apps/web/supabase/migrations/20250205034829_subscription-entitlements.sql" %}
 -- Function to auto-create a feature_usage row upon account creation
 CREATE OR REPLACE FUNCTION public.create_feature_usage_row()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+SET search_path = ''
+AS $$
 BEGIN
   INSERT INTO public.feature_usage (account_id, feature)
   VALUES (NEW.id, '');

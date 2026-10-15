@@ -3,6 +3,7 @@ import * as z from 'zod';
 
 import {
   BillingConfig,
+  BillingIntervalSchema,
   LineItemSchema,
   PlanSchema,
   type ProductSchema,
@@ -56,12 +57,24 @@ async function fetchPlanDetailsFromProvider({
 
   const providerPlan = await gateway.getPlanById(variantId);
 
+  // providers report `one_time` while the local schema uses `one-time`
+  const paymentType =
+    providerPlan.type === 'recurring' ? 'recurring' : 'one-time';
+
+  // one-time plans must not carry an interval. Providers may also report
+  // intervals the local schema does not model (day, week, empty string),
+  // so validate instead of casting and fall back to a monthly interval
+  const interval =
+    paymentType === 'recurring'
+      ? (BillingIntervalSchema.safeParse(providerPlan.interval).data ?? 'month')
+      : undefined;
+
   const plan = PlanSchema.parse({
     id: providerPlan.id,
     name: providerPlan.name,
     description: providerPlan.description ?? providerPlan.name,
-    interval: providerPlan.interval as 'month' | 'year' | undefined,
-    paymentType: providerPlan.type,
+    interval,
+    paymentType,
     lineItems: [
       LineItemSchema.parse({
         id: providerPlan.id,

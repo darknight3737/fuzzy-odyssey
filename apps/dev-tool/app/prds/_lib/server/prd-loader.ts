@@ -1,6 +1,6 @@
-import { PRDManager } from '@kit/mcp-server/prd-manager';
-
-import { relative } from 'node:path';
+import 'server-only';
+import { createPrdDeps, createPrdService } from '@kit/mcp-server/prd-manager';
+import { resolveProjectRoot } from '@kit/mcp-server/resolve-root';
 
 interface PRDSummary {
   filename: string;
@@ -11,36 +11,37 @@ interface PRDSummary {
   completedStories: number;
 }
 
+type PrdService = ReturnType<typeof createPrdService>;
+
+// Pinned to globalThis so `next dev` HMR reuses one instance per process.
+const globalStore = globalThis as typeof globalThis & {
+  __devToolPrdService?: PrdService;
+};
+
+export function getPrdService(): PrdService {
+  globalStore.__devToolPrdService ??= createPrdService(
+    createPrdDeps(resolveProjectRoot()),
+  );
+
+  return globalStore.__devToolPrdService;
+}
+
 export async function loadPRDs(): Promise<PRDSummary[]> {
   try {
-    PRDManager.setRootPath(relative(process.cwd(), '../..'));
+    const { prds, warnings } = await getPrdService().list();
 
-    // Use the actual PRDManager to list PRDs
-    const prdFiles = await PRDManager.listPRDs();
-
-    const prdSummaries: PRDSummary[] = [];
-
-    // Load each PRD to get its details
-    for (const filename of prdFiles) {
-      try {
-        const content = await PRDManager.getPRDContent(filename);
-        const prd = JSON.parse(content);
-
-        prdSummaries.push({
-          filename,
-          title: prd.introduction.title,
-          lastUpdated: prd.metadata.lastUpdated,
-          progress: prd.progress.overall,
-          totalStories: prd.progress.total,
-          completedStories: prd.progress.completed,
-        });
-      } catch (prdError) {
-        console.error(`Failed to load PRD ${filename}:`, prdError);
-        // Continue with other PRDs even if one fails
-      }
+    for (const warning of warnings) {
+      console.warn('[prds]', warning);
     }
 
-    return prdSummaries;
+    return prds.map((prd) => ({
+      filename: prd.filename,
+      title: prd.title,
+      lastUpdated: prd.last_updated,
+      progress: prd.progress,
+      totalStories: prd.total_stories,
+      completedStories: prd.completed_stories,
+    }));
   } catch (error) {
     console.error('Failed to load PRDs:', error);
     return [];

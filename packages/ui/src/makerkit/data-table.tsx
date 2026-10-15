@@ -149,6 +149,7 @@ export function DataTable<RecordData extends DataItem>({
 
   const navigateToPage = useNavigateToNewPage();
 
+  // oxlint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     getRowId,

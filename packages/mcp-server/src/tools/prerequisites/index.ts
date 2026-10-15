@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { execFileAsync } from '../../lib/process-utils';
+import { READ_ONLY_TOOL } from '../../lib/tool-response';
 import {
   type KitPrerequisitesDeps,
   createKitPrerequisitesService,
@@ -23,6 +24,7 @@ export function registerKitPrerequisitesTool(
       description: 'Check installed tools and versions for this kit variant',
       inputSchema: KitPrerequisitesInputSchema,
       outputSchema: KitPrerequisitesOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async (input) => {
       const parsedInput = KitPrerequisitesInputSchema.parse(input);

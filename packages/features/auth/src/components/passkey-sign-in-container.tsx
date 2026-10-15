@@ -14,6 +14,7 @@ import { Trans } from '@kit/ui/trans';
 import { useCaptcha } from '../captcha/client';
 import { useLastAuthMethod } from '../hooks/use-last-auth-method';
 import { AuthErrorAlert } from './auth-error-alert';
+import { LastAuthMethodHint } from './last-auth-method-hint';
 
 /**
  * @name PasskeySignInContainer
@@ -69,7 +70,7 @@ export function PasskeySignInContainer({
 
       <div className={'flex w-full flex-1 flex-col space-y-3'}>
         <Button
-          className={'flex w-full gap-x-3 text-center'}
+          className={'relative flex w-full gap-x-3 text-center'}
           data-test={'passkey-sign-in-button'}
           variant={'outline'}
           disabled={loading || captchaLoading}
@@ -80,6 +81,11 @@ export function PasskeySignInContainer({
           <span>
             <Trans i18nKey={'auth.signInWithPasskey'} />
           </span>
+
+          <LastAuthMethodHint
+            type="passkey"
+            className="absolute right-0 translate-x-[50%] translate-y-[-50%]"
+          />
         </Button>
 
         {captcha.field}

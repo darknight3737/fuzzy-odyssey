@@ -43,12 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from '@kit/ui/table';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@kit/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@kit/ui/tooltip';
 import { Trans } from '@kit/ui/trans';
 import { cn } from '@kit/ui/utils';
 
@@ -257,25 +252,23 @@ function FactorsTable({
               </td>
 
               <td className={'flex justify-end'}>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={
-                        <Button
-                          variant={'ghost'}
-                          size={'icon'}
-                          onClick={() => setUnenrolling(factor.id)}
-                        >
-                          <X className={'h-4'} />
-                        </Button>
-                      }
-                    />
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        variant={'ghost'}
+                        size={'icon'}
+                        onClick={() => setUnenrolling(factor.id)}
+                      >
+                        <X className={'h-4'} />
+                      </Button>
+                    }
+                  />
 
-                    <TooltipContent>
-                      <Trans i18nKey={'account.unenrollTooltip'} />
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                  <TooltipContent>
+                    <Trans i18nKey={'account.unenrollTooltip'} />
+                  </TooltipContent>
+                </Tooltip>
               </td>
             </TableRow>
           ))}

@@ -1,8 +1,10 @@
+import { Suspense } from 'react';
+import { connection } from 'next/server';
 import type { Metadata } from 'next';
 
 import { notFound, permanentRedirect } from 'next/navigation';
 
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import appConfig from '~/config/app.config';
 import { resolveCategoryFromSlug } from '~/lib/categories/server';
@@ -19,19 +21,20 @@ type Props = {
 };
 
 // ISR: Revalidate every hour per PRD requirement
-export const revalidate = 3600;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  await connection();
   const { category: categorySlug, location: locationSlug } = await params;
 
   // Resolve category (could be alias) - per PRD requirement
   const category = await resolveCategoryFromSlug(categorySlug);
 
   if (!category) {
+  await connection();
     return { title: 'Not Found' };
   }
 
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
   const { data: location } = await client
     .from('locations')
     .select('name')
@@ -95,7 +98,7 @@ async function CategoryLocationPage({ params }: Props) {
   );
 
   // Get location from DB for display (if exists), otherwise use parsed data
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
   const { data: location } = await client
     .from('locations')
     .select('id, name, slug, type')

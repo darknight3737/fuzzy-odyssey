@@ -183,6 +183,46 @@ background once the params are known.
 
 Catch-all segments take an array: `{ slug: item.slug.split('/') }`.
 
+## Keeping marketing pages static
+
+The marketing layout (`app/[locale]/(marketing)/layout.tsx`) declares:
+
+```tsx
+export const ensureStatic = 'navigation';
+```
+
+Every page under it — home, pricing, blog, changelog, legal — must then render
+completely at build time. If anything in that subtree reads `cookies()`,
+`headers()`, `searchParams` or the Supabase server client, the build fails
+instead of quietly turning the page dynamic. That matters because these pages
+are meant to be served from a CDN: a server-side user read there would both cost
+a render per request and risk caching one visitor's data for another.
+
+Things that are still allowed:
+
+- `'use cache'` data, such as CMS loaders.
+- Client Components, including ones that read auth in the browser (the site
+  header does this).
+- Dynamic segments, provided `generateStaticParams` returns their params. Under
+  `'navigation'`, a slug that wasn't returned waits for its static render on the
+  first request rather than streaming a fallback shell.
+
+`searchParams` are always per request, so they can't be used here. That's why the
+blog and changelog paginate by path: page 1 is `/blog`, and later pages are
+`/blog/page/2`, `/blog/page/3`, and so on, each enumerated by
+`generateStaticParams`. Follow the same pattern for any paginated marketing
+listing you add.
+
+If a marketing page genuinely needs per-request data, move it out of the
+`(marketing)` group rather than removing the guard for the whole site.
+
+{% alert type="warning" title="Strict CSP disables this" %}
+`ENABLE_STRICT_CSP=true` makes every page dynamic, because the CSP nonce is read
+per request in the root layout. Remove `ensureStatic` from the marketing layout
+when you enable it, or the build fails. See
+[Content Security Policy](/docs/next-supabase-turbo/security/csp#strict-csp-and-static-rendering).
+{% /alert %}
+
 ## When to reach for `connection()`
 
 You will hit this error:

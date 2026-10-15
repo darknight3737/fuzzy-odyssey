@@ -268,9 +268,15 @@ export function createKitEmailsDeps(rootPath = process.cwd()): KitEmailsDeps {
       sampleProps: Record<string, string>,
       templateId?: string,
     ) {
+      // Sample props are free-form strings; the registry renderers are typed
+      // per template, so widen here and validate the result shape below.
+      type SampleRenderer = (props: Record<string, string>) => Promise<unknown>;
+
       const renderFromRegistry =
         typeof templateId === 'string'
-          ? EMAIL_TEMPLATE_RENDERERS?.[templateId]
+          ? (EMAIL_TEMPLATE_RENDERERS?.[
+              templateId as keyof typeof EMAIL_TEMPLATE_RENDERERS
+            ] as unknown as SampleRenderer | undefined)
           : undefined;
 
       if (typeof renderFromRegistry === 'function') {

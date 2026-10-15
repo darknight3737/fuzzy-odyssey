@@ -11,7 +11,6 @@ import { If } from '@kit/ui/if';
 import { Separator } from '@kit/ui/separator';
 import { Trans } from '@kit/ui/trans';
 
-import { LastAuthMethodHint } from './last-auth-method-hint';
 import { MagicLinkAuthContainer } from './magic-link-auth-container';
 import { OauthProviders } from './oauth-providers';
 import { OtpSignInContainer } from './otp-sign-in-container';
@@ -59,8 +58,6 @@ export function SignInMethodsContainer(props: {
 
   return (
     <>
-      <LastAuthMethodHint />
-
       <If condition={props.providers.password}>
         <PasswordSignInContainer
           onSignIn={onSignIn}
@@ -90,7 +87,7 @@ export function SignInMethodsContainer(props: {
               <Separator />
             </div>
 
-            <div className="relative flex justify-center text-xs uppercase">
+            <div className="relative flex justify-center text-[0.6rem] uppercase">
               <span className="bg-background text-muted-foreground px-2">
                 <Trans i18nKey="auth.orContinueWith" />
               </span>

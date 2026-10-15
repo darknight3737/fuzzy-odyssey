@@ -33,12 +33,7 @@ import {
 } from '@kit/ui/item';
 import { toast } from '@kit/ui/sonner';
 import { Spinner } from '@kit/ui/spinner';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@kit/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@kit/ui/tooltip';
 import { Trans } from '@kit/ui/trans';
 
 export function PasskeysList(props: { userId: string }) {
@@ -143,25 +138,23 @@ function PasskeyItem(props: { passkey: PasskeyListItem; userId: string }) {
           </ItemDescription>
         </ItemContent>
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant={'ghost'}
-                  size={'icon'}
-                  onClick={() => setIsDeleting(true)}
-                >
-                  <X className={'h-4'} />
-                </Button>
-              }
-            />
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant={'ghost'}
+                size={'icon'}
+                onClick={() => setIsDeleting(true)}
+              >
+                <X className={'h-4'} />
+              </Button>
+            }
+          />
 
-            <TooltipContent>
-              <Trans i18nKey={'account.deletePasskeyTooltip'} />
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+          <TooltipContent>
+            <Trans i18nKey={'account.deletePasskeyTooltip'} />
+          </TooltipContent>
+        </Tooltip>
       </Item>
 
       <If condition={isDeleting}>

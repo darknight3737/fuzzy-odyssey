@@ -236,7 +236,7 @@ const authConfig = AuthConfigSchema.parse({
 
 1. **OAuth not working**: Ensure the provider is configured in both the code and Supabase Dashboard with matching credentials.
 2. **Magic link emails not arriving**: Check your email configuration and Supabase email templates. For local development, emails go to Mailpit at `localhost:54324`.
-3. **OTP using wrong template**: Both OTP and magic link use the same Supabase email template type. Use `otp.html` for OTP or `magic-link.html` for magic links, but not both simultaneously.
+3. **OTP code missing from the email**: Both OTP and magic link use the same Supabase email template type (`magic_link`). The default `magic-link.html` includes both the link (`{{ .TokenHash }}`) and the code (`{{ .Token }}`), so it works for either flow. Use `otp.html` instead if you want a code-only email.
 4. **Identity linking fails**: Must be enabled in both environment variables and Supabase Dashboard.
 
 ## Related Topics

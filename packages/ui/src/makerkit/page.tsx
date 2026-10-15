@@ -4,6 +4,7 @@ import { cn } from '../lib/utils';
 import { Separator } from '../shadcn/separator';
 import { If } from './if';
 import { PageSidebarTrigger, PageStyleProvider } from './page-style-context';
+import { sidebarExtras } from './sidebar';
 
 export type PageLayoutStyle = 'sidebar' | 'header' | 'custom';
 
@@ -40,7 +41,11 @@ function PageWithSidebar(props: PageProps) {
 
   return (
     <div
-      className={cn('flex min-w-0 flex-1 overflow-x-hidden', props.className)}
+      className={cn(
+        'flex min-w-0 flex-1 overflow-x-hidden',
+        sidebarExtras.ssrDesktopGuard,
+        props.className,
+      )}
     >
       {Navigation}
 
@@ -70,7 +75,7 @@ export function PageMobileNavigation(
   return (
     <div
       className={cn(
-        'container flex w-full items-center justify-between px-0 py-2 group-data-[slot="sidebar-wrapper"]/sidebar-wrapper:border-b group-data-[slot="sidebar-wrapper"]/sidebar-wrapper:px-4 lg:hidden',
+        'flex w-full items-center justify-between px-0 py-2 group-data-[slot="sidebar-wrapper"]/sidebar-wrapper:border-b group-data-[slot="sidebar-wrapper"]/sidebar-wrapper:px-4 lg:hidden',
         props.className,
       )}
     >

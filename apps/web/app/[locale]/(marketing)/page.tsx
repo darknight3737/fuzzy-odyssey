@@ -1,8 +1,9 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import Link from 'next/link';
 
 import { ArrowRight, Building2, Check, Compass, Search } from 'lucide-react';
 
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import appConfig from '~/config/app.config';
 import { pageMetadata, serializeJsonLd } from '~/lib/seo';
@@ -14,7 +15,10 @@ export const metadata = pageMetadata(
 );
 
 async function Home() {
-  const client = getSupabaseServerClient();
+  'use cache';
+  cacheLife('hours');
+  cacheTag('directory');
+  const client = getDirectoryClient();
   const [{ data: categories, error }, { data: businesses }] = await Promise.all(
     [
       client

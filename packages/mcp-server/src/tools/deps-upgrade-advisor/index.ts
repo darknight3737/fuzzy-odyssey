@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { execFileAsync } from '../../lib/process-utils';
+import { READ_ONLY_OPEN_WORLD_TOOL } from '../../lib/tool-response';
 import {
   type DepsUpgradeAdvisorDeps,
   createDepsUpgradeAdvisorService,
@@ -33,6 +34,7 @@ export function registerDepsUpgradeAdvisorToolWithDeps(
         'Analyze outdated dependencies and return risk-bucketed upgrade recommendations',
       inputSchema: DepsUpgradeAdvisorInputSchema,
       outputSchema: DepsUpgradeAdvisorOutputSchema,
+      annotations: READ_ONLY_OPEN_WORLD_TOOL,
     },
     async (input) => {
       try {

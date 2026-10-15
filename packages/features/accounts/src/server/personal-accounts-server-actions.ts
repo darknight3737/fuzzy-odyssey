@@ -1,8 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-
 import { authActionClient } from '@kit/next/safe-action';
 import { verifyOtpForPurpose } from '@kit/otp/orchestration';
 import { getLogger } from '@kit/shared/logger';
@@ -80,9 +77,10 @@ export const deletePersonalAccountAction = authActionClient
 
     logger.info(ctx, `Account request successfully sent`);
 
-    // clear the cache for all pages
-    revalidatePath('/', 'layout');
-
-    // redirect to the home page
-    redirect('/');
+    // the client performs a full page load on success: a server redirect is a
+    // soft navigation that keeps the browser's cached user, so the header
+    // would still render the account as signed in. No revalidatePath either:
+    // it would refresh the current (now unauthenticated) route and race the
+    // client's reload with a redirect to sign-in.
+    return { success: true };
   });

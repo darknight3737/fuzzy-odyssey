@@ -281,12 +281,12 @@ If you edit a skill, update both copies so the behaviour stays identical across 
 The kit includes skills that provide specialized guidance for common tasks. They work in Claude Code (from `.claude/skills`) and in Antigravity (from `.agents/skills`).
 
 {% callout title="Skills may require explicit invocation" %}
-Agents can automatically invoke skills based on the context of the conversation. However, you can also explicitly invoke skills by typing the skill name at the start of your message when you need specialized guidance, such as '/postgres-supabase-expert' "review the database schema for the projects feature".
+Agents can automatically invoke skills based on the context of the conversation. However, you can also explicitly invoke skills by typing the skill name at the start of your message when you need specialized guidance, such as '/postgres-expert' "review the database schema for the projects feature".
 {% /callout %}
 
 | Skill | Command | Purpose |
 |-------|---------|---------|
-| Postgres & Supabase Expert | `/postgres-supabase-expert` | Database schemas, RLS policies, migrations, PgTAP tests |
+| Postgres & Supabase Expert | `/postgres-expert` | Database schemas, RLS policies, migrations, PgTAP tests |
 | RLS Review | `/rls-review` | Adversarial tenant-isolation audit, proven with runnable PgTAP attacks |
 | Server Action Builder | `/server-action-builder` | Server Actions with validation and error handling |
 | Service Builder | `/service-builder` | Pure, interface-agnostic services with injected dependencies |
@@ -303,7 +303,7 @@ If you touch RLS, the database schema, or anything under `apps/web/supabase/`, r
 Invoke a skill by typing its command at the start of your message:
 
 ```
-/postgres-supabase-expert Create a projects table with RLS policies for team access
+/postgres-expert Create a projects table with RLS policies for team access
 ```
 
 ```
@@ -499,6 +499,6 @@ Add a quick reference section:
      {"question": "How do I update agent rules when I change my app?", "answer": "Edit the relevant AGENTS.md file. Changes apply immediately to new agent sessions. Document your domain logic, API patterns, and feature flags so agents generate code that fits your application."},
      {"question": "Can I use multiple AI tools on the same project?", "answer": "Yes. The instruction files work across tools. AGENTS.md covers Cursor, Windsurf, Codex, and Antigravity. CLAUDE.md adds Claude-specific context. You can switch between tools without reconfiguring."},
      {"question": "Why does the agent generate code that doesn't match my patterns?", "answer": "Add explicit examples to your AGENTS.md showing correct and incorrect patterns. Agents learn from examples better than abstract rules. Include the specific imports, function signatures, and patterns you want."},
-     {"question": "How do skills work with AI agents?", "answer": "Skills are specialized instruction sets. Agents activate them automatically when a task matches the skill description, and you can also invoke them explicitly with /skill-name syntax. For example, /postgres-supabase-expert provides database guidance, /server-action-builder helps with Server Actions."}
+     {"question": "How do skills work with AI agents?", "answer": "Skills are specialized instruction sets. Agents activate them automatically when a task matches the skill description, and you can also invoke them explicitly with /skill-name syntax. For example, /postgres-expert provides database guidance, /server-action-builder helps with Server Actions."}
    ]
 /%}

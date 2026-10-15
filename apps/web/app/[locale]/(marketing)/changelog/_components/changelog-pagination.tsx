@@ -5,6 +5,8 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@kit/ui/button';
 import { Trans } from '@kit/ui/trans';
 
+import { getChangelogPagePath } from '../_lib/changelog-page-path';
+
 interface ChangelogPaginationProps {
   currentPage: number;
   canGoToNextPage: boolean;
@@ -23,7 +25,7 @@ export function ChangelogPagination({
     <div className="flex justify-end gap-2">
       {canGoToPreviousPage && (
         <Button
-          render={<Link href={`/changelog?page=${previousPage}`} />}
+          render={<Link href={getChangelogPagePath(previousPage)} />}
           variant="outline"
           size="sm"
         >
@@ -37,7 +39,7 @@ export function ChangelogPagination({
 
       {canGoToNextPage && (
         <Button
-          render={<Link href={`/changelog?page=${nextPage}`} />}
+          render={<Link href={getChangelogPagePath(nextPage)} />}
           variant="outline"
           size="sm"
         >

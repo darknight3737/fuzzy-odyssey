@@ -35,11 +35,12 @@ export function useFetchNotifications({
 
 function useFetchInitialNotifications(props: { accountIds: string[] }) {
   const client = useSupabase();
-  const now = new Date().toISOString();
 
   return useQuery({
     queryKey: ['notifications', ...props.accountIds],
     queryFn: async () => {
+      const now = new Date().toISOString();
+
       const { data } = await client
         .from('notifications')
         .select(

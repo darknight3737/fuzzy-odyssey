@@ -1,4 +1,6 @@
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { Suspense } from 'react';
+import { connection } from 'next/server';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 import { Trans } from '@kit/ui/trans';
 
 import { pageMetadata } from '~/lib/seo';
@@ -14,7 +16,8 @@ export function generateMetadata() {
 }
 
 async function CategoriesPage() {
-  const client = getSupabaseServerClient();
+  await connection();
+  const client = getDirectoryClient();
 
   const { data: categories } = await client
     .from('categories')
@@ -33,4 +36,6 @@ async function CategoriesPage() {
   );
 }
 
-export default CategoriesPage;
+export default function Page() {
+  return <Suspense fallback={<div role="status" className="container mx-auto min-h-96 px-6 py-12">Carregando…</div>}><CategoriesPage /></Suspense>;
+}

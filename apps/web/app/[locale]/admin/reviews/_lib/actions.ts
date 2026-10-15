@@ -1,5 +1,5 @@
 'use server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { z } from 'zod';
 import { isSuperAdmin } from '@kit/admin';
 import { authActionClient } from '@kit/next/safe-action';
@@ -25,8 +25,8 @@ export const moderateReviewAction = authActionClient.inputSchema(z.object({
         .select('slug')
         .eq('id', data.business_id)
         .single();
-    if (business)
-        revalidatePath(`/company/${business.slug}`);
+    updateTag('directory');
+    if (business) revalidatePath(`/company/${business.slug}`);
     revalidatePath('/admin/reviews');
     return { success: true };
 });

@@ -65,55 +65,12 @@ ALTER TYPE public.app_permissions ADD VALUE 'feature.manage';
 COMMIT;
 ```
 
-## Standard Table Template
+## Standard Table Template and Migration Workflow
 
-```sql
-create table if not exists public.feature (
-  id uuid unique not null default extensions.uuid_generate_v4(),
-  account_id uuid references public.accounts(id) on delete cascade not null,
-  name varchar(255) not null,
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now(),
-  created_by uuid references auth.users(id),
-  updated_by uuid references auth.users(id),
-  primary key (id)
-);
-
--- Enable RLS
-alter table "public"."feature" enable row level security;
-
--- Revoke defaults, grant specific
-revoke all on public.feature from authenticated, service_role;
-grant select, insert, update, delete on table public.feature to authenticated;
-
--- Add triggers
-create trigger set_timestamps
-  before insert or update on public.feature
-  for each row execute function public.trigger_set_timestamps();
-
-create trigger set_user_tracking
-  before insert or update on public.feature
-  for each row execute function public.trigger_set_user_tracking();
-
--- Add indexes
-create index ix_feature_account_id on public.feature(account_id);
-```
-
-## Migration Workflow
-
-```bash
-# New entity: copy schema to migration
-pnpm --filter web run supabase migrations new feature_name
-
-# Modify existing: generate diff
-pnpm --filter web run supabase:db:diff -f update_feature
-
-# Apply
-pnpm --filter web supabase migrations up
-
-# Generate types
-pnpm supabase:web:typegen
-```
+Both live in `apps/web/supabase/AGENTS.md` (sections "Table Template" and
+"Migration Workflow"). Read them there rather than from memory: that file is the
+single source of truth for grants, `on delete` actions, triggers and the
+`db:diff` flow, and it changes more often than this skill.
 
 ## Security Definer Function Pattern
 

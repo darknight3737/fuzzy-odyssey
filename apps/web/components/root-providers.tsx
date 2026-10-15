@@ -10,6 +10,7 @@ import { MonitoringProvider } from '@kit/monitoring/components';
 import { AppEventsProvider } from '@kit/shared/events';
 import { CSPProvider } from '@kit/ui/csp-provider';
 import { If } from '@kit/ui/if';
+import { TooltipProvider } from '@kit/ui/tooltip';
 
 import { AnalyticsProvider } from '~/components/analytics-provider';
 import { AuthProvider } from '~/components/auth-provider';
@@ -63,7 +64,7 @@ export function RootProviders({
                     enableColorScheme={false}
                     nonce={nonce}
                   >
-                    {children}
+                    <TooltipProvider>{children}</TooltipProvider>
                   </ThemeProvider>
                 </AuthProvider>
 

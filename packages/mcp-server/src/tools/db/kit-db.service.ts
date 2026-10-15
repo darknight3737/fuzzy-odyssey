@@ -454,7 +454,7 @@ function extractMigrationName(
       }
 
       const nameColumn = columns[1];
-      const normalizedName = normalizeMigrationName(nameColumn);
+      const normalizedName = normalizeMigrationName(nameColumn ?? '');
       const candidate = `${id}_${normalizedName}`;
       const exactMatch = candidates.find(
         (migration) =>

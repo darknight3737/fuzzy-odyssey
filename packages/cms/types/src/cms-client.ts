@@ -43,7 +43,15 @@ export namespace Cms {
     content?: boolean;
     parentIds?: string[];
     language?: string | undefined;
+    /**
+     * Direction applied to `sortBy`. Defaults to `asc`.
+     */
     sortDirection?: 'asc' | 'desc';
+    /**
+     * Field to sort by. When omitted, implementations rank items by their
+     * explicit `order` first and fall back to `publishedAt`, which keeps
+     * hand-ordered collections such as documentation in authored order.
+     */
     sortBy?: 'publishedAt' | 'order' | 'title';
     status?: ContentItemStatus;
   }

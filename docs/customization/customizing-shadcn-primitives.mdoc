@@ -154,7 +154,7 @@ import { alertExtras } from '@kit/ui/alert-extras';
 
 ## Caveats
 
-- Always merge with `cn()` from `@kit/ui/utils` — it uses `tailwind-merge` to resolve conflicting utility classes (e.g., `bg-primary` from the default variant vs `bg-green-600/10` from your token).
-- `tailwind-merge` resolves utilities like `bg-*`, `text-*`, `border-*`, but **does not** detect conflicts in arbitrary selectors like `[&>svg]:text-*`. If upstream changes a primitive's icon color rule, your override may need to tighten its selector to win.
+- Always merge with `cn()` from `@kit/ui/utils` — it uses `cn` to resolve conflicting utility classes (e.g., `bg-primary` from the default variant vs `bg-green-600/10` from your token).
+- `cn` resolves utilities like `bg-*`, `text-*`, `border-*`, but **does not** detect conflicts in arbitrary selectors like `[&>svg]:text-*`. If upstream changes a primitive's icon color rule, your override may need to tighten its selector to win.
 - Always add a header comment in the makerkit file explaining why the wrapper exists. Future-you (or the CLI sync diff) needs to know what's going on.
 - Never edit files in `packages/ui/src/shadcn/` to add project behavior — the CLI will silently overwrite your changes on the next sync.

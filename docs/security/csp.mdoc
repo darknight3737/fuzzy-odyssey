@@ -11,6 +11,8 @@ The Next.js Supabase Turbo kit provides a secure way to include [CSP headers](ht
 
 [How to enable a strict CSP](#how-to-enable-a-strict-csp)
 
+[Strict CSP and static rendering](#strict-csp-and-static-rendering)
+
 [Making your application compliant with CSP](#making-your-application-compliant-with-csp)
 
 [Adding a nonce to your application](#adding-a-nonce-to-your-application)
@@ -29,7 +31,29 @@ ENABLE_STRICT_CSP=true
 
 By default, this setting is disabled due to the overhead required for development. While this is a bit advanced, it is recommended to enable it before going to production - or at some point in your development process.
 
-Once enabled, the CSP headers will be automatically added to the response headers using the Next.js middleware. 
+Once enabled, the CSP headers will be automatically added to the response headers using the Next.js middleware.
+
+## Strict CSP and static rendering
+
+A CSP nonce must be unique for every response, so it can never be part of a page rendered at build time. With strict CSP enabled, the root layout reads the nonce from `headers()`, which makes **every** page render per request — including the marketing pages, which are otherwise static and CDN-cacheable.
+
+The kit is configured for static rendering by default, so enabling strict CSP requires two code changes alongside the environment variable:
+
+1. Add `export const instant = false` to the root layout, since no route can produce an instant static shell any more:
+
+```tsx {% filename="apps/web/app/[locale]/layout.tsx" %}
+export const instant = false;
+```
+
+2. Remove the `ensureStatic` export from the marketing layout. It fails the build when any part of a marketing page renders per request, and the nonce read in the root layout counts:
+
+```diff {% filename="apps/web/app/[locale]/(marketing)/layout.tsx" %}
+- export const ensureStatic = 'navigation';
+```
+
+If you skip the second step, `next build` fails on the marketing routes. That is intentional: it stops strict CSP from silently making your marketing site dynamic.
+
+Weigh this before enabling it: you trade CDN-cached marketing pages for a server render on every visit.
 
 ## Making your application compliant with CSP
 

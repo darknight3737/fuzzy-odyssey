@@ -1,7 +1,9 @@
+import { Suspense } from 'react';
+import { connection } from 'next/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { getAllLocationsForFilter } from '~/lib/locations/search';
 import { pageMetadata } from '~/lib/seo';
@@ -29,6 +31,8 @@ type Props = {
 };
 
 export async function generateMetadata({ params, searchParams }: Props) {
+  await connection();
+  await connection();
   const { slug } = await params;
 
   // Use cached category fetch to avoid duplicate query
@@ -84,7 +88,7 @@ async function CategoryPage({ params, searchParams }: Props) {
             (filters.sort as 'relevancy' | 'rating' | 'name') || 'relevancy',
         });
 
-  const { data: directoryPages } = await getSupabaseServerClient()
+  const { data: directoryPages } = await getDirectoryClient()
     .from('directory_pages')
     .select('category_slug, location_slug, location_name, business_count')
     .eq('category_slug', category.slug)

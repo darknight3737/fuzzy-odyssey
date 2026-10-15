@@ -4,6 +4,10 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import * as z from 'zod';
 
 import { getLogger } from '@kit/shared/logger';
+import {
+  getOwnedAccountIds,
+  removeAccountImages,
+} from '@kit/supabase/account-image';
 import { Database } from '@kit/supabase/database';
 
 export function createDeletePersonalAccountService() {
@@ -46,6 +50,13 @@ class DeletePersonalAccountService {
       'User requested to delete their personal account. Processing...',
     );
 
+    // the user's teams cascade away with the user, so collect their ids
+    // (and the personal account's) while the rows still exist
+    const accountIds = await this.collectOwnedAccountIds(
+      params.adminClient,
+      userId,
+    );
+
     // execute the deletion of the user
     try {
       const response = await params.adminClient.auth.admin.deleteUser(userId);
@@ -55,6 +66,10 @@ class DeletePersonalAccountService {
       }
 
       logger.info(ctx, 'User successfully deleted!');
+
+      // images live in a public bucket, so they stay fetchable unless
+      // removed explicitly. Errors are handled in the method.
+      await this.removeAccountImages(params.adminClient, userId, accountIds);
 
       if (params.account.email) {
         // dispatch the delete account email. Errors are handled in the method.
@@ -77,6 +92,41 @@ class DeletePersonalAccountService {
       );
 
       throw new Error('Error deleting user', { cause: error });
+    }
+  }
+
+  private async collectOwnedAccountIds(
+    adminClient: SupabaseClient<Database>,
+    userId: string,
+  ) {
+    const { data, error } = await getOwnedAccountIds(adminClient, userId);
+
+    if (error) {
+      const logger = await getLogger();
+
+      logger.error(
+        { name: this.namespace, userId, error },
+        'Failed to list owned accounts. Only the personal image will be removed',
+      );
+    }
+
+    return data ?? [userId];
+  }
+
+  private async removeAccountImages(
+    adminClient: SupabaseClient<Database>,
+    userId: string,
+    accountIds: string[],
+  ) {
+    const { error } = await removeAccountImages(adminClient, accountIds);
+
+    if (error) {
+      const logger = await getLogger();
+
+      logger.error(
+        { name: this.namespace, userId, accountIds, error },
+        'Failed to remove account images',
+      );
     }
   }
 

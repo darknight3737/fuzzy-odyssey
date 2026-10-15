@@ -2,6 +2,10 @@ import { Page, expect, test } from '@playwright/test';
 
 import { AuthPageObject } from '../authentication/auth.po';
 import { TeamAccountsPageObject } from '../team-accounts/team-accounts.po';
+import {
+  getAccountImageStatus,
+  seedAccountImage,
+} from '../utils/account-image';
 import { AUTH_STATES } from '../utils/auth-state';
 
 test.describe('Admin Auth flow without MFA', () => {
@@ -172,6 +176,19 @@ test.describe('Admin', () => {
     test('delete user flow', async ({ page }) => {
       const auth = new AuthPageObject(page);
 
+      // personal account id == auth user id
+      const [, userId] =
+        new URL(page.url()).pathname.match(/^\/admin\/accounts\/([^/]+)$/) ??
+        [];
+
+      if (!userId) {
+        throw new Error(`Unexpected account URL: ${page.url()}`);
+      }
+
+      await seedAccountImage(userId);
+
+      expect(await getAccountImageStatus(userId)).toBe(200);
+
       await page.getByTestId('admin-delete-account-button').click();
 
       await expect(
@@ -194,6 +211,9 @@ test.describe('Admin', () => {
 
       // Should redirect to admin dashboard
       await page.waitForURL('/admin/accounts');
+
+      // the avatar is removed from the public bucket
+      await expect.poll(() => getAccountImageStatus(userId)).not.toBe(200);
 
       // Log out
       await auth.signOut();

@@ -45,14 +45,16 @@ function UserHomeLayout({ children }: React.PropsWithChildren) {
     <Page style={isSidebar ? 'sidebar' : 'header'}>
       <PageNavigation>{navigation}</PageNavigation>
 
-      <PageMobileNavigation className={isSidebar ? 'md:hidden' : undefined}>
+      <PageMobileNavigation>
         <div>
           <AppLogo />
         </div>
 
         {/* The sidebar already holds the nav, so mobile only needs a trigger. */}
         {isSidebar ? (
-          <MobileSidebarTrigger />
+          <MobileSidebarTrigger
+            collapsible={personalAccountNavigationConfig.sidebarCollapsedStyle}
+          />
         ) : (
           <Suspense fallback={null}>
             <UserMobileNavigation />

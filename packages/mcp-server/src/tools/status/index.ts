@@ -1,6 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { execFileAsync } from '../../lib/process-utils';
+import { resolveSupabaseConfig } from '../../lib/supabase-config';
+import { READ_ONLY_TOOL } from '../../lib/tool-response';
 import {
   type KitStatusDeps,
   createKitStatusService,
@@ -18,6 +20,7 @@ export function registerKitStatusTool(server: McpServer, rootPath?: string) {
       description: 'Project status with variant context',
       inputSchema: KitStatusInputSchema,
       outputSchema: KitStatusOutputSchema,
+      annotations: READ_ONLY_TOOL,
     },
     async (input) => {
       const parsedInput = KitStatusInputSchema.parse(input);
@@ -52,7 +55,7 @@ export function registerKitStatusTool(server: McpServer, rootPath?: string) {
   );
 }
 
-function createKitStatusDeps(rootPath = process.cwd()): KitStatusDeps {
+export function createKitStatusDeps(rootPath = process.cwd()): KitStatusDeps {
   return {
     rootPath,
     async readJsonFile(path: string): Promise<unknown> {
@@ -96,6 +99,11 @@ function createKitStatusDeps(rootPath = process.cwd()): KitStatusDeps {
     },
     getNodeVersion() {
       return process.version;
+    },
+    async resolveSupabasePorts() {
+      const { ports } = await resolveSupabaseConfig(rootPath);
+
+      return { api: ports.api, studio: ports.studio };
     },
   };
 }

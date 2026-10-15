@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import { connection } from 'next/server';
 import Link from 'next/link';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
@@ -8,6 +10,7 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 async function UserHomePage() {
+  await connection();
   const client = getSupabaseServerClient();
   const {
     data: { user },
@@ -79,4 +82,6 @@ async function UserHomePage() {
     </main>
   );
 }
-export default UserHomePage;
+export default function Page() {
+  return <Suspense fallback={<div role="status" className="container mx-auto min-h-96 px-6 py-12">Carregando…</div>}><UserHomePage /></Suspense>;
+}

@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import type { ParsedLocation } from './utils';
 import { parseLocationSlug } from './utils';
@@ -14,7 +14,7 @@ export async function getOrCreateLocationBySlug(slug: string): Promise<{
   slug: string;
   type: 'country' | 'state' | 'city';
 } | null> {
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
 
   // First, try to find existing location
   const { data: existing } = await client
@@ -206,7 +206,7 @@ export async function getBusinessesByLocationSlug(
   locationSlug: string,
   categoryId?: string,
 ) {
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
 
   // First, try to find existing location
   const { data: location } = await client

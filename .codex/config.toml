@@ -1,3 +1,7 @@
 [mcp_servers.makerkit]
 command = "node"
 args = ["packages/mcp-server/build/index.cjs"]
+
+[mcp_servers.next_dev_tools]
+command = "npx"
+args = ["-y", "next-devtools-mcp@latest"]

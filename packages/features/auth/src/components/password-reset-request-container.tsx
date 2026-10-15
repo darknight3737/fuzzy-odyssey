@@ -14,7 +14,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@kit/ui/form';
 import { If } from '@kit/ui/if';
@@ -78,17 +77,13 @@ export function PasswordResetRequestContainer(params: {
             })}
             className={'w-full'}
           >
-            <div className={'flex flex-col gap-y-4'}>
+            <div className={'flex flex-col gap-y-2'}>
               <AuthErrorAlert error={error} />
 
               <FormField
                 name={'email'}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      <Trans i18nKey={'common.emailAddress'} />
-                    </FormLabel>
-
                     <FormControl>
                       <Input
                         required

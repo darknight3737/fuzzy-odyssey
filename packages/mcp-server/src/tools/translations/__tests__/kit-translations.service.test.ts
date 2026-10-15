@@ -139,10 +139,10 @@ describe('KitTranslationsService.list', () => {
     expect(result.base_locale).toBe('en');
     expect(result.locales).toEqual(['en', 'es']);
     expect(result.namespaces).toEqual(['auth', 'common']);
-    expect(result.translations.en.common['header.title']).toBe('Dashboard');
-    expect(result.translations.en.auth.login).toBe('Sign In');
-    expect(result.translations.es.common['header.title']).toBe('Panel');
-    expect(result.translations.es.auth).toEqual({});
+    expect(result.translations.en?.common?.['header.title']).toBe('Dashboard');
+    expect(result.translations.en?.auth?.login).toBe('Sign In');
+    expect(result.translations.es?.common?.['header.title']).toBe('Panel');
+    expect(result.translations.es?.auth).toEqual({});
   });
 });
 
@@ -231,9 +231,9 @@ describe('KitTranslationsService.stats', () => {
 
     expect(result.base_locale).toBe('en');
     expect(result.total_keys).toBe(2);
-    expect(result.coverage.en.translated).toBe(2);
-    expect(result.coverage.es.translated).toBe(1);
-    expect(result.coverage.es.missing).toBe(1);
+    expect(result.coverage.en?.translated).toBe(2);
+    expect(result.coverage.es?.translated).toBe(1);
+    expect(result.coverage.es?.missing).toBe(1);
   });
 });
 

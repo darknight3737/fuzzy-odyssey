@@ -1,15 +1,10 @@
 {
+  "extends": "@kit/tsconfig/base.json",
   "compilerOptions": {
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
-    "outDir": "./build",
-    "noEmit": false,
-    "strict": false,
-    "target": "ES2024",
-    "allowSyntheticDefaultImports": true,
-    "jsx": "react-jsx",
-    "module": "nodenext",
-    "moduleResolution": "nodenext"
+    "lib": ["esnext"],
+    "jsx": "react-jsx"
   },
   "include": ["src"],
-  "exclude": ["node_modules", "src/**/__tests__"]
+  "exclude": ["node_modules", "build"]
 }

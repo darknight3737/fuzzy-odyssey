@@ -1,18 +1,18 @@
 'use client';
 
-import { useMemo } from 'react';
-
 import dynamic from 'next/dynamic';
 
-import { Lightbulb } from 'lucide-react';
-
-import { If } from '@kit/ui/if';
+import { Badge } from '@kit/ui/badge';
 import { Trans } from '@kit/ui/trans';
+import { cn } from '@kit/ui/utils';
 
 import { useLastAuthMethod } from '../hooks/use-last-auth-method';
+import { AuthMethod } from '../utils/last-auth-method';
 
 interface LastAuthMethodHintProps {
   className?: string;
+  name?: string;
+  type: AuthMethod;
 }
 
 // we force dynamic import to avoid hydration errors
@@ -23,54 +23,34 @@ export const LastAuthMethodHint = dynamic(
   },
 );
 
-function LastAuthMethodHintImpl({ className }: LastAuthMethodHintProps) {
-  const { hasLastMethod, methodType, providerName, isOAuth } =
+function LastAuthMethodHintImpl({
+  className,
+  type,
+  name,
+}: LastAuthMethodHintProps) {
+  const { hasLastMethod, methodType, isOAuth, providerName } =
     useLastAuthMethod();
 
-  // Get the appropriate translation key based on the method - memoized
-  // This must be called before any conditional returns to follow Rules of Hooks
-  const methodKey = useMemo(() => {
-    switch (methodType) {
-      case 'password':
-        return 'auth.methodPassword';
-      case 'otp':
-        return 'auth.methodOtp';
-      case 'magic_link':
-        return 'auth.methodMagicLink';
-      case 'oauth':
-        return 'auth.methodOauth';
-      case 'passkey':
-        return 'auth.methodPasskey';
-      default:
-        return null;
-    }
-  }, [methodType]);
-
   // Don't show anything until loaded or if no last method
-  if (!hasLastMethod) {
+  if (!hasLastMethod || methodType !== type) {
     return null;
   }
 
-  if (!methodKey) {
-    return null; // If method is not recognized, don't render anything
+  if (isOAuth) {
+    if (providerName !== name) {
+      return null;
+    }
   }
 
   return (
-    <div
+    <Badge
       data-test="last-auth-method-hint"
-      className={`text-muted-foreground/80 flex items-center justify-center gap-2 text-xs ${className || ''}`}
+      className={cn(
+        'animate-in fade-in-50 zoom-in scale-75 bg-blue-500 text-white duration-500 dark:bg-blue-400 dark:text-black',
+        className,
+      )}
     >
-      <Lightbulb className="h-3 w-3" />
-
-      <span>
-        <Trans i18nKey="auth.lastUsedMethodPrefix" />{' '}
-        <If condition={isOAuth && Boolean(providerName)}>{providerName}</If>
-        <If condition={!isOAuth || !providerName}>
-          <span className="text-muted-foreground font-medium">
-            <Trans i18nKey={methodKey} />
-          </span>
-        </If>
-      </span>
-    </div>
+      <Trans i18nKey="auth.lastUsedMethod" />
+    </Badge>
   );
 }

@@ -1,116 +1,106 @@
 import { describe, expect, it } from 'vitest';
 
-import { createAsyncDialogState } from './use-async-dialog-state';
+import {
+  type AsyncDialogAction,
+  asyncDialogReducer,
+  createAsyncDialogState,
+} from './use-async-dialog-state';
 
-describe('createAsyncDialogState', () => {
+function run(initialOpen: boolean, actions: AsyncDialogAction[]) {
+  return actions.reduce(
+    asyncDialogReducer,
+    createAsyncDialogState(initialOpen),
+  );
+}
+
+const pending = (sessionId: number, value: boolean): AsyncDialogAction => ({
+  type: 'pending',
+  sessionId,
+  pending: value,
+});
+
+const sync = (open: boolean): AsyncDialogAction => ({ type: 'sync', open });
+
+describe('asyncDialogReducer', () => {
   it('starts idle for a closed dialog', () => {
-    const state = createAsyncDialogState();
-
-    expect(state.getSessionId()).toBe(0);
-    expect(state.isPending()).toBe(false);
-    expect(state.isCurrentSession(0)).toBe(true);
+    expect(createAsyncDialogState()).toEqual({
+      open: false,
+      sessionId: 0,
+      pendingCount: 0,
+    });
   });
 
   it('tracks pending state for the active session', () => {
-    const state = createAsyncDialogState(true);
-    const sessionId = state.getSessionId();
+    let state = run(true, [pending(1, true)]);
 
-    state.setPending(sessionId, true);
+    expect(state.pendingCount).toBe(1);
 
-    expect(state.isPending()).toBe(true);
+    state = asyncDialogReducer(state, pending(1, false));
 
-    state.setPending(sessionId, false);
-
-    expect(state.isPending()).toBe(false);
+    expect(state.pendingCount).toBe(0);
   });
 
-  it('keeps pending true until all overlapping requests settle', () => {
-    const state = createAsyncDialogState(true);
-    const sessionId = state.getSessionId();
+  it('keeps pending until all overlapping requests settle', () => {
+    let state = run(true, [pending(1, true), pending(1, true)]);
 
-    state.setPending(sessionId, true);
-    state.setPending(sessionId, true);
+    expect(state.pendingCount).toBe(2);
 
-    expect(state.isPending()).toBe(true);
+    state = asyncDialogReducer(state, pending(1, false));
 
-    state.setPending(sessionId, false);
+    expect(state.pendingCount).toBe(1);
 
-    expect(state.isPending()).toBe(true);
+    state = asyncDialogReducer(state, pending(1, false));
 
-    state.setPending(sessionId, false);
-
-    expect(state.isPending()).toBe(false);
+    expect(state.pendingCount).toBe(0);
   });
 
   it('ignores extra false transitions', () => {
-    const state = createAsyncDialogState(true);
-    const sessionId = state.getSessionId();
+    const initial = createAsyncDialogState(true);
 
-    state.setPending(sessionId, false);
-
-    expect(state.isPending()).toBe(false);
+    expect(asyncDialogReducer(initial, pending(1, false))).toBe(initial);
   });
 
   it('creates a new session when reopening the dialog', () => {
-    const state = createAsyncDialogState(true);
-    const firstSessionId = state.getSessionId();
-
-    state.syncOpen(false);
-    state.syncOpen(true);
-
-    expect(state.getSessionId()).toBe(firstSessionId + 1);
-    expect(state.isCurrentSession(firstSessionId)).toBe(false);
+    expect(run(true, [sync(false), sync(true)]).sessionId).toBe(2);
   });
 
   it('ignores stale pending updates from an older session after reopen', () => {
-    const state = createAsyncDialogState(true);
-    const firstSessionId = state.getSessionId();
+    let state = run(true, [pending(1, true), sync(false), sync(true)]);
 
-    state.setPending(firstSessionId, true);
-    state.syncOpen(false);
-    state.syncOpen(true);
+    expect(state.pendingCount).toBe(0);
 
-    expect(state.isPending()).toBe(false);
+    state = asyncDialogReducer(state, pending(1, false));
 
-    state.setPending(firstSessionId, false);
-
-    expect(state.isPending()).toBe(false);
+    expect(state.pendingCount).toBe(0);
   });
 
   it('allows new session requests after a reopen even if the old one was pending', () => {
-    const state = createAsyncDialogState(true);
-    const firstSessionId = state.getSessionId();
+    let state = run(true, [
+      pending(1, true),
+      sync(false),
+      sync(true),
+      pending(2, true),
+    ]);
 
-    state.setPending(firstSessionId, true);
-    state.syncOpen(false);
-    state.syncOpen(true);
+    expect(state.pendingCount).toBe(1);
 
-    const secondSessionId = state.getSessionId();
+    state = asyncDialogReducer(state, pending(1, false));
 
-    state.setPending(secondSessionId, true);
+    expect(state.pendingCount).toBe(1);
 
-    expect(state.isPending()).toBe(true);
+    state = asyncDialogReducer(state, pending(2, false));
 
-    state.setPending(firstSessionId, false);
-
-    expect(state.isPending()).toBe(true);
-
-    state.setPending(secondSessionId, false);
-
-    expect(state.isPending()).toBe(false);
+    expect(state.pendingCount).toBe(0);
   });
 
   it('does not bump the session id for repeated syncs with the same open value', () => {
-    const state = createAsyncDialogState();
+    const closed = run(false, [sync(false)]);
 
-    state.syncOpen(false);
-    expect(state.getSessionId()).toBe(0);
+    expect(closed.sessionId).toBe(0);
 
-    state.syncOpen(true);
-    const openSessionId = state.getSessionId();
+    const opened = asyncDialogReducer(closed, sync(true));
 
-    state.syncOpen(true);
-
-    expect(state.getSessionId()).toBe(openSessionId);
+    expect(asyncDialogReducer(opened, sync(true))).toBe(opened);
+    expect(opened.sessionId).toBe(1);
   });
 });

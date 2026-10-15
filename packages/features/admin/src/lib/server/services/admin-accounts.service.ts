@@ -1,6 +1,8 @@
 import 'server-only';
 import { SupabaseClient } from '@supabase/supabase-js';
 
+import { getLogger } from '@kit/shared/logger';
+import { removeAccountImages } from '@kit/supabase/account-image';
 import { Database } from '@kit/supabase/database';
 
 export function createAdminAccountsService(
@@ -26,6 +28,21 @@ class AdminAccountsService {
 
     if (error) {
       throw error;
+    }
+
+    // the image lives in a public bucket, so it stays fetchable unless removed
+    // explicitly. The account is already gone, so a failure is logged.
+    const { error: imageError } = await removeAccountImages(this.adminClient, [
+      accountId,
+    ]);
+
+    if (imageError) {
+      const logger = await getLogger();
+
+      logger.error(
+        { accountId, error: imageError },
+        'Failed to remove account image',
+      );
     }
   }
 

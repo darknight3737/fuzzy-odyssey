@@ -88,7 +88,7 @@ export class KitMailboxService {
       created_at: toString(message.Created ?? message.created),
       size: toNumber(message.Size ?? message.size),
       read: toBoolean(message.Read ?? message.read) ?? false,
-      readAt: toString(message.ReadAt ?? message.readAt),
+      readAt: toString(message.ReadAt ?? message.readAt) ?? undefined,
       text: readBody(message.Text ?? message.text),
       html: readBody(message.HTML ?? message.Html ?? message.html),
       headers: readHeaders(message.Headers ?? message.headers),

@@ -31,14 +31,13 @@ export const generateMetadata = async () => {
 function SignInPage({ searchParams }: SignInPageProps) {
   return (
     <>
-      <div className={'flex flex-col items-center gap-1.5'}>
-        <Heading level={4} className={'tracking-tight'}>
-          <Trans i18nKey={'auth.signInHeading'} />
+      <div className={'flex flex-col items-center'}>
+        <Heading level={2} className={'tracking-tighter'}>
+          <Trans
+            i18nKey={'auth.signInHeading'}
+            values={{ productName: process.env.NEXT_PUBLIC_PRODUCT_NAME }}
+          />
         </Heading>
-
-        <p className={'text-muted-foreground text-sm'}>
-          <Trans i18nKey={'auth.signInSubheading'} />
-        </p>
       </div>
 
       <Suspense fallback={<AuthFormFallback />}>

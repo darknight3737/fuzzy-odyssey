@@ -523,9 +523,10 @@ function EnvList({ appState }: { appState: AppEnvState }) {
               </Heading>
 
               <div className="w-full space-y-2">
-                {varState.definitions.map((def) => (
+                {varState.definitions.map((def, index) => (
                   <div
-                    key={`${def.key}-${def.source}`}
+                    // A key can be defined more than once in the same file.
+                    key={`${def.source}:${def.line ?? index}`}
                     className="flex items-center gap-2"
                   >
                     <Badge

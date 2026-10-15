@@ -24,11 +24,11 @@ function PasswordResetPage() {
   return (
     <>
       <div className={'flex flex-col items-center gap-1'}>
-        <Heading level={4} className={'tracking-tight'}>
+        <Heading level={2} className={'tracking-tight'}>
           <Trans i18nKey={'auth.passwordResetLabel'} />
         </Heading>
 
-        <p className={'text-muted-foreground text-sm'}>
+        <p className={'text-muted-foreground text-center text-sm'}>
           <Trans i18nKey={'auth.passwordResetSubheading'} />
         </p>
       </div>

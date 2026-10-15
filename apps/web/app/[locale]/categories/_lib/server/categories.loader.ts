@@ -1,9 +1,9 @@
 import { cache } from 'react';
 
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 export const loadCategories = cache(async () => {
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
 
   const { data, error } = await client
     .from('categories')

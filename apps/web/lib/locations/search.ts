@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { LOCATION_SUGGESTIONS, type LocationSuggestion, searchLocationSuggestions } from './data';
 
@@ -17,7 +17,7 @@ export async function searchLocations(
   query: string,
   limit: number = 50,
 ): Promise<LocationSearchResult[]> {
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
   const trimmedQuery = query.trim();
 
   if (trimmedQuery.length < 3) {
@@ -77,7 +77,7 @@ export async function searchLocations(
  * Returns DB locations + common suggestions
  */
 export async function getAllLocationsForFilter(): Promise<LocationSearchResult[]> {
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
 
   // Get all DB locations
   const { data: dbLocations } = await client

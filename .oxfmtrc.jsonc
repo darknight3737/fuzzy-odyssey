@@ -48,7 +48,7 @@
     "order": "asc",
   },
   "sortTailwindcss": {
-    "functions": ["tw", "clsx", "cn", "cva"],
+    "functions": ["tw", "cn", "cva"],
   },
   "ignorePatterns": [
     "node_modules",

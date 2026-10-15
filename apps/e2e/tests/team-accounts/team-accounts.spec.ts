@@ -1,6 +1,11 @@
 import { Page, expect, test } from '@playwright/test';
 
 import { InvitationsPageObject } from '../invitations/invitations.po';
+import {
+  getAccountIdByName,
+  getAccountImageStatus,
+  seedAccountImage,
+} from '../utils/account-image';
 import { HOME_LANDING_URL, TeamAccountsPageObject } from './team-accounts.po';
 
 // Helper function to set up a team with a member
@@ -254,9 +259,19 @@ test.describe('Team Account Deletion', () => {
     const params = teamAccounts.createTeamName();
 
     const { email } = await teamAccounts.setup(params);
+
+    const teamId = await getAccountIdByName(params.teamName);
+
+    await seedAccountImage(teamId);
+
+    expect(await getAccountImageStatus(teamId)).toBe(200);
+
     await teamAccounts.goToSettings();
 
     await teamAccounts.deleteAccount(email);
+
+    // the logo is removed from the public bucket
+    await expect.poll(() => getAccountImageStatus(teamId)).not.toBe(200);
     await teamAccounts.openAccountsSelector();
 
     await expect(

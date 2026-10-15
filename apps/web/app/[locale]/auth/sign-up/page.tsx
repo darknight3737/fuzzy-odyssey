@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import { getSafeRedirectPath } from '@kit/shared/utils';
 import Link from 'next/link';
 
 import { getTranslations } from 'next-intl/server';
@@ -18,22 +20,17 @@ export const generateMetadata = async () => {
   };
 };
 
-const paths = {
-  callback: pathsConfig.auth.callback,
-  appHome: pathsConfig.app.home,
-};
 
-async function SignUpPage() {
+async function SignUpPage({searchParams}: {searchParams: Promise<{next?: string; invite_token?: string}>}) {
+  const {next, invite_token} = await searchParams;
+  const returnPath = getSafeRedirectPath(next, invite_token ? `/join?invite_token=${encodeURIComponent(invite_token)}` : pathsConfig.app.home);
+  const paths = {callback: pathsConfig.auth.callback, appHome: returnPath};
   return (
     <>
-      <div className={'flex flex-col items-center gap-1'}>
-        <Heading level={4} className={'tracking-tight'}>
+      <div className={'flex flex-col items-center'}>
+        <Heading level={2} className={'tracking-tighter'}>
           <Trans i18nKey={'auth.signUpHeading'} />
         </Heading>
-
-        <p className={'text-muted-foreground text-sm'}>
-          <Trans i18nKey={'auth.signUpSubheading'} />
-        </p>
       </div>
 
       <SignUpMethodsContainer
@@ -46,7 +43,7 @@ async function SignUpPage() {
       <div className={'flex justify-center'}>
         <Button
           render={
-            <Link href={pathsConfig.auth.signIn}>
+            <Link href={`${pathsConfig.auth.signIn}?next=${encodeURIComponent(returnPath)}`}>
               <Trans i18nKey={'auth.alreadyHaveAnAccount'} />
             </Link>
           }
@@ -59,4 +56,4 @@ async function SignUpPage() {
   );
 }
 
-export default SignUpPage;
+export default function Page(props: Parameters<typeof SignUpPage>[0]) { return <Suspense fallback={<div role="status">Carregando…</div>}><SignUpPage {...props} /></Suspense>; }

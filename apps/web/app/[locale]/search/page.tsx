@@ -1,8 +1,10 @@
+import { Suspense } from 'react';
+import { connection } from 'next/server';
 import Link from 'next/link';
 
 import { z } from 'zod';
 
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
+import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { pageMetadata } from '~/lib/seo';
 
@@ -23,6 +25,7 @@ export const metadata = pageMetadata(
   false,
 );
 async function SearchPage({ searchParams }: Props) {
+  await connection();
   const params = z
     .object({
       q: z.string().max(120).catch(''),
@@ -38,7 +41,7 @@ async function SearchPage({ searchParams }: Props) {
   const page = /^[1-9][0-9]{0,4}$/.test(params.page ?? '')
     ? Number(params.page)
     : 1;
-  const client = getSupabaseServerClient();
+  const client = getDirectoryClient();
   const [
     { data: businesses, error, count },
     { data: categories },
@@ -161,4 +164,6 @@ async function SearchPage({ searchParams }: Props) {
     </main>
   );
 }
-export default SearchPage;
+export default function Page(props: Parameters<typeof SearchPage>[0]) {
+  return <Suspense fallback={<div role="status" className="container mx-auto min-h-96 px-6 py-12">Carregando…</div>}><SearchPage {...props} /></Suspense>;
+}

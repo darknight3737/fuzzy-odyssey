@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import { connection } from 'next/server';
 import Link from 'next/link';
 
 import { AdminGuard } from '@kit/admin/components/admin-guard';
@@ -6,6 +8,7 @@ import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { ReviewModeration } from './_components/review-moderation';
 
 async function ReviewsAdminPage() {
+  await connection();
   const { data, error } = await getSupabaseServerClient()
     .from('reviews')
     .select('id,business_id,reviewer_name,rating,title,content,created_at')

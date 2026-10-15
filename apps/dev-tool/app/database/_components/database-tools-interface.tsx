@@ -10,7 +10,6 @@ import {
   SearchIcon,
 } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
 import { Input } from '@kit/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@kit/ui/tabs';
 
@@ -71,7 +70,7 @@ export function DatabaseToolsInterface({
       </div>
 
       {/* Database Tools Tabs */}
-      <Tabs defaultValue="schemas" className="space-y-6">
+      <Tabs defaultValue="schemas" className="flex flex-col space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="schemas" className="flex items-center gap-2">
             <LayersIcon className="h-4 w-4" />

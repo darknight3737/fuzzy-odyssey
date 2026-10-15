@@ -1,6 +1,7 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@kit/ui/tabs';
+import { cn } from '@kit/ui/utils';
 
 import { CodeCard } from './code-card';
 import { ControlPanel } from './control-panel';
@@ -64,8 +65,8 @@ export function ComponentStoryLayout({
   codeDescription,
 }: ComponentStoryLayoutProps) {
   return (
-    <div className={className}>
-      <Tabs defaultValue={defaultTab} className="w-full">
+    <div className={cn('p-2', className)}>
+      <Tabs defaultValue={defaultTab} className="flex w-full flex-col">
         <TabsList>
           <TabsTrigger value="playground">Playground</TabsTrigger>
           {examples && <TabsTrigger value="examples">Examples</TabsTrigger>}
