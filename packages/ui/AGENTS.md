@@ -1,303 +1,41 @@
-# UI Components & Styling Instructions
+# @kit/ui — UI Components & Styling
 
-This file contains instructions for working with UI components, styling, and forms.
+## Component Library
 
-## Core UI Library
+This project uses **Base UI** (not Radix UI). Key differences:
 
-Import from `packages/ui/src/`:
+- NEVER use `asChild` prop — Base UI uses `render` prop for element composition
+- ALWAYS use the `render` prop pattern when you need to render a custom element (e.g., `<Button nativeButton={false} render={<Link />} />`)
 
-```tsx
-// Base UI components
-import { Button } from '@kit/ui/button';
-import { Card } from '@kit/ui/card';
+## Non-Negotiables
 
-// Makerkit components
-import { If } from '@kit/ui/if';
-import { ProfileAvatar } from '@kit/ui/profile-avatar';
-import { toast } from '@kit/ui/sonner';
-import { Trans } from '@kit/ui/trans';
-```
+1. ALWAYS import as `@kit/ui/<name>` — no deep paths, no matter the folder structure
+2. ALWAYS use `cn()` from `@kit/ui/utils` for class merging
+3. ALWAYS use semantic Tailwind classes (`bg-background`, `text-muted-foreground`) — NEVER hardcoded colors (`bg-white`, `text-gray-500`)
+4. ALWAYS add `data-test` attributes on interactive elements
+5. ALWAYS add `FormMessage` to every form field for error display
+6. ALWAYS consider error-handling, not just happy paths.
+7. ALWAYS Ensure UI surfaces useful and human-readable errors, not internal ones.
+8. NEVER add generics to `useForm` — let Zod resolver infer types
+9. NEVER use `watch()` — use `useWatch` hook instead when using React Hook Form
+10. NEVER use Radix UI patterns (`asChild`, `@radix-ui/*` imports) — this project uses Base UI
 
-NB: imports must follow the convention "@kit/ui/<name>", no matter the folder they're placed in
+## Skills
 
-## Styling Guidelines
+- `/react-form-builder` — Full form implementation workflow with react-hook-form + Zod
 
-- Use **Tailwind CSS v4** with semantic classes
-- Prefer semantic Tailwind classes like `bg-background`, `text-muted-foreground`
-- Use `cn()` utility from `@kit/ui/utils` for class merging
+## Key Components
 
-```tsx
-import { cn } from '@kit/ui/utils';
+| Component                 | Import                                                                                 |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| Button, Card, Input, etc. | `@kit/ui/<name>`                                                                       |
+| Form fields               | `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage` from `@kit/ui/form` |
+| Translations              | `Trans` from `@kit/ui/trans`                                                           |
+| Toast                     | `toast` from `@kit/ui/sonner`                                                          |
+| Conditional render        | `If` from `@kit/ui/if`                                                                 |
+| Class merging             | `cn` from `@kit/ui/utils`                                                              |
 
-function MyComponent({ className }) {
-  return (
-    <div className={cn('bg-background text-foreground', className)}>
-      Content
-    </div>
-  );
-}
-```
+## Zod
 
-### Conditional Rendering
-
-Use the `If` component from `packages/ui/src/makerkit/if.tsx`:
-
-```tsx
-import { If } from '@kit/ui/if';
-
-<If condition={isLoading} fallback={<Content />}>
-  <Spinner />
-</If>
-
-// With type inference
-<If condition={error}>
-  {(err) => <ErrorMessage error={err} />}
-</If>
-```
-
-### Testing Attributes
-
-Use `data-testid` for making e2e testing easier:
-
-```tsx
-<button data-testid="submit-button">Submit</button>
-<div data-testid="user-profile" data-user-id={user.id}>Profile</div>
-```
-
-## Forms with React Hook Form & Zod
-
-```typescript
-import * as z from 'zod';
-
-// 1. Schema in separate file
-export const CreateNoteSchema = z.object({
-  title: z.string().min(1),
-  content: z.string().min(1),
-});
-
-// 2. Client component with form
-'use client';
-
-const form = useForm({
-  resolver: zodResolver(CreateNoteSchema),
-});
-
-const onSubmit = (data) => {
-  startTransition(async () => {
-    await toast.promise(createNoteAction(data), {
-      loading: 'Creating...',
-      success: 'Created!',
-      error: 'Failed!',
-    }).unwrap();
-  });
-};
-```
-
-### Guidelines
-
-- Place Zod resolver in a separate file so it can be reused with Server Actions
-- Never add generics to `useForm`, use Zod resolver to infer types instead
-- Never use `watch()` instead use hook `useWatch`
-- Add `FormDescription` (optionally) and always add `FormMessage` to display errors
-
-## Internationalization
-
-Always use `Trans` component from `packages/ui/src/makerkit/trans.tsx`:
-
-```tsx
-import { Trans } from '@kit/ui/trans';
-
-<Trans
-  i18nKey="user.welcomeMessage"
-  values={{ name: user.name }}
-/>
-
-// With HTML elements
-<Trans
-  i18nKey="terms.agreement"
-  components={{
-    TermsLink: <a href="/terms" className="underline" />,
-  }}
-/>
-```
-
-## Toast Notifications
-
-Use the `toast` utility from `@kit/ui/sonner`:
-
-```tsx
-import { toast } from '@kit/ui/sonner';
-
-// Simple toast
-toast.success('Success message');
-toast.error('Error message');
-
-// Promise-based toast
-await toast.promise(asyncFunction(), {
-  loading: 'Processing...',
-  success: 'Done!',
-  error: 'Failed!',
-});
-```
-
-## Common Component Patterns
-
-### Loading States
-
-```tsx
-import { Spinner } from '@kit/ui/spinner';
-
-<If condition={isLoading} fallback={<Content />}>
-  <Spinner className="h-4 w-4" />
-</If>
-```
-
-### Error Handling
-
-```tsx
-import { TriangleAlert } from 'lucide-react';
-
-import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
-
-<If condition={Boolean(error)}>
-  <Alert variant="destructive">
-    <TriangleAlert className="h-4 w-4" />
-    <AlertTitle>Error</AlertTitle>
-    <AlertDescription>{error}</AlertDescription>
-  </Alert>
-</If>
-```
-
-### Button Patterns
-
-```tsx
-import { Button } from '@kit/ui/button';
-
-// Loading button
-<Button disabled={isPending}>
-  {isPending ? (
-    <>
-      <Spinner className="mr-2 h-4 w-4" />
-      Loading...
-    </>
-  ) : (
-    'Submit'
-  )}
-</Button>
-
-// Variants
-<Button variant="default">Default</Button>
-<Button variant="destructive">Delete</Button>
-<Button variant="outline">Cancel</Button>
-<Button variant="ghost">Ghost</Button>
-```
-
-### Card Layouts
-
-```tsx
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@kit/ui/card';
-
-<Card>
-  <CardHeader>
-    <CardTitle>Card Title</CardTitle>
-    <CardDescription>Card description</CardDescription>
-  </CardHeader>
-  <CardContent>
-    Card content goes here
-  </CardContent>
-</Card>
-```
-
-## Form Components
-
-### Input Fields
-
-```tsx
-import { Input } from '@kit/ui/input';
-import { Label } from '@kit/ui/label';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@kit/ui/form';
-
-<FormField
-  name="title"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Title</FormLabel>
-
-      <FormControl render={<Input placeholder="Enter title" {...field} />} />
-
-      <FormDescription>
-        The title of your task
-      </FormDescription>
-
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-```
-
-### Select Components
-
-```tsx
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@kit/ui/select';
-
-<FormField
-  name="category"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Category</FormLabel>
-      <Select onValueChange={field.onChange} defaultValue={field.value}>
-        <FormControl
-          render={
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-          }
-        />
-        
-        <SelectContent>
-          <SelectItem value="option1">Option 1</SelectItem>
-          <SelectItem value="option2">Option 2</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <FormDescription>
-        The category of your task
-      </FormDescription>
-
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-```
-
-## Accessibility Guidelines
-
-- Always include proper ARIA labels
-- Use semantic HTML elements
-- Ensure proper keyboard navigation
-
-```tsx
-<button
-  aria-label="Close modal"
-  aria-describedby="modal-description"
-  onClick={onClose}
->
-  <X className="h-4 w-4" />
-</button>
-```
-
-## Dark Mode Support
-
-The UI components automatically support dark mode through CSS variables. Use semantic color classes:
-
-```tsx
-// Good - semantic colors
-<div className="bg-background text-foreground border-border">
-  <p className="text-muted-foreground">Secondary text</p>
-</div>
-
-// Avoid - hardcoded colors
-<div className="bg-white text-black border-gray-200">
-  <p className="text-gray-500">Secondary text</p>
-</div>
-```
+- ALWAYS import Zod as `import * as z from 'zod'`
+- Place schemas in a separate file so they can be reused with server actions

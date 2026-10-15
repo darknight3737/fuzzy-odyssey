@@ -7,8 +7,8 @@
     "dev": "next dev --port=3010 | pino-pretty -c"
   },
   "dependencies": {
-    "@faker-js/faker": "^10.4.0",
-    "@hookform/resolvers": "^5.2.2",
+    "@faker-js/faker": "catalog:",
+    "@hookform/resolvers": "catalog:",
     "@tanstack/react-query": "catalog:",
     "lucide-react": "catalog:",
     "next": "catalog:",
@@ -16,7 +16,7 @@
     "nodemailer": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "rxjs": "^7.8.2"
+    "rxjs": "catalog:"
   },
   "devDependencies": {
     "@kit/email-templates": "workspace:*",
@@ -26,17 +26,17 @@
     "@kit/shared": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@kit/ui": "workspace:*",
-    "@tailwindcss/postcss": "^4.3.0",
+    "@tailwindcss/postcss": "catalog:",
     "@types/nodemailer": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "babel-plugin-react-compiler": "1.0.0",
-    "pino-pretty": "13.0.0",
+    "babel-plugin-react-compiler": "catalog:",
+    "pino-pretty": "catalog:",
     "react-hook-form": "catalog:",
-    "recharts": "3.7.0",
+    "recharts": "catalog:",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:",
-    "typescript": "^6.0.2",
+    "typescript": "catalog:",
     "zod": "catalog:"
   },
   "browserslist": [

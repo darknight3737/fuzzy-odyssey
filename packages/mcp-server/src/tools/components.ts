@@ -8,7 +8,7 @@ interface ComponentInfo {
   name: string;
   exportPath: string;
   filePath: string;
-  category: 'shadcn' | 'makerkit' | 'utils';
+  category: 'shadcn' | 'makerkit' | 'base-ui' | 'hooks' | 'utils';
   description: string;
 }
 
@@ -206,25 +206,32 @@ export class ComponentsTool {
 
   private static determineCategory(
     filePath: string,
-  ): 'shadcn' | 'makerkit' | 'utils' {
+  ): ComponentInfo['category'] {
     if (filePath.includes('/shadcn/')) return 'shadcn';
     if (filePath.includes('/makerkit/')) return 'makerkit';
+    if (filePath.includes('/base-ui/')) return 'base-ui';
+    if (filePath.includes('/hooks/')) return 'hooks';
     return 'utils';
   }
 
   private static async generateDescription(
     exportName: string,
     _filePath: string,
-    category: 'shadcn' | 'makerkit' | 'utils',
+    category: ComponentInfo['category'],
   ): Promise<string> {
     const componentName = exportName.replace('./', '');
 
-    if (category === 'shadcn') {
-      return this.getShadcnDescription(componentName);
-    } else if (category === 'makerkit') {
-      return this.getMakerkitDescription(componentName);
-    } else {
-      return this.getUtilsDescription(componentName);
+    switch (category) {
+      case 'shadcn':
+        return this.getShadcnDescription(componentName);
+      case 'makerkit':
+        return this.getMakerkitDescription(componentName);
+      case 'base-ui':
+        return this.getBaseUiDescription(componentName);
+      case 'hooks':
+        return this.getHooksDescription(componentName);
+      default:
+        return this.getUtilsDescription(componentName);
     }
   }
 
@@ -285,6 +292,21 @@ export class ComponentsTool {
         'Displays a form textarea or a component that looks like a textarea',
       tooltip:
         'A popup that displays information related to an element when the element receives keyboard focus or the mouse hovers over it',
+      'context-menu':
+        'A menu triggered by right-click or long-press for contextual actions',
+      empty: 'An empty state placeholder component',
+      pagination: 'Navigation component for paging through data sets',
+      'native-select': 'A native HTML select element with consistent styling',
+      toggle: 'A two-state button that can be either on or off',
+      'menu-bar':
+        'A horizontal menu bar with dropdown menus for application commands',
+      'aspect-ratio': 'Displays content within a desired ratio',
+      kbd: 'Keyboard shortcut indicator component',
+      'button-group': 'Groups related buttons together with consistent spacing',
+      'input-group': 'Groups an input with related addons or buttons',
+      item: 'A generic list item component with consistent styling',
+      field: 'A form field wrapper component with label and error handling',
+      drawer: 'A panel that slides in from the edge of the screen',
     };
 
     return (
@@ -297,8 +319,6 @@ export class ComponentsTool {
       if: 'Conditional rendering component that shows children only when condition is true',
       trans:
         'Internationalization component for translating text with interpolation support',
-      sidebar:
-        'Application sidebar component with navigation and collapsible functionality',
       'bordered-navigation-menu':
         'Navigation menu component with bordered styling',
       spinner: 'Loading spinner component with customizable size and styling',
@@ -317,14 +337,29 @@ export class ComponentsTool {
         'Component for selecting application language/locale',
       stepper: 'Step-by-step navigation component for multi-step processes',
       'card-button': 'Clickable card component that acts as a button',
-      'multi-step-form':
-        'Multi-step form component with validation and navigation',
       'app-breadcrumbs': 'Application breadcrumb navigation component',
       'empty-state':
         'Component for displaying empty states with customizable content',
       marketing: 'Collection of marketing-focused components and layouts',
       'file-uploader':
         'File upload component with drag-and-drop and preview functionality',
+      'navigation-schema': 'Schema and types for navigation configuration',
+      'navigation-utils':
+        'Utility functions for navigation path resolution and matching',
+      'mode-toggle': 'Toggle button for switching between light and dark mode',
+      'mobile-mode-toggle':
+        'Mobile-optimized toggle for switching between light and dark mode',
+      'lazy-render':
+        'Component that defers rendering until visible in the viewport',
+      'cookie-banner': 'GDPR-compliant cookie consent banner',
+      'version-updater':
+        'Component that checks for and prompts application updates',
+      'oauth-provider-logo-image':
+        'Displays the logo image for an OAuth provider',
+      'copy-to-clipboard': 'Button component for copying text to the clipboard',
+      'error-boundary': 'React error boundary component with fallback UI',
+      'sidebar-navigation':
+        'Sidebar navigation component with collapsible sections',
     };
 
     return (
@@ -333,11 +368,30 @@ export class ComponentsTool {
     );
   }
 
+  private static getBaseUiDescription(componentName: string): string {
+    const descriptions: Record<string, string> = {
+      'csp-provider': 'Content Security Policy provider for Base UI components',
+    };
+
+    return descriptions[componentName] || `Base UI component: ${componentName}`;
+  }
+
+  private static getHooksDescription(componentName: string): string {
+    const descriptions: Record<string, string> = {
+      'hooks/use-async-dialog':
+        'Hook for managing async dialog state with promise-based open/close',
+      'hooks/use-mobile': 'Hook for detecting mobile viewport breakpoints',
+      'use-supabase-upload':
+        'Hook for uploading files to Supabase Storage with progress tracking',
+    };
+
+    return descriptions[componentName] || `React hook: ${componentName}`;
+  }
+
   private static getUtilsDescription(componentName: string): string {
     const descriptions: Record<string, string> = {
       utils:
         'Utility functions for styling, class management, and common operations',
-      'navigation-schema': 'Schema and types for navigation configuration',
     };
 
     return descriptions[componentName] || `Utility module: ${componentName}`;

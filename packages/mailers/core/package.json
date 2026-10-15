@@ -41,7 +41,6 @@
     "@kit/resend": "workspace:*",
     "@kit/shared": "workspace:*",
     "@kit/tsconfig": "workspace:*",
-    "@types/node": "catalog:",
     "zod": "catalog:"
   }
 }

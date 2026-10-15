@@ -1,6 +1,6 @@
 {
   "name": "fuzzy-odyssey",
-  "version": "3.0.0-8",
+  "version": "3.0.0",
   "private": true,
   "author": {
     "name": "MakerKit",
@@ -35,13 +35,15 @@
     "env:validate": "turbo gen validate-env"
   },
   "devDependencies": {
-    "@manypkg/cli": "^0.25.1",
-    "@turbo/gen": "^2.8.11",
-    "cross-env": "^10.0.0",
+    "@manypkg/cli": "catalog:",
+    "@turbo/gen": "catalog:",
+    "@types/node": "catalog:",
+    "cross-env": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "turbo": "2.8.11",
-    "typescript": "^5.9.3"
+    "server-only": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=20.10.0"

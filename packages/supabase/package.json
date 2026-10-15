@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@kit/tsconfig": "workspace:*",
-    "@supabase/ssr": "^0.10.2",
+    "@supabase/ssr": "catalog:",
     "@supabase/supabase-js": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@types/react": "catalog:",

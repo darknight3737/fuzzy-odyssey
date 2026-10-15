@@ -30,7 +30,7 @@
     "@kit/tsconfig": "workspace:*",
     "@kit/ui": "workspace:*",
     "@types/react": "catalog:",
-    "date-fns": "^4.1.0",
+    "date-fns": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
     "zod": "catalog:"

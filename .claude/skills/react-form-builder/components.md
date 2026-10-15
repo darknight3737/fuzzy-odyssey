@@ -3,6 +3,7 @@
 ## Import Pattern
 
 ```typescript
+import { useAction } from 'next-safe-action/hooks';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@kit/ui/form';
 import { Input } from '@kit/ui/input';
 import { Button } from '@kit/ui/button';
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@kit/ui/textarea';
 import { Checkbox } from '@kit/ui/checkbox';
 import { Switch } from '@kit/ui/switch';
-import { Alert, AlertDescription } from '@kit/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 import { toast } from '@kit/ui/sonner';
@@ -21,7 +22,6 @@ import { toast } from '@kit/ui/sonner';
 ```tsx
 <FormField
   name="fieldName"
-  control={form.control}
   render={({ field }) => (
     <FormItem>
       <FormLabel>
@@ -48,7 +48,6 @@ import { toast } from '@kit/ui/sonner';
 ```tsx
 <FormField
   name="category"
-  control={form.control}
   render={({ field }) => (
     <FormItem>
       <FormLabel>Category</FormLabel>
@@ -74,7 +73,6 @@ import { toast } from '@kit/ui/sonner';
 ```tsx
 <FormField
   name="acceptTerms"
-  control={form.control}
   render={({ field }) => (
     <FormItem className="flex items-center space-x-2">
       <FormControl>
@@ -97,7 +95,6 @@ import { toast } from '@kit/ui/sonner';
 ```tsx
 <FormField
   name="notifications"
-  control={form.control}
   render={({ field }) => (
     <FormItem className="flex items-center justify-between">
       <div>
@@ -121,7 +118,6 @@ import { toast } from '@kit/ui/sonner';
 ```tsx
 <FormField
   name="description"
-  control={form.control}
   render={({ field }) => (
     <FormItem>
       <FormLabel>Description</FormLabel>
@@ -142,13 +138,14 @@ import { toast } from '@kit/ui/sonner';
 ## Error Alert
 
 ```tsx
-<If condition={error}>
-  <Alert variant="destructive">
-    <AlertDescription>
-      <Trans i18nKey="common.errors.generic" />
-    </AlertDescription>
-  </Alert>
-</If>
+<Alert variant="destructive">
+  <AlertTitle>
+    <Trans i18nKey="common.errors.title" />
+  </AlertTitle>
+  <AlertDescription>
+    <Trans i18nKey="common.errors.generic" />
+  </AlertDescription>
+</Alert>
 ```
 
 ## Submit Button
@@ -156,14 +153,10 @@ import { toast } from '@kit/ui/sonner';
 ```tsx
 <Button
   type="submit"
-  disabled={pending}
+  disabled={isPending}
   data-test="submit-button"
 >
-  {pending ? (
-    <Trans i18nKey="common.submitting" />
-  ) : (
-    <Trans i18nKey="common.submit" />
-  )}
+  <Trans i18nKey={isPending ? 'common.submitting' : 'common.submit'} />
 </Button>
 ```
 
@@ -172,65 +165,79 @@ import { toast } from '@kit/ui/sonner';
 ```tsx
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { useTransition, useState } from 'react';
-import { isRedirectError } from 'next/dist/client/components/redirect-error';
-import type { z } from 'zod';
+import { useState } from 'react';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useAction } from 'next-safe-action/hooks';
+import { useForm } from 'react-hook-form';
+
+import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
+import { Button } from '@kit/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@kit/ui/form';
 import { Input } from '@kit/ui/input';
-import { Button } from '@kit/ui/button';
-import { Alert, AlertDescription } from '@kit/ui/alert';
-import { If } from '@kit/ui/if';
-import { toast } from '@kit/ui/sonner';
 import { Trans } from '@kit/ui/trans';
 
 import { MySchema } from '../_lib/schemas/my.schema';
 import { myAction } from '../_lib/server/server-actions';
 
 export function MyForm() {
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState(false);
+  const [state, setState] = useState({
+    success: false,
+    error: false,
+  });
+
+  const { execute, isPending } = useAction(myAction, {
+    onSuccess: () => {
+      setState({ success: true, error: false });
+    },
+    onError: () => {
+      setState({ error: true, success: false });
+    },
+  });
 
   const form = useForm({
     resolver: zodResolver(MySchema),
     defaultValues: { name: '' },
-    mode: 'onChange',
   });
 
-  const onSubmit = (data: z.output<typeof MySchema>) => {
-    setError(false);
+  if (state.success) {
+    return (
+      <Alert variant="success">
+        <AlertTitle>
+          <Trans i18nKey="common.success" />
+        </AlertTitle>
+      </Alert>
+    );
+  }
 
-    startTransition(async () => {
-      try {
-        await myAction(data);
-        toast.success('Success!');
-      } catch (e) {
-        if (!isRedirectError(e)) {
-          setError(true);
-        }
-      }
-    });
-  };
+  if (state.error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>
+          <Trans i18nKey="common.errors.title" />
+        </AlertTitle>
+        <AlertDescription>
+          <Trans i18nKey="common.errors.generic" />
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <Form {...form}>
-        <If condition={error}>
-          <Alert variant="destructive">
-            <AlertDescription>
-              <Trans i18nKey="common.errors.generic" />
-            </AlertDescription>
-          </Alert>
-        </If>
-
+    <Form {...form}>
+      <form
+        className="space-y-4"
+        onSubmit={form.handleSubmit((data) => {
+          execute(data);
+        })}
+      >
         <FormField
           name="name"
-          control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>
+                <Trans i18nKey="namespace:name" />
+              </FormLabel>
               <FormControl>
                 <Input data-test="name-input" {...field} />
               </FormControl>
@@ -239,11 +246,11 @@ export function MyForm() {
           )}
         />
 
-        <Button type="submit" disabled={pending} data-test="submit-button">
-          {pending ? 'Saving...' : 'Save'}
+        <Button type="submit" disabled={isPending} data-test="submit-button">
+          <Trans i18nKey={isPending ? 'common.submitting' : 'common.submit'} />
         </Button>
-      </Form>
-    </form>
+      </form>
+    </Form>
   );
 }
 ```

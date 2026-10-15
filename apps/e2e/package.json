@@ -11,10 +11,10 @@
     "test:ui": "ENABLE_BILLING_TESTS=true playwright test --ui"
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1",
+    "@playwright/test": "catalog:",
     "@supabase/supabase-js": "catalog:",
-    "dotenv": "17.4.2",
-    "node-html-parser": "^7.1.0",
-    "totp-generator": "^2.0.1"
+    "dotenv": "catalog:",
+    "node-html-parser": "catalog:",
+    "totp-generator": "catalog:"
   }
 }

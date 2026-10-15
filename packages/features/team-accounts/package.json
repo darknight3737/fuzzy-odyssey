@@ -15,18 +15,17 @@
     "./hooks/*": "./src/hooks/*.ts",
     "./webhooks": "./src/server/services/webhooks/index.ts",
     "./policies": "./src/server/policies/index.ts",
-    "./services/account-invitations.service": "./src/server/services/account-invitations.service.ts",
-    "./invitation-signature": "./src/server/services/invitation-signature.ts"
+    "./services/account-invitations.service": "./src/server/services/account-invitations.service.ts"
   },
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "nanoid": "^5.1.7"
+    "nanoid": "catalog:"
   },
   "devDependencies": {
-    "@hookform/resolvers": "^5.2.2",
+    "@hookform/resolvers": "catalog:",
     "@kit/accounts": "workspace:*",
     "@kit/billing-gateway": "workspace:*",
     "@kit/email-templates": "workspace:*",
@@ -41,11 +40,11 @@
     "@kit/ui": "workspace:*",
     "@supabase/supabase-js": "catalog:",
     "@tanstack/react-query": "catalog:",
-    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-table": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "class-variance-authority": "^0.7.1",
-    "date-fns": "^4.1.0",
+    "class-variance-authority": "catalog:",
+    "date-fns": "catalog:",
     "lucide-react": "catalog:",
     "next": "catalog:",
     "next-intl": "catalog:",
