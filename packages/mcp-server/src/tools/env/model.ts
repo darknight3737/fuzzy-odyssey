@@ -212,6 +212,21 @@ export const envVariables: EnvVariableModel[] = [
     },
   },
   {
+    name: 'NEXT_PUBLIC_CAPTCHA_WIDGET_SIZE',
+    displayName: 'Captcha Widget Size',
+    description:
+      'Turnstile widget size. Use "invisible" (default) for Non-interactive/Invisible site keys, or "normal"/"compact" for Managed site keys.',
+    category: 'Security',
+    type: 'enum',
+    values: ['invisible', 'normal', 'compact'],
+    validate: ({ value }) => {
+      return z
+        .enum(['invisible', 'normal', 'compact'])
+        .optional()
+        .safeParse(value);
+    },
+  },
+  {
     name: 'CAPTCHA_SECRET_TOKEN',
     displayName: 'Captcha Secret Token',
     description:
@@ -416,7 +431,7 @@ export const envVariables: EnvVariableModel[] = [
     },
   },
   {
-    name: 'NEXT_PUBLIC_ENABLE_TEAMS_ACCOUNTS_ONLY',
+    name: 'NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_ONLY',
     displayName: 'Enable Teams Accounts Only',
     description:
       'When enabled, disables personal accounts and only allows team accounts.',
@@ -756,21 +771,6 @@ export const envVariables: EnvVariableModel[] = [
           1,
           `The STRIPE_WEBHOOK_SECRET variable must be at least 1 character`,
         )
-        .optional()
-        .safeParse(value);
-    },
-  },
-  {
-    name: 'STRIPE_UI_MODE',
-    displayName: 'Stripe Checkout UI Mode',
-    description:
-      'Controls whether Stripe Checkout uses an embedded page or a hosted page. Defaults to embedded_page.',
-    category: 'Billing',
-    type: 'enum',
-    values: ['embedded_page', 'hosted_page'],
-    validate: ({ value }) => {
-      return z
-        .enum(['embedded_page', 'hosted_page'])
         .optional()
         .safeParse(value);
     },
@@ -1411,6 +1411,21 @@ export const envVariables: EnvVariableModel[] = [
     type: 'boolean',
     validate: ({ value }) => {
       return z.coerce.boolean().optional().safeParse(value);
+    },
+  },
+  {
+    name: 'STRIPE_UI_MODE',
+    displayName: 'Stripe Checkout UI Mode',
+    description:
+      'Controls whether Stripe Checkout uses an embedded page or a hosted page. Defaults to embedded_page.',
+    category: 'Billing',
+    type: 'enum',
+    values: ['embedded_page', 'hosted_page'],
+    validate: ({ value }) => {
+      return z
+        .enum(['embedded_page', 'hosted_page'])
+        .optional()
+        .safeParse(value);
     },
   },
   {

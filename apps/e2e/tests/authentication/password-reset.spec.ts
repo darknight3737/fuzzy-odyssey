@@ -35,6 +35,9 @@ test.describe('Password Reset Flow', () => {
       ]);
     }).toPass();
 
+    // Same guard as the confirmation template — see auth.spec.ts.
+    await auth.expectAuthOtpCode(email, 'Reset your password');
+
     await auth.visitConfirmEmailLink(email, {
       deleteAfter: true,
     });

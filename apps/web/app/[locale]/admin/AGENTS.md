@@ -30,11 +30,15 @@ export default AdminGuard(AdminPage);
 
 ```typescript
 import { isSuperAdmin } from '@kit/admin';
+import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 
 async function adminOperation() {
-  // CRITICAL: Validate first - admin client bypasses RLS
-  if (!(await isSuperAdmin(currentUser))) {
+  // CRITICAL: Validate first - admin client bypasses RLS.
+  // isSuperAdmin checks the caller's session, so pass the regular server client.
+  const client = getSupabaseServerClient();
+
+  if (!(await isSuperAdmin(client))) {
     throw new Error('Unauthorized');
   }
 

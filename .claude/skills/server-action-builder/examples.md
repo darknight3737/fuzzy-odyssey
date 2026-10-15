@@ -9,51 +9,51 @@ Location: `apps/web/app/home/[account]/billing/_lib/server/server-actions.ts`
 ```typescript
 'use server';
 
-import { enhanceAction } from '@kit/next/actions';
-import { getLogger } from '@kit/shared/logger';
-import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
-import { UpdateBillingSchema } from '../schemas/billing.schema';
-import { createBillingService } from './billing.service';
+import { authActionClient } from '@kit/next/safe-action';
+import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
-export const updateBillingAction = enhanceAction(
-  async function (data, user) {
-    const logger = await getLogger();
-    const ctx = { name: 'update-billing', userId: user.id, accountId: data.accountId };
+import { TeamBillingPortalSchema, TeamCheckoutSchema } from '../schema/team-billing.schema';
+import { createTeamBillingService } from './team-billing.service';
 
-    logger.info(ctx, 'Updating billing settings');
+export const createTeamAccountCheckoutSession = authActionClient
+  .inputSchema(TeamCheckoutSchema)
+  .action(async ({ parsedInput: data }) => {
+    const client = getSupabaseServerClient();
+    const service = createTeamBillingService(client);
 
-    const service = createBillingService();
-    await service.updateBilling(data);
+    return service.createCheckout(data);
+  });
 
-    logger.info(ctx, 'Billing settings updated');
+export const createBillingPortalSession = authActionClient
+  .inputSchema(TeamBillingPortalSchema)
+  .action(async ({ parsedInput: params }) => {
+    const client = getSupabaseServerClient();
+    const service = createTeamBillingService(client);
 
-    revalidatePath(`/home/${data.accountSlug}/billing`);
+    const url = await service.createBillingPortalSession(params);
 
-    return { success: true };
-  },
-  {
-    auth: true,
-    schema: UpdateBillingSchema,
-  },
-);
+    redirect(url);
+  });
 ```
 
 ## Personal Settings Action
 
-Location: `apps/web/app/home/(user)/settings/_lib/server/server-actions.ts`
-
 ```typescript
 'use server';
 
-import { enhanceAction } from '@kit/next/actions';
-import { getLogger } from '@kit/shared/logger';
 import { revalidatePath } from 'next/cache';
+
+import { authActionClient } from '@kit/next/safe-action';
+import { getLogger } from '@kit/shared/logger';
+import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import { UpdateProfileSchema } from '../schemas/profile.schema';
 
-export const updateProfileAction = enhanceAction(
-  async function (data, user) {
+export const updateProfileAction = authActionClient
+  .inputSchema(UpdateProfileSchema)
+  .action(async ({ parsedInput: data, ctx: { user } }) => {
     const logger = await getLogger();
     const ctx = { name: 'update-profile', userId: user.id };
 
@@ -76,12 +76,7 @@ export const updateProfileAction = enhanceAction(
     revalidatePath('/home/settings');
 
     return { success: true };
-  },
-  {
-    auth: true,
-    schema: UpdateProfileSchema,
-  },
-);
+  });
 ```
 
 ## Action with Redirect
@@ -89,40 +84,41 @@ export const updateProfileAction = enhanceAction(
 ```typescript
 'use server';
 
-import { enhanceAction } from '@kit/next/actions';
 import { redirect } from 'next/navigation';
+
+import { authActionClient } from '@kit/next/safe-action';
+import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import { CreateProjectSchema } from '../schemas/project.schema';
 import { createProjectService } from './project.service';
 
-export const createProjectAction = enhanceAction(
-  async function (data, user) {
-    const service = createProjectService();
+export const createProjectAction = authActionClient
+  .inputSchema(CreateProjectSchema)
+  .action(async ({ parsedInput: data }) => {
+    const client = getSupabaseServerClient();
+    const service = createProjectService(client);
     const project = await service.create(data);
 
-    // Redirect after creation
     redirect(`/home/${data.accountSlug}/projects/${project.id}`);
-  },
-  {
-    auth: true,
-    schema: CreateProjectSchema,
-  },
-);
+  });
 ```
 
-## Delete Action with Confirmation
+## Delete Action
 
 ```typescript
 'use server';
 
-import { enhanceAction } from '@kit/next/actions';
-import { getLogger } from '@kit/shared/logger';
 import { revalidatePath } from 'next/cache';
+
+import { authActionClient } from '@kit/next/safe-action';
+import { getLogger } from '@kit/shared/logger';
+import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import { DeleteItemSchema } from '../schemas/item.schema';
 
-export const deleteItemAction = enhanceAction(
-  async function (data, user) {
+export const deleteItemAction = authActionClient
+  .inputSchema(DeleteItemSchema)
+  .action(async ({ parsedInput: data, ctx: { user } }) => {
     const logger = await getLogger();
     const ctx = { name: 'delete-item', userId: user.id, itemId: data.itemId };
 
@@ -146,12 +142,7 @@ export const deleteItemAction = enhanceAction(
     revalidatePath(`/home/${data.accountSlug}/items`);
 
     return { success: true };
-  },
-  {
-    auth: true,
-    schema: DeleteItemSchema,
-  },
-);
+  });
 ```
 
 ## Error Handling with isRedirectError
@@ -159,36 +150,34 @@ export const deleteItemAction = enhanceAction(
 ```typescript
 'use server';
 
-import { enhanceAction } from '@kit/next/actions';
 import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { redirect } from 'next/navigation';
 
-export const submitFormAction = enhanceAction(
-  async function (data, user) {
+import { authActionClient } from '@kit/next/safe-action';
+import { getLogger } from '@kit/shared/logger';
+
+import { FormSchema } from '../schemas/form.schema';
+
+export const submitFormAction = authActionClient
+  .inputSchema(FormSchema)
+  .action(async ({ parsedInput: data, ctx: { user } }) => {
     const logger = await getLogger();
     const ctx = { name: 'submit-form', userId: user.id };
 
     try {
       logger.info(ctx, 'Submitting form');
 
-      // Process form
       await processForm(data);
 
       logger.info(ctx, 'Form submitted, redirecting');
 
       redirect('/success');
     } catch (error) {
-      // Don't treat redirects as errors
       if (!isRedirectError(error)) {
         logger.error({ ...ctx, error }, 'Form submission failed');
         throw error;
       }
       throw error; // Re-throw redirect
     }
-  },
-  {
-    auth: true,
-    schema: FormSchema,
-  },
-);
+  });
 ```

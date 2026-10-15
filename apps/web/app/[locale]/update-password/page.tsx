@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 
 import { getTranslations } from 'next-intl/server';
 
+import { AuthLayoutShell } from '@kit/auth/auth-layout';
 import { UpdatePasswordForm } from '@kit/auth/password-reset';
-import { AuthLayoutShell } from '@kit/auth/shared';
 import { getSafeRedirectPath } from '@kit/shared/utils';
 import { requireUser } from '@kit/supabase/require-user';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
@@ -32,6 +32,8 @@ async function UpdatePasswordPage(props: UpdatePasswordPageProps) {
 
   const result = await requireUser(client, {
     next: pathsConfig.auth.passwordUpdate,
+    signInPath: pathsConfig.auth.signIn,
+    mfaVerifyPath: pathsConfig.auth.verifyMfa,
   });
 
   if (result.error) {

@@ -6,7 +6,12 @@ import { isBrowser } from '@kit/shared/utils';
 const LAST_AUTH_METHOD_KEY = 'auth_last_method';
 
 // Types of authentication methods
-export type AuthMethod = 'password' | 'otp' | 'magic_link' | 'oauth';
+export type AuthMethod =
+  | 'password'
+  | 'otp'
+  | 'magic_link'
+  | 'oauth'
+  | 'passkey';
 
 export interface LastAuthMethod {
   method: AuthMethod;

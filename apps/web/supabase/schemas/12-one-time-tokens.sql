@@ -53,6 +53,11 @@ REVOKE ALL ON public.nonces FROM anon, authenticated, service_role;
 
 -- RLS policies
 -- Users can view their own nonces for verification
+-- Defense-in-depth RLS policies. NOTE: the nonces table is intentionally
+-- RPC-only — the authenticated role is never granted base table privileges, so
+-- these policies only take effect if such a grant is ever added. All token
+-- access happens through the SECURITY DEFINER verify_nonce / get_nonce_status
+-- functions; the table is never exposed to the data API directly.
 CREATE POLICY "Users can read their own nonces"
   ON public.nonces
   FOR SELECT
@@ -407,6 +412,11 @@ BEGIN
   );
 END;
 $$;
+
+-- get_nonce_status is an administrative function called by the backend using
+-- the service role (see @kit/otp getNonceStatus via the admin client). It must
+-- be executable by service_role like the other administrative nonce functions.
+grant execute on function public.get_nonce_status to service_role;
 
 -- Comments for documentation
 COMMENT ON TABLE public.nonces IS 'Table for storing one-time tokens with enhanced security and audit features';

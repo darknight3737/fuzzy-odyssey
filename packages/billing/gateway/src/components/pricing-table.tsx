@@ -159,7 +159,7 @@ function PricingItem(
   const lineItem = props.primaryLineItem!;
   const isCustom = props.plan.custom ?? false;
 
-  const i18nKey = `billing.units.${lineItem.unit}` as never;
+  const i18nKey = lineItem?.unit ? `billing.units.${lineItem.unit}` : '';
 
   const unitLabel = lineItem?.unit
     ? t.has(i18nKey)
@@ -465,7 +465,7 @@ function PlanIntervalSwitcher(
           <Button
             size={'sm'}
             key={plan}
-            variant={selected ? 'secondary' : 'custom'}
+            variant={selected ? 'secondary' : null}
             className={className}
             onClick={() => props.setInterval(plan)}
           >
@@ -509,7 +509,7 @@ function DefaultCheckoutButton(
     highlighted?: boolean;
   }>,
 ) {
-  const t = useTranslations('billing');
+  const t = useTranslations();
 
   const signUpPath = props.paths.signUp;
 

@@ -3,6 +3,12 @@ import { Page, expect } from '@playwright/test';
 import { AuthPageObject } from '../authentication/auth.po';
 import { OtpPo } from '../utils/otp.po';
 
+/**
+ * Where a user without a personal dashboard lands: `/home` normally, and the
+ * create-team onboarding when `NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_ONLY` is on.
+ */
+export const HOME_LANDING_URL = /\/home(\/create-team)?$/;
+
 export class TeamAccountsPageObject {
   private readonly page: Page;
   public auth: AuthPageObject;
@@ -222,7 +228,9 @@ export class TeamAccountsPageObject {
         '[data-test="delete-team-form-confirm-button"]',
       );
 
-      const response = this.page.waitForURL('**/home');
+      // With TEAM_ACCOUNTS_ONLY a user left without any team is sent to the
+      // create-team onboarding instead of /home.
+      const response = this.page.waitForURL(HOME_LANDING_URL);
 
       return Promise.all([click, response]);
     }).toPass();
@@ -257,19 +265,28 @@ export class TeamAccountsPageObject {
   }
 
   async transferOwnership(memberEmail: string, ownerEmail: string) {
+    // Open the member's actions dropdown and start the transfer flow. These are
+    // one-shot steps that open a dialog and consume a single-use OTP, so they
+    // must run exactly once — retrying them (as a wrapping toPass would) leaves
+    // the dialog mid-flow and re-sends the OTP, which is a flakiness source.
+    const memberRow = this.page.getByRole('row', { name: memberEmail });
+    await memberRow.getByRole('button').click();
+
+    // Click the transfer ownership option in the dropdown menu
+    await this.page.getByText('Transfer Ownership').click();
+
+    // Complete OTP verification (has its own retry for reading the code)
+    await this.otp.completeOtpVerification(ownerEmail);
+
+    // Confirm the transfer and wait for the mutation to complete. Only this
+    // final, idempotent step is retried.
     await expect(async () => {
-      // Find the member row and click the actions button
-      const memberRow = this.page.getByRole('row', { name: memberEmail });
-      await memberRow.getByRole('button').click();
-
-      // Click the transfer ownership option in the dropdown menu
-      await this.page.getByText('Transfer Ownership').click();
-
-      // Complete OTP verification
-      await this.otp.completeOtpVerification(ownerEmail);
-
-      // Wait for the transfer to complete and page to reload
-      const response = this.page.waitForResponse('**/members');
+      const response = this.page.waitForResponse((response) => {
+        return (
+          response.url().includes('members') &&
+          response.request().method() === 'POST'
+        );
+      });
 
       return Promise.all([
         this.page.click('[data-test="confirm-transfer-ownership-button"]'),

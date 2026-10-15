@@ -41,6 +41,14 @@ function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+// Anything that shells out costs seconds on a cold Windows CI runner — well
+// past vitest's 5s default.
+const SHELL_TIMEOUT = 30_000;
+
+// Process lookups go through PowerShell on Windows, which has been measured at
+// ~28s to start on a contended runner. Budget for that plus the query.
+const PROCESS_LOOKUP_TIMEOUT = 120_000;
+
 // ---------------------------------------------------------------------------
 // pnpm — the command that triggered this whole cross-platform fix.
 // The MCP tools call pnpm for migrations, seeding, checks, and dev server.
@@ -67,6 +75,19 @@ describe('pnpm commands', () => {
     await expect(
       execFileAsync('pnpm', ['run', '__nonexistent_script_xyz__']),
     ).rejects.toThrow();
+  });
+
+  it('pnpm exec passes quoted args through untouched', async () => {
+    // On Windows pnpm is a `.cmd` shim, so this is the one path that goes
+    // through cmd.exe — arguments must survive its double parsing intact.
+    const result = await execFileAsync('pnpm', [
+      'exec',
+      'node',
+      '-e',
+      'console.log("shim (ok) & done")',
+    ]);
+
+    expect(result.stdout).toContain('shim (ok) & done');
   });
 
   it('pnpm ls --json (read-only, similar to deps-advisor outdated)', async () => {
@@ -123,6 +144,18 @@ describe('node commands', () => {
 
     expect(result.stdout.trim()).toBe('hello');
   });
+
+  it('node -e preserves shell meta characters in arguments', async () => {
+    const value = 'a&b|c^d%e (f)';
+
+    const result = await execFileAsync('node', [
+      '-e',
+      'console.log(process.argv[1])',
+      value,
+    ]);
+
+    expect(result.stdout.trim()).toBe(value);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -139,6 +172,7 @@ describe('docker commands', async () => {
       const result = await execFileAsync('docker', ['--version']);
       expect(result.stdout).toContain('Docker');
     },
+    SHELL_TIMEOUT,
   );
 
   it.skipIf(!hasDocker)(
@@ -147,6 +181,47 @@ describe('docker commands', async () => {
       const result = await execFileAsync('docker', ['compose', 'version']);
       expect(result.stdout).toContain('Docker Compose');
     },
+    SHELL_TIMEOUT,
+  );
+});
+
+// ---------------------------------------------------------------------------
+// PowerShell — findProcessesByName runs through it on Windows.
+// These two separate invocation cost from query cost, which is what pinned the
+// blame when process lookups started exhausting their timeout: a contended
+// runner measured 28s for the trivial command and 23s for the CIM query, so
+// startup dominates and the WMI enumeration is nearly free by comparison.
+// ---------------------------------------------------------------------------
+
+describe('powershell', () => {
+  it.skipIf(!IS_WINDOWS)(
+    'runs a trivial command',
+    async () => {
+      const result = await execFileAsync('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        'Write-Output ok',
+      ]);
+
+      expect(result.stdout.trim()).toBe('ok');
+    },
+    PROCESS_LOOKUP_TIMEOUT,
+  );
+
+  it.skipIf(!IS_WINDOWS)(
+    'enumerates processes via Get-CimInstance',
+    async () => {
+      const result = await execFileAsync('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        '(Get-CimInstance Win32_Process).Count',
+      ]);
+
+      expect(Number(result.stdout.trim())).toBeGreaterThan(0);
+    },
+    PROCESS_LOOKUP_TIMEOUT,
   );
 });
 
@@ -191,34 +266,38 @@ describe('port operations', () => {
 // ---------------------------------------------------------------------------
 
 describe('process lifecycle', () => {
-  it('spawn a long-running node process, find it, then kill it', async () => {
-    // Spawn a detached node process (mirrors how pnpm exec next dev works)
-    const marker = `__test_marker_${Date.now()}__`;
+  it(
+    'spawn a long-running node process, find it, then kill it',
+    async () => {
+      // Spawn a detached node process (mirrors how pnpm exec next dev works)
+      const marker = `__test_marker_${Date.now()}__`;
 
-    const child = spawnDetached('node', [
-      '-e',
-      `process.title = "${marker}"; setTimeout(() => {}, 60000)`,
-    ]);
+      const child = spawnDetached('node', [
+        '-e',
+        `process.title = "${marker}"; setTimeout(() => {}, 60000)`,
+      ]);
 
-    expect(child.pid).toBeGreaterThan(0);
-    pidsToCleanup.push(child.pid!);
+      expect(child.pid).toBeGreaterThan(0);
+      pidsToCleanup.push(child.pid!);
 
-    await sleep(500);
+      await sleep(500);
 
-    // Verify it's alive (process.kill(pid, 0) is cross-platform)
-    expect(() => process.kill(child.pid!, 0)).not.toThrow();
+      // Verify it's alive (process.kill(pid, 0) is cross-platform)
+      expect(() => process.kill(child.pid!, 0)).not.toThrow();
 
-    // findProcessesByName should find it (mirrors "stripe.*listen" pattern)
-    const found = await findProcessesByName(marker, process.cwd());
-    expect(found.length).toBeGreaterThan(0);
+      // findProcessesByName should find it (mirrors "stripe.*listen" pattern)
+      const found = await findProcessesByName(marker, process.cwd());
+      expect(found.length).toBeGreaterThan(0);
 
-    // Kill it (mirrors kit_dev_stop stopping services)
-    await killProcess(child.pid!);
-    await sleep(300);
+      // Kill it (mirrors kit_dev_stop stopping services)
+      await killProcess(child.pid!);
+      await sleep(300);
 
-    // Verify it's dead
-    expect(() => process.kill(child.pid!, 0)).toThrow();
-  });
+      // Verify it's dead
+      expect(() => process.kill(child.pid!, 0)).toThrow();
+    },
+    PROCESS_LOOKUP_TIMEOUT,
+  );
 
   it('spawn a pnpm process via spawnDetached', async () => {
     // This is exactly how kit_dev_start spawns the Next.js dev server:
@@ -243,14 +322,18 @@ describe('process lifecycle', () => {
     await sleep(300);
   });
 
-  it('findProcessesByName returns empty for nonexistent pattern', async () => {
-    const procs = await findProcessesByName(
-      'zzz_no_such_process_12345',
-      process.cwd(),
-    );
+  it(
+    'findProcessesByName returns empty for nonexistent pattern',
+    async () => {
+      const procs = await findProcessesByName(
+        'zzz_no_such_process_12345',
+        process.cwd(),
+      );
 
-    expect(procs).toEqual([]);
-  });
+      expect(procs).toEqual([]);
+    },
+    PROCESS_LOOKUP_TIMEOUT,
+  );
 
   it('killProcess does not throw for already-dead PID', async () => {
     const child = spawnDetached('node', ['-e', 'process.exit(0)']);

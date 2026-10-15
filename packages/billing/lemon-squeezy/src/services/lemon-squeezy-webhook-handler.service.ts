@@ -14,7 +14,7 @@ import { SubscriptionInvoiceWebhook } from '../types/subscription-invoice-webhoo
 import { SubscriptionWebhook } from '../types/subscription-webhook';
 import { initializeLemonSqueezyClient } from './lemon-squeezy-sdk';
 import { createLemonSqueezySubscriptionPayloadBuilderService } from './lemon-squeezy-subscription-payload-builder.service';
-import { getSubscriptionIntervalType } from './subscription-interval';
+import { resolveSubscriptionInterval } from './resolve-subscription-interval';
 import { createHmac } from './verify-hmac';
 
 import { timingSafeEqual as cryptoTimingSafeEqual } from 'node:crypto';
@@ -350,7 +350,10 @@ export class LemonSqueezyWebhookHandlerService implements BillingWebhookHandlerS
       },
     ];
 
-    const { interval, intervalCount } = getSubscriptionIntervalType(renewsAt);
+    const { interval, intervalCount } = await resolveSubscriptionInterval({
+      variantId,
+      renewsAt,
+    });
 
     const payloadBuilderService =
       createLemonSqueezySubscriptionPayloadBuilderService();
@@ -435,10 +438,14 @@ export class LemonSqueezyWebhookHandlerService implements BillingWebhookHandlerS
     const renewsAt = subscription.renews_at;
     const trialEndsAt = subscription.trial_ends_at;
 
-    // `billing_anchor` is a day-of-month (1-31), not an interval count. Derive
-    // the interval from the renewal date, consistent with the
-    // subscription-created path, instead of mislabelling the stored interval.
-    const { interval, intervalCount } = getSubscriptionIntervalType(renewsAt);
+    // `billing_anchor` is a day-of-month (1-31), not an interval count. Resolve
+    // the interval from the variant's configured billing interval, consistent
+    // with the subscription-created path, instead of mislabelling the stored
+    // interval.
+    const { interval, intervalCount } = await resolveSubscriptionInterval({
+      variantId,
+      renewsAt,
+    });
 
     const payloadBuilderService =
       createLemonSqueezySubscriptionPayloadBuilderService();

@@ -1,5 +1,7 @@
 'use client';
 
+import type React from 'react';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -36,6 +38,7 @@ interface PasswordSignUpFormProps {
 
   loading: boolean;
   captchaLoading: boolean;
+  captchaField?: React.ReactNode;
 }
 
 export function PasswordSignUpForm({
@@ -44,6 +47,7 @@ export function PasswordSignUpForm({
   onSubmit,
   loading,
   captchaLoading,
+  captchaField,
 }: PasswordSignUpFormProps) {
   const form = useForm({
     resolver: zodResolver(PasswordSignUpSchema),
@@ -60,7 +64,7 @@ export function PasswordSignUpForm({
         className={'flex w-full flex-col gap-y-4'}
         onSubmit={form.handleSubmit(onSubmit)}
       >
-        <div className={'flex flex-col space-y-2.5'}>
+        <div className={'flex flex-col gap-y-1.5'}>
           <FormField
             control={form.control}
             name={'email'}
@@ -115,6 +119,8 @@ export function PasswordSignUpForm({
           <TermsAndConditionsFormField />
         </If>
 
+        {captchaField}
+
         <Button
           data-test={'auth-submit-button'}
           className={'w-full'}
@@ -143,7 +149,7 @@ export function PasswordSignUpForm({
 
               <ArrowRight
                 className={
-                  'zoom-in animate-in slide-in-from-left-2 fill-mode-both h-4 delay-500 duration-500'
+                  'zoom-in animate-in slide-in-from-left-2 fill-mode-both h-4 gap-2 delay-500 duration-500'
                 }
               />
             </span>

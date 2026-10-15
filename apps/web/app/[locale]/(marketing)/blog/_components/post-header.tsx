@@ -2,11 +2,16 @@ import { Cms } from '@kit/cms';
 import { If } from '@kit/ui/if';
 import { cn } from '@kit/ui/utils';
 
+import { sanitizeCmsExcerptHtml } from '~/lib/sanitize-cms-html';
+
 import { CoverImage } from './cover-image';
 import { DateFormatter } from './date-formatter';
 
-export function PostHeader({ post }: { post: Cms.ContentItem }) {
+export async function PostHeader({ post }: { post: Cms.ContentItem }) {
   const { title, publishedAt, description, image } = post;
+  const sanitizedDescription = description
+    ? await sanitizeCmsExcerptHtml(description)
+    : null;
 
   return (
     <div className={'flex flex-1 flex-col'}>
@@ -28,7 +33,7 @@ export function PostHeader({ post }: { post: Cms.ContentItem }) {
 
           <h2
             className={'text-muted-foreground text-base'}
-            dangerouslySetInnerHTML={{ __html: description ?? '' }}
+            dangerouslySetInnerHTML={{ __html: sanitizedDescription ?? '' }}
           ></h2>
         </div>
       </div>

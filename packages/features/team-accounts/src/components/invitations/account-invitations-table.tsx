@@ -4,10 +4,11 @@ import { useMemo, useState } from 'react';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Ellipsis } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 
 import { Database } from '@kit/supabase/database';
 import { Badge } from '@kit/ui/badge';
+import { badgeExtras } from '@kit/ui/badge-extras';
 import { Button } from '@kit/ui/button';
 import { DataTable } from '@kit/ui/data-table';
 import {
@@ -83,6 +84,7 @@ function useGetColumns(permissions: {
   currentUserRoleHierarchy: number;
 }): ColumnDef<Invitations[0]>[] {
   const t = useTranslations('teams');
+  const format = useFormatter();
 
   return useMemo(
     () => [
@@ -118,13 +120,17 @@ function useGetColumns(permissions: {
       {
         header: t('invitedAtLabel'),
         cell: ({ row }) => {
-          return new Date(row.original.created_at).toLocaleDateString();
+          return format.dateTime(new Date(row.original.created_at), {
+            dateStyle: 'medium',
+          });
         },
       },
       {
         header: t('expiresAtLabel'),
         cell: ({ row }) => {
-          return new Date(row.original.expires_at).toLocaleDateString();
+          return format.dateTime(new Date(row.original.expires_at), {
+            dateStyle: 'medium',
+          });
         },
       },
       {
@@ -133,10 +139,12 @@ function useGetColumns(permissions: {
           const isExpired = getIsInviteExpired(row.original.expires_at);
 
           if (isExpired) {
-            return <Badge variant={'warning'}>{t('expired')}</Badge>;
+            return (
+              <Badge className={badgeExtras.warning}>{t('expired')}</Badge>
+            );
           }
 
-          return <Badge variant={'success'}>{t('active')}</Badge>;
+          return <Badge className={badgeExtras.success}>{t('active')}</Badge>;
         },
       },
       {
@@ -150,7 +158,7 @@ function useGetColumns(permissions: {
         ),
       },
     ],
-    [permissions, t],
+    [permissions, t, format],
   );
 }
 

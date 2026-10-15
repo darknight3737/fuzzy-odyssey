@@ -3,15 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { authActionClient } from '@kit/next/safe-action';
-import { createOtpApi } from '@kit/otp';
+import { verifyOtpForPurpose } from '@kit/otp/orchestration';
 import { getLogger } from '@kit/shared/logger';
-import type { Database } from '@kit/supabase/database';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import { DeleteTeamAccountSchema } from '../../schema/delete-team-account.schema';
+import { assertAccountOwner } from '../orchestration';
 import { createDeleteTeamAccountService } from '../services/delete-team-account.service';
 
 const enableTeamAccountDeletion =
@@ -22,19 +20,7 @@ export const deleteTeamAccountAction = authActionClient
   .action(async ({ parsedInput: params, ctx: { user } }) => {
     const logger = await getLogger();
 
-    const otpService = createOtpApi(getSupabaseServerClient());
-
-    const otpResult = await otpService.verifyToken({
-      purpose: `delete-team-account-${params.accountId}`,
-      userId: user.id,
-      token: params.otp,
-      // allow a few honest retries while still bounding brute-force attempts
-      maxVerificationAttempts: 5,
-    });
-
-    if (!otpResult.valid) {
-      throw new Error('Invalid OTP code');
-    }
+    const client = getSupabaseServerClient();
 
     const ctx = {
       name: 'team-accounts.delete',
@@ -48,46 +34,37 @@ export const deleteTeamAccountAction = authActionClient
       throw new Error('Team account deletion is not enabled');
     }
 
+    await verifyOtpForPurpose({
+      client,
+      logger,
+      ctx,
+      userId: user.id,
+      token: params.otp,
+      purpose: `delete-team-account-${params.accountId}`,
+      // allow a few honest retries while still bounding brute-force attempts
+      maxVerificationAttempts: 5,
+    });
+
+    const isOwner = await assertAccountOwner({
+      client,
+      accountId: params.accountId,
+    });
+
+    if (!isOwner) {
+      throw new Error('You do not have permission to delete this account');
+    }
+
+    const service = createDeleteTeamAccountService();
+
     logger.info(ctx, `Deleting team account...`);
 
-    await deleteTeamAccount({
+    await service.deleteTeamAccount(client, {
       accountId: params.accountId,
       userId: user.id,
     });
 
     logger.info(ctx, `Team account request successfully sent`);
 
-    revalidatePath('/', 'layout');
+    revalidatePath('/');
     redirect('/home');
   });
-
-async function deleteTeamAccount(params: {
-  accountId: string;
-  userId: string;
-}) {
-  const client = getSupabaseServerClient();
-  const service = createDeleteTeamAccountService();
-
-  // verify that the user has the necessary permissions to delete the team account
-  await assertUserPermissionsToDeleteTeamAccount(client, params.accountId);
-
-  // delete the team account
-  await service.deleteTeamAccount(client, params);
-}
-
-async function assertUserPermissionsToDeleteTeamAccount(
-  client: SupabaseClient<Database>,
-  accountId: string,
-) {
-  const { data: isOwner, error } = await client
-    .rpc('is_account_owner', {
-      account_id: accountId,
-    })
-    .single();
-
-  if (error || !isOwner) {
-    throw new Error('You do not have permission to delete this account');
-  }
-
-  return isOwner;
-}

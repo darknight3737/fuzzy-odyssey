@@ -1,5 +1,7 @@
 'use client';
 
+import type React from 'react';
+
 import Link from 'next/link';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,11 +34,13 @@ export function PasswordSignInForm({
   captchaLoading = false,
   loading = false,
   redirecting = false,
+  captchaField,
 }: {
   onSubmit: (params: z.output<typeof PasswordSignInSchema>) => unknown;
   captchaLoading: boolean;
   loading: boolean;
   redirecting: boolean;
+  captchaField?: React.ReactNode;
 }) {
   const t = useTranslations('auth');
 
@@ -51,10 +55,10 @@ export function PasswordSignInForm({
   return (
     <Form {...form}>
       <form
-        className={'flex w-full flex-col gap-y-4'}
+        className={'flex w-full flex-col gap-y-2'}
         onSubmit={form.handleSubmit(onSubmit)}
       >
-        <div className={'flex flex-col space-y-2.5'}>
+        <div className={'flex flex-col gap-y-1.5'}>
           <FormField
             control={form.control}
             name={'email'}
@@ -88,26 +92,28 @@ export function PasswordSignInForm({
               <FormItem>
                 <FormControl>
                   <PasswordInput {...field} />
-                </FormControl>
 
-                <FormMessage />
-
-                <div>
                   <Button
                     nativeButton={false}
                     render={<Link href={'/auth/password-reset'} />}
                     type={'button'}
                     size={'sm'}
                     variant={'link'}
-                    className={'text-xs'}
+                    className={'p-0 text-xs'}
                   >
                     <Trans i18nKey={'auth.passwordForgottenQuestion'} />
                   </Button>
-                </div>
+                </FormControl>
+
+                <FormMessage />
+
+                <div></div>
               </FormItem>
             )}
           />
         </div>
+
+        {captchaField}
 
         <Button
           data-test="auth-submit-button"
@@ -127,7 +133,7 @@ export function PasswordSignInForm({
             </span>
           </If>
 
-          <If condition={captchaLoading}>
+          <If condition={captchaLoading && !redirecting}>
             <span className={'animate-in fade-in slide-in-from-bottom-24'}>
               <Trans i18nKey={'auth.verifyingCaptcha'} />
             </span>
@@ -136,7 +142,7 @@ export function PasswordSignInForm({
           <If condition={!redirecting && !loading && !captchaLoading}>
             <span
               className={
-                'animate-in fade-in slide-in-from-bottom-24 flex items-center'
+                'animate-in fade-in slide-in-from-bottom-24 flex items-center gap-1'
               }
             >
               <Trans i18nKey={'auth.signInWithEmail'} />

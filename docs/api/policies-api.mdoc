@@ -444,17 +444,17 @@ async function validateEnterpriseFeatureAccess(context: FeatureContext) {
     policies: [
       createPolicy(async (ctx) =>
         ctx.subscription?.plan === 'enterprise' && ctx.subscription.active
-          ? allow({ billing: 'enterprise-subscription' })
+          ? allow({ billing. 'enterprise-subscription' })
           : deny('Enterprise subscription required')
       ),
       createPolicy(async (ctx) =>
         ctx.trial?.type === 'enterprise' && ctx.trial.daysRemaining > 0
-          ? allow({ billing: 'enterprise-trial', daysLeft: ctx.trial.daysRemaining })
+          ? allow({ billing. 'enterprise-trial', daysLeft: ctx.trial.daysRemaining })
           : deny('Active enterprise trial required')
       ),
       createPolicy(async (ctx) =>
         ctx.adminOverride?.enabled && ctx.user.role === 'super-admin'
-          ? allow({ billing: 'admin-override' })
+          ? allow({ billing. 'admin-override' })
           : deny('Admin override not available')
       ),
     ],

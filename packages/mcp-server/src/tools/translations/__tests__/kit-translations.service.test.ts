@@ -7,16 +7,35 @@ import {
 
 import path from 'node:path';
 
+// The service builds absolute paths with `path.resolve`, so the fixtures are
+// anchored the same way. Inside the mock every path is canonicalized to forward
+// slashes, which keeps the fixture keys readable and platform-independent.
+const ROOT = path.resolve('/repo');
+
+const toPosix = (filePath: string) => filePath.split(path.sep).join('/');
+
+const LOCALES_ROOT = toPosix(
+  path.resolve(ROOT, 'apps', 'web', 'i18n', 'messages'),
+);
+
 function createDeps(
   files: Record<string, string>,
   directories: string[],
 ): KitTranslationsDeps & { _files: Record<string, string> } {
-  const store = { ...files };
-  const dirSet = new Set(directories);
+  const store = Object.fromEntries(
+    Object.entries(files).map(([filePath, content]) => [
+      toPosix(filePath),
+      content,
+    ]),
+  );
+
+  const dirSet = new Set(directories.map(toPosix));
 
   return {
-    rootPath: '/repo',
-    async readFile(filePath: string) {
+    rootPath: ROOT,
+    async readFile(rawPath: string) {
+      const filePath = toPosix(rawPath);
+
       if (!(filePath in store)) {
         const error = new Error(
           `ENOENT: no such file: ${filePath}`,
@@ -27,10 +46,11 @@ function createDeps(
 
       return store[filePath]!;
     },
-    async writeFile(filePath: string, content: string) {
-      store[filePath] = content;
+    async writeFile(rawPath: string, content: string) {
+      store[toPosix(rawPath)] = content;
     },
-    async readdir(dirPath: string) {
+    async readdir(rawPath: string) {
+      const dirPath = toPosix(rawPath);
       const entries = new Set<string>();
 
       for (const filePath of Object.keys(store)) {
@@ -47,7 +67,9 @@ function createDeps(
 
       return Array.from(entries.values());
     },
-    async stat(targetPath: string) {
+    async stat(rawPath: string) {
+      const targetPath = toPosix(rawPath);
+
       if (!dirSet.has(targetPath)) {
         const error = new Error(
           `ENOENT: no such directory: ${targetPath}`,
@@ -60,16 +82,19 @@ function createDeps(
         isDirectory: () => true,
       };
     },
-    async fileExists(filePath: string) {
+    async fileExists(rawPath: string) {
+      const filePath = toPosix(rawPath);
+
       return filePath in store || dirSet.has(filePath);
     },
-    async mkdir(dirPath: string) {
-      dirSet.add(dirPath);
+    async mkdir(rawPath: string) {
+      dirSet.add(toPosix(rawPath));
     },
-    async unlink(filePath: string) {
-      delete store[filePath];
+    async unlink(rawPath: string) {
+      delete store[toPosix(rawPath)];
     },
-    async rmdir(dirPath: string) {
+    async rmdir(rawPath: string) {
+      const dirPath = toPosix(rawPath);
       const prefix = dirPath.endsWith('/') ? dirPath : `${dirPath}/`;
 
       for (const key of Object.keys(store)) {
@@ -92,7 +117,7 @@ function createDeps(
 
 describe('KitTranslationsService.list', () => {
   it('lists and flattens translations with missing namespace fallback', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({
@@ -123,7 +148,7 @@ describe('KitTranslationsService.list', () => {
 
 describe('KitTranslationsService.update', () => {
   it('updates nested translation keys', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({}),
@@ -144,7 +169,7 @@ describe('KitTranslationsService.update', () => {
   });
 
   it('rejects paths outside locales root', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({}),
@@ -165,7 +190,7 @@ describe('KitTranslationsService.update', () => {
   });
 
   it('rejects namespace path segments', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({}),
@@ -188,7 +213,7 @@ describe('KitTranslationsService.update', () => {
 
 describe('KitTranslationsService.stats', () => {
   it('computes coverage using base locale keys', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({
@@ -214,7 +239,7 @@ describe('KitTranslationsService.stats', () => {
 
 describe('KitTranslationsService.addNamespace', () => {
   it('creates namespace JSON in all locale directories', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({}),
@@ -238,7 +263,7 @@ describe('KitTranslationsService.addNamespace', () => {
   });
 
   it('throws if namespace already exists', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({}),
@@ -254,7 +279,7 @@ describe('KitTranslationsService.addNamespace', () => {
   });
 
   it('throws if no locales exist', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps({}, [localesRoot]);
 
     const service = createKitTranslationsService(deps);
@@ -265,7 +290,7 @@ describe('KitTranslationsService.addNamespace', () => {
   });
 
   it('rejects path traversal in namespace', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({}),
@@ -287,7 +312,7 @@ describe('KitTranslationsService.addNamespace', () => {
 
 describe('KitTranslationsService.addLocale', () => {
   it('creates locale directory with namespace files', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({ hello: 'Hello' }),
@@ -311,7 +336,7 @@ describe('KitTranslationsService.addLocale', () => {
   });
 
   it('throws if locale already exists', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({}),
@@ -327,7 +352,7 @@ describe('KitTranslationsService.addLocale', () => {
   });
 
   it('works when no namespaces exist yet', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps({}, [localesRoot]);
 
     const service = createKitTranslationsService(deps);
@@ -338,7 +363,7 @@ describe('KitTranslationsService.addLocale', () => {
   });
 
   it('rejects path traversal in locale', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps({}, [localesRoot]);
 
     const service = createKitTranslationsService(deps);
@@ -355,7 +380,7 @@ describe('KitTranslationsService.addLocale', () => {
 
 describe('KitTranslationsService.removeNamespace', () => {
   it('deletes namespace files from all locales', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({}),
@@ -378,7 +403,7 @@ describe('KitTranslationsService.removeNamespace', () => {
   });
 
   it('throws if namespace does not exist', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({}),
@@ -394,7 +419,7 @@ describe('KitTranslationsService.removeNamespace', () => {
   });
 
   it('rejects path traversal', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps({}, [localesRoot]);
 
     const service = createKitTranslationsService(deps);
@@ -407,7 +432,7 @@ describe('KitTranslationsService.removeNamespace', () => {
 
 describe('KitTranslationsService.removeLocale', () => {
   it('deletes entire locale directory', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({}),
@@ -427,7 +452,7 @@ describe('KitTranslationsService.removeLocale', () => {
   });
 
   it('throws if locale does not exist', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps({}, [localesRoot]);
 
     const service = createKitTranslationsService(deps);
@@ -438,7 +463,7 @@ describe('KitTranslationsService.removeLocale', () => {
   });
 
   it('throws when trying to delete base locale', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps(
       {
         [`${localesRoot}/en/common.json`]: JSON.stringify({}),
@@ -455,7 +480,7 @@ describe('KitTranslationsService.removeLocale', () => {
   });
 
   it('rejects path traversal', async () => {
-    const localesRoot = '/repo/apps/web/i18n/messages';
+    const localesRoot = LOCALES_ROOT;
     const deps = createDeps({}, [localesRoot]);
 
     const service = createKitTranslationsService(deps);

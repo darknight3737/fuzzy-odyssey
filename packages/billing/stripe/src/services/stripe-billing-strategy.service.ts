@@ -58,7 +58,7 @@ export class StripeBillingStrategyService implements BillingStrategyProviderServ
     logger.info(ctx, 'Checkout session created successfully');
 
     return {
-      checkoutToken: client_secret,
+      checkoutToken: client_secret ?? null,
       url,
     };
   }

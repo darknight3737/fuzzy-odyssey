@@ -4,7 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { AuthLayoutShell } from '@kit/auth/shared';
+import { AuthLayoutShell } from '@kit/auth/auth-layout';
 import { MultiFactorAuthError, requireUser } from '@kit/supabase/require-user';
 import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
@@ -24,8 +24,20 @@ interface JoinTeamAccountPageProps {
     type?: 'invite' | 'magic-link';
     email?: string;
     is_new_user?: string;
+    error?: string;
   }>;
 }
+
+/**
+ * Error codes emitted by the /join/accept route, mapped to translation keys.
+ * The route sends a code rather than a message so nothing from the query string
+ * is rendered verbatim; anything unrecognized falls back to the generic key.
+ */
+const JOIN_ERROR_CODES = new Map([
+  ['invalid-link', 'teams.inviteErrorInvalidLink'],
+  ['not-found', 'teams.inviteErrorNotFound'],
+  ['unknown', 'teams.inviteErrorUnknown'],
+]);
 
 export const generateMetadata = async () => {
   const t = await getTranslations('teams');
@@ -38,6 +50,24 @@ export const generateMetadata = async () => {
 async function JoinTeamAccountPage(props: JoinTeamAccountPageProps) {
   const searchParams = await props.searchParams;
   const token = searchParams.invite_token;
+
+  // the /join/accept route redirects here with an error code when it cannot
+  // process the link. It carries no invite_token, so this must be handled
+  // before the missing-token check below — otherwise every such failure would
+  // render as a bare 404 and the invitee would never learn what went wrong.
+  if (searchParams.error) {
+    // a Map, not an object literal: an object lookup would resolve inherited
+    // keys (`?error=toString` returning Object.prototype.toString), which `??`
+    // does not fall back on
+    const i18nKey =
+      JOIN_ERROR_CODES.get(searchParams.error) ?? 'teams.inviteErrorUnknown';
+
+    return (
+      <AuthLayoutShell Logo={AppLogo}>
+        <InviteError i18nKey={i18nKey} />
+      </AuthLayoutShell>
+    );
+  }
 
   // no token, redirect to 404
   if (!token) {
@@ -178,6 +208,31 @@ async function JoinTeamAccountPage(props: JoinTeamAccountPageProps) {
 }
 
 export default JoinTeamAccountPage;
+
+function InviteError(props: { i18nKey: string }) {
+  return (
+    <div className={'flex flex-col space-y-4'} data-test={'join-invite-error'}>
+      <Heading level={6}>
+        <Trans i18nKey={'teams.inviteErrorHeading'} />
+      </Heading>
+
+      <p className={'text-muted-foreground text-sm'}>
+        <Trans i18nKey={props.i18nKey} />
+      </p>
+
+      <Button
+        render={
+          <Link href={pathsConfig.app.home}>
+            <ArrowLeft className={'mr-2 w-4'} />
+            <Trans i18nKey={'teams.backToHome'} />
+          </Link>
+        }
+        className={'w-full'}
+        variant={'outline'}
+      />
+    </div>
+  );
+}
 
 function InviteNotFoundOrExpired() {
   return (

@@ -670,19 +670,19 @@ function PlanDetails({
         <span className={'text-sm font-medium'}>
           <b>
             <Trans
-              i18nKey={`billing:plans.${selectedProduct.id}.name`}
+              i18nKey={`billing.plans.${selectedProduct.id}.name`}
               defaults={selectedProduct.name}
             />
           </b>{' '}
           <If condition={isRecurring}>
-            / <Trans i18nKey={`billing:billingInterval.${selectedInterval}`} />
+            / <Trans i18nKey={`billing.billingInterval.${selectedInterval}`} />
           </If>
         </span>
 
         <p>
           <span className={'text-muted-foreground text-sm'}>
             <Trans
-              i18nKey={`billing:plans.${selectedProduct.id}.description`}
+              i18nKey={`billing.plans.${selectedProduct.id}.description`}
               defaults={selectedProduct.description}
             />
           </span>

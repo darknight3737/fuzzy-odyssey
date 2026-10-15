@@ -40,6 +40,16 @@ type MessagesResponse = {
 export class Mailbox {
   static URL = 'http://127.0.0.1:54324';
 
+  /**
+   * Subjects the OTP mailer may use. The kit ships English only, so
+   * deployments running another default locale add their translated subject
+   * through `OTP_EMAIL_SUBJECTS` (pipe-separated).
+   */
+  static OTP_SUBJECTS = [
+    'One-time password for',
+    ...(process.env.OTP_EMAIL_SUBJECTS?.split('|').map((s) => s.trim()) ?? []),
+  ].filter(Boolean);
+
   constructor(private readonly page: Page) {}
 
   async visitMailbox(
@@ -104,11 +114,15 @@ export class Mailbox {
 
     const json = await this.getEmail(email, {
       deleteAfter,
-      subject: `One-time password for`,
+      subject: Mailbox.OTP_SUBJECTS,
     });
 
     if (!json) {
-      throw new Error('Email body was not found');
+      throw new Error(
+        `OTP email was not found for ${email}. Searched subjects: ${Mailbox.OTP_SUBJECTS.join(
+          ', ',
+        )}. Set OTP_EMAIL_SUBJECTS when the mailer runs in another locale.`,
+      );
     }
 
     if (email !== json.To[0]!.Address) {
@@ -117,23 +131,50 @@ export class Mailbox {
       );
     }
 
-    const text = json.HTML.match(
-      new RegExp(`Your one-time password is: (\\d{6})`),
-    )?.[1];
+    // The OTP button holds the raw digits and nothing else, so it reads the
+    // same in every locale — unlike the sentence above it.
+    const code =
+      json.HTML.match(/>\s*(\d{6})\s*</)?.[1] ??
+      json.HTML.match(/one-time password is:\s*(\d{6})/i)?.[1];
 
-    if (text) {
-      console.log(`OTP code found in text: ${text}`);
-      return text;
+    if (code) {
+      console.log(`OTP code found in text: ${code}`);
+      return code;
     }
 
     throw new Error('Could not find OTP code in email');
+  }
+
+  /**
+   * Retrieves the 6-digit code from the `{{ .Token }}` panel in a GoTrue auth
+   * email (confirmation, recovery). Distinct from `getOtpFromEmail`, which reads
+   * the kit mailer's "One-time password for" email — a different mechanism.
+   */
+  async getAuthOtpFromEmail(email: string, subject: string) {
+    const json = await this.getEmail(email, { deleteAfter: false, subject });
+
+    if (!json) {
+      throw new Error(`Email with subject "${subject}" was not found`);
+    }
+
+    const code = json.HTML.match(
+      /Or enter this code in the app:[\s\S]*?>(\d{6})</,
+    )?.[1];
+
+    if (!code) {
+      throw new Error(
+        `No auth code panel found in the "${subject}" email — did the {{ .Token }} block get dropped from the template?`,
+      );
+    }
+
+    return code;
   }
 
   async getEmail(
     email: string,
     params: {
       deleteAfter: boolean;
-      subject?: string;
+      subject?: string | string[];
     },
   ) {
     console.log(`Retrieving email from mailbox ${email}...`);
@@ -153,40 +194,36 @@ export class Mailbox {
       return;
     }
 
-    const message = params.subject
-      ? (() => {
-          const filtered = messagesResponse.messages.filter((item) =>
-            item.Subject.includes(params.subject!),
-          );
+    const subjects = params.subject
+      ? Array.isArray(params.subject)
+        ? params.subject
+        : [params.subject]
+      : [];
 
-          console.log(
-            `Found ${filtered.length} emails with subject ${params.subject}`,
-          );
+    const candidates = subjects.length
+      ? messagesResponse.messages.filter((item) =>
+          subjects.some((subject) => item.Subject.includes(subject)),
+        )
+      : messagesResponse.messages;
 
-          // retrieve the latest by timestamp
-          return filtered.reduce((acc, item) => {
-            if (
-              new Date(acc.Created).getTime() < new Date(item.Created).getTime()
-            ) {
-              return item;
-            }
-
-            return acc;
-          });
-        })()
-      : messagesResponse.messages.reduce((acc, item) => {
-          if (
-            new Date(acc.Created).getTime() < new Date(item.Created).getTime()
-          ) {
-            return item;
-          }
-
-          return acc;
-        });
-
-    if (!message) {
-      throw new Error('No message found');
+    if (subjects.length) {
+      console.log(
+        `Found ${candidates.length} emails with subject ${subjects.join(' | ')}`,
+      );
     }
+
+    // Reducing without a seed throws on an empty list, which hides the real
+    // problem (no matching email) behind a cryptic TypeError.
+    if (!candidates.length) {
+      return;
+    }
+
+    // retrieve the latest by timestamp
+    const message = candidates.reduce((acc, item) =>
+      new Date(acc.Created).getTime() < new Date(item.Created).getTime()
+        ? item
+        : acc,
+    );
 
     const messageId = message.ID;
     const messageUrl = `${Mailbox.URL}/api/v1/message/${messageId}`;

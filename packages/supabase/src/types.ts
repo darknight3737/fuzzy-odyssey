@@ -1,4 +1,7 @@
-import type { AMREntry, AuthenticatorAssuranceLevels } from '@supabase/supabase-js';
+import type {
+  AMREntry,
+  AuthenticatorAssuranceLevels,
+} from '@supabase/supabase-js';
 
 /**
  * @name JWTUserData

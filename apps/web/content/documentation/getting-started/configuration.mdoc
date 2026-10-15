@@ -103,13 +103,13 @@ import { HomeIcon, SettingsIcon } from 'lucide-react';
 
 export default [
   {
-    label: 'common:routes.home',
+    label: 'common.routes.home',
     path: pathsConfig.app.personalAccount,
     Icon: <HomeIcon className="w-4" />,
     end: true,
   },
   {
-    label: 'common:routes.settings',
+    label: 'common.routes.settings',
     path: pathsConfig.app.settings,
     Icon: <SettingsIcon className="w-4" />,
   },
@@ -122,18 +122,18 @@ export default [
 // config/team-account-navigation.config.tsx
 export default [
   {
-    label: 'common:routes.dashboard',
+    label: 'common.routes.dashboard',
     path: createPath(pathsConfig.app.teamAccount, account),
     Icon: <LayoutDashboardIcon className="w-4" />,
     end: true,
   },
   {
-    label: 'common:routes.projects',
+    label: 'common.routes.projects',
     path: createPath(pathsConfig.app.projects, account),
     Icon: <FolderIcon className="w-4" />,
   },
   {
-    label: 'common:routes.members',
+    label: 'common.routes.members',
     path: createPath(pathsConfig.app.members, account),
     Icon: <UsersIcon className="w-4" />,
   },

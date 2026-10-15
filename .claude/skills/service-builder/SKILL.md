@@ -27,7 +27,7 @@ import * as z from 'zod';
 
 export const CreateProjectSchema = z.object({
   name: z.string().min(1),
-  accountId: z.string().uuid(),
+  accountId: z.uuid(),
 });
 
 export type CreateProjectInput = z.infer<typeof CreateProjectSchema>;

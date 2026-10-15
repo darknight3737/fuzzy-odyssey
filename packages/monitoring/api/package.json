@@ -3,34 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "sideEffects": false,
-  "version": "0.1.0",
-  "scripts": {
-    "clean": "git clean -xdf ../.turbo node_modules",
-    "format": "prettier --check \"**/*.{ts,tsx}\"",
-    "lint": "eslint ..",
-    "typecheck": "tsc --noEmit"
-  },
-  "prettier": "@kit/prettier-config",
-  "exports": {
-    "./server": "./src/server.ts",
-    "./instrumentation": "./src/instrumentation.ts",
-    "./instrumentation-client": "./src/instrumentation-client.ts",
-    "./hooks": "./src/hooks/index.ts",
-    "./components": "./src/components/index.ts"
-  },
-  "devDependencies": {
-    "@kit/eslint-config": "workspace:*",
-    "@kit/monitoring-core": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
-    "@kit/sentry": "workspace:*",
-    "@kit/shared": "workspace:*",
-    "@kit/tsconfig": "workspace:*",
-    "@sentry/nextjs": "catalog:",
-    "@types/react": "catalog:",
-    "next": "catalog:",
-    "react": "catalog:",
-    "zod": "catalog:"
-  },
   "typesVersions": {
     "*": {
       "*": [
@@ -41,6 +13,7 @@
   "exports": {
     "./server": "./src/server.ts",
     "./instrumentation": "./src/instrumentation.ts",
+    "./instrumentation-client": "./src/instrumentation-client.ts",
     "./hooks": "./src/hooks/index.ts",
     "./components": "./src/components/index.ts"
   },
@@ -53,7 +26,9 @@
     "@kit/sentry": "workspace:*",
     "@kit/shared": "workspace:*",
     "@kit/tsconfig": "workspace:*",
+    "@sentry/nextjs": "catalog:",
     "@types/react": "catalog:",
+    "next": "catalog:",
     "react": "catalog:",
     "zod": "catalog:"
   }

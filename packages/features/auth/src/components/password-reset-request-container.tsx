@@ -7,6 +7,7 @@ import * as z from 'zod';
 
 import { useRequestResetPassword } from '@kit/supabase/hooks/use-request-reset-password';
 import { Alert, AlertDescription } from '@kit/ui/alert';
+import { alertExtras } from '@kit/ui/alert-extras';
 import { Button } from '@kit/ui/button';
 import {
   Form,
@@ -49,7 +50,7 @@ export function PasswordResetRequestContainer(params: {
   return (
     <>
       <If condition={success}>
-        <Alert variant={'success'}>
+        <Alert className={alertExtras.success}>
           <AlertDescription>
             <Trans i18nKey={'auth.passwordResetSuccessMessage'} />
           </AlertDescription>
@@ -102,6 +103,8 @@ export function PasswordResetRequestContainer(params: {
                 )}
               />
 
+              {captcha.field}
+
               <Button
                 disabled={resetPasswordMutation.isPending || captchaLoading}
                 type="submit"
@@ -123,7 +126,6 @@ export function PasswordResetRequestContainer(params: {
                 </If>
               </Button>
             </div>
-            {captcha.field}
           </form>
         </Form>
       </If>

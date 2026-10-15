@@ -10,6 +10,7 @@ import { Page, PageMobileNavigation, PageNavigation } from '@kit/ui/page';
 import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
+import { MobileSidebarTrigger } from '~/components/mobile-sidebar-trigger';
 import featuresFlagConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
 import { personalAccountNavigationConfig } from '~/config/personal-account-navigation.config';
@@ -19,8 +20,6 @@ import { HomeMenuNavigation } from './_components/home-menu-navigation';
 import { HomeMobileNavigation } from './_components/home-mobile-navigation';
 import { HomeSidebar } from './_components/home-sidebar';
 import { loadUserWorkspace } from './_lib/server/load-user-workspace';
-
-export const metadata = { robots: { index: false, follow: false } };
 
 function UserHomeLayout({ children }: React.PropsWithChildren) {
   const state = use(getLayoutState());
@@ -54,8 +53,12 @@ async function SidebarLayout({ children }: React.PropsWithChildren) {
             <HomeSidebar workspace={workspace} />
           </PageNavigation>
 
-          <PageMobileNavigation className={'flex items-center justify-between'}>
-            <MobileNavigation workspace={workspace} />
+          <PageMobileNavigation className={'md:hidden'}>
+            <div>
+              <AppLogo />
+            </div>
+
+            <MobileSidebarTrigger />
           </PageMobileNavigation>
 
           {children}
@@ -77,7 +80,7 @@ async function HeaderLayout({ children }: React.PropsWithChildren) {
           <HomeMenuNavigation workspace={workspace} />
         </PageNavigation>
 
-        <PageMobileNavigation className={'flex items-center justify-between'}>
+        <PageMobileNavigation>
           <MobileNavigation workspace={workspace} />
         </PageMobileNavigation>
 
@@ -94,7 +97,9 @@ function MobileNavigation({
 }) {
   return (
     <>
-      <AppLogo />
+      <div>
+        <AppLogo />
+      </div>
 
       <HomeMobileNavigation workspace={workspace} />
     </>

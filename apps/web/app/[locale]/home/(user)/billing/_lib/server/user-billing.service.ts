@@ -1,5 +1,4 @@
 import 'server-only';
-
 import { redirect } from 'next/navigation';
 
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -117,13 +116,15 @@ class UserBillingService {
       checkoutToken = checkout.checkoutToken;
       url = checkout.url;
     } catch (error) {
+      const message = Error.isError(error) ? error.message : error;
+
       logger.error(
         {
           name: `billing.personal-account`,
           planId,
           customerId,
           accountId,
-          error,
+          error: message,
         },
         `Checkout session not created due to an error`,
       );
@@ -149,6 +150,8 @@ class UserBillingService {
       redirect(url);
     }
 
+    // return the checkout token to the client
+    // so we can call the payment gateway to complete the checkout
     logger.info(
       {
         userId: user.id,
@@ -156,8 +159,6 @@ class UserBillingService {
       `Checkout session created. Returning checkout token to client...`,
     );
 
-    // return the checkout token to the client
-    // so we can call the payment gateway to complete the checkout
     return {
       checkoutToken,
     };

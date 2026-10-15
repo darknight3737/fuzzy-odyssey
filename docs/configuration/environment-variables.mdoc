@@ -98,9 +98,11 @@ If you're using a version prior to 2.12.0, use `NEXT_PUBLIC_SUPABASE_ANON_KEY` a
 NEXT_PUBLIC_AUTH_PASSWORD=true
 NEXT_PUBLIC_AUTH_MAGIC_LINK=false
 NEXT_PUBLIC_AUTH_OTP=false
+NEXT_PUBLIC_AUTH_PASSKEY=false
 NEXT_PUBLIC_AUTH_IDENTITY_LINKING=false
 NEXT_PUBLIC_CAPTCHA_SITE_KEY=
 CAPTCHA_SECRET_TOKEN=
+NEXT_PUBLIC_CAPTCHA_WIDGET_SIZE=invisible
 NEXT_PUBLIC_DISPLAY_TERMS_AND_CONDITIONS_CHECKBOX=false
 ```
 
@@ -109,9 +111,11 @@ NEXT_PUBLIC_DISPLAY_TERMS_AND_CONDITIONS_CHECKBOX=false
 | `NEXT_PUBLIC_AUTH_PASSWORD` | `true` | Enable password auth |
 | `NEXT_PUBLIC_AUTH_MAGIC_LINK` | `false` | Enable magic link auth |
 | `NEXT_PUBLIC_AUTH_OTP` | `false` | Enable OTP auth |
+| `NEXT_PUBLIC_AUTH_PASSKEY` | `false` | Enable passkey (WebAuthn) auth |
 | `NEXT_PUBLIC_AUTH_IDENTITY_LINKING` | `false` | Allow identity linking |
 | `NEXT_PUBLIC_CAPTCHA_SITE_KEY` | - | Cloudflare Turnstile site key |
 | `CAPTCHA_SECRET_TOKEN` | - | Cloudflare Turnstile secret |
+| `NEXT_PUBLIC_CAPTCHA_WIDGET_SIZE` | `invisible` | Turnstile widget size. Set to `normal` or `compact` with a Managed site key |
 | `NEXT_PUBLIC_DISPLAY_TERMS_AND_CONDITIONS_CHECKBOX` | `false` | Show terms checkbox |
 
 ### Password Requirements

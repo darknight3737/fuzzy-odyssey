@@ -206,7 +206,9 @@ function Chart(
         />
         <ChartTooltip
           cursor={false}
-          content={(props) => <ChartTooltipContent hideLabel {...props} />}
+          content={({ content: _content, ...props }) => (
+            <ChartTooltipContent hideLabel {...props} />
+          )}
         />
         <Line
           dataKey="value"
@@ -661,6 +663,7 @@ export function VisitorsChart() {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value);
+
                 return date.toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -671,11 +674,11 @@ export function VisitorsChart() {
             <ChartTooltip
               cursor={false}
               defaultIndex={isMobile ? -1 : 10}
-              content={(props) => (
+              content={({ content: _content, ...props }) => (
                 <ChartTooltipContent
                   {...props}
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString('en-US', {
+                    return new Date(Number(value)).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                     });
@@ -897,13 +900,13 @@ export function PageViewsChart() {
               }}
             />
             <ChartTooltip
-              content={(props) => (
+              content={({ content: _content, ...props }) => (
                 <ChartTooltipContent
                   {...props}
                   className="w-[150px]"
                   nameKey="views"
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString('en-US', {
+                    return new Date(Number(value)).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',

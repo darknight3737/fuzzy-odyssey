@@ -16,11 +16,9 @@
     "./registry": "./src/registry/index.ts",
     "./env": "./src/env/index.ts"
   },
-  "devDependencies": {
-    "@kit/eslint-config": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
-    "@kit/tsconfig": "workspace:*",
-    "@types/react": "catalog:"
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next-runtime-env": "catalog:",

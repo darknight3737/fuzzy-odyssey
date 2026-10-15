@@ -29,3 +29,27 @@ export async function checkRequiresMultiFactorAuthentication(
 
   return nextLevel === ASSURANCE_LEVEL_2 && nextLevel !== currentLevel;
 }
+
+/**
+ * @name checkTokenRequiresMultiFactorAuthentication
+ * @description Bearer-token variant of {@link checkRequiresMultiFactorAuthentication}.
+ * The bearer client has no session storage, so the session-based check would
+ * silently report "no MFA required".
+ */
+export async function checkTokenRequiresMultiFactorAuthentication(
+  client: SupabaseClient,
+  token: string,
+) {
+  const assuranceLevel =
+    await client.auth.mfa.getAuthenticatorAssuranceLevel(token);
+
+  if (assuranceLevel.error || !assuranceLevel.data) {
+    throw new Error(
+      assuranceLevel.error?.message ?? 'Failed to resolve assurance level',
+    );
+  }
+
+  const { nextLevel, currentLevel } = assuranceLevel.data;
+
+  return nextLevel === ASSURANCE_LEVEL_2 && nextLevel !== currentLevel;
+}

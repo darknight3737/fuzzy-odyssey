@@ -6,7 +6,8 @@ import { Page, PageMobileNavigation, PageNavigation } from '@kit/ui/page';
 import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AdminSidebar } from '~/admin/_components/admin-sidebar';
-import { AdminMobileNavigation } from '~/admin/_components/mobile-navigation';
+import { AppLogo } from '~/components/app-logo';
+import { MobileSidebarTrigger } from '~/components/mobile-sidebar-trigger';
 
 export const metadata = {
   title: `Super Admin`,
@@ -25,8 +26,12 @@ export default function AdminLayout(props: React.PropsWithChildren) {
           <AdminSidebar />
         </PageNavigation>
 
-        <PageMobileNavigation>
-          <AdminMobileNavigation />
+        <PageMobileNavigation className={'md:hidden'}>
+          <div>
+            <AppLogo />
+          </div>
+
+          <MobileSidebarTrigger />
         </PageMobileNavigation>
 
         {props.children}

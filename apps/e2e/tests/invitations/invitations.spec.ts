@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 
+import { AuthPageObject } from '../authentication/auth.po';
 import { InvitationsPageObject } from './invitations.po';
 
 test.describe('Invitations', () => {
@@ -127,6 +128,98 @@ test.describe('Full Invitation Flow', () => {
     await invitations.teamAccounts.openAccountsSelector();
 
     await expect(invitations.teamAccounts.getTeams()).toHaveCount(1);
+  });
+
+  test('should let a user accept an invite sent to a mixed-case email', async ({
+    page,
+  }) => {
+    const invitations = new InvitationsPageObject(page);
+    await invitations.setup();
+
+    await invitations.navigateToMembers();
+
+    // Supabase Auth lowercases the address at sign-up. If the invitation kept
+    // the inviter's casing, the invitee could never be matched to their own
+    // account and the invite would be permanently unacceptable.
+    const mixedCaseEmail = invitations.auth.createRandomMixedCaseEmail();
+    const normalizedEmail = mixedCaseEmail.toLowerCase();
+
+    await invitations.openInviteForm();
+
+    await invitations.inviteMembers([
+      {
+        email: mixedCaseEmail,
+        role: 'member',
+      },
+    ]);
+
+    await expect(invitations.getInvitations()).toHaveCount(1);
+
+    // the invitation is stored canonicalized, not as the inviter typed it.
+    // `toContainText` is case-sensitive, and the cell also renders an avatar
+    // initial alongside the address, hence a substring assertion.
+    await expect(invitations.getInvitations()).toContainText(normalizedEmail);
+
+    // sign out and pick the invite up as the invitee
+    await page.context().clearCookies();
+    await page.reload();
+
+    // the invitation email is delivered to the normalized address
+    await invitations.auth.visitConfirmEmailLink(normalizedEmail);
+
+    // the accept button must both render and actually work
+    await invitations.acceptInvitation();
+
+    await invitations.teamAccounts.openAccountsSelector();
+
+    await expect(invitations.teamAccounts.getTeams()).toHaveCount(1);
+  });
+
+  test('should surface an error when accepting an invitation fails', async ({
+    browser,
+    page,
+  }) => {
+    const invitations = new InvitationsPageObject(page);
+    await invitations.setup();
+
+    await invitations.navigateToMembers();
+
+    const email = invitations.auth.createRandomEmail();
+
+    await invitations.openInviteForm();
+    await invitations.inviteMembers([{ email, role: 'member' }]);
+
+    await expect(invitations.getInvitations()).toHaveCount(1);
+
+    // the invitee opens the link in their own context so the owner stays signed
+    // in and can revoke the invitation underneath them
+    const inviteeContext = await browser.newContext();
+    const inviteePage = await inviteeContext.newPage();
+    const inviteeAuth = new AuthPageObject(inviteePage);
+
+    await inviteeAuth.visitConfirmEmailLink(email);
+    await inviteePage.waitForURL('**/join?**');
+
+    const acceptButton = inviteePage.locator(
+      '[data-test="join-team-form"] button[type="submit"]',
+    );
+
+    await expect(acceptButton).toBeVisible();
+
+    // the owner revokes the invitation while the invitee has the page open
+    await invitations.deleteInvitation(email);
+    await expect(invitations.getInvitations()).toHaveCount(0);
+
+    // the click must not fail silently: previously the server action returned
+    // 200, no membership was created, and the button simply reset with nothing
+    // shown to the invitee
+    await acceptButton.click();
+
+    await expect(
+      inviteePage.locator('[data-test="accept-invitation-error"]'),
+    ).toBeVisible();
+
+    await inviteeContext.close();
   });
 
   test('new users should be redirected to /identities to set up identity', async ({

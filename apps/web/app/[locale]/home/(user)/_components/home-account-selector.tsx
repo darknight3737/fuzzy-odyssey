@@ -1,11 +1,8 @@
 'use client';
 
-import { useContext } from 'react';
-
 import { useRouter } from 'next/navigation';
 
 import { AccountSelector } from '@kit/accounts/account-selector';
-import { SidebarContext } from '@kit/ui/sidebar';
 
 import featureFlagsConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
@@ -22,13 +19,14 @@ export function HomeAccountSelector(props: {
   }>;
 
   userId: string;
+  collapsed?: boolean;
 }) {
   const router = useRouter();
-  const context = useContext(SidebarContext);
+  const collapsed = props.collapsed ?? true;
 
   return (
     <AccountSelector
-      collapsed={!context?.open}
+      collapsed={collapsed}
       accounts={props.accounts}
       features={features}
       userId={props.userId}

@@ -14,7 +14,9 @@
     "./server-admin-client": "./src/clients/server-admin-client.ts",
     "./middleware-client": "./src/clients/middleware-client.ts",
     "./browser-client": "./src/clients/browser-client.ts",
+    "./bearer-client": "./src/clients/bearer-client.ts",
     "./check-requires-mfa": "./src/check-requires-mfa.ts",
+    "./passkey-errors": "./src/passkey-errors.ts",
     "./require-user": "./src/require-user.ts",
     "./hooks/*": "./src/hooks/*.ts",
     "./database": "./src/database.types.ts",
@@ -23,7 +25,8 @@
   },
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@kit/shared": "workspace:*"
@@ -36,6 +39,7 @@
     "@types/react": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
+    "vitest": "catalog:",
     "zod": "catalog:"
   }
 }

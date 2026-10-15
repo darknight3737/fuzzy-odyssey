@@ -15,6 +15,7 @@ import { LastAuthMethodHint } from './last-auth-method-hint';
 import { MagicLinkAuthContainer } from './magic-link-auth-container';
 import { OauthProviders } from './oauth-providers';
 import { OtpSignInContainer } from './otp-sign-in-container';
+import { PasskeySignInContainer } from './passkey-sign-in-container';
 import { PasswordSignInContainer } from './password-sign-in-container';
 
 export function SignInMethodsContainer(props: {
@@ -28,6 +29,7 @@ export function SignInMethodsContainer(props: {
     password: boolean;
     magicLink: boolean;
     otp: boolean;
+    passkey: boolean;
     oAuth: Provider[];
   };
 
@@ -44,6 +46,16 @@ export function SignInMethodsContainer(props: {
 
     router.replace(returnPath);
   }, [props.paths.returnPath, router]);
+
+  // whether any email-based method (which renders a form) is enabled
+  const hasEmailMethod =
+    props.providers.password ||
+    props.providers.magicLink ||
+    props.providers.otp;
+
+  // whether any non-email method (passkey or OAuth) is enabled
+  const hasExternalMethod =
+    props.providers.passkey || props.providers.oAuth.length > 0;
 
   return (
     <>
@@ -71,14 +83,8 @@ export function SignInMethodsContainer(props: {
         />
       </If>
 
-      <If condition={props.providers.oAuth.length}>
-        <If
-          condition={
-            props.providers.magicLink ||
-            props.providers.password ||
-            props.providers.otp
-          }
-        >
+      <If condition={hasExternalMethod}>
+        <If condition={hasEmailMethod}>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <Separator />
@@ -92,14 +98,25 @@ export function SignInMethodsContainer(props: {
           </div>
         </If>
 
-        <OauthProviders
-          enabledProviders={props.providers.oAuth}
-          shouldCreateUser={false}
-          paths={{
-            callback: props.paths.callback,
-            returnPath: props.paths.returnPath,
-          }}
-        />
+        <div className={'flex-col space-y-2'}>
+          <If condition={props.providers.passkey}>
+            <PasskeySignInContainer
+              onSignIn={onSignIn}
+              captchaSiteKey={props.captchaSiteKey}
+            />
+          </If>
+
+          <If condition={props.providers.oAuth.length}>
+            <OauthProviders
+              enabledProviders={props.providers.oAuth}
+              shouldCreateUser={false}
+              paths={{
+                callback: props.paths.callback,
+                returnPath: props.paths.returnPath,
+              }}
+            />
+          </If>
+        </div>
       </If>
     </>
   );

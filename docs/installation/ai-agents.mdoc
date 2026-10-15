@@ -3,12 +3,12 @@ status: "published"
 title: "AI Agentic Development | Next.js Supabase Turbo"
 label: "AI Agentic Development"
 order: 11
-description: "Configure Claude Code, Cursor, Windsurf, and other AI coding assistants to work effectively with the Next.js Supabase Turbo SaaS Starter Kit."
+description: "Configure Claude Code, Google Antigravity, Cursor, Windsurf, and other AI coding assistants to work effectively with the Next.js Supabase Turbo SaaS Starter Kit."
 ---
 
-AI Agentic Development uses AI coding assistants like Claude Code or Cursor to write code within your project. MakerKit ships with instruction files (`AGENTS.md`, `CLAUDE.md`) that teach these AI agents your codebase patterns, available skills, and project conventions so they generate code matching your architecture.
+AI Agentic Development uses AI coding assistants like Claude Code, Google Antigravity or Cursor to write code within your project. MakerKit ships with instruction files (`AGENTS.md`, `CLAUDE.md`) that teach these AI agents your codebase patterns, available skills, and project conventions so they generate code matching your architecture.
 
-The kit includes pre-configured agent rules for Claude Code, Cursor, Windsurf, Codex, and Gemini. In our extensive testing with state-of-the-art agents like Claude Code, we found that modern tools already crawl existing patterns and learn from your codebase. With a polished codebase like MakerKit, agents have the context they need to produce good code without exhaustive API documentation.
+The kit includes pre-configured agent rules for Claude Code, Google Antigravity, Cursor, Windsurf, Codex, and Gemini. In our extensive testing with state-of-the-art agents like Claude Code, we found that modern tools already crawl existing patterns and learn from your codebase. With a polished codebase like MakerKit, agents have the context they need to produce good code without exhaustive API documentation.
 
 {% sequence title="AI Agent Setup" description="Get AI agents working with your MakerKit codebase." %}
 
@@ -30,9 +30,11 @@ MakerKit uses a hierarchical system of instruction files. Global rules live at t
 
 | File | Purpose | Used By |
 |------|---------|---------|
-| `AGENTS.md` | Primary agent instructions | Cursor, Windsurf |
+| `AGENTS.md` | Primary agent instructions | Cursor, Windsurf, Codex, Antigravity |
 | `CLAUDE.md` | Claude-specific instructions | Claude Code |
-| `.gemini/GEMINI.md` | Gemini instructions | Gemini |
+| `.gemini/GEMINI.md` | Gemini instructions | Gemini, Antigravity |
+| `.claude/` | Skills and agents for Claude Code | Claude Code |
+| `.agents/` | Portable skills, agents and MCP config | Antigravity |
 
 ### Hierarchical Structure
 
@@ -95,6 +97,31 @@ claude
 ```
 
 Claude Code discovers and reads the instruction files on startup.
+
+### Google Antigravity
+
+Antigravity reads the root `AGENTS.md` automatically at session start, in both the desktop app and the `agy` CLI. It also reads `.gemini/GEMINI.md`, which takes precedence when the two conflict — the kit's `GEMINI.md` simply points the agent at the `AGENTS.md` files, so the two work together.
+
+Nested `AGENTS.md` files are opt-in. To get the package-level instructions (routes, database, UI, feature packages), enable them once:
+
+**Settings → Agent → Load nested AGENTS.md files**
+
+This matters on MakerKit: most of the useful context lives in the 13 package-level files rather than the root one.
+
+Antigravity natively recognises the `.agents/` directory, so the kit's skills, custom agent and MCP configuration work without conversion:
+
+```
+.agents/
+├── skills/               # Discovered and activated automatically
+├── agents/               # Custom agents (agy --agent <name>)
+└── mcp_config.json       # MCP servers for this project
+```
+
+Antigravity activates skills on its own using progressive disclosure: it reads the name and description of each skill and loads the full instructions only when your task matches. Run `/skills` in the CLI to see which ones are available.
+
+{% alert type="info" title="Build the MCP Server first" %}
+The MCP Server must be built before Antigravity can start it. Run `pnpm --filter "@kit/mcp-server" build` once. See the [MCP Server documentation](./mcp) for details.
+{% /alert %}
 
 ### Cursor
 
@@ -214,39 +241,62 @@ import featureFlags from '~/config/feature-flags.config';
 if (featureFlags.enableTeamCreation) { /* ... */ }
 ```
 
-## Claude Code Directory Structure
+## Agent Directory Structure
 
-Claude Code uses a `.claude/` directory for additional configuration:
+The kit ships the same skills twice, in the two locations agent tools look for them.
+
+Claude Code uses the `.claude/` directory:
 
 ```
 .claude/
 ├── agents/               # Custom agent definitions
 │   └── code-quality-reviewer.md
-├── commands/             # Slash commands
-│   └── feature-builder.md
-├── evals/                # Evaluation scripts
 ├── skills/               # Reusable skills
+│   ├── bug-hunt/
+│   ├── bug-hunt-lite/
 │   ├── playwright-e2e/
 │   ├── postgres-expert/
 │   ├── react-form-builder/
-│   └── server-action-builder/
+│   ├── reviewer/
+│   ├── rls-review/
+│   ├── server-action-builder/
+│   └── service-builder/
 └── settings.local.json   # Local permissions (git-ignored)
 ```
 
+Antigravity uses the `.agents/` directory, which holds the same skills plus its MCP configuration:
+
+```
+.agents/
+├── agents/               # Custom agents
+│   └── code-quality-reviewer.md
+├── skills/               # Same skills as .claude/skills
+└── mcp_config.json       # MCP servers for this project
+```
+
+If you edit a skill, update both copies so the behaviour stays identical across tools.
+
 ## Built-in Skills
 
-The kit includes skills for Claude Code that provide specialized guidance for common tasks.
+The kit includes skills that provide specialized guidance for common tasks. They work in Claude Code (from `.claude/skills`) and in Antigravity (from `.agents/skills`).
 
 {% callout title="Skills may require explicit invocation" %}
-Claude can automatically invoke skills based on the context of the conversation. However, you can also explicitly invoke skills by typing the skill name at the start of your message when you need specialized guidance, such as '/postgres-supabase-expert' "review the database schema for the projects feature".
+Agents can automatically invoke skills based on the context of the conversation. However, you can also explicitly invoke skills by typing the skill name at the start of your message when you need specialized guidance, such as '/postgres-supabase-expert' "review the database schema for the projects feature".
 {% /callout %}
 
 | Skill | Command | Purpose |
 |-------|---------|---------|
 | Postgres & Supabase Expert | `/postgres-supabase-expert` | Database schemas, RLS policies, migrations, PgTAP tests |
+| RLS Review | `/rls-review` | Adversarial tenant-isolation audit, proven with runnable PgTAP attacks |
 | Server Action Builder | `/server-action-builder` | Server Actions with validation and error handling |
+| Service Builder | `/service-builder` | Pure, interface-agnostic services with injected dependencies |
 | React Form Builder | `/react-form-builder` | Forms with Zod validation and Shadcn UI |
 | Playwright E2E | `/playwright-e2e` | End-to-end test patterns |
+| Reviewer | `/reviewer` | Adversarial review of the latest changes |
+| Bug Hunt Lite | `/bug-hunt-lite` | Fast, diff-scoped security and logic pass |
+| Bug Hunt | `/bug-hunt` | Deep, multi-stage vulnerability sweep of the whole codebase |
+
+If you touch RLS, the database schema, or anything under `apps/web/supabase/`, run `/rls-review` before merging. It writes cross-tenant attacks as PgTAP tests and runs them, rather than reading the policies and declaring them safe.
 
 ### Using Skills
 
@@ -260,18 +310,17 @@ Invoke a skill by typing its command at the start of your message:
 /server-action-builder Create an action to update user settings
 ```
 
-### Feature Builder Command
+### Custom Agents
 
-The `/feature-builder` command orchestrates multiple skills for end-to-end feature implementation:
+The kit ships one custom agent, `code-quality-reviewer`, which reviews recent changes against the standards in the `AGENTS.md` files.
 
+Claude Code loads it from `.claude/agents/`. Antigravity loads it from `.agents/agents/` and can also run it as the main agent:
+
+```bash
+agy --agent code-quality-reviewer
 ```
-/feature-builder Add a projects feature with CRUD operations
-```
 
-This command guides you through:
-1. Database schema with `/postgres-supabase-expert`
-2. Server Actions with `/server-action-builder`
-3. Forms with `/react-form-builder`
+Add your own by dropping a markdown file with `name` and `description` frontmatter into the same directories.
 
 ## Adding External Skills
 
@@ -393,6 +442,21 @@ With a consistent codebase like MakerKit, agents pick up patterns automatically.
 2. Check file names match exactly (case-sensitive)
 3. Restart your editor to reload configuration
 
+### Antigravity Ignores the Package-Level Rules
+
+Antigravity reads the root `AGENTS.md` by default, but nested files are opt-in. Enable **Settings → Agent → Load nested AGENTS.md files**, then start a new session.
+
+### Antigravity Does Not See the MCP Server
+
+1. Build it first: `pnpm --filter "@kit/mcp-server" build`
+2. Confirm `packages/mcp-server/build/index.cjs` exists
+3. Run `/mcp` in the CLI, or open the MCP panel in the IDE, to see the connection status
+4. If the project config is not picked up, add the server globally in `~/.gemini/config/mcp_config.json` using the absolute path to `index.cjs`
+
+### Antigravity Does Not List the Skills
+
+Skills must live in `.agents/skills/<skill-name>/SKILL.md` with `name` and `description` frontmatter. Antigravity uses the description to decide when to activate a skill, so a missing description means the skill is never selected. Run `/skills` in the CLI to see what was discovered.
+
 ### Agent Generates Wrong Patterns
 
 Add explicit examples to your `AGENTS.md`:
@@ -429,11 +493,12 @@ Add a quick reference section:
 {% faq
    title="Frequently Asked Questions"
    items=[
-     {"question": "Which AI coding tool works best with MakerKit?", "answer": "Claude Code and Cursor have the deepest integration through AGENTS.md and CLAUDE.md files. Both support the hierarchical instruction system and built-in skills. Choose based on your preferred workflow."},
+     {"question": "Which AI coding tool works best with MakerKit?", "answer": "Claude Code, Google Antigravity and Cursor have the deepest integration. Claude Code reads .claude/skills and CLAUDE.md; Antigravity reads .agents/skills, .agents/agents and AGENTS.md; Cursor reads AGENTS.md. All three support the hierarchical instruction system. Choose based on your preferred workflow."},
+     {"question": "Does the kit work with Google Antigravity?", "answer": "Yes. Antigravity reads the root AGENTS.md automatically and loads the package-level files once you enable Settings, Agent, Load nested AGENTS.md files. The skills in .agents/skills, the custom agent in .agents/agents and the MCP configuration in .agents/mcp_config.json are all in Antigravity's native locations, so they work without conversion. Build the MCP Server once with the pnpm build command for @kit/mcp-server before starting a session."},
      {"question": "Do I need the MCP Server?", "answer": "No, but it helps. The MCP Server gives agents additional tools for understanding the codebase. Agents work without it, but may need more guidance for complex tasks."},
      {"question": "How do I update agent rules when I change my app?", "answer": "Edit the relevant AGENTS.md file. Changes apply immediately to new agent sessions. Document your domain logic, API patterns, and feature flags so agents generate code that fits your application."},
-     {"question": "Can I use multiple AI tools on the same project?", "answer": "Yes. The instruction files work across tools. AGENTS.md covers Cursor, Windsurf, and Codex. CLAUDE.md adds Claude-specific context. You can switch between tools without reconfiguring."},
+     {"question": "Can I use multiple AI tools on the same project?", "answer": "Yes. The instruction files work across tools. AGENTS.md covers Cursor, Windsurf, Codex, and Antigravity. CLAUDE.md adds Claude-specific context. You can switch between tools without reconfiguring."},
      {"question": "Why does the agent generate code that doesn't match my patterns?", "answer": "Add explicit examples to your AGENTS.md showing correct and incorrect patterns. Agents learn from examples better than abstract rules. Include the specific imports, function signatures, and patterns you want."},
-     {"question": "How do skills work with AI agents?", "answer": "Skills are specialized instruction sets you invoke explicitly with /skill-name syntax in Claude Code. For example, /postgres-supabase-expert provides database guidance, /server-action-builder helps with Server Actions."}
+     {"question": "How do skills work with AI agents?", "answer": "Skills are specialized instruction sets. Agents activate them automatically when a task matches the skill description, and you can also invoke them explicitly with /skill-name syntax. For example, /postgres-supabase-expert provides database guidance, /server-action-builder helps with Server Actions."}
    ]
 /%}

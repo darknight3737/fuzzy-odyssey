@@ -132,7 +132,7 @@ export const createInvitationsAction = authActionClient
  */
 export const deleteInvitationAction = authActionClient
   .inputSchema(DeleteInvitationSchema)
-  .action(async ({ parsedInput: data, ctx: { user } }) => {
+  .action(async ({ parsedInput: data }) => {
     const client = getSupabaseServerClient();
     const service = createAccountInvitationsService(client);
 
@@ -175,7 +175,6 @@ export const acceptInvitationAction = authActionClient
     const client = getSupabaseServerClient();
 
     const { inviteToken, nextPath } = data;
-
     const safeNextPath = getSafeRedirectPath(nextPath, '/home');
 
     // create the services
@@ -204,7 +203,7 @@ export const acceptInvitationAction = authActionClient
     // Increase the seats for the account
     await perSeatBillingService.increaseSeats(accountId);
 
-    redirect(nextPath);
+    redirect(safeNextPath);
   });
 
 /**

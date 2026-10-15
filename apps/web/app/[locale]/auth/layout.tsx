@@ -1,4 +1,4 @@
-import { AuthLayoutShell } from '@kit/auth/shared';
+import { AuthLayoutShell } from '@kit/auth/auth-layout';
 
 import { AppLogo } from '~/components/app-logo';
 

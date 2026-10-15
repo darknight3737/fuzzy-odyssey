@@ -6,6 +6,8 @@ order: 9
 description: "A guide to updating this kit from v2 to v3 using git and AI Agents"
 ---
 
+The source for this page is available at `docs/installation/v3-migration.mdoc`. You can reference this file to AI agents for automatic migrations.
+
 v3 is a major upgrade that modernizes the entire stack:
 
 - **Zod v4** — faster validation, smaller bundle, cleaner API
@@ -84,6 +86,12 @@ Each step is tagged so you can merge incrementally:
 | 8 | `v3-step/oxc` | Replaces ESLint + Prettier with Oxc |
 | 9 | `v3-step/remove-edge-csrf` | Drops CSRF middleware in favor of Server Actions |
 | 10 | `v3-step/final` | Centralizes dependency versions |
+
+After merging the last tag (`v3-step/final`), merge the latest `main` to pick up any fixes and improvements released after the migration tags:
+
+```bash
+git pull upstream main
+```
 
 ### Before starting the migration
 
@@ -412,6 +420,30 @@ If you used Radix primitives directly, these sub-components were renamed:
 
 Base UI also introduces a **Positioner** wrapper for floating components (Popover, Tooltip, Select, DropdownMenu). Props like `align`, `side`, `sideOffset` move from `Content`/`Popup` to the `Positioner`.
 
+### AlertDialog inside Dropdowns
+
+Base UI does not support nesting an `AlertDialog` trigger around a `DropdownMenuItem`. If you have an `AlertDialogTrigger` wrapping a dropdown item, remove the trigger and instead control the dialog with state, placing it outside the dropdown:
+
+```diff
+- <AlertDialog>
+-   <AlertDialogTrigger asChild>
+-     <DropdownMenuItem>Delete</DropdownMenuItem>
+-   </AlertDialogTrigger>
+-   <AlertDialogContent>...</AlertDialogContent>
+- </AlertDialog>
++ const [isAlertOpen, setIsAlertOpen] = useState(false);
++
++ <DropdownMenuItem onClick={() => setIsAlertOpen(true)}>
++   Delete
++ </DropdownMenuItem>
++
++ <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
++   <AlertDialogContent>...</AlertDialogContent>
++ </AlertDialog>
+```
+
+Use `useState` to control `open` and `onOpenChange` on the `AlertDialog`, and trigger it from the dropdown item's `onClick` handler. Note: Base UI uses `onClick` instead of Radix's `onSelect` on menu items.
+
 ### Sidebar Import Path Change
 
 The shadcn sidebar component moved:
@@ -457,15 +489,35 @@ The interpolation syntax changed from double to single curly braces:
 
 This applies to **every custom translation string** that uses variables.
 
-### withI18n Removal
+### i18next API Removal
 
-The `withI18n` higher-order component is removed. If you wrapped page exports
-with it, remove the wrapper:
+The entire `react-i18next` / `i18next` API surface is removed in v3. This includes:
+
+- **`withI18n` HOC** — no longer needed. If you wrapped Server Component page exports with it, remove the wrapper:
 
 ```diff
 - export default withI18n(MyPage);
 + export default MyPage;
 ```
+
+- **`useTranslation` hook** — replace with `useTranslations` from `next-intl`:
+
+```diff
+- import { useTranslation } from 'react-i18next';
+- const { t } = useTranslation('namespace');
++ import { useTranslations } from 'next-intl';
++ const t = useTranslations('namespace');
+```
+
+- **`createI18nServerInstance` / `getTranslation`** — replace with `getTranslations` from `next-intl/server` (see above).
+
+- **`Trans` component** — now imported from `@kit/ui/trans` (backed by `next-intl`), not from `react-i18next`. The API is the same but key syntax uses dots instead of colons.
+
+- **`i18next.init` / custom i18n configuration** — replaced by the `next-intl` config in `apps/web/i18n/request.ts`. Remove any custom i18next initialization code.
+
+- **Custom namespaces** — if you added custom translation namespaces, register them in `apps/web/i18n/request.ts` so `next-intl` can load them.
+
+- **Custom locales** — if you added custom locales, register them in `packages/i18n/src/locales.tsx`.
 
 ### next.config.mjs
 
@@ -484,9 +536,14 @@ Without this wrapper, `next-intl` will not work.
 
 ### Messages Files
 
-**Message files** moved to `apps/web/i18n/messages/{locale}/`.
+**Message files** moved from `apps/web/public/locales/{locale}/` to `apps/web/i18n/messages/{locale}/`.
 
-Please migrate your existing messages to `apps/web/i18n/messages/{locale}/`.
+Migrate your custom translation files to the new location:
+
+```bash
+# Example: move English translations
+mv apps/web/public/locales/en/* apps/web/i18n/messages/en/
+```
 
 ### Navigation Config
 
@@ -869,7 +926,7 @@ last selected team in a cookie.
    work with the teams-only redirect logic.
 
 Run `pnpm typecheck` to verify. No action needed unless I plan
-to enable `NEXT_PUBLIC_ENABLE_TEAMS_ACCOUNTS_ONLY=true`.
+to enable `NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_ONLY=true`.
 ```
 
 New feature flag for apps that only use team accounts (no personal accounts).
@@ -878,13 +935,13 @@ New feature flag for apps that only use team accounts (no personal accounts).
 
 ```typescript
 // apps/web/config/feature-flags.config.ts
-enableTeamsOnly: import.meta.env.NEXT_PUBLIC_ENABLE_TEAMS_ACCOUNTS_ONLY === 'true',
+enableTeamsOnly: import.meta.env.NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_ONLY === 'true',
 ```
 
 ### New Env Variable
 
 ```
-NEXT_PUBLIC_ENABLE_TEAMS_ACCOUNTS_ONLY=false
+NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_ONLY=false
 ```
 
 Set to `true` if your app should skip personal accounts entirely.

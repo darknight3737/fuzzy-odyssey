@@ -61,9 +61,8 @@ export function PasswordSignInContainer({
           loading={isLoading}
           redirecting={isRedirecting}
           captchaLoading={captchaLoading}
+          captchaField={captcha.field}
         />
-
-        {captcha.field}
       </div>
     </>
   );

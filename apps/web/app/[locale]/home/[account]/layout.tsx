@@ -10,6 +10,7 @@ import { Page, PageMobileNavigation, PageNavigation } from '@kit/ui/page';
 import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
+import { MobileSidebarTrigger } from '~/components/mobile-sidebar-trigger';
 import { getTeamAccountSidebarConfig } from '~/config/team-account-navigation.config';
 
 // local imports
@@ -17,8 +18,6 @@ import { TeamAccountLayoutMobileNavigation } from './_components/team-account-la
 import { TeamAccountLayoutSidebar } from './_components/team-account-layout-sidebar';
 import { TeamAccountNavigationMenu } from './_components/team-account-navigation-menu';
 import { loadTeamWorkspace } from './_lib/server/team-account-workspace.loader';
-
-export const metadata = { robots: { index: false, follow: false } };
 
 type TeamWorkspaceLayoutProps = React.PropsWithChildren<{
   params: Promise<{ account: string }>;
@@ -56,8 +55,6 @@ async function SidebarLayout({
     image: picture_url,
   }));
 
-  console.log(state);
-
   return (
     <TeamAccountWorkspaceContextProvider value={data}>
       <SidebarProvider defaultOpen={state.open}>
@@ -71,16 +68,12 @@ async function SidebarLayout({
             />
           </PageNavigation>
 
-          <PageMobileNavigation className={'flex items-center justify-between'}>
-            <AppLogo />
-
-            <div className={'flex space-x-4'}>
-              <TeamAccountLayoutMobileNavigation
-                userId={data.user.id}
-                accounts={accounts}
-                account={account}
-              />
+          <PageMobileNavigation className={'md:hidden'}>
+            <div>
+              <AppLogo />
             </div>
+
+            <MobileSidebarTrigger />
           </PageMobileNavigation>
 
           {children}
@@ -98,12 +91,32 @@ function HeaderLayout({
 }>) {
   const data = use(loadTeamWorkspace(account));
 
+  const accounts = data.accounts.map(({ name, slug, picture_url }) => ({
+    label: name,
+    value: slug,
+    image: picture_url,
+  }));
+
   return (
     <TeamAccountWorkspaceContextProvider value={data}>
       <Page style={'header'}>
         <PageNavigation>
           <TeamAccountNavigationMenu workspace={data} />
         </PageNavigation>
+
+        <PageMobileNavigation className={'flex items-center justify-between'}>
+          <div>
+            <AppLogo />
+          </div>
+
+          <div>
+            <TeamAccountLayoutMobileNavigation
+              userId={data.user.id}
+              accounts={accounts}
+              account={account}
+            />
+          </div>
+        </PageMobileNavigation>
 
         {children}
       </Page>

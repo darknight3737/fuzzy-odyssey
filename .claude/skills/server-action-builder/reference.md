@@ -1,37 +1,56 @@
 # Server Action Reference
 
-## enhanceAction API
+## authActionClient API
 
 ```typescript
-import { enhanceAction } from '@kit/next/actions';
+import { authActionClient } from '@kit/next/safe-action';
 
-export const myAction = enhanceAction(
-  async function (data, user) {
+export const myAction = authActionClient
+  .inputSchema(ZodSchema)     // Zod schema for input validation
+  .action(async ({ parsedInput: data, ctx: { user } }) => {
     // data: validated input (typed from schema)
-    // user: authenticated user object (if auth: true)
+    // user: authenticated user object
 
     return { success: true, data: result };
-  },
-  {
-    auth: true,           // Require authentication (default: false)
-    schema: ZodSchema,    // Zod schema for validation (optional)
-  },
-);
+  });
 ```
 
-### Options
+## publicActionClient API
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `auth` | `boolean` | `false` | Require authenticated user |
-| `schema` | `ZodSchema` | - | Zod schema for input validation |
+For actions that don't require authentication:
 
-### Handler Parameters
+```typescript
+import { publicActionClient } from '@kit/next/safe-action';
 
-| Parameter | Type               | Description                        |
-|-----------|--------------------|------------------------------------|
-| `data`    | `z.output<Schema>` | Validated input data               |
-| `user`    | `User`             | Authenticated user (if auth: true) |
+export const myPublicAction = publicActionClient
+  .inputSchema(ZodSchema)
+  .action(async ({ parsedInput: data }) => {
+    // no ctx.user here
+
+    return { success: true };
+  });
+```
+
+## captchaActionClient API
+
+For actions that require CAPTCHA + authentication:
+
+```typescript
+import { captchaActionClient } from '@kit/next/safe-action';
+
+export const myProtectedAction = captchaActionClient
+  .inputSchema(ZodSchema)
+  .action(async ({ parsedInput: data, ctx: { user } }) => {
+    return { success: true };
+  });
+```
+
+### Action Callback Parameters
+
+| Parameter       | Type               | Description                        |
+|-----------------|--------------------|------------------------------------|
+| `parsedInput`   | `z.output<Schema>` | Validated input data               |
+| `ctx.user`      | `User`             | Authenticated user (auth clients)  |
 
 ## enhanceRouteHandler API
 
@@ -69,7 +88,7 @@ export const GET = enhanceRouteHandler(
 ## Common Zod Patterns
 
 ```typescript
-import * as z from 'zod';
+import { z } from 'zod';
 
 // Basic schema
 export const CreateItemSchema = z.object({

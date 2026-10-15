@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   devIndicators: {
     position: 'bottom-right',
   },
+  experimental: {
+    useTypeScriptCli: true,
+  },
   logging: {
     fetches: {
       fullUrl: true,

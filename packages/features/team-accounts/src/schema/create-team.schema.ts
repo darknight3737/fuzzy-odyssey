@@ -41,8 +41,8 @@ export function containsNonLatinCharacters(value: string): boolean {
  */
 export const SlugSchema = z
   .string()
-  .min(2)
-  .max(50)
+  .min(2, { message: 'teams.slugMinLength' })
+  .max(50, { message: 'teams.slugMaxLength' })
   .regex(SLUG_REGEX, {
     message: 'teams.invalidSlugError',
   })
@@ -61,8 +61,8 @@ export const SlugSchema = z
  */
 export const TeamNameSchema = z
   .string()
-  .min(2)
-  .max(50)
+  .min(2, { message: 'teams.teamNameMinLength' })
+  .max(50, { message: 'teams.teamNameMaxLength' })
   .refine(
     (name) => {
       return !SPECIAL_CHARACTERS_REGEX.test(name);

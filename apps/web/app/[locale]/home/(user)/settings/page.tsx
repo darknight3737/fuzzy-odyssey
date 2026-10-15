@@ -9,6 +9,8 @@ import featureFlagsConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
 import { requireUserInServerComponent } from '~/lib/server/require-user-in-server-component';
 
+import { AuthHashStatusListener } from './_components/auth-hash-status-listener';
+
 // Show email option if password, magic link, or OTP is enabled
 const showEmailOption =
   authConfig.providers.password ||
@@ -20,6 +22,7 @@ const features = {
   enablePasswordUpdate: authConfig.providers.password,
   enableAccountDeletion: featureFlagsConfig.enableAccountDeletion,
   enableAccountLinking: authConfig.enableIdentityLinking,
+  enablePasskeys: authConfig.providers.passkey,
 };
 
 const providers = authConfig.providers.oAuth;
@@ -45,6 +48,8 @@ function PersonalAccountSettingsPage() {
 
   return (
     <div className={'flex w-full flex-1 flex-col lg:max-w-2xl'}>
+      <AuthHashStatusListener />
+
       <PersonalAccountSettingsContainer
         userId={user.id}
         features={features}

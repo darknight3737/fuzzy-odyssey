@@ -120,8 +120,10 @@ class AccountInvitationsService {
       throw error;
     }
 
+    const invitationEmail = normalizeEmail(invitation.email);
+
     const isUserAlreadyMember = members.find((member) => {
-      return member.email === invitation.email;
+      return normalizeEmail(member.email) === invitationEmail;
     });
 
     if (isUserAlreadyMember) {
@@ -257,8 +259,14 @@ class AccountInvitationsService {
       );
     }
 
-    // if the invitation email does not match the user email, throw an error
-    if (invitation.data?.email !== params.userEmail) {
+    // if the invitation email does not match the user email, throw an error.
+    // NB: the comparison is case-insensitive. Supabase Auth lowercases emails at
+    // sign-up, so an invitation stored before normalization (or written by
+    // another client) may legitimately differ in case from the user's email.
+    if (
+      !invitation.data?.email ||
+      normalizeEmail(invitation.data.email) !== normalizeEmail(params.userEmail)
+    ) {
       logger.error({
         ...ctx,
         error: 'Invitation email does not match user email',
@@ -397,6 +405,16 @@ class AccountInvitationsService {
       );
     }
   }
+}
+
+/**
+ * @name normalizeEmail
+ * @description Canonicalizes an email for comparison. Supabase Auth lowercases
+ * emails at sign-up, so every comparison between an invitation address and a
+ * user address must be case-insensitive.
+ */
+export function normalizeEmail(email: string | null | undefined) {
+  return email?.trim().toLowerCase() ?? '';
 }
 
 function getSecretFingerprint(value: string) {

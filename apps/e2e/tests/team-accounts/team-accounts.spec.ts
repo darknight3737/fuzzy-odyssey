@@ -1,7 +1,7 @@
 import { Page, expect, test } from '@playwright/test';
 
 import { InvitationsPageObject } from '../invitations/invitations.po';
-import { TeamAccountsPageObject } from './team-accounts.po';
+import { HOME_LANDING_URL, TeamAccountsPageObject } from './team-accounts.po';
 
 // Helper function to set up a team with a member
 async function setupTeamWithMember(page: Page, memberRole = 'member') {
@@ -300,14 +300,16 @@ test.describe('Team Ownership Transfer', () => {
     await teamAccounts.transferOwnership(memberEmail, ownerEmail);
 
     // Verify the transfer was successful by checking if the primary owner badge
-    // is now on the new owner's row
+    // is now on the new owner's row. This positive assertion auto-retries and so
+    // also acts as the barrier that waits for the post-transfer reload to render
+    // before the negative assertion below runs.
     const memberRow = page.getByRole('row', { name: memberEmail });
 
     // Check for the primary owner badge on the member's row
     await expect(memberRow.locator('text=Primary Owner')).toBeVisible();
 
     // The original owner should no longer have the primary owner badge
-    const ownerRow = page.getByRole('row', { name: ownerEmail.split('@')[0] });
+    const ownerRow = page.getByRole('row', { name: ownerEmail });
     await expect(ownerRow.locator('text=Primary Owner')).not.toBeVisible();
   });
 });
@@ -351,6 +353,6 @@ test.describe('Team Account Security', () => {
     await userBPage.goto(`/home/${teamSlug}`);
 
     // Check that we're not on the team page anymore (should redirect)
-    await expect(userBPage).toHaveURL(`/home`);
+    await expect(userBPage).toHaveURL(HOME_LANDING_URL);
   });
 });

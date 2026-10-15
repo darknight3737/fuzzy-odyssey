@@ -6,6 +6,8 @@ import { redirect } from 'next/navigation';
 import { requireUser } from '@kit/supabase/require-user';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
+import pathsConfig from '~/config/paths.config.ts';
+
 /**
  * @name requireUserInServerComponent
  * @description Require the user to be authenticated in a server component.
@@ -14,7 +16,11 @@ import { getSupabaseServerClient } from '@kit/supabase/server-client';
  */
 export const requireUserInServerComponent = cache(async () => {
   const client = getSupabaseServerClient();
-  const result = await requireUser(client);
+
+  const result = await requireUser(client, {
+    signInPath: pathsConfig.auth.signIn,
+    mfaVerifyPath: pathsConfig.auth.verifyMfa,
+  });
 
   if (result.error) {
     redirect(result.redirectTo);

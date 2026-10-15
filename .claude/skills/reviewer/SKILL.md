@@ -27,17 +27,19 @@ Default to skepticism. Assume the change can fail in subtle, high-cost, or user-
 
 ## Step 3 — Launch two sub-agents in parallel
 
-### Track A — Code Quality & Architecture Audit
+### Track A — Adversarial Code Quality & Architecture Audit
 
-Spawn an `Explore` sub-agent using the prompt in `.agents/subagents/code-quality-audit.md`.
+Spawn an `Explore` sub-agent using the prompt in `.claude/agents/code-quality-reviewer.md`.
 
 Pass it the list of changed files. Its job: verify AGENTS.md compliance, flag anti-patterns, and propose simpler/better-structured alternatives.
 
 ### Track B — Adversarial Logic & Bug Review
 
-Spawn a `general-purpose` sub-agent. Instruct it to actively try to disprove the change by looking for violated invariants, missing guards, unhandled failure paths, and assumptions that stop being true under stress.
+Run the `bug-hunt-lite` skill on the collected diff. It is the lightweight, diff-scoped sibling of `/bug-hunt`: 2–4 parallel hunters that try to disprove the change, then one separate adversarial pass that tries to refute their candidates. It keeps the adversarial-redundancy principle while staying cheap enough to run on every feature.
 
-Tell it to trace how bad inputs, retries, concurrent actions, or partially completed operations move through the changed code.
+`bug-hunt-lite` already covers the attack-surface priorities and finding bar below — it returns confirmed findings in this section's format, which you merge in Step 4. The priorities and bars below are the contract it fulfils; keep them as the reference.
+
+If `bug-hunt-lite` is unavailable, fall back to spawning a `general-purpose` sub-agent: instruct it to actively try to disprove the change by looking for violated invariants, missing guards, unhandled failure paths, and assumptions that stop being true under stress, and to trace how bad inputs, retries, concurrent actions, or partially completed operations move through the changed code.
 
 #### Attack surface — prioritise in this order:
 

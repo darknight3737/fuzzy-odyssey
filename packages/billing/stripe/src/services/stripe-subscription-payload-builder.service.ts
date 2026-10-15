@@ -2,6 +2,40 @@ import type Stripe from 'stripe';
 
 import { UpsertSubscriptionParams } from '@kit/billing/types';
 
+type SubscriptionStatus = UpsertSubscriptionParams['status'];
+
+const SUBSCRIPTION_STATUSES = [
+  'active',
+  'canceled',
+  'incomplete',
+  'incomplete_expired',
+  'past_due',
+  'paused',
+  'trialing',
+  'unpaid',
+] as const satisfies readonly SubscriptionStatus[];
+
+/**
+ * Stripe widened `Subscription.Status` with an open-ended `OtherString` member
+ * so that adding a status upstream is not a breaking change for their types.
+ * We store the status in a column with a fixed set of values, so a status we do
+ * not know about cannot be written. Reject it here, where the message says what
+ * happened, rather than letting the database reject it later.
+ */
+function toSubscriptionStatus(
+  status: Stripe.Subscription.Status,
+): SubscriptionStatus {
+  const known = SUBSCRIPTION_STATUSES as readonly string[];
+
+  if (!known.includes(status)) {
+    throw new Error(
+      `Unsupported Stripe subscription status "${status}". Add it to the billing schema before handling it here.`,
+    );
+  }
+
+  return status as SubscriptionStatus;
+}
+
 /**
  * @name createStripeSubscriptionPayloadBuilderService
  * @description Create a new instance of the `StripeSubscriptionPayloadBuilderService` class
@@ -67,7 +101,7 @@ class StripeSubscriptionPayloadBuilderService {
       target_account_id: params.accountId,
       target_customer_id: params.customerId,
       billing_provider: 'stripe',
-      status: params.status,
+      status: toSubscriptionStatus(params.status),
       line_items: lineItems,
       active,
       currency: params.currency,

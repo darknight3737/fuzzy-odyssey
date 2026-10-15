@@ -39,10 +39,29 @@ export class StripePageObject {
     await billingCountry.selectOption(params.billingCountry ?? 'IT');
   }
 
-  submitForm() {
-    return this.getStripeCheckoutIframe()
-      .locator('[data-testid="hosted-payment-submit-button"]')
-      .click();
+  submitButton() {
+    return this.getStripeCheckoutIframe().locator(
+      '[data-testid="hosted-payment-submit-button"]',
+    );
+  }
+
+  async submitForm() {
+    const submitButton = this.submitButton();
+
+    // Stripe re-renders the embedded checkout while it validates the form, and
+    // a click landing mid-render is dropped silently: the button stays in its
+    // "complete" state, no confirmation request is ever sent, and the test only
+    // finds out 20s later when the success page never appears. Keep clicking
+    // until Stripe tells us it started processing the payment.
+    await expect(async () => {
+      if (await submitButton.isEnabled()) {
+        await submitButton.click({ timeout: 5_000 });
+      }
+
+      await expect(submitButton).toHaveClass(/SubmitButton--processing/, {
+        timeout: 5_000,
+      });
+    }).toPass({ timeout: 30_000 });
   }
 
   cardNumber() {

@@ -15,6 +15,12 @@ import { Database } from '~/lib/database.types';
 const InviteTokenSchema = z.string().uuid();
 
 /**
+ * Stable codes for failures on this route. The join page maps them to
+ * translated copy — see `JOIN_ERROR_CODES` there.
+ */
+type JoinErrorCode = 'invalid-link' | 'not-found' | 'unknown';
+
+/**
  * @name GET
  * @description Entry point for team invitation email links.
  *
@@ -48,7 +54,7 @@ export async function GET(request: NextRequest) {
   if (!inviteToken || !InviteTokenSchema.safeParse(inviteToken).success) {
     logger.warn(ctx, 'Missing or malformed invite_token parameter');
 
-    return redirectToError('Invalid invitation link');
+    return redirectToError('invalid-link');
   }
 
   // If the link is not validly signed, never auto-authenticate. Send the user
@@ -83,7 +89,7 @@ export async function GET(request: NextRequest) {
         'Invitation not found or expired',
       );
 
-      return redirectToError('Invitation not found or expired');
+      return redirectToError('not-found');
     }
 
     logger.info(
@@ -94,17 +100,23 @@ export async function GET(request: NextRequest) {
       'Valid signed invitation found. Generating auth link...',
     );
 
+    // Supabase Auth lowercases emails at sign-up, so the invitation address must
+    // be canonicalized before it is compared against (or used to mint an auth
+    // link for) an account. Invitations stored before normalization was
+    // introduced may still carry mixed case.
+    const invitationEmail = invitation.email.trim().toLowerCase();
+
     // Determine email link type based on user existence
     // 'invite' for new users (creates account + authenticates)
     // 'magiclink' for existing users (authenticates only)
     const emailLinkType = await determineEmailLinkType(
       adminClient,
-      invitation.email,
+      invitationEmail,
     );
 
     // Generate fresh Supabase auth link
     const generateLinkResponse = await adminClient.auth.admin.generateLink({
-      email: invitation.email,
+      email: invitationEmail,
       type: emailLinkType,
     });
 
@@ -168,13 +180,17 @@ export async function GET(request: NextRequest) {
       'Failed to process invitation acceptance',
     );
 
-    return redirectToError('An error occurred processing your invitation');
+    return redirectToError('unknown');
   }
 }
 
 /**
  * @name determineEmailLinkType
  * @description Determines whether to use 'invite' or 'magiclink' based on user existence
+ * @param email - the invitation address, already lowercased. `accounts.email`
+ * mirrors `auth.users.email`, which Supabase Auth stores lowercased, so an
+ * exact match on the canonical form is correct here. `ilike` would not be: `_`
+ * and `%` are wildcards and appear in ordinary email local parts.
  */
 async function determineEmailLinkType(
   adminClient: SupabaseClient<Database>,
@@ -215,13 +231,18 @@ function redirectToSecureJoin(inviteToken: string): NextResponse {
 
 /**
  * @name redirectToError
- * @description Redirects to join page with error message
+ * @description Redirects to the join page with a stable error code.
+ *
+ * A code — not a message — so the join page can render a translated string. It
+ * also means nothing this route puts in the URL is echoed back into the page,
+ * which keeps the query param from being usable to place arbitrary text on a
+ * first-party screen.
  */
-function redirectToError(message: string): NextResponse {
+function redirectToError(code: JoinErrorCode): NextResponse {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const errorUrl = new URL(pathsConfig.app.joinTeam, siteUrl);
 
-  errorUrl.searchParams.set('error', message);
+  errorUrl.searchParams.set('error', code);
 
   return NextResponse.redirect(errorUrl);
 }

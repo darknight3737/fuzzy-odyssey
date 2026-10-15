@@ -7,11 +7,16 @@ import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 import { cn } from '@kit/ui/utils';
 
+import { sanitizeCmsExcerptHtml } from '~/lib/sanitize-cms-html';
+
 import { CoverImage } from '../../blog/_components/cover-image';
 import { DateFormatter } from '../../blog/_components/date-formatter';
 
-export function ChangelogHeader({ entry }: { entry: Cms.ContentItem }) {
+export async function ChangelogHeader({ entry }: { entry: Cms.ContentItem }) {
   const { title, publishedAt, description, image } = entry;
+  const sanitizedDescription = description
+    ? await sanitizeCmsExcerptHtml(description)
+    : null;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -42,7 +47,7 @@ export function ChangelogHeader({ entry }: { entry: Cms.ContentItem }) {
           {description && (
             <h2
               className="text-muted-foreground text-base"
-              dangerouslySetInnerHTML={{ __html: description }}
+              dangerouslySetInnerHTML={{ __html: sanitizedDescription ?? '' }}
             />
           )}
         </div>

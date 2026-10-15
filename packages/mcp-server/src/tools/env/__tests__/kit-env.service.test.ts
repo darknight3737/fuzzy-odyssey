@@ -1,22 +1,39 @@
 import { describe, expect, it } from 'vitest';
 
 import { type KitEnvDeps, createKitEnvService } from '../kit-env.service';
-import { processEnvDefinitions } from '../scanner';
+import { findWorkspaceRoot, processEnvDefinitions } from '../scanner';
 import { KitEnvUpdateInputSchema } from '../schema';
+
+import path from 'node:path';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
+// The service resolves absolute paths, so the fixtures are anchored the same
+// way and canonicalized to forward slashes to stay platform-independent.
+const toPosix = (filePath: string) => filePath.split(path.sep).join('/');
+
+const ROOT = toPosix(path.resolve('/repo'));
+const APPS_DIR = `${ROOT}/apps`;
+const WEB_DIR = `${APPS_DIR}/web`;
+
 function createDeps(
   files: Record<string, string> = {},
   overrides: Partial<KitEnvDeps> = {},
 ): KitEnvDeps & { _store: Record<string, string> } {
-  const store = { ...files };
+  const store = Object.fromEntries(
+    Object.entries(files).map(([filePath, content]) => [
+      toPosix(filePath),
+      content,
+    ]),
+  );
 
   return {
-    rootPath: '/repo',
-    async readFile(filePath: string) {
+    rootPath: ROOT,
+    async readFile(rawPath: string) {
+      const filePath = toPosix(rawPath);
+
       if (!(filePath in store)) {
         const error = new Error(
           `ENOENT: no such file: ${filePath}`,
@@ -26,11 +43,11 @@ function createDeps(
       }
       return store[filePath]!;
     },
-    async writeFile(filePath: string, content: string) {
-      store[filePath] = content;
+    async writeFile(rawPath: string, content: string) {
+      store[toPosix(rawPath)] = content;
     },
-    async fileExists(filePath: string) {
-      return filePath in store;
+    async fileExists(rawPath: string) {
+      return toPosix(rawPath) in store;
     },
     ...overrides,
     get _store() {
@@ -95,7 +112,7 @@ describe('KitEnvService.getSchema', () => {
 describe('KitEnvService.update', () => {
   it('replaces an existing key in-place', async () => {
     const deps = createDeps({
-      '/repo/apps/web/.env.local':
+      [`${WEB_DIR}/.env.local`]:
         '# Comment\nEMAIL_SENDER=team@example.com\nOTHER=foo\n',
     });
 
@@ -109,7 +126,7 @@ describe('KitEnvService.update', () => {
 
     expect(result.success).toBe(true);
 
-    const content = deps._store['/repo/apps/web/.env.local']!;
+    const content = deps._store[`${WEB_DIR}/.env.local`]!;
     expect(content).toContain('EMAIL_SENDER=hello@example.com');
     // preserves comment
     expect(content).toContain('# Comment');
@@ -119,7 +136,7 @@ describe('KitEnvService.update', () => {
 
   it('appends new key when it does not exist', async () => {
     const deps = createDeps({
-      '/repo/apps/web/.env.local': 'EXISTING=value\n',
+      [`${WEB_DIR}/.env.local`]: 'EXISTING=value\n',
     });
 
     const service = createKitEnvService(deps);
@@ -130,7 +147,7 @@ describe('KitEnvService.update', () => {
       file: '.env.local',
     });
 
-    const content = deps._store['/repo/apps/web/.env.local']!;
+    const content = deps._store[`${WEB_DIR}/.env.local`]!;
     expect(content).toContain('EXISTING=value');
     expect(content).toContain('NEW_KEY=new_value');
   });
@@ -146,7 +163,7 @@ describe('KitEnvService.update', () => {
       file: '.env.local',
     });
 
-    const content = deps._store['/repo/apps/web/.env.local']!;
+    const content = deps._store[`${WEB_DIR}/.env.local`]!;
     expect(content).toContain('BRAND_NEW=value');
   });
 
@@ -179,7 +196,7 @@ describe('KitEnvService.update', () => {
     });
 
     // Secret keys default to .env.local in dev mode
-    expect(deps._store['/repo/apps/web/.env.local']).toContain(
+    expect(deps._store[`${WEB_DIR}/.env.local`]).toContain(
       'STRIPE_SECRET_KEY=sk_test_123',
     );
   });
@@ -198,7 +215,7 @@ describe('KitEnvService.update', () => {
       mode: 'development',
     });
 
-    expect(deps._store['/repo/apps/web/.env.local']).toContain(
+    expect(deps._store[`${WEB_DIR}/.env.local`]).toContain(
       'NEXT_PUBLIC_SITE_URL=http://localhost:3000',
     );
   });
@@ -215,7 +232,7 @@ describe('KitEnvService.update', () => {
     });
 
     // Secret keys in prod default to .env.production.local
-    expect(deps._store['/repo/apps/web/.env.production.local']).toContain(
+    expect(deps._store[`${WEB_DIR}/.env.production.local`]).toContain(
       'STRIPE_SECRET_KEY=sk_live_abc',
     );
   });
@@ -262,7 +279,7 @@ describe('KitEnvService — path traversal prevention', () => {
 
   it('allows valid file names within web directory', async () => {
     const deps = createDeps({
-      '/repo/apps/web/.env.local': 'KEY=val',
+      [`${WEB_DIR}/.env.local`]: 'KEY=val',
     });
 
     const service = createKitEnvService(deps);
@@ -280,7 +297,7 @@ describe('KitEnvService.rawRead', () => {
   it('returns content when file exists', async () => {
     const service = createKitEnvService(
       createDeps({
-        '/repo/apps/web/.env.local': '# My env\nFOO=bar\n',
+        [`${WEB_DIR}/.env.local`]: '# My env\nFOO=bar\n',
       }),
     );
 
@@ -303,7 +320,7 @@ describe('KitEnvService.rawRead', () => {
 describe('KitEnvService.rawWrite', () => {
   it('overwrites file with raw content', async () => {
     const deps = createDeps({
-      '/repo/apps/web/.env.local': 'OLD=content',
+      [`${WEB_DIR}/.env.local`]: 'OLD=content',
     });
 
     const service = createKitEnvService(deps);
@@ -311,7 +328,7 @@ describe('KitEnvService.rawWrite', () => {
     const result = await service.rawWrite('.env.local', '# New\nNEW=value');
 
     expect(result.success).toBe(true);
-    expect(deps._store['/repo/apps/web/.env.local']).toBe('# New\nNEW=value');
+    expect(deps._store[`${WEB_DIR}/.env.local`]).toBe('# New\nNEW=value');
   });
 
   it('creates file when it does not exist', async () => {
@@ -321,7 +338,7 @@ describe('KitEnvService.rawWrite', () => {
 
     await service.rawWrite('.env.production', 'PROD_KEY=val');
 
-    expect(deps._store['/repo/apps/web/.env.production']).toBe('PROD_KEY=val');
+    expect(deps._store[`${WEB_DIR}/.env.production`]).toBe('PROD_KEY=val');
   });
 });
 
@@ -331,12 +348,11 @@ describe('KitEnvService.rawWrite', () => {
 
 describe('KitEnvService.read — file precedence', () => {
   it('returns variables with mode information when pointing to real workspace', async () => {
-    // Use the actual monorepo root — will scan real .env files
+    // Use the actual monorepo root — will scan real .env files. Resolved with
+    // the shipped helper rather than a separator-dependent regex: a wrong root
+    // makes the scan throw ENOENT instead of quietly returning nothing.
     const service = createKitEnvService(
-      createDeps(
-        {},
-        { rootPath: process.cwd().replace(/\/packages\/mcp-server$/, '') },
-      ),
+      createDeps({}, { rootPath: findWorkspaceRoot(process.cwd()) }),
     );
 
     const result = await service.read('development');
@@ -354,17 +370,17 @@ describe('KitEnvService — injected fs', () => {
   it('getAppState reads from injected fs', async () => {
     const deps = createDeps(
       {
-        '/repo/apps/web/.env': 'FOO=bar\n',
+        [`${WEB_DIR}/.env`]: 'FOO=bar\n',
       },
       {
         readdir: async (dirPath: string) => {
-          if (dirPath === '/repo/apps') {
+          if (toPosix(dirPath) === APPS_DIR) {
             return ['web'];
           }
           return [];
         },
-        stat: async (path: string) => ({
-          isDirectory: () => path === '/repo/apps/web',
+        stat: async (filePath: string) => ({
+          isDirectory: () => toPosix(filePath) === WEB_DIR,
         }),
       },
     );
@@ -379,17 +395,17 @@ describe('KitEnvService — injected fs', () => {
   it('getVariable reads from injected fs', async () => {
     const deps = createDeps(
       {
-        '/repo/apps/web/.env': 'HELLO=world\n',
+        [`${WEB_DIR}/.env`]: 'HELLO=world\n',
       },
       {
         readdir: async (dirPath: string) => {
-          if (dirPath === '/repo/apps') {
+          if (toPosix(dirPath) === APPS_DIR) {
             return ['web'];
           }
           return [];
         },
-        stat: async (path: string) => ({
-          isDirectory: () => path === '/repo/apps/web',
+        stat: async (filePath: string) => ({
+          isDirectory: () => toPosix(filePath) === WEB_DIR,
         }),
       },
     );

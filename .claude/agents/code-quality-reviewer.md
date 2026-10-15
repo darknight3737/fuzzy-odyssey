@@ -1,7 +1,6 @@
 ---
 name: code-quality-reviewer
 description: Use this agent when you need to review recently written or modified code for quality, security, and adherence to Makerkit standards. MUST USE after every ending every task. This agent should be used proactively immediately after writing or modifying code, especially for TypeScript/React/Next.js code in the Makerkit SaaS architecture. Examples:\n\n<example>\nContext: The user has just written a new React component for user authentication.\nuser: "Create a login form component with email and password fields"\nassistant: "I'll create a login form component for you."\n<function call to create component>\nassistant: "Now let me review this code for quality and best practices using the code-quality-reviewer agent."\n<commentary>\nSince new code was just written, proactively use the code-quality-reviewer agent to ensure it meets all standards.\n</commentary>\n</example>\n\n<example>\nContext: The user has modified database schema and migrations.\nuser: "Add a new projects table with proper RLS policies"\nassistant: "I've created the projects table schema and migration."\n<function call to create schema>\nassistant: "Let me review these database changes to ensure they follow best practices."\n<commentary>\nDatabase changes were made, so use the code-quality-reviewer to check for security, RLS implementation, and schema design.\n</commentary>\n</example>\n\n<example>\nContext: The user has refactored an existing server action.\nuser: "Refactor the updateProfile action to use the new validation schema"\nassistant: "I've refactored the updateProfile action."\n<function call to refactor>\nassistant: "I'll now review the refactored code to ensure it maintains quality standards."\n<commentary>\nCode was modified, trigger the code-quality-reviewer to verify the refactoring maintains standards.\n</commentary>\n</example>
-model: sonnet
 color: red
 ---
 
@@ -26,13 +25,12 @@ You will analyze recently written or modified code against these critical criter
 - Flag any useEffect usage as a code smell requiring justification
 - Verify single state objects are preferred over multiple useState calls (4-5+ is too many)
 - Ensure server-side data fetching uses React Server Components where appropriate
-- Check for loading indicators (LoadingSpinner) in async operations
+- Check for loading indicators (`Spinner` from `@kit/ui/spinner`) in async operations
 - Verify data-test attributes are added for E2E testing where needed
 - Confirm forms use react-hook-form with @kit/ui/form components
-- Check that server actions use enhanceAction and API routes use enhanceRouteHandler
+- Check that server actions use `authActionClient` from `@kit/next/safe-action` and API routes use `enhanceRouteHandler`
 - Check that server actions and route handlers use reusable services for encapsulating business logic
-- Verify pages export components using withI18n utility
-- Ensure redirects after server actions use redirect() with proper isRedirectError handling in the client-side form where the server action is called
+- Ensure redirects after server actions use redirect() rather than client-side routing
 - Verify back-end does not expose sensitive data
 
 **Makerkit Architecture Validation:**

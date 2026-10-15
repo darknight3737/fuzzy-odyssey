@@ -99,10 +99,35 @@ export class AuthPageObject {
     }).toPass();
   }
 
+  async expectAuthOtpCode(email: string, subject: string) {
+    let code = '';
+
+    await expect(async () => {
+      code = await this.mailbox.getAuthOtpFromEmail(email, subject);
+
+      expect(code).toMatch(/^\d{6}$/);
+    }).toPass();
+
+    return code;
+  }
+
   createRandomEmail() {
     const value = Math.random() * 10000000000000;
 
     return `${value.toFixed(0)}@makerkit.dev`;
+  }
+
+  /**
+   * Returns an address whose local part contains uppercase characters, unlike
+   * `createRandomEmail` which is digits-only and so can never vary in case.
+   * Supabase Auth lowercases emails at sign-up, so any flow that matches a
+   * user-supplied address against an authenticated user has to be exercised
+   * with mixed case to be meaningful.
+   */
+  createRandomMixedCaseEmail() {
+    const value = Math.random() * 10000000000000;
+
+    return `Case${value.toFixed(0)}.Upper@makerkit.dev`;
   }
 
   async signUpFlow(path: string) {

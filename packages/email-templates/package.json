@@ -1,29 +1,7 @@
 {
   "name": "@kit/email-templates",
   "version": "0.1.0",
-  "scripts": {
-    "clean": "git clean -xdf .turbo node_modules",
-    "format": "prettier --check \"**/*.{ts,tsx}\"",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
-  },
-  "prettier": "@kit/prettier-config",
-  "exports": {
-    ".": "./src/index.ts",
-    "./registry": "./src/registry.ts"
-  },
-  "dependencies": {
-    "@react-email/components": "catalog:"
-  },
-  "devDependencies": {
-    "@kit/eslint-config": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
-    "@kit/tsconfig": "workspace:*",
-    "@types/react": "catalog:",
-    "next-intl": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:"
-  },
+  "private": true,
   "typesVersions": {
     "*": {
       "*": [
@@ -40,7 +18,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@react-email/components": "catalog:"
+    "react-email": "catalog:"
   },
   "devDependencies": {
     "@kit/tsconfig": "workspace:*",

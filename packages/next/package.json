@@ -1,32 +1,7 @@
 {
   "name": "@kit/next",
   "version": "0.1.0",
-  "scripts": {
-    "clean": "git clean -xdf .turbo node_modules",
-    "format": "prettier --check \"**/*.{ts,tsx}\"",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
-  },
-  "prettier": "@kit/prettier-config",
-  "exports": {
-    "./actions": "./src/actions/index.ts",
-    "./safe-action": "./src/actions/safe-action-client.ts",
-    "./routes": "./src/routes/index.ts"
-  },
-  "dependencies": {
-    "next-safe-action": "catalog:"
-  },
-  "devDependencies": {
-    "@kit/auth": "workspace:*",
-    "@kit/eslint-config": "workspace:*",
-    "@kit/monitoring": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
-    "@kit/supabase": "workspace:*",
-    "@kit/tsconfig": "workspace:*",
-    "@supabase/supabase-js": "catalog:",
-    "next": "catalog:",
-    "zod": "catalog:"
-  },
+  "private": true,
   "typesVersions": {
     "*": {
       "*": [
@@ -41,7 +16,8 @@
   },
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "next-safe-action": "catalog:"
@@ -53,6 +29,7 @@
     "@kit/tsconfig": "workspace:*",
     "@supabase/supabase-js": "catalog:",
     "next": "catalog:",
+    "vitest": "catalog:",
     "zod": "catalog:"
   }
 }

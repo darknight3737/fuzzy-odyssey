@@ -27,9 +27,12 @@ To enable it, you need to set the following environment variables:
 ```bash
 CAPTCHA_SECRET_TOKEN=
 NEXT_PUBLIC_CAPTCHA_SITE_KEY=
+NEXT_PUBLIC_CAPTCHA_WIDGET_SIZE=invisible
 ```
 
 You can find the `CAPTCHA_SECRET_TOKEN` in the Turnstile configuration. The `NEXT_PUBLIC_CAPTCHA_SITE_KEY` is public and safe to share. Instead, the `CAPTCHA_SECRET_TOKEN` should be kept secret.
+
+`NEXT_PUBLIC_CAPTCHA_WIDGET_SIZE` controls the visual appearance of the Turnstile widget. The default is `invisible`, which is correct for **Non-interactive** and **Invisible** site key types. If you use a **Managed** site key (where Cloudflare may require the user to interact with a checkbox), set this to `normal` or `compact` so the widget is visible.
 
 This guide assumes you have correctly set up your Turnstile configuration. If you haven't, please refer to the https://developers.cloudflare.com/turnstile.
 

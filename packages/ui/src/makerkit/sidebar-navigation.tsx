@@ -384,8 +384,12 @@ export function SidebarNavigation({
 }>) {
   const currentLocale = useLocale();
   const currentPath = usePathname() ?? '';
-  const { open } = useSidebar();
+  const { open: sidebarOpen, isMobile } = useSidebar();
   const t = useTranslations();
+
+  // On mobile the sidebar renders as a full-width sheet (never the icon rail),
+  // so labels must always be shown regardless of the desktop collapse state.
+  const open = sidebarOpen || isMobile;
 
   return (
     <div className={cn('flex flex-col', { 'gap-y-0': open, 'gap-y-1': !open })}>

@@ -28,7 +28,7 @@ grant execute on function public.is_aal2() to authenticated;
 
 /*
 * public.is_super_admin
-* Check if the user is a super admin.
+* Check if the user is a super admin. 
 * A Super Admin is a user that has the role 'super-admin' and has MFA enabled.
 */
 create

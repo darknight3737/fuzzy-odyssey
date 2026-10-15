@@ -4,10 +4,11 @@ import { useMemo, useState } from 'react';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Ellipsis } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 
 import { Database } from '@kit/supabase/database';
 import { Badge } from '@kit/ui/badge';
+import { badgeExtras } from '@kit/ui/badge-extras';
 import { Button } from '@kit/ui/button';
 import { DataTable } from '@kit/ui/data-table';
 import {
@@ -124,6 +125,7 @@ function useGetColumns(
   },
 ): ColumnDef<Members[0]>[] {
   const t = useTranslations('teams');
+  const format = useFormatter();
 
   return useMemo(
     () => [
@@ -173,7 +175,9 @@ function useGetColumns(
               <RoleBadge role={role} />
 
               <If condition={isPrimaryOwner}>
-                <Badge variant={'warning'}>{t('primaryOwnerLabel')}</Badge>
+                <Badge className={badgeExtras.warning}>
+                  {t('primaryOwnerLabel')}
+                </Badge>
               </If>
             </span>
           );
@@ -182,7 +186,9 @@ function useGetColumns(
       {
         header: t('joinedAtLabel'),
         cell: ({ row }) => {
-          return new Date(row.original.created_at).toLocaleDateString();
+          return format.dateTime(new Date(row.original.created_at), {
+            dateStyle: 'medium',
+          });
         },
       },
       {
@@ -199,7 +205,7 @@ function useGetColumns(
         ),
       },
     ],
-    [t, params, permissions],
+    [t, format, params, permissions],
   );
 }
 

@@ -7,8 +7,12 @@ import {
 
 function createDeps(
   overrides: Partial<RunChecksDeps> = {},
+  // Mirrors the root package.json: the default checks must all exist, or every
+  // run reports them as missing.
   scripts: Record<string, string> = {
     typecheck: 'tsc --noEmit',
+    'lint:fix': 'oxlint --fix',
+    'format:fix': 'oxfmt',
     test: 'vitest run',
   },
 ): RunChecksDeps {

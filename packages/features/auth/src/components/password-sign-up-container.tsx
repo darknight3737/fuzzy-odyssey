@@ -3,6 +3,7 @@
 import { CheckCircle } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
+import { alertExtras } from '@kit/ui/alert-extras';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
@@ -59,9 +60,8 @@ export function EmailPasswordSignUpContainer({
             defaultValues={defaultValues}
             displayTermsCheckbox={displayTermsCheckbox}
             captchaLoading={captchaLoading}
+            captchaField={captcha.field}
           />
-
-          {captcha.field}
         </div>
       </If>
     </>
@@ -70,7 +70,7 @@ export function EmailPasswordSignUpContainer({
 
 function SuccessAlert() {
   return (
-    <Alert variant={'success'}>
+    <Alert className={alertExtras.success}>
       <CheckCircle className={'w-4'} />
 
       <AlertTitle>

@@ -1,26 +1,7 @@
 {
   "name": "@kit/mailers",
   "version": "0.1.0",
-  "scripts": {
-    "clean": "git clean -xdf .turbo node_modules",
-    "format": "prettier --check \"**/*.{ts,tsx}\"",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
-  },
-  "prettier": "@kit/prettier-config",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "devDependencies": {
-    "@kit/eslint-config": "workspace:*",
-    "@kit/mailers-shared": "workspace:*",
-    "@kit/nodemailer": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
-    "@kit/resend": "workspace:*",
-    "@kit/shared": "workspace:*",
-    "@kit/tsconfig": "workspace:*",
-    "zod": "catalog:"
-  },
+  "private": true,
   "typesVersions": {
     "*": {
       "*": [

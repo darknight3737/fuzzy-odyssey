@@ -1,7 +1,8 @@
-import { z } from 'zod';
-import { timingSafeEqual } from 'node:crypto';
+import * as z from 'zod';
 
 import { DatabaseWebhookVerifierService } from './database-webhook-verifier.service';
+
+import { timingSafeEqual } from 'node:crypto';
 
 const webhooksSecret = z
   .string({

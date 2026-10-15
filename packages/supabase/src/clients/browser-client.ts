@@ -17,5 +17,14 @@ export function getSupabaseBrowserClient<GenericSchema = Database>() {
       // sync with the server/middleware clients to avoid attribute drift.
       secure: process.env.NODE_ENV === 'production',
     },
+    auth: {
+      experimental: {
+        // Opt-in to the WebAuthn/passkey APIs (`signInWithPasskey`,
+        // `registerPasskey`, `passkey.*`). These methods throw at call time
+        // unless this flag is enabled. The passkey UI is still gated behind
+        // the `NEXT_PUBLIC_AUTH_PASSKEY` config flag.
+        passkey: true,
+      },
+    },
   });
 }

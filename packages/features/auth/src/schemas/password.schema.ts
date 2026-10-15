@@ -4,9 +4,18 @@ import * as z from 'zod';
  * Password requirements
  * These are the requirements for the password when signing up or changing the password
  */
+export interface PasswordRequirements {
+  specialChars: boolean;
+  numbers: boolean;
+  uppercase: boolean;
+}
+
 const requirements = {
   minLength: 8,
   maxLength: 99,
+};
+
+export const webPasswordRequirements: PasswordRequirements = {
   specialChars:
     process.env.NEXT_PUBLIC_PASSWORD_REQUIRE_SPECIAL_CHARS === 'true',
   numbers: process.env.NEXT_PUBLIC_PASSWORD_REQUIRE_NUMBERS === 'true',
@@ -19,15 +28,26 @@ const requirements = {
  */
 export const PasswordSchema = z
   .string()
-  .min(requirements.minLength)
+  .min(requirements.minLength, { message: 'auth.errors.minPasswordLength' })
   .max(requirements.maxLength);
+
+/**
+ * Refined password schema for an explicit policy — the platform-agnostic form of
+ * `RefinedPasswordSchema`.
+ */
+export const createRefinedPasswordSchema = (
+  passwordRequirements: PasswordRequirements,
+) =>
+  PasswordSchema.superRefine((val, ctx) =>
+    validatePassword(val, ctx, passwordRequirements),
+  );
 
 /**
  * Refined password schema with additional requirements
  * This is required to validate the password requirements on sign up and password change
  */
-export const RefinedPasswordSchema = PasswordSchema.superRefine((val, ctx) =>
-  validatePassword(val, ctx),
+export const RefinedPasswordSchema = createRefinedPasswordSchema(
+  webPasswordRequirements,
 );
 
 export function refineRepeatPassword(
@@ -43,8 +63,12 @@ export function refineRepeatPassword(
   }
 }
 
-function validatePassword(password: string, ctx: z.RefinementCtx) {
-  if (requirements.specialChars) {
+function validatePassword(
+  password: string,
+  ctx: z.RefinementCtx,
+  passwordRequirements: PasswordRequirements,
+) {
+  if (passwordRequirements.specialChars) {
     const specialCharsCount =
       password.match(/[!@#$%^&*(),.?":{}|<>]/g)?.length ?? 0;
 
@@ -56,7 +80,7 @@ function validatePassword(password: string, ctx: z.RefinementCtx) {
     }
   }
 
-  if (requirements.numbers) {
+  if (passwordRequirements.numbers) {
     const numbersCount = password.match(/\d/g)?.length ?? 0;
 
     if (numbersCount < 1) {
@@ -67,7 +91,7 @@ function validatePassword(password: string, ctx: z.RefinementCtx) {
     }
   }
 
-  if (requirements.uppercase) {
+  if (passwordRequirements.uppercase) {
     if (!/[A-Z]/.test(password)) {
       ctx.addIssue({
         message: 'auth.errors.uppercasePassword',

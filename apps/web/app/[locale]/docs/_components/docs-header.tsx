@@ -19,7 +19,7 @@ export function DocsHeader() {
             <Separator orientation="vertical" />
 
             <Link
-              href="/help"
+              href="/docs"
               className="font-semibold tracking-tight hover:underline"
             >
               <Trans i18nKey="marketing.documentation" />
@@ -29,6 +29,7 @@ export function DocsHeader() {
           <DocsBackButton />
         </div>
       }
+      centered={false}
       className="border-border/50 border-b px-4"
     />
   );

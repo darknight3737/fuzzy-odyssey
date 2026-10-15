@@ -1,7 +1,11 @@
 import * as z from 'zod';
 
 const InviteSchema = z.object({
-  email: z.string().email(),
+  // Normalize the email at the boundary: Supabase Auth (GoTrue) lowercases
+  // emails at sign-up, so an invitation stored as `Owner@example.com` would
+  // never match the resulting `owner@example.com` user. Case is insignificant
+  // for the local part in practice, so we canonicalize on write.
+  email: z.string().trim().toLowerCase().email(),
   role: z.string().min(1).max(100),
 });
 

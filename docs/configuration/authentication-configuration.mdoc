@@ -1,8 +1,8 @@
 ---
 status: "published"
 label: "Authentication Configuration"
-title: "Authentication Configuration: Password, Magic Link, OAuth, MFA"
-description: "Configure email/password, magic link, OTP, and OAuth authentication in the Next.js Supabase SaaS Kit. Set up password requirements, identity linking, and CAPTCHA protection."
+title: "Authentication Configuration: Password, Magic Link, OAuth, Passkeys, MFA"
+description: "Configure email/password, magic link, OTP, passkeys, and OAuth authentication in the Next.js Supabase SaaS Kit. Set up password requirements, identity linking, and CAPTCHA protection."
 order: 2
 ---
 
@@ -19,6 +19,7 @@ Password authentication is enabled by default. To switch to magic link or add OA
 | Password | `NEXT_PUBLIC_AUTH_PASSWORD` | `true` | Traditional email/password |
 | Magic Link | `NEXT_PUBLIC_AUTH_MAGIC_LINK` | `false` | Passwordless email links |
 | OTP | `NEXT_PUBLIC_AUTH_OTP` | `false` | One-time password codes |
+| Passkey | `NEXT_PUBLIC_AUTH_PASSKEY` | `false` | WebAuthn passkeys (biometrics / security keys) |
 | OAuth | Configure in code | `['google']` | Third-party providers |
 
 ## Basic Configuration
@@ -28,6 +29,7 @@ Password authentication is enabled by default. To switch to magic link or add OA
 NEXT_PUBLIC_AUTH_PASSWORD=true
 NEXT_PUBLIC_AUTH_MAGIC_LINK=false
 NEXT_PUBLIC_AUTH_OTP=false
+NEXT_PUBLIC_AUTH_PASSKEY=false
 ```
 
 ## Switching to Magic Link
@@ -57,6 +59,43 @@ content_path = "./supabase/templates/otp.html"
 ```
 
 Also update the templates in your Supabase Dashboard under **Authentication > Templates** for production.
+
+## Passkeys
+
+Passkeys let users sign in with WebAuthn — using their device's biometrics (Face ID, Touch ID, Windows Hello) or a hardware security key — instead of a password. Passkeys are **disabled by default**.
+
+```bash
+# Enable the passkey sign-in option
+NEXT_PUBLIC_AUTH_PASSKEY=true
+```
+
+When enabled, a "Sign in with Passkey" button appears on the sign-in page alongside the other methods, and a **Passkeys** card appears in the personal account settings where users can register and remove their passkeys.
+
+{% alert type="warning" title="Enable WebAuthn in Supabase" %}
+The passkey option only renders the UI. You must also enable WebAuthn for your project in the Supabase Dashboard under **Authentication > Sign In / Providers**. Passkeys require a secure context (HTTPS, or `localhost` during development).
+{% /alert %}
+
+### How passkeys work in the kit
+
+Passkeys are powered by Supabase's experimental WebAuthn APIs, which are opted into on the browser client (`packages/supabase/src/clients/browser-client.ts`):
+
+```typescript
+createBrowserClient(url, key, {
+  auth: {
+    experimental: {
+      passkey: true,
+    },
+  },
+});
+```
+
+The relevant building blocks are:
+
+- `useSignInWithPasskey()` — signs an existing user in with `supabase.auth.signInWithPasskey()`
+- `useRegisterPasskey(userId)` — registers a passkey for the signed-in user with `supabase.auth.registerPasskey()`
+- `useFetchPasskeys(userId)` / `useDeletePasskey(userId)` — list and remove passkeys via `supabase.auth.passkey.*`
+
+Because passkeys authenticate an **existing** account, the sign-in button only appears on the sign-in page (not on sign-up). Users first register a passkey from their account settings, then use it to sign in. See [Supabase's passkeys guide](https://supabase.com/docs/guides/auth/passkeys) for more details.
 
 ## OAuth Providers
 
@@ -92,6 +131,7 @@ providers: {
   password: process.env.NEXT_PUBLIC_AUTH_PASSWORD === 'true',
   magicLink: process.env.NEXT_PUBLIC_AUTH_MAGIC_LINK === 'true',
   otp: process.env.NEXT_PUBLIC_AUTH_OTP === 'true',
+  passkey: process.env.NEXT_PUBLIC_AUTH_PASSKEY === 'true',
   oAuth: ['google', 'github'],  // Add providers here
 }
 ```
@@ -186,6 +226,7 @@ const authConfig = AuthConfigSchema.parse({
     password: process.env.NEXT_PUBLIC_AUTH_PASSWORD === 'true',
     magicLink: process.env.NEXT_PUBLIC_AUTH_MAGIC_LINK === 'true',
     otp: process.env.NEXT_PUBLIC_AUTH_OTP === 'true',
+    passkey: process.env.NEXT_PUBLIC_AUTH_PASSKEY === 'true',
     oAuth: ['google'],
   },
 });

@@ -1,5 +1,4 @@
 import 'server-only';
-
 import { redirect } from 'next/navigation';
 
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -126,7 +125,7 @@ class TeamBillingService {
       `Creating checkout session...`,
     );
 
-    let checkoutToken: string | null | undefined;
+    let checkoutToken: string | null = null;
     let url: string | null | undefined;
 
     try {
@@ -144,10 +143,12 @@ class TeamBillingService {
       checkoutToken = checkout.checkoutToken;
       url = checkout.url;
     } catch (error) {
+      const message = Error.isError(error) ? error.message : error;
+
       logger.error(
         {
           ...ctx,
-          error,
+          error: message,
         },
         `Error creating the checkout session`,
       );
@@ -155,18 +156,10 @@ class TeamBillingService {
       throw new Error(`Checkout not created`, { cause: error });
     }
 
-    if (!url && !checkoutToken) {
-      throw new Error(
-        'Checkout session returned neither a URL nor a checkout token',
-      );
-    }
-
     // if URL provided, we redirect to the provider's hosted page
     if (url) {
       logger.info(
-        {
-          userId: user.id,
-        },
+        ctx,
         `Checkout session created. Redirecting to hosted page...`,
       );
 

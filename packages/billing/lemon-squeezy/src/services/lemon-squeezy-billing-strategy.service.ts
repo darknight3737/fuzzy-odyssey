@@ -25,7 +25,7 @@ import { getLogger } from '@kit/shared/logger';
 import { createLemonSqueezyBillingPortalSession } from './create-lemon-squeezy-billing-portal-session';
 import { createLemonSqueezyCheckout } from './create-lemon-squeezy-checkout';
 import { createLemonSqueezySubscriptionPayloadBuilderService } from './lemon-squeezy-subscription-payload-builder.service';
-import { getSubscriptionIntervalType } from './subscription-interval';
+import { resolveSubscriptionInterval } from './resolve-subscription-interval';
 
 /**
  * @name LemonSqueezyBillingStrategyService
@@ -394,9 +394,14 @@ export class LemonSqueezyBillingStrategyService implements BillingStrategyProvid
     const renewsAt = subscription.renews_at;
     const trialEndsAt = subscription.trial_ends_at;
 
-    // `billing_anchor` is a day-of-month (1-31), not an interval count. Derive
-    // the interval from the renewal date, consistent with the webhook handler.
-    const { interval, intervalCount } = getSubscriptionIntervalType(renewsAt);
+    // `billing_anchor` is a day-of-month (1-31), not an interval count. Resolve
+    // the interval from the variant's configured billing interval (stable plan
+    // metadata), consistent with the webhook handler. Inferring it from the
+    // renewal date misclassifies annual plans as monthly near renewal.
+    const { interval, intervalCount } = await resolveSubscriptionInterval({
+      variantId,
+      renewsAt,
+    });
 
     const subscriptionItemId =
       data.data.attributes.first_subscription_item?.id.toString() as string;
