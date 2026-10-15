@@ -56,6 +56,7 @@ const config = {
         },
   reactCompiler: ENABLE_REACT_COMPILER,
   cacheComponents: true,
+  partialPrefetching: true,
   experimental: {
     mdxRs: true,
     turbopackFileSystemCacheForDev: true,
