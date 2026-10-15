@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import { PlusCircle } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
@@ -20,13 +22,26 @@ import { If } from '@kit/ui/if';
 import { PageBody } from '@kit/ui/page';
 import { Trans } from '@kit/ui/trans';
 
+import {
+  CardSkeleton,
+  Delayed,
+  PageHeaderSkeleton,
+} from '~/components/skeletons/page-skeletons';
+
 // local imports
 import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
-import { loadMembersPageData } from './_lib/server/members-page.loader';
+import { loadTeamWorkspace } from '../_lib/server/team-account-workspace.loader';
+import {
+  canAddMember,
+  loadAccountInvitations,
+  loadAccountMembers,
+} from './_lib/server/members-page.loader';
 
 interface TeamAccountMembersPageProps {
   params: Promise<{ account: string }>;
 }
+
+type Params = TeamAccountMembersPageProps['params'];
 
 export const generateMetadata = async () => {
   const t = await getTranslations('teams');
@@ -37,95 +52,147 @@ export const generateMetadata = async () => {
   };
 };
 
-async function TeamAccountMembersPage({ params }: TeamAccountMembersPageProps) {
-  const client = getSupabaseServerClient();
-  const slug = (await params).account;
-
-  const [members, invitations, canAddMember, { user, account }] =
-    await loadMembersPageData(client, slug);
-
-  const canManageRoles = account.permissions.includes('roles.manage');
-  const canManageInvitations = account.permissions.includes('invites.manage');
-
-  const isPrimaryOwner = account.primary_owner_user_id === user.id;
-  const currentUserRoleHierarchy = account.role_hierarchy_level;
-
+/**
+ * The two cards load independently, so a slow invitations query no longer holds
+ * up the members table.
+ */
+function TeamAccountMembersPage({ params }: TeamAccountMembersPageProps) {
   return (
     <PageBody>
-      <TeamAccountLayoutPageHeader
-        title={<Trans i18nKey={'common.routes.members'} />}
-        description={<AppBreadcrumbs />}
-        account={account.slug}
-      />
+      <Suspense fallback={<PageHeaderSkeleton />}>
+        <MembersPageHeader params={params} />
+      </Suspense>
 
       <div className={'flex w-full max-w-4xl flex-col space-y-4 pb-32'}>
-        <Card>
-          <CardHeader className={'flex flex-row justify-between'}>
-            <div className={'flex flex-col space-y-1.5'}>
-              <CardTitle>
-                <Trans i18nKey={'common.accountMembers'} />
-              </CardTitle>
+        <Suspense
+          fallback={
+            <Delayed>
+              <CardSkeleton rows={4} />
+            </Delayed>
+          }
+        >
+          <MembersCard params={params} />
+        </Suspense>
 
-              <CardDescription>
-                <Trans i18nKey={'common.membersTabDescription'} />
-              </CardDescription>
-            </div>
-
-            <If condition={canManageInvitations && canAddMember}>
-              <InviteMembersDialogContainer
-                userRoleHierarchy={currentUserRoleHierarchy}
-                accountSlug={account.slug}
-              >
-                <Button size={'sm'} data-test={'invite-members-form-trigger'}>
-                  <PlusCircle className={'w-4'} />
-
-                  <span>
-                    <Trans i18nKey={'teams.inviteMembersButton'} />
-                  </span>
-                </Button>
-              </InviteMembersDialogContainer>
-            </If>
-          </CardHeader>
-
-          <CardContent>
-            <AccountMembersTable
-              userRoleHierarchy={currentUserRoleHierarchy}
-              currentUserId={user.id}
-              currentAccountId={account.id}
-              members={members}
-              isPrimaryOwner={isPrimaryOwner}
-              canManageRoles={canManageRoles}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className={'flex flex-row justify-between'}>
-            <div className={'flex flex-col space-y-1.5'}>
-              <CardTitle>
-                <Trans i18nKey={'teams.pendingInvitesHeading'} />
-              </CardTitle>
-
-              <CardDescription>
-                <Trans i18nKey={'teams.pendingInvitesDescription'} />
-              </CardDescription>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <AccountInvitationsTable
-              permissions={{
-                canUpdateInvitation: canManageRoles,
-                canRemoveInvitation: canManageRoles,
-                currentUserRoleHierarchy,
-              }}
-              invitations={invitations}
-            />
-          </CardContent>
-        </Card>
+        <Suspense
+          fallback={
+            <Delayed>
+              <CardSkeleton rows={2} />
+            </Delayed>
+          }
+        >
+          <InvitationsCard params={params} />
+        </Suspense>
       </div>
     </PageBody>
   );
 }
 
 export default TeamAccountMembersPage;
+
+async function MembersPageHeader({ params }: { params: Params }) {
+  const { account } = await params;
+
+  return (
+    <TeamAccountLayoutPageHeader
+      title={<Trans i18nKey={'common.routes.members'} />}
+      description={<AppBreadcrumbs />}
+      account={account}
+    />
+  );
+}
+
+async function MembersCard({ params }: { params: Params }) {
+  const client = getSupabaseServerClient();
+  const slug = (await params).account;
+
+  const [members, { user, account }, canInvite] = await Promise.all([
+    loadAccountMembers(client, slug),
+    loadTeamWorkspace(slug),
+    canAddMember(),
+  ]);
+
+  const canManageRoles = account.permissions.includes('roles.manage');
+  const canManageInvitations = account.permissions.includes('invites.manage');
+
+  return (
+    <Card>
+      <CardHeader className={'flex flex-row justify-between'}>
+        <div className={'flex flex-col space-y-1.5'}>
+          <CardTitle>
+            <Trans i18nKey={'common.accountMembers'} />
+          </CardTitle>
+
+          <CardDescription>
+            <Trans i18nKey={'common.membersTabDescription'} />
+          </CardDescription>
+        </div>
+
+        <If condition={canManageInvitations && canInvite}>
+          <InviteMembersDialogContainer
+            userRoleHierarchy={account.role_hierarchy_level}
+            accountSlug={account.slug}
+          >
+            <Button size={'sm'} data-test={'invite-members-form-trigger'}>
+              <PlusCircle className={'w-4'} />
+
+              <span>
+                <Trans i18nKey={'teams.inviteMembersButton'} />
+              </span>
+            </Button>
+          </InviteMembersDialogContainer>
+        </If>
+      </CardHeader>
+
+      <CardContent>
+        <AccountMembersTable
+          userRoleHierarchy={account.role_hierarchy_level}
+          currentUserId={user.id}
+          currentAccountId={account.id}
+          members={members}
+          isPrimaryOwner={account.primary_owner_user_id === user.id}
+          canManageRoles={canManageRoles}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+async function InvitationsCard({ params }: { params: Params }) {
+  const client = getSupabaseServerClient();
+  const slug = (await params).account;
+
+  const [invitations, { account }] = await Promise.all([
+    loadAccountInvitations(client, slug),
+    loadTeamWorkspace(slug),
+  ]);
+
+  const canManageRoles = account.permissions.includes('roles.manage');
+
+  return (
+    <Card>
+      <CardHeader className={'flex flex-row justify-between'}>
+        <div className={'flex flex-col space-y-1.5'}>
+          <CardTitle>
+            <Trans i18nKey={'teams.pendingInvitesHeading'} />
+          </CardTitle>
+
+          <CardDescription>
+            <Trans i18nKey={'teams.pendingInvitesDescription'} />
+          </CardDescription>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        <AccountInvitationsTable
+          permissions={{
+            canUpdateInvitation: canManageRoles,
+            canRemoveInvitation: canManageRoles,
+            currentUserRoleHierarchy: account.role_hierarchy_level,
+          }}
+          invitations={invitations}
+        />
+      </CardContent>
+    </Card>
+  );
+}

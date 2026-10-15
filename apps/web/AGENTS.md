@@ -43,6 +43,11 @@ import { useUserWorkspace } from '@kit/accounts/hooks/use-user-workspace';
 import { useTeamAccountWorkspace } from '@kit/team-accounts/hooks/use-team-account-workspace';
 ```
 
+Both **suspend** — the contexts hold a promise which the hooks unwrap with
+`use()`. Any component calling one needs a `<Suspense>` boundary above it, or it
+suspends further up than intended. This is what lets the workspace layouts
+render their shell and `children` before the workspace resolves.
+
 ## Key Config Files
 
 | Purpose | Location |

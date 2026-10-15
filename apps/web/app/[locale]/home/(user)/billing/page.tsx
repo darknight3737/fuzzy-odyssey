@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import { getTranslations } from 'next-intl/server';
 
 import { resolveProductPlan } from '@kit/billing-gateway';
@@ -10,6 +12,7 @@ import { If } from '@kit/ui/if';
 import { PageBody } from '@kit/ui/page';
 import { Trans } from '@kit/ui/trans';
 
+import { CardSkeleton, Delayed } from '~/components/skeletons/page-skeletons';
 import billingConfig from '~/config/billing.config';
 import { requireUserInServerComponent } from '~/lib/server/require-user-in-server-component';
 
@@ -28,7 +31,31 @@ export const generateMetadata = async () => {
   };
 };
 
-async function PersonalAccountBillingPage() {
+/**
+ * The header is static; only the billing data waits.
+ */
+function PersonalAccountBillingPage() {
+  return (
+    <PageBody>
+      <HomeLayoutPageHeader
+        title={<Trans i18nKey={'common.routes.billing'} />}
+        description={<AppBreadcrumbs />}
+      />
+
+      <Suspense
+        fallback={
+          <Delayed className={'flex max-w-2xl flex-col'}>
+            <CardSkeleton rows={4} />
+          </Delayed>
+        }
+      >
+        <PersonalAccountBillingContent />
+      </Suspense>
+    </PageBody>
+  );
+}
+
+async function PersonalAccountBillingContent() {
   const user = await requireUserInServerComponent();
 
   const [subscription, order, customerId] =
@@ -54,51 +81,44 @@ async function PersonalAccountBillingPage() {
   const hasBillingData = subscription || order;
 
   return (
-    <PageBody>
-      <HomeLayoutPageHeader
-        title={<Trans i18nKey={'common.routes.billing'} />}
-        description={<AppBreadcrumbs />}
-      />
+    <div className={'flex max-w-2xl flex-col space-y-4'}>
+      <If
+        condition={hasBillingData}
+        fallback={
+          <>
+            <PersonalAccountCheckoutForm customerId={customerId} />
+          </>
+        }
+      >
+        <div className={'flex w-full flex-col space-y-6'}>
+          <If condition={subscription}>
+            {(subscription) => {
+              return (
+                <CurrentSubscriptionCard
+                  subscription={subscription}
+                  product={subscriptionProductPlan!.product}
+                  plan={subscriptionProductPlan!.plan}
+                />
+              );
+            }}
+          </If>
 
-      <div className={'flex max-w-2xl flex-col space-y-4'}>
-        <If
-          condition={hasBillingData}
-          fallback={
-            <>
-              <PersonalAccountCheckoutForm customerId={customerId} />
-            </>
-          }
-        >
-          <div className={'flex w-full flex-col space-y-6'}>
-            <If condition={subscription}>
-              {(subscription) => {
-                return (
-                  <CurrentSubscriptionCard
-                    subscription={subscription}
-                    product={subscriptionProductPlan!.product}
-                    plan={subscriptionProductPlan!.plan}
-                  />
-                );
-              }}
-            </If>
+          <If condition={order}>
+            {(order) => {
+              return (
+                <CurrentLifetimeOrderCard
+                  order={order}
+                  product={orderProductPlan!.product}
+                  plan={orderProductPlan!.plan}
+                />
+              );
+            }}
+          </If>
+        </div>
+      </If>
 
-            <If condition={order}>
-              {(order) => {
-                return (
-                  <CurrentLifetimeOrderCard
-                    order={order}
-                    product={orderProductPlan!.product}
-                    plan={orderProductPlan!.plan}
-                  />
-                );
-              }}
-            </If>
-          </div>
-        </If>
-
-        <If condition={customerId}>{() => <PersonalBillingPortalForm />}</If>
-      </div>
-    </PageBody>
+      <If condition={customerId}>{() => <PersonalBillingPortalForm />}</If>
+    </div>
   );
 }
 

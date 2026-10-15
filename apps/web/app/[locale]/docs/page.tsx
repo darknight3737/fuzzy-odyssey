@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import { locale as localeRootParam } from 'next/root-params';
 
 import { getTranslations } from 'next-intl/server';
@@ -14,20 +16,30 @@ export const generateMetadata = async () => {
   };
 };
 
-async function DocsPage() {
+function DocsPage() {
+  return (
+    <div className={'flex w-full flex-1 flex-col gap-y-6 xl:gap-y-8'}>
+      <Suspense fallback={null}>
+        <DocsPageHeader />
+      </Suspense>
+
+      <div className={'relative flex size-full justify-center overflow-y-auto'}>
+        <Suspense fallback={null}>
+          <DocsCardsList />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+
+async function DocsPageHeader() {
   const t = await getTranslations('marketing');
 
   return (
-    <div className={'flex w-full flex-1 flex-col gap-y-6 xl:gap-y-8'}>
-      <SitePageHeader
-        title={t('documentation')}
-        subtitle={t('documentationSubtitle')}
-      />
-
-      <div className={'relative flex size-full justify-center overflow-y-auto'}>
-        <DocsCardsList />
-      </div>
-    </div>
+    <SitePageHeader
+      title={t('documentation')}
+      subtitle={t('documentationSubtitle')}
+    />
   );
 }
 

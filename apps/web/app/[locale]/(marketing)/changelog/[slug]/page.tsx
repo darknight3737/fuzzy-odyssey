@@ -1,4 +1,4 @@
-import { cache } from 'react';
+import { Suspense, cache } from 'react';
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -84,7 +84,15 @@ export async function generateMetadata({
   });
 }
 
-async function ChangelogEntryPage({ params }: ChangelogEntryPageProps) {
+function ChangelogEntryPage({ params }: ChangelogEntryPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <ChangelogEntryContent params={params} />
+    </Suspense>
+  );
+}
+
+async function ChangelogEntryContent({ params }: ChangelogEntryPageProps) {
   const slug = (await params).slug;
   const data = await getChangelogData(slug);
 

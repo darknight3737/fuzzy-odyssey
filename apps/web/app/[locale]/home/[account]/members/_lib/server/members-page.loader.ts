@@ -1,25 +1,7 @@
 import 'server-only';
 import { SupabaseClient } from '@supabase/supabase-js';
 
-import { loadTeamWorkspace } from '~/home/[account]/_lib/server/team-account-workspace.loader';
 import { Database } from '~/lib/database.types';
-
-/**
- * Load data for the members page
- * @param client
- * @param slug
- */
-export async function loadMembersPageData(
-  client: SupabaseClient<Database>,
-  slug: string,
-) {
-  return Promise.all([
-    loadAccountMembers(client, slug),
-    loadInvitations(client, slug),
-    canAddMember,
-    loadTeamWorkspace(slug),
-  ]);
-}
 
 /**
  * @name canAddMember
@@ -31,7 +13,7 @@ export async function loadMembersPageData(
  * The same check needs to be added when creating an invitation
  *
  */
-async function canAddMember() {
+export async function canAddMember() {
   return Promise.resolve(true);
 }
 
@@ -40,7 +22,7 @@ async function canAddMember() {
  * @param client
  * @param account
  */
-async function loadAccountMembers(
+export async function loadAccountMembers(
   client: SupabaseClient<Database>,
   account: string,
 ) {
@@ -61,7 +43,7 @@ async function loadAccountMembers(
  * @param client
  * @param account
  */
-async function loadInvitations(
+export async function loadAccountInvitations(
   client: SupabaseClient<Database>,
   account: string,
 ) {

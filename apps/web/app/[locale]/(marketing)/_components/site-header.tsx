@@ -70,9 +70,7 @@ function MobileSearch() {
       <Search className={'text-muted-foreground absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2'}/>
     </form>);
 }
-export function SiteHeader(props: {
-    user?: JWTUserData | null;
-}) {
+export function SiteHeader() {
     return (<Header logo={<div className={'flex items-center gap-3'}>
           <div className={'flex md:hidden'}>
             <MobileNavigationDropdown />
@@ -106,6 +104,6 @@ export function SiteHeader(props: {
           <Button className={'hidden md:inline-flex'} render={<Link href={'/claim'}/>} nativeButton={false}>Minha empresa</Button>
 
           <MobileSearch />
-          <SiteHeaderAccountSection user={props.user ?? null}/>
+          <SiteHeaderAccountSection />
         </div>}/>);
 }

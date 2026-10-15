@@ -116,6 +116,21 @@ export function DashboardSkeleton() {
   );
 }
 
+/**
+ * Fills the sidebar's fixed-height header slot while the workspace resolves.
+ *
+ * Not delayed: the slot is always occupied, so there is no flicker to avoid —
+ * only a gap to prevent. Delaying would leave it blank and then pop in.
+ */
+export function SidebarHeaderSkeleton() {
+  return (
+    <div className={'flex items-center gap-x-2'}>
+      <Skeleton className={'size-6 rounded-md'} />
+      <Skeleton className={'h-4 w-24 group-data-[collapsible=icon]:hidden'} />
+    </div>
+  );
+}
+
 /** For pages that render a header and nothing else. */
 export function PageHeaderOnlySkeleton() {
   return (

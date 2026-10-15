@@ -1,4 +1,4 @@
-import { cache } from 'react';
+import { Suspense, cache } from 'react';
 
 import type { Metadata } from 'next';
 
@@ -65,13 +65,40 @@ const getContentItems = cache(
   },
 );
 
-async function ChangelogPage(props: ChangelogPageProps) {
+function ChangelogPage(props: ChangelogPageProps) {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <ChangelogHeader />
+      </Suspense>
+
+      <div className="container flex max-w-4xl flex-col space-y-12 py-12">
+        <Suspense fallback={null}>
+          <ChangelogEntries searchParams={props.searchParams} />
+        </Suspense>
+      </div>
+    </>
+  );
+}
+
+async function ChangelogHeader() {
   const t = await getTranslations('marketing');
+
+  return (
+    <SitePageHeader title={t('changelog')} subtitle={t('changelogSubtitle')} />
+  );
+}
+
+async function ChangelogEntries({
+  searchParams,
+}: {
+  searchParams: ChangelogPageProps['searchParams'];
+}) {
   const language = await getLocale();
-  const searchParams = await props.searchParams;
+  const { page: pageParam } = await searchParams;
 
   const limit = CHANGELOG_ENTRIES_PER_PAGE;
-  const page = searchParams.page ? parseInt(searchParams.page) : 0;
+  const page = pageParam ? parseInt(pageParam) : 0;
   const offset = page * limit;
 
   const { total, items: entries } = await getContentItems(
@@ -82,35 +109,28 @@ async function ChangelogPage(props: ChangelogPageProps) {
 
   return (
     <>
-      <SitePageHeader
-        title={t('changelog')}
-        subtitle={t('changelogSubtitle')}
-      />
+      <If
+        condition={entries.length > 0}
+        fallback={<Trans i18nKey="marketing.noChangelogEntries" />}
+      >
+        <div className="space-y-0">
+          {entries.map((entry, index) => {
+            return (
+              <ChangelogEntry
+                key={entry.id}
+                entry={entry}
+                highlight={index === 0}
+              />
+            );
+          })}
+        </div>
 
-      <div className="container flex max-w-4xl flex-col space-y-12 py-12">
-        <If
-          condition={entries.length > 0}
-          fallback={<Trans i18nKey="marketing.noChangelogEntries" />}
-        >
-          <div className="space-y-0">
-            {entries.map((entry, index) => {
-              return (
-                <ChangelogEntry
-                  key={entry.id}
-                  entry={entry}
-                  highlight={index === 0}
-                />
-              );
-            })}
-          </div>
-
-          <ChangelogPagination
-            currentPage={page}
-            canGoToNextPage={offset + limit < total}
-            canGoToPreviousPage={page > 0}
-          />
-        </If>
-      </div>
+        <ChangelogPagination
+          currentPage={page}
+          canGoToNextPage={offset + limit < total}
+          canGoToPreviousPage={page > 0}
+        />
+      </If>
     </>
   );
 }
