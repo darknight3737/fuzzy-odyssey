@@ -13,12 +13,13 @@ export const getCategoryBySlug = cache(async (slug: string) => {
     .from('categories')
     .select('id, name, slug, description')
     .eq('slug', slug)
+    .eq('is_active', true)
     .single();
 
-  if (error || !data) {
+  if (error && error.code !== 'PGRST116') throw error;
+  if (!data) {
     return null;
   }
 
   return data;
 });
-

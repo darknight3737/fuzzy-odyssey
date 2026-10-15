@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       accounts: {
@@ -184,6 +159,136 @@ export type Database = {
           },
         ]
       }
+      business_awards: {
+        Row: {
+          business_id: string
+          certificate_url: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_order: number
+          id: string
+          is_featured: boolean
+          issuer: string
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+          year: number | null
+        }
+        Insert: {
+          business_id: string
+          certificate_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_featured?: boolean
+          issuer: string
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+          year?: number | null
+        }
+        Update: {
+          business_id?: string
+          certificate_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_featured?: boolean
+          issuer?: string
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_awards_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_cases: {
+        Row: {
+          budget_range: string | null
+          business_id: string
+          challenge: string | null
+          client_name: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string
+          display_order: number
+          duration: string | null
+          id: string
+          images: string[]
+          industry: string | null
+          is_featured: boolean
+          project_type: string | null
+          results: string | null
+          solution: string | null
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          budget_range?: string | null
+          business_id: string
+          challenge?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          display_order?: number
+          duration?: string | null
+          id?: string
+          images?: string[]
+          industry?: string | null
+          is_featured?: boolean
+          project_type?: string | null
+          results?: string | null
+          solution?: string | null
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          budget_range?: string | null
+          business_id?: string
+          challenge?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          display_order?: number
+          duration?: string | null
+          id?: string
+          images?: string[]
+          industry?: string | null
+          is_featured?: boolean
+          project_type?: string | null
+          results?: string | null
+          solution?: string | null
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_cases_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_categories: {
         Row: {
           business_id: string
@@ -283,9 +388,62 @@ export type Database = {
           },
         ]
       }
+      business_services: {
+        Row: {
+          business_id: string
+          created_at: string | null
+          created_by: string | null
+          delivery_time: string | null
+          description: string
+          display_order: number
+          id: string
+          is_featured: boolean
+          price_range: string | null
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string | null
+          created_by?: string | null
+          delivery_time?: string | null
+          description: string
+          display_order?: number
+          id?: string
+          is_featured?: boolean
+          price_range?: string | null
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          delivery_time?: string | null
+          description?: string
+          display_order?: number
+          id?: string
+          is_featured?: boolean
+          price_range?: string | null
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_services_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
-          account_id: string
+          account_id: string | null
           address: Json | null
           business_languages: string[]
           contact_enabled: boolean
@@ -310,7 +468,7 @@ export type Database = {
           works_remotely: boolean
         }
         Insert: {
-          account_id: string
+          account_id?: string | null
           address?: Json | null
           business_languages?: string[]
           contact_enabled?: boolean
@@ -335,7 +493,7 @@ export type Database = {
           works_remotely?: boolean
         }
         Update: {
-          account_id?: string
+          account_id?: string | null
           address?: Json | null
           business_languages?: string[]
           contact_enabled?: boolean
@@ -498,6 +656,30 @@ export type Database = {
           enable_account_billing?: boolean
           enable_team_account_billing?: boolean
           enable_team_accounts?: boolean
+        }
+        Relationships: []
+      }
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
         }
         Relationships: []
       }
@@ -1208,6 +1390,17 @@ export type Database = {
       }
     }
     Views: {
+      directory_pages: {
+        Row: {
+          business_count: number | null
+          category_name: string | null
+          category_slug: string | null
+          location_name: string | null
+          location_slug: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
       user_account_workspace: {
         Row: {
           id: string | null
@@ -1253,6 +1446,10 @@ export type Database = {
       can_action_account_member: {
         Args: { target_team_account_id: string; target_user_id: string }
         Returns: boolean
+      }
+      claim_business: {
+        Args: { business_slug: string }
+        Returns: string
       }
       create_invitation: {
         Args: { account_id: string; email: string; role: string }
@@ -1403,6 +1600,38 @@ export type Database = {
         Args: { p_id: string; p_reason?: string }
         Returns: boolean
       }
+      search_directory: {
+        Args: {
+          category_slug?: string
+          location_slug?: string
+          search_term?: string
+        }
+        Returns: {
+          account_id: string | null
+          address: Json | null
+          business_languages: string[]
+          contact_enabled: boolean
+          cover_image_url: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          domain_rating: number
+          email: string | null
+          employee_count: number | null
+          founded_year: number | null
+          id: string
+          logo_url: string | null
+          name: string
+          phone: string | null
+          slug: string
+          tier: Database["public"]["Enums"]["business_tier"]
+          updated_at: string | null
+          updated_by: string | null
+          verification_status: Database["public"]["Enums"]["verification_status"]
+          website: string | null
+          works_remotely: boolean
+        }[]
+      }
       team_account_workspace: {
         Args: { account_slug: string }
         Returns: {
@@ -1529,526 +1758,6 @@ export type Database = {
       }
     }
   }
-  storage: {
-    Tables: {
-      buckets: {
-        Row: {
-          allowed_mime_types: string[] | null
-          avif_autodetection: boolean | null
-          created_at: string | null
-          file_size_limit: number | null
-          id: string
-          name: string
-          owner: string | null
-          owner_id: string | null
-          public: boolean | null
-          type: Database["storage"]["Enums"]["buckettype"]
-          updated_at: string | null
-        }
-        Insert: {
-          allowed_mime_types?: string[] | null
-          avif_autodetection?: boolean | null
-          created_at?: string | null
-          file_size_limit?: number | null
-          id: string
-          name: string
-          owner?: string | null
-          owner_id?: string | null
-          public?: boolean | null
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string | null
-        }
-        Update: {
-          allowed_mime_types?: string[] | null
-          avif_autodetection?: boolean | null
-          created_at?: string | null
-          file_size_limit?: number | null
-          id?: string
-          name?: string
-          owner?: string | null
-          owner_id?: string | null
-          public?: boolean | null
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      buckets_analytics: {
-        Row: {
-          created_at: string
-          format: string
-          id: string
-          type: Database["storage"]["Enums"]["buckettype"]
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          format?: string
-          id: string
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          format?: string
-          id?: string
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      iceberg_namespaces: {
-        Row: {
-          bucket_id: string
-          created_at: string
-          id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          bucket_id: string
-          created_at?: string
-          id?: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          bucket_id?: string
-          created_at?: string
-          id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "iceberg_namespaces_bucket_id_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets_analytics"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      iceberg_tables: {
-        Row: {
-          bucket_id: string
-          created_at: string
-          id: string
-          location: string
-          name: string
-          namespace_id: string
-          updated_at: string
-        }
-        Insert: {
-          bucket_id: string
-          created_at?: string
-          id?: string
-          location: string
-          name: string
-          namespace_id: string
-          updated_at?: string
-        }
-        Update: {
-          bucket_id?: string
-          created_at?: string
-          id?: string
-          location?: string
-          name?: string
-          namespace_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "iceberg_tables_bucket_id_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets_analytics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "iceberg_tables_namespace_id_fkey"
-            columns: ["namespace_id"]
-            isOneToOne: false
-            referencedRelation: "iceberg_namespaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      migrations: {
-        Row: {
-          executed_at: string | null
-          hash: string
-          id: number
-          name: string
-        }
-        Insert: {
-          executed_at?: string | null
-          hash: string
-          id: number
-          name: string
-        }
-        Update: {
-          executed_at?: string | null
-          hash?: string
-          id?: number
-          name?: string
-        }
-        Relationships: []
-      }
-      objects: {
-        Row: {
-          bucket_id: string | null
-          created_at: string | null
-          id: string
-          last_accessed_at: string | null
-          level: number | null
-          metadata: Json | null
-          name: string | null
-          owner: string | null
-          owner_id: string | null
-          path_tokens: string[] | null
-          updated_at: string | null
-          user_metadata: Json | null
-          version: string | null
-        }
-        Insert: {
-          bucket_id?: string | null
-          created_at?: string | null
-          id?: string
-          last_accessed_at?: string | null
-          level?: number | null
-          metadata?: Json | null
-          name?: string | null
-          owner?: string | null
-          owner_id?: string | null
-          path_tokens?: string[] | null
-          updated_at?: string | null
-          user_metadata?: Json | null
-          version?: string | null
-        }
-        Update: {
-          bucket_id?: string | null
-          created_at?: string | null
-          id?: string
-          last_accessed_at?: string | null
-          level?: number | null
-          metadata?: Json | null
-          name?: string | null
-          owner?: string | null
-          owner_id?: string | null
-          path_tokens?: string[] | null
-          updated_at?: string | null
-          user_metadata?: Json | null
-          version?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "objects_bucketId_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      prefixes: {
-        Row: {
-          bucket_id: string
-          created_at: string | null
-          level: number
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          bucket_id: string
-          created_at?: string | null
-          level?: number
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          bucket_id?: string
-          created_at?: string | null
-          level?: number
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "prefixes_bucketId_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      s3_multipart_uploads: {
-        Row: {
-          bucket_id: string
-          created_at: string
-          id: string
-          in_progress_size: number
-          key: string
-          owner_id: string | null
-          upload_signature: string
-          user_metadata: Json | null
-          version: string
-        }
-        Insert: {
-          bucket_id: string
-          created_at?: string
-          id: string
-          in_progress_size?: number
-          key: string
-          owner_id?: string | null
-          upload_signature: string
-          user_metadata?: Json | null
-          version: string
-        }
-        Update: {
-          bucket_id?: string
-          created_at?: string
-          id?: string
-          in_progress_size?: number
-          key?: string
-          owner_id?: string | null
-          upload_signature?: string
-          user_metadata?: Json | null
-          version?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "s3_multipart_uploads_bucket_id_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      s3_multipart_uploads_parts: {
-        Row: {
-          bucket_id: string
-          created_at: string
-          etag: string
-          id: string
-          key: string
-          owner_id: string | null
-          part_number: number
-          size: number
-          upload_id: string
-          version: string
-        }
-        Insert: {
-          bucket_id: string
-          created_at?: string
-          etag: string
-          id?: string
-          key: string
-          owner_id?: string | null
-          part_number: number
-          size?: number
-          upload_id: string
-          version: string
-        }
-        Update: {
-          bucket_id?: string
-          created_at?: string
-          etag?: string
-          id?: string
-          key?: string
-          owner_id?: string | null
-          part_number?: number
-          size?: number
-          upload_id?: string
-          version?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "s3_multipart_uploads_parts_bucket_id_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "s3_multipart_uploads_parts_upload_id_fkey"
-            columns: ["upload_id"]
-            isOneToOne: false
-            referencedRelation: "s3_multipart_uploads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      add_prefixes: {
-        Args: { _bucket_id: string; _name: string }
-        Returns: undefined
-      }
-      can_insert_object: {
-        Args: { bucketid: string; metadata: Json; name: string; owner: string }
-        Returns: undefined
-      }
-      delete_prefix: {
-        Args: { _bucket_id: string; _name: string }
-        Returns: boolean
-      }
-      extension: {
-        Args: { name: string }
-        Returns: string
-      }
-      filename: {
-        Args: { name: string }
-        Returns: string
-      }
-      foldername: {
-        Args: { name: string }
-        Returns: string[]
-      }
-      get_level: {
-        Args: { name: string }
-        Returns: number
-      }
-      get_prefix: {
-        Args: { name: string }
-        Returns: string
-      }
-      get_prefixes: {
-        Args: { name: string }
-        Returns: string[]
-      }
-      get_size_by_bucket: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          bucket_id: string
-          size: number
-        }[]
-      }
-      list_multipart_uploads_with_delimiter: {
-        Args: {
-          bucket_id: string
-          delimiter_param: string
-          max_keys?: number
-          next_key_token?: string
-          next_upload_token?: string
-          prefix_param: string
-        }
-        Returns: {
-          created_at: string
-          id: string
-          key: string
-        }[]
-      }
-      list_objects_with_delimiter: {
-        Args: {
-          bucket_id: string
-          delimiter_param: string
-          max_keys?: number
-          next_token?: string
-          prefix_param: string
-          start_after?: string
-        }
-        Returns: {
-          id: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
-      operation: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      search: {
-        Args: {
-          bucketname: string
-          levels?: number
-          limits?: number
-          offsets?: number
-          prefix: string
-          search?: string
-          sortcolumn?: string
-          sortorder?: string
-        }
-        Returns: {
-          created_at: string
-          id: string
-          last_accessed_at: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
-      search_legacy_v1: {
-        Args: {
-          bucketname: string
-          levels?: number
-          limits?: number
-          offsets?: number
-          prefix: string
-          search?: string
-          sortcolumn?: string
-          sortorder?: string
-        }
-        Returns: {
-          created_at: string
-          id: string
-          last_accessed_at: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
-      search_v1_optimised: {
-        Args: {
-          bucketname: string
-          levels?: number
-          limits?: number
-          offsets?: number
-          prefix: string
-          search?: string
-          sortcolumn?: string
-          sortorder?: string
-        }
-        Returns: {
-          created_at: string
-          id: string
-          last_accessed_at: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
-      search_v2: {
-        Args: {
-          bucket_name: string
-          levels?: number
-          limits?: number
-          prefix: string
-          start_after?: string
-        }
-        Returns: {
-          created_at: string
-          id: string
-          key: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
-    }
-    Enums: {
-      buckettype: "STANDARD" | "ANALYTICS"
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
 }
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
@@ -2169,9 +1878,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       app_permissions: [
@@ -2207,11 +1913,6 @@ export const Constants = {
         "paused",
       ],
       verification_status: ["pending", "verified", "rejected"],
-    },
-  },
-  storage: {
-    Enums: {
-      buckettype: ["STANDARD", "ANALYTICS"],
     },
   },
 } as const

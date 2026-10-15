@@ -21,6 +21,7 @@ export const generateMetadata = async () => {
 interface Props {
   searchParams: Promise<{
     invite_token?: string;
+    next?: string;
   }>;
 }
 
@@ -30,7 +31,12 @@ const paths = {
 };
 
 async function SignUpPage({ searchParams }: Props) {
-  const inviteToken = (await searchParams).invite_token;
+  const { invite_token: inviteToken, next } = await searchParams;
+  const returnPath =
+    next?.startsWith('/') && !next.startsWith('//')
+      ? next
+      : pathsConfig.app.home;
+  const signUpPaths = { ...paths, appHome: returnPath };
 
   const signInPath =
     pathsConfig.auth.signIn +
@@ -52,7 +58,7 @@ async function SignUpPage({ searchParams }: Props) {
         providers={authConfig.providers}
         displayTermsCheckbox={authConfig.displayTermsCheckbox}
         inviteToken={inviteToken}
-        paths={paths}
+        paths={signUpPaths}
       />
 
       <div className={'flex justify-center'}>

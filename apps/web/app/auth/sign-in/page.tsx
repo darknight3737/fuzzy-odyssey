@@ -34,7 +34,10 @@ async function SignInPage({ searchParams }: SignInPageProps) {
 
   const paths = {
     callback: pathsConfig.auth.callback,
-    returnPath: next || pathsConfig.app.home,
+    returnPath:
+      next?.startsWith('/') && !next.startsWith('//')
+        ? next
+        : pathsConfig.app.home,
     joinTeam: pathsConfig.app.joinTeam,
   };
 

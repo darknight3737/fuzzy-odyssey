@@ -14,8 +14,18 @@ export async function i18nResolver(language: string, namespace: string) {
       `../../public/locales/${language}/${namespace}.json`
     );
 
-    return data as Record<string, string>;
+    return (data.default ?? data) as Record<string, string>;
   } catch (error) {
+    if (language !== 'en') {
+      try {
+        const fallback = await import(
+          `../../public/locales/en/${namespace}.json`
+        );
+        return (fallback.default ?? fallback) as Record<string, string>;
+      } catch {
+        /* report missing namespaces below */
+      }
+    }
     console.group(
       `Error while loading translation file: ${language}/${namespace}`,
     );

@@ -34,6 +34,25 @@ export async function middleware(request: NextRequest) {
   // apply CSRF protection for mutating requests
   const csrfResponse = await withCsrfMiddleware(request, response);
 
+  // Resolve missing directory URLs before streaming begins, preserving a true
+  // HTTP 404 for crawlers instead of a streamed 200 with an error screen.
+  const missingDirectoryPage = await isMissingDirectoryPage(
+    request,
+    csrfResponse,
+  );
+  if (missingDirectoryPage) {
+    return new NextResponse(
+      `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow"><title>Página não encontrada | Selletive</title></head><body><main><p>Selletive</p><h1>Página não encontrada</h1><p>O perfil ou a categoria pode ter mudado.</p><a href="/categories">Explorar empresas</a></main></body></html>`,
+      {
+        status: 404,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'X-Robots-Tag': 'noindex, follow',
+        },
+      },
+    );
+  }
+
   // handle patterns for specific routes
   const handlePattern = matchUrlPattern(request.url);
 
@@ -233,4 +252,63 @@ async function createResponseWithSecureHeaders() {
   const { createCspResponse } = await import('./lib/create-csp-response');
 
   return createCspResponse();
+}
+
+async function isMissingDirectoryPage(
+  request: NextRequest,
+  response: NextResponse,
+) {
+  if (!['GET', 'HEAD'].includes(request.method)) return false;
+  const segments = request.nextUrl.pathname.split('/').filter(Boolean);
+  if (segments.length !== 2) return false;
+  const [first, second] = segments;
+  if (!first || !second) return false;
+  const client = createMiddlewareClient(request, response);
+  if (first === 'company' || first === 'categories') {
+    const result =
+      first === 'company'
+        ? await client
+            .from('businesses')
+            .select('id')
+            .eq('slug', second)
+            .maybeSingle()
+        : await client
+            .from('categories')
+            .select('id')
+            .eq('slug', second)
+            .eq('is_active', true)
+            .maybeSingle();
+    return !result.error && !result.data;
+  }
+  if (
+    [
+      'auth',
+      'home',
+      'admin',
+      'api',
+      'blog',
+      'docs',
+      'claim',
+      'sitemaps',
+    ].includes(first)
+  )
+    return false;
+  const [category, location] = await Promise.all([
+    client
+      .from('categories')
+      .select('id')
+      .eq('slug', first)
+      .eq('is_active', true)
+      .maybeSingle(),
+    client.from('locations').select('id').eq('slug', second).maybeSingle(),
+  ]);
+  if (category.error || location.error) return false;
+  if (!location.data) return true;
+  if (category.data) return false;
+  const alias = await client
+    .from('category_aliases')
+    .select('category_id')
+    .eq('alias_slug', first)
+    .maybeSingle();
+  return !alias.error && !alias.data;
 }

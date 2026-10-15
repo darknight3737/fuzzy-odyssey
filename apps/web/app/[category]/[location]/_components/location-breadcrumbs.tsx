@@ -26,15 +26,18 @@ export function LocationBreadcrumbs({
 }: LocationBreadcrumbsProps) {
   return (
     <nav aria-label="Breadcrumb" className="mb-4">
-      <ol className="flex items-center space-x-2 text-sm text-muted-foreground">
+      <ol className="text-muted-foreground flex items-center space-x-2 text-sm">
         <li>
           <Link href="/" className="hover:text-foreground">
-            Home
+            Início
           </Link>
         </li>
         <li>/</li>
         <li>
-          <Link href={`/${category.slug}`} className="hover:text-foreground">
+          <Link
+            href={`/categories/${category.slug}`}
+            className="hover:text-foreground"
+          >
             {category.name}
           </Link>
         </li>
@@ -44,4 +47,3 @@ export function LocationBreadcrumbs({
     </nav>
   );
 }
-

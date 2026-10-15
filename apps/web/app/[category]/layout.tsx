@@ -1,3 +1,4 @@
+import { requireUser } from '@kit/supabase/require-user';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import { SiteFooter } from '~/(marketing)/_components/site-footer';
@@ -6,10 +7,9 @@ import { withI18n } from '~/lib/i18n/with-i18n';
 
 async function CategoryLocationLayout(props: React.PropsWithChildren) {
   const client = getSupabaseServerClient();
-  
+
   // Get user if authenticated, but don't require it
-  const { data } = await client.auth.getUser();
-  const user = data.user ?? undefined;
+  const { data: user } = await requireUser(client, { verifyMfa: false });
 
   return (
     <div className={'flex min-h-[100vh] flex-col'}>
@@ -23,6 +23,3 @@ async function CategoryLocationLayout(props: React.PropsWithChildren) {
 }
 
 export default withI18n(CategoryLocationLayout);
-
-
-

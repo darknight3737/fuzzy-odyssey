@@ -57,31 +57,43 @@ export function BusinessGrid({ businesses }: BusinessGridProps) {
                 <div className={'mb-3 flex items-start justify-between'}>
                   <div className={'flex items-start gap-3'}>
                     {business.logo_url && (
+                      // Logos may be hosted on any company domain.
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={business.logo_url}
+                        width={48}
+                        height={48}
+                        loading="lazy"
+                        decoding="async"
                         alt={business.name}
                         className={'h-12 w-12 rounded object-cover'}
                       />
                     )}
                     <div className={'flex-1'}>
                       <div className={'mb-1 flex items-center gap-2'}>
-                        <CardTitle className={'text-lg'}>{business.name}</CardTitle>
+                        <CardTitle className={'text-lg'}>
+                          {business.name}
+                        </CardTitle>
                         {business.tier === 'verified' && (
                           <Verified className={'h-4 w-4 text-blue-500'} />
                         )}
                         {business.tier === 'highlight' && (
                           <Badge variant={'secondary'} className={'text-xs'}>
-                            Highlight
+                            Patrocinado
                           </Badge>
                         )}
                         {business.tier === 'spotlight' && (
                           <Badge variant={'default'} className={'text-xs'}>
-                            Spotlight
+                            Patrocinado
                           </Badge>
                         )}
                       </div>
                       {primaryLocation && (
-                        <div className={'mb-2 flex items-center gap-1 text-sm text-muted-foreground'}>
+                        <div
+                          className={
+                            'text-muted-foreground mb-2 flex items-center gap-1 text-sm'
+                          }
+                        >
                           <MapPin className={'h-3 w-3'} />
                           <span>Located in {primaryLocation.name}</span>
                         </div>
@@ -98,7 +110,7 @@ export function BusinessGrid({ businesses }: BusinessGridProps) {
 
               {business.description && (
                 <CardContent>
-                  <p className={'line-clamp-3 text-sm text-muted-foreground'}>
+                  <p className={'text-muted-foreground line-clamp-3 text-sm'}>
                     {business.description}
                   </p>
                 </CardContent>
@@ -110,6 +122,3 @@ export function BusinessGrid({ businesses }: BusinessGridProps) {
     </div>
   );
 }
-
-
-

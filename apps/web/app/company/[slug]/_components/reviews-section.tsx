@@ -1,14 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
 import { Trans } from '@kit/ui/trans';
 
+import { ReviewForm } from './review-form';
+
 type Review = {
   id: string;
   reviewer_name: string;
   rating: number;
-  title: string;
-  content: string;
+  title: string | null;
+  content: string | null;
   status: 'pending' | 'approved' | 'rejected';
-  created_at: string;
+  created_at: string | null;
 };
 
 type ReviewsSectionProps = {
@@ -16,7 +18,7 @@ type ReviewsSectionProps = {
   reviews: Review[];
 };
 
-export function ReviewsSection({ reviews }: ReviewsSectionProps) {
+export function ReviewsSection({ reviews, businessId }: ReviewsSectionProps) {
   const approvedReviews = reviews.filter(
     (review) => review.status === 'approved',
   );
@@ -49,11 +51,9 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
               <CardHeader>
                 <div className={'flex items-start justify-between'}>
                   <div>
-                    <CardTitle className={'text-lg'}>
-                      {review.title}
-                    </CardTitle>
+                    <CardTitle className={'text-lg'}>{review.title}</CardTitle>
 
-                    <p className={'text-sm text-muted-foreground'}>
+                    <p className={'text-muted-foreground text-sm'}>
                       {review.reviewer_name}
                     </p>
                   </div>
@@ -82,6 +82,7 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
           ))}
         </div>
       )}
+      <ReviewForm businessId={businessId} />
     </div>
   );
 }

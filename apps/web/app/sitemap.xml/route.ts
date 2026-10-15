@@ -1,87 +1,39 @@
-import { getServerSideSitemap } from 'next-sitemap';
+import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
-import { createCmsClient } from '@kit/cms';
-
-import appConfig from '~/config/app.config';
-
-/**
- * @description The maximum age of the sitemap in seconds.
- * This is used to set the cache-control header for the sitemap. The cache-control header is used to control how long the sitemap is cached.
- * By default, the cache-control header is set to 'public, max-age=600, s-maxage=3600'.
- * This means that the sitemap will be cached for 600 seconds (10 minutes) and will be considered stale after 3600 seconds (1 hour).
- */
-const MAX_AGE = 60;
-const S_MAX_AGE = 3600;
+import {
+  SITEMAP_PAGE_SIZE,
+  absoluteUrl,
+  xmlEscape,
+  xmlResponse,
+} from '~/lib/sitemaps';
 
 export async function GET() {
-  const paths = getPaths();
-  const contentItems = await getContentItems();
-
-  const headers = {
-    'Cache-Control': `public, max-age=${MAX_AGE}, s-maxage=${S_MAX_AGE}`,
-  };
-
-  return getServerSideSitemap([...paths, ...contentItems], headers);
-}
-
-function getPaths() {
-  const paths = [
-    '/',
-    '/faq',
-    '/blog',
-    '/docs',
-    '/pricing',
-    '/contact',
-    '/cookie-policy',
-    '/terms-of-service',
-    '/privacy-policy',
-    // add more paths here
-  ];
-
-  return paths.map((path) => {
-    return {
-      loc: new URL(path, appConfig.url).href,
-      lastmod: new Date().toISOString(),
-    };
+  const client = getSupabaseServerClient();
+  const results = await Promise.all([
+    client.from('businesses').select('id', { count: 'exact', head: true }),
+    client
+      .from('categories')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_active', true),
+    client
+      .from('directory_pages')
+      .select('category_slug', { count: 'exact', head: true }),
+  ]);
+  if (results.some((r) => r.error))
+    return new Response('Sitemap temporarily unavailable', {
+      status: 503,
+      headers: { 'Retry-After': '300' },
+    });
+  const entries = ['/sitemaps/static/0'];
+  ['companies', 'categories', 'locations'].forEach((kind, i) => {
+    for (
+      let page = 0;
+      page < Math.ceil((results[i]?.count ?? 0) / SITEMAP_PAGE_SIZE);
+      page++
+    )
+      entries.push(`/sitemaps/${kind}/${page}`);
   });
-}
-
-async function getContentItems() {
-  const client = await createCmsClient();
-
-  // do not paginate the content items
-  const limit = Infinity;
-  const posts = client
-    .getContentItems({
-      collection: 'posts',
-      content: false,
-      limit,
-    })
-    .then((response) => response.items)
-    .then((posts) =>
-      posts.map((post) => ({
-        loc: new URL(`/blog/${post.slug}`, appConfig.url).href,
-        lastmod: post.publishedAt
-          ? new Date(post.publishedAt).toISOString()
-          : new Date().toISOString(),
-      })),
-    );
-
-  const docs = client
-    .getContentItems({
-      collection: 'documentation',
-      content: false,
-      limit,
-    })
-    .then((response) => response.items)
-    .then((docs) =>
-      docs.map((doc) => ({
-        loc: new URL(`/docs/${doc.slug}`, appConfig.url).href,
-        lastmod: doc.publishedAt
-          ? new Date(doc.publishedAt).toISOString()
-          : new Date().toISOString(),
-      })),
-    );
-
-  return Promise.all([posts, docs]).then((items) => items.flat());
+  return xmlResponse(
+    `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${entries.map((path) => `<sitemap><loc>${xmlEscape(absoluteUrl(path))}</loc></sitemap>`).join('')}</sitemapindex>`,
+  );
 }

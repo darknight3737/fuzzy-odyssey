@@ -1,136 +1,259 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
-import { Button } from '@kit/ui/button';
-import { withI18n } from '~/lib/i18n/with-i18n';
+import { ArrowRight, Building2, Check, Compass, Search } from 'lucide-react';
 
-import { Star } from 'lucide-react';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
-import { TypeSelect } from './_components/type-select';
 
-type PageProps = {
-  searchParams?: { [key: string]: string | string[] | undefined };
-};
+import appConfig from '~/config/app.config';
+import { withI18n } from '~/lib/i18n/with-i18n';
+import { pageMetadata, serializeJsonLd } from '~/lib/seo';
 
-async function Home({ searchParams }: PageProps) {
-  const typeParam = typeof searchParams?.type === 'string' ? searchParams?.type : undefined;
-  const type = typeParam === 'software' ? 'software' : 'services';
+export const metadata = pageMetadata(
+  'Selletive — Encontre o próximo parceiro da sua empresa',
+  'Descubra empresas e prestadores de serviços B2B. Compare especialidades, localização e avaliações para escolher seu próximo parceiro.',
+  '/',
+);
 
-  const parentSlug = type === 'software' ? 'development-product' : 'it-services';
+async function Home() {
   const client = getSupabaseServerClient();
-
-  const { data: parent } = await client
-    .from('categories')
-    .select('id')
-    .eq('slug', parentSlug)
-    .maybeSingle();
-
-  let level2: Array<{ id: string; name: string; slug: string }> = [];
-  if (parent?.id) {
-    const { data } = await client
-      .from('categories')
-      .select('id, name, slug')
-      .eq('level', 2)
-      .eq('parent_id', parent.id)
-      .order('name');
-
-    level2 = data ?? [];
-  }
+  const [{ data: categories, error }, { data: businesses }] = await Promise.all(
+    [
+      client
+        .from('categories')
+        .select('id, name, slug, description')
+        .eq('is_active', true)
+        .eq('level', 1)
+        .order('name')
+        .limit(12),
+      client
+        .from('businesses')
+        .select('id, name, slug, description, tier')
+        .order('name')
+        .limit(4),
+    ],
+  );
+  if (error) throw error;
   return (
-    <div className={'flex flex-col'}>
-      {/* Menu Sub Bar */}
-      <div className={'border-b'}>
-        <nav className={'container mx-auto flex items-center justify-between gap-6 overflow-x-auto py-3 text-sm'}>
-          {/* Type selector */}
-          <TypeSelect defaultValue={type} />
-
-          {/* Dynamic level-2 categories for selected parent */}
-          <div className={'flex min-w-0 flex-1 items-center justify-end gap-6'}>
-            {level2.length > 0 ? (
-              level2.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`/categories/${cat.slug}`}
-                  className={'text-muted-foreground hover:underline hover:decoration-muted-foreground/50 hover:underline-offset-4 whitespace-nowrap'}
-                >
-                  {cat.name}
-                </Link>
-              ))
-            ) : (
-              <span className={'text-muted-foreground text-sm'}>No categories found</span>
-            )}
-          </div>
-        </nav>
-      </div>
-
-      {/* Hero Section */}
-      <section className={'container mx-auto grid grid-cols-1 items-center gap-10 py-14 md:grid-cols-2'}>
-        {/* Left column */}
-        <div className={'space-y-6'}>
-          <h1 className={'font-serif text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl'}>
-            Find the perfect service provider
-            <span className={'relative inline-block'}>
-              <span className={'sr-only'}>.</span>
-              <span className={'ml-1 inline-block h-3 w-3 translate-y-[-0.35em] rounded-full bg-blue-600 align-top'} />
-            </span>
-          </h1>
-
-          <p className={'text-muted-foreground max-w-xl text-base md:text-lg'}>
-            Sortlist helps you describe your needs, meet relevant providers, and hire the best one.
-          </p>
-
-          <Button size={'lg'}>Get started - it&apos;s free!</Button>
-        </div>
-
-        {/* Right column */}
-        <div className={'relative mx-auto h-[460px] w-full max-w-[560px]'}>
-          {/* Mark - background image */}
-          <Image
-            src={'/images/dashboard-header.webp'}
-            alt={'Mark — background'}
-            width={800}
-            height={600}
-            className={'absolute left-0 top-6 h-[340px] w-[260px] rounded-xl object-cover shadow-md md:h-[380px] md:w-[300px]'}
-            priority
-          />
-
-          {/* Lilia - foreground image */}
-          <Image
-            src={'/images/sign-in.webp'}
-            alt={'Lilia — foreground'}
-            width={900}
-            height={700}
-            className={'absolute right-0 top-0 h-[380px] w-[300px] rounded-xl object-cover shadow-lg md:h-[420px] md:w-[340px]'}
-            priority
-          />
-
-          {/* Name labels */}
-          <div className={'absolute left-6 top-10 rounded-lg bg-black/40 px-3 py-2 text-xs text-white backdrop-blur-sm'}>
-            <div className={'font-semibold'}>Mark</div>
-            <div className={'text-white/90'}>Marketing Manager at a food company</div>
-          </div>
-
-          <div className={'absolute right-3 top-6 rounded-lg bg-black/40 px-3 py-2 text-xs text-white backdrop-blur-sm md:right-4'}>
-            <div className={'font-semibold'}>Lilia</div>
-            <div className={'text-white/90'}>Web Agency Owner</div>
-          </div>
-
-          {/* Testimonial card */}
-          <div className={'absolute bottom-2 left-1/2 w-[88%] -translate-x-1/2 rounded-xl bg-white p-4 shadow-lg md:bottom-4 md:w-[70%]'}>
-            <div className={'flex items-center gap-1'}>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className={'h-4 w-4 fill-yellow-400 text-yellow-400'} />
-              ))}
+    <main className="flex-1">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeJsonLd({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'Selletive',
+            url: appConfig.url,
+            inLanguage: 'pt-BR',
+          }),
+        }}
+      />
+      <section className="border-b bg-[#f6f5f1] text-[#172b26]">
+        <div className="container mx-auto grid gap-16 px-6 py-20 lg:grid-cols-[1.3fr_1fr] lg:py-28">
+          <div>
+            <p className="mb-6 text-xs font-semibold uppercase tracking-[.2em]">
+              Boas parcerias começam aqui
+            </p>
+            <h1 className="max-w-3xl font-serif text-5xl leading-[1.08] tracking-tight md:text-7xl">
+              O próximo passo da sua empresa.
+              <br />
+              <span className="text-[#597665]">O parceiro certo.</span>
+            </h1>
+            <p className="mt-7 max-w-xl text-lg leading-relaxed text-[#53645c]">
+              Encontre especialistas para transformar suas ideias em resultados.
+              Explore empresas, conheça suas especialidades e escolha com
+              confiança.
+            </p>
+            <form
+              action="/search"
+              role="search"
+              className="mt-9 flex max-w-xl flex-col gap-3 rounded-2xl border bg-white p-3 shadow-sm sm:flex-row"
+            >
+              <label htmlFor="provider-search" className="sr-only">
+                Qual serviço você procura?
+              </label>
+              <div className="flex flex-1 items-center gap-3 px-2">
+                <Search aria-hidden="true" className="h-5 w-5 shrink-0" />
+                <input
+                  id="provider-search"
+                  name="q"
+                  maxLength={120}
+                  placeholder="Qual serviço você procura?"
+                  className="min-w-0 flex-1 bg-transparent py-3 text-base outline-none"
+                />
+              </div>
+              <button
+                data-test="homepage-search"
+                className="rounded-xl bg-[#233e33] px-6 py-3 font-medium text-white hover:bg-[#355643]"
+              >
+                Encontrar empresas
+              </button>
+            </form>
+            <div className="mt-5 flex flex-wrap gap-5 text-xs text-[#53645c]">
+              <span className="flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                Busca gratuita
+              </span>
+              <span className="flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                Contato direto
+              </span>
+              <span className="flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                Sem compromisso
+              </span>
             </div>
-
-            <p className={'mt-2 text-sm text-foreground'}>
-              <b>Mark</b> found <b>Lilia</b> to build his new website
+          </div>
+          <div
+            className="relative flex flex-col justify-center gap-4 lg:pl-8"
+            aria-label="Como encontrar seu parceiro"
+          >
+            <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-[#e1e8dc]">
+              <Compass className="h-8 w-8" />
+            </div>
+            <p className="font-serif text-3xl">
+              Especialistas para cada desafio.
+            </p>
+            {[
+              'Marketing que aproxima.',
+              'Design que faz a diferença.',
+              'Tecnologia que leva além.',
+            ].map((text, i) => (
+              <Link
+                key={text}
+                href="/categories"
+                className="group flex items-center gap-5 rounded-2xl border border-[#dedfd7] bg-white/70 p-6 transition-transform hover:-translate-y-1"
+              >
+                <span className="font-serif text-2xl text-[#87947e]">
+                  0{i + 1}
+                </span>
+                <span className="flex-1 font-medium">{text}</span>
+                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            ))}
+            <p className="mt-3 text-sm text-[#53645c]">
+              Uma escolha bem informada muda tudo.
             </p>
           </div>
         </div>
       </section>
-    </div>
+      <section className="container mx-auto px-6 py-20">
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="text-muted-foreground mb-3 text-xs uppercase tracking-widest">
+              Encontre sua especialidade
+            </p>
+            <h2 className="font-serif text-4xl">Do desafio à solução.</h2>
+          </div>
+          <Link
+            href="/categories"
+            className="flex items-center gap-2 text-sm underline underline-offset-4"
+          >
+            Todas as categorias <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {categories?.map((category) => (
+            <Link
+              href={`/categories/${category.slug}`}
+              key={category.id}
+              className="hover:bg-muted/40 group rounded-2xl border p-7 transition-colors"
+            >
+              <Building2 className="mb-8 h-6 w-6 text-[#597665]" />
+              <h3 className="flex items-center justify-between text-lg font-semibold">
+                {category.name}
+                <ArrowRight className="h-4 w-4" />
+              </h3>
+              <p className="text-muted-foreground mt-3 line-clamp-2 text-sm leading-relaxed">
+                {category.description ||
+                  `Conheça empresas especializadas em ${category.name.toLowerCase()}.`}
+              </p>
+            </Link>
+          ))}
+        </div>
+        {!categories?.length && (
+          <p className="text-muted-foreground rounded-2xl border p-8">
+            Estamos preparando nosso diretório. As categorias e empresas
+            aparecerão aqui assim que forem cadastradas.
+          </p>
+        )}
+      </section>
+      {!!businesses?.length && (
+        <section className="container mx-auto px-6 pb-20">
+          <h2 className="mb-8 font-serif text-4xl">
+            Conheça quem faz acontecer.
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {businesses.map((b) => (
+              <Link
+                href={`/company/${b.slug}`}
+                key={b.id}
+                className="hover:bg-muted/30 rounded-2xl border p-6"
+              >
+                <span className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#edf0e8] font-serif text-xl">
+                  {b.name.charAt(0)}
+                </span>
+                <h3 className="text-lg font-semibold">{b.name}</h3>
+                <p className="text-muted-foreground mt-3 line-clamp-3 text-sm">
+                  {b.description}
+                </p>
+                <span className="mt-6 inline-flex items-center gap-2 text-sm">
+                  Conhecer empresa <ArrowRight className="h-4 w-4" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+      <section className="bg-[#edf0e8] py-20">
+        <div className="container mx-auto grid gap-10 px-6 md:grid-cols-3">
+          {[
+            [
+              '01',
+              'Explore as possibilidades',
+              'Busque por especialidade e localização. Encontre empresas que atendem ao seu desafio.',
+            ],
+            [
+              '02',
+              'Conheça os detalhes',
+              'Compare serviços, equipes e avaliações publicadas. Monte sua própria seleção.',
+            ],
+            [
+              '03',
+              'Converse com quem entende',
+              'Acesse o site ou os contatos da empresa e dê o próximo passo diretamente.',
+            ],
+          ].map(([n, title, copy]) => (
+            <div key={n}>
+              <span className="text-sm text-[#597665]">{n}</span>
+              <h2 className="mt-4 font-serif text-2xl">{title}</h2>
+              <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
+                {copy}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="container mx-auto flex flex-col items-start justify-between gap-8 px-6 py-20 md:flex-row md:items-center">
+        <div>
+          <p className="text-muted-foreground mb-3 text-xs uppercase tracking-widest">
+            Para quem faz acontecer
+          </p>
+          <h2 className="font-serif text-4xl">
+            Sua empresa merece ser encontrada.
+          </h2>
+          <p className="text-muted-foreground mt-4">
+            Reivindique seu perfil gratuitamente e mantenha suas informações
+            atualizadas.
+          </p>
+        </div>
+        <Link
+          href="/claim"
+          className="shrink-0 rounded-full bg-[#233e33] px-7 py-4 text-sm font-medium text-white"
+        >
+          Encontrar minha empresa →
+        </Link>
+      </section>
+    </main>
   );
 }
-
 export default withI18n(Home);

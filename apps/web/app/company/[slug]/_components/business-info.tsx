@@ -2,6 +2,8 @@ import { Badge } from '@kit/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
 import { Trans } from '@kit/ui/trans';
 
+import { safeWebsite } from '~/lib/seo';
+
 type Business = {
   description: string | null;
   website: string | null;
@@ -35,7 +37,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
 
         <CardContent>
           {business.description && (
-            <p className={'mb-4 text-muted-foreground'}>
+            <p className={'text-muted-foreground mb-4'}>
               {business.description}
             </p>
           )}
@@ -47,7 +49,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
                   <Trans i18nKey={'business:website'} defaults={'Website:'} />
                 </strong>{' '}
                 <a
-                  href={business.website}
+                  href={safeWebsite(business.website)}
                   target={'_blank'}
                   rel={'noopener noreferrer'}
                   className={'text-primary hover:underline'}
@@ -73,10 +75,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
                 <strong className={'text-sm'}>
                   <Trans i18nKey={'business:email'} defaults={'Email:'} />
                 </strong>{' '}
-                <a
-                  href={`mailto:${business.email}`}
-                  className={'text-primary'}
-                >
+                <a href={`mailto:${business.email}`} className={'text-primary'}>
                   {business.email}
                 </a>
               </div>
@@ -142,10 +141,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
           {business.employee_count && (
             <div>
               <strong className={'text-sm'}>
-                <Trans
-                  i18nKey={'business:employees'}
-                  defaults={'Employees:'}
-                />
+                <Trans i18nKey={'business:employees'} defaults={'Employees:'} />
               </strong>{' '}
               {business.employee_count}
             </div>
@@ -195,6 +191,3 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
     </div>
   );
 }
-
-
-

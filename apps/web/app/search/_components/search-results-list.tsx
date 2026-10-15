@@ -43,16 +43,23 @@ export function SearchResultsList({ businesses }: SearchResultsListProps) {
             <CardHeader>
               <div className={'mb-2 flex items-start justify-between'}>
                 {business.logo_url && (
+                  // Logos are supplied by directory data and may use arbitrary hosts.
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={business.logo_url}
+                    width={48}
+                    height={48}
+                    loading="lazy"
+                    decoding="async"
                     alt={business.name}
                     className={'h-12 w-12 rounded object-cover'}
                   />
                 )}
 
-                {business.tier !== 'unclaimed' && business.tier !== 'claimed' && (
-                  <Badge variant={'secondary'}>{business.tier}</Badge>
-                )}
+                {business.tier !== 'unclaimed' &&
+                  business.tier !== 'claimed' && (
+                    <Badge variant={'secondary'}>{business.tier}</Badge>
+                  )}
               </div>
 
               <CardTitle>{business.name}</CardTitle>
@@ -60,7 +67,9 @@ export function SearchResultsList({ businesses }: SearchResultsListProps) {
 
             <CardContent>
               {business.description && (
-                <p className={'mb-3 line-clamp-3 text-sm text-muted-foreground'}>
+                <p
+                  className={'text-muted-foreground mb-3 line-clamp-3 text-sm'}
+                >
                   {business.description}
                 </p>
               )}
@@ -71,7 +80,11 @@ export function SearchResultsList({ businesses }: SearchResultsListProps) {
                     {business.business_categories.slice(0, 2).map(
                       (bc, idx) =>
                         bc.categories && (
-                          <Badge key={idx} variant={'outline'} className={'text-xs'}>
+                          <Badge
+                            key={idx}
+                            variant={'outline'}
+                            className={'text-xs'}
+                          >
                             {bc.categories.name}
                           </Badge>
                         ),
@@ -85,6 +98,3 @@ export function SearchResultsList({ businesses }: SearchResultsListProps) {
     </div>
   );
 }
-
-
-

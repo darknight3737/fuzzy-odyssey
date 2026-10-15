@@ -31,7 +31,9 @@
 @layer base {
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
   }
 
   *,
@@ -45,5 +47,14 @@
   input::placeholder,
   textarea::placeholder {
     color: theme(--color-muted-foreground);
+  }
+}
+@layer base {
+  :focus-visible {
+    outline: 2px solid #597665;
+    outline-offset: 4px;
+  }
+  main {
+    min-width: 0;
   }
 }

@@ -1,11 +1,11 @@
 /**
  * Location slug parsing and generation utilities
- * 
+ *
  * Location slugs follow PRD pattern: [name]-[code]-[country-code]
- * 
+ *
  * Examples:
  * - Country: "brazil-br"
- * - State: "sao-paulo-sp-br"  
+ * - State: "sao-paulo-sp-br"
  * - City: "sao-paulo-sp-br" or "san-francisco-ca-us"
  */
 
@@ -28,21 +28,21 @@ export interface ParsedLocation {
 
 /**
  * Parses a location slug into its components
- * 
+ *
  * @example
- * parseLocationSlug("brazil-br") 
+ * parseLocationSlug("brazil-br")
  * // { name: "Brazil", type: "country", countryCode: "br", slug: "brazil-br" }
- * 
+ *
  * @example
  * parseLocationSlug("sao-paulo-sp-br")
  * // { name: "São Paulo", type: "state", countryCode: "br", stateCode: "sp", slug: "sao-paulo-sp-br" }
  */
 export function parseLocationSlug(slug: string): ParsedLocation {
   const parts = slug.split('-');
-  
+
   // Extract country code (last 2 characters after last hyphen)
   const countryCode = parts[parts.length - 1]?.toLowerCase();
-  
+
   if (!countryCode || countryCode.length !== 2) {
     throw new Error(`Invalid location slug format: ${slug}`);
   }
@@ -51,10 +51,10 @@ export function parseLocationSlug(slug: string): ParsedLocation {
   // Format: [name]-[country] = country (2 parts)
   // Format: [name]-[state]-[country] = state (3 parts)
   // Format: [name]-[state]-[country] or [city]-[state]-[country] = city/state (3+ parts)
-  
+
   if (parts.length === 2) {
     // Country level: "brazil-br"
-    const name = formatLocationName(parts[0]);
+    const name = formatLocationName(parts[0] ?? '');
     return {
       name,
       type: 'country',
@@ -62,11 +62,11 @@ export function parseLocationSlug(slug: string): ParsedLocation {
       slug,
     };
   } else if (parts.length === 3) {
-    // State level: "sao-paulo-sp-br" 
+    // State level: "sao-paulo-sp-br"
     // Could also be a city with same name as state
     const stateCode = parts[1]?.toLowerCase();
-    const name = formatLocationName(parts[0]);
-    
+    const name = formatLocationName(parts[0] ?? '');
+
     return {
       name,
       type: 'state', // Default to state, can be refined later
@@ -80,7 +80,7 @@ export function parseLocationSlug(slug: string): ParsedLocation {
     const stateCode = parts[parts.length - 2]?.toLowerCase();
     const nameParts = parts.slice(0, -2);
     const name = formatLocationName(nameParts.join(' '));
-    
+
     return {
       name,
       type: 'city',
@@ -100,13 +100,13 @@ function formatLocationName(slugName: string): string {
   // Convert hyphenated to title case
   return slugName
     .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 }
 
 /**
  * Generates a location slug from components
- * 
+ *
  * @example
  * generateLocationSlug("São Paulo", "sp", "br", "state")
  * // Returns: "sao-paulo-sp-br"
@@ -151,4 +151,3 @@ export function isValidLocationSlug(slug: string): boolean {
     return false;
   }
 }
-

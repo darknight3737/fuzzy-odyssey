@@ -65,10 +65,13 @@ const AppConfigSchema = z
 
 const appConfig = AppConfigSchema.parse({
   name: process.env.NEXT_PUBLIC_PRODUCT_NAME || 'Selletive',
-  title: process.env.NEXT_PUBLIC_SITE_TITLE || 'Selletive - B2B Discovery Platform',
-  description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION || 'Find and connect with verified B2B service providers',
+  title:
+    process.env.NEXT_PUBLIC_SITE_TITLE || 'Selletive — Empresas e serviços B2B',
+  description:
+    process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
+    'Encontre empresas e especialistas em marketing, design, tecnologia e serviços B2B. Compare perfis e escolha seu próximo parceiro.',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-  locale: process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'en',
+  locale: process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'pt',
   theme: process.env.NEXT_PUBLIC_DEFAULT_THEME_MODE || 'light',
   themeColor: process.env.NEXT_PUBLIC_THEME_COLOR || '#3b82f6',
   themeColorDark: process.env.NEXT_PUBLIC_THEME_COLOR_DARK || '#60a5fa',

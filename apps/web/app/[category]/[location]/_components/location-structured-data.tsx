@@ -1,4 +1,5 @@
 import appConfig from '~/config/app.config';
+import { serializeJsonLd } from '~/lib/seo';
 
 type Category = {
   name: string;
@@ -40,8 +41,8 @@ export function LocationStructuredData({
   const itemListSchema = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `Best ${category.name} in ${location.name}`,
-    description: `Find top ${category.name} providers in ${location.name}`,
+    name: `${category.name} em ${location.name}`,
+    description: `Encontre empresas de ${category.name} em ${location.name}`,
     url: pageUrl,
     numberOfItems: businesses.length,
     itemListElement: businesses.map((business, index) => ({
@@ -73,7 +74,7 @@ export function LocationStructuredData({
         '@type': 'ListItem',
         position: 2,
         name: category.name,
-        item: `${appConfig.url}/${category.slug}`,
+        item: `${appConfig.url}/categories/${category.slug}`,
       },
       {
         '@type': 'ListItem',
@@ -88,13 +89,12 @@ export function LocationStructuredData({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(itemListSchema) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbSchema) }}
       />
     </>
   );
 }
-

@@ -34,10 +34,9 @@
   "contactError": "Ocorreu um erro ao enviar sua mensagem",
   "contactSuccessDescription": "Recebemos sua mensagem e entraremos em contato o mais breve possível",
   "contactErrorDescription": "Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente mais tarde",
-  "footerDescription": "Aqui você pode adicionar uma descrição sobre sua empresa ou produto",
+  "footerDescription": "Conectamos empresas a parceiros que fazem a diferença. Descubra serviços, compare especialidades e dê o próximo passo.",
   "copyright": "© Copyright {{year}} {{product}}. Todos os direitos reservados.",
   "findProviders": "Encontrar provedores",
   "getClients": "Conseguir clientes",
   "resources": "Recursos"
 }
-

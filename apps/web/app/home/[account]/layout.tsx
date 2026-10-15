@@ -18,6 +18,8 @@ import { TeamAccountLayoutSidebar } from './_components/team-account-layout-side
 import { TeamAccountNavigationMenu } from './_components/team-account-navigation-menu';
 import { loadTeamWorkspace } from './_lib/server/team-account-workspace.loader';
 
+export const metadata = { robots: { index: false, follow: false } };
+
 type TeamWorkspaceLayoutProps = React.PropsWithChildren<{
   params: Promise<{ account: string }>;
 }>;

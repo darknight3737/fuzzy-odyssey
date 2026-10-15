@@ -1,27 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+import { Menu, Search } from 'lucide-react';
 
 import { JWTUserData } from '@kit/supabase/types';
-import { Header } from '@kit/ui/marketing';
 import { Button } from '@kit/ui/button';
-import { Input } from '@kit/ui/input';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuList,
-} from '@kit/ui/navigation-menu';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@kit/ui/dropdown-menu';
+import { Input } from '@kit/ui/input';
+import { Header } from '@kit/ui/marketing';
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuList,
+} from '@kit/ui/navigation-menu';
 import { Trans } from '@kit/ui/trans';
 
-import { Menu, Search } from 'lucide-react';
 import { SiteHeaderAccountSection } from './site-header-account-section';
 
 function MobileNavigationDropdown() {
@@ -33,17 +35,23 @@ function MobileNavigationDropdown() {
 
       <DropdownMenuContent className={'w-full'}>
         <DropdownMenuItem asChild>
-          <Link href={'/categories'} className={'flex w-full h-full items-center'}>
-            <Trans i18nKey={'marketing:findProviders'} defaults={'Find providers'} />
+          <Link
+            href={'/categories'}
+            className={'flex h-full w-full items-center'}
+          >
+            <Trans
+              i18nKey={'marketing:findProviders'}
+              defaults={'Find providers'}
+            />
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={'/contact'} className={'flex w-full h-full items-center'}>
+          <Link href={'/claim'} className={'flex h-full w-full items-center'}>
             <Trans i18nKey={'marketing:getClients'} defaults={'Get clients'} />
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={'/docs'} className={'flex w-full h-full items-center'}>
+          <Link href={'/faq'} className={'flex h-full w-full items-center'}>
             <Trans i18nKey={'marketing:resources'} defaults={'Resources'} />
           </Link>
         </DropdownMenuItem>
@@ -67,12 +75,17 @@ function DesktopSearch() {
   return (
     <form onSubmit={handleSubmit} className={'relative hidden md:block'}>
       <Input
-        placeholder={'What service?'}
-        className={'pr-9 w-[260px]'}
+        aria-label={'Buscar serviços'}
+        placeholder={'Qual serviço?'}
+        className={'w-[260px] pr-9'}
         value={searchValue}
         onChange={(e) => setSearchValue(e.target.value)}
       />
-      <Search className={'text-muted-foreground absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2'} />
+      <Search
+        className={
+          'text-muted-foreground absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2'
+        }
+      />
     </form>
   );
 }
@@ -96,7 +109,7 @@ function MobileSearch() {
       <button
         onClick={() => setIsOpen(true)}
         aria-label={'Search'}
-        className={'rounded-full p-2 hover:bg-accent md:hidden'}
+        className={'hover:bg-accent rounded-full p-2 md:hidden'}
       >
         <Search className={'h-5 w-5'} />
       </button>
@@ -106,8 +119,9 @@ function MobileSearch() {
   return (
     <form onSubmit={handleSubmit} className={'relative md:hidden'}>
       <Input
-        placeholder={'What service?'}
-        className={'pr-9 w-[200px]'}
+        aria-label={'Buscar serviços'}
+        placeholder={'Qual serviço?'}
+        className={'w-[130px] pr-9 sm:w-[200px]'}
         value={searchValue}
         onChange={(e) => setSearchValue(e.target.value)}
         autoFocus
@@ -117,7 +131,11 @@ function MobileSearch() {
           }
         }}
       />
-      <Search className={'text-muted-foreground absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2'} />
+      <Search
+        className={
+          'text-muted-foreground absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2'
+        }
+      />
     </form>
   );
 }
@@ -142,25 +160,40 @@ export function SiteHeader(props: { user?: JWTUserData | null }) {
               <NavigationMenuItem>
                 <Link
                   href={'/categories'}
-                  className={'inline-flex w-max text-sm font-medium transition-colors duration-300'}
+                  className={
+                    'inline-flex w-max text-sm font-medium transition-colors duration-300'
+                  }
                 >
-                  <Trans i18nKey={'marketing:findProviders'} defaults={'Find providers'} />
+                  <Trans
+                    i18nKey={'marketing:findProviders'}
+                    defaults={'Find providers'}
+                  />
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <Link
-                  href={'/contact'}
-                  className={'inline-flex w-max text-sm font-medium transition-colors duration-300'}
+                  href={'/claim'}
+                  className={
+                    'inline-flex w-max text-sm font-medium transition-colors duration-300'
+                  }
                 >
-                  <Trans i18nKey={'marketing:getClients'} defaults={'Get clients'} />
+                  <Trans
+                    i18nKey={'marketing:getClients'}
+                    defaults={'Get clients'}
+                  />
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <Link
-                  href={'/docs'}
-                  className={'inline-flex w-max text-sm font-medium transition-colors duration-300'}
+                  href={'/faq'}
+                  className={
+                    'inline-flex w-max text-sm font-medium transition-colors duration-300'
+                  }
                 >
-                  <Trans i18nKey={'marketing:resources'} defaults={'Resources'} />
+                  <Trans
+                    i18nKey={'marketing:resources'}
+                    defaults={'Resources'}
+                  />
                 </Link>
               </NavigationMenuItem>
             </NavigationMenuList>
@@ -172,7 +205,7 @@ export function SiteHeader(props: { user?: JWTUserData | null }) {
           <DesktopSearch />
 
           <Button asChild className={'hidden md:inline-flex'}>
-            <Link href={'/contact'}>Post a project</Link>
+            <Link href={'/claim'}>Minha empresa</Link>
           </Button>
 
           <MobileSearch />

@@ -1,3 +1,5 @@
+import { cache } from 'react';
+
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 type FilterParams = {
@@ -36,6 +38,18 @@ export async function getFilteredBusinesses(
   params: FilterParams,
 ): Promise<BusinessWithRating[]> {
   const client = getSupabaseServerClient();
+
+  const { data: categoryTree } = await client
+    .from('categories')
+    .select('id,parent_id')
+    .eq('is_active', true);
+  const categoryIds = new Set([params.categoryId]);
+  for (let depth = 0; depth < 3; depth++) {
+    for (const category of categoryTree ?? []) {
+      if (category.parent_id && categoryIds.has(category.parent_id))
+        categoryIds.add(category.id);
+    }
+  }
 
   // Get location ID if filtering by location
   let locationId: string | null = null;
@@ -88,8 +102,8 @@ export async function getFilteredBusinesses(
   let query = client
     .from('businesses')
     .select(selectFields)
-    .eq('business_categories.category_id', params.categoryId)
-    .in('tier', ['verified', 'highlight', 'spotlight']);
+    .in('business_categories.category_id', [...categoryIds])
+    .in('tier', ['unclaimed', 'claimed', 'verified', 'highlight', 'spotlight']);
 
   // Apply location filter using inner join
   if (locationId) {
@@ -129,7 +143,8 @@ export async function getFilteredBusinesses(
   }
 
   // Get all businesses first
-  const { data: businesses } = await query;
+  const { data: businesses, error } = await query;
+  if (error) throw error;
 
   if (!businesses || businesses.length === 0) {
     return [];
@@ -160,7 +175,7 @@ export async function getFilteredBusinesses(
   });
 
   // Add ratings to businesses and apply rating filter in one pass
-  let businessesWithRatings: BusinessWithRating[] = businesses
+  const businessesWithRatings: BusinessWithRating[] = businesses
     .map((business) => {
       const ratingData = ratingsMap.get(business.id);
       const averageRating = ratingData
@@ -214,9 +229,7 @@ export async function getFilteredBusinesses(
   return businessesWithRatings;
 }
 
-function parseTeamSizeRange(
-  range: string,
-): [number | null, number | null] {
+function parseTeamSizeRange(range: string): [number | null, number | null] {
   if (range === '< 10') return [null, 9];
   if (range === '10-50') return [10, 50];
   if (range === '50-100') return [50, 100];
@@ -225,9 +238,7 @@ function parseTeamSizeRange(
   return [null, null];
 }
 
-function parseFoundedYearRange(
-  range: string,
-): [number | null, number | null] {
+function parseFoundedYearRange(range: string): [number | null, number | null] {
   if (range === 'Before 2000') return [null, 1999];
   if (range === '2000-2010') return [2000, 2010];
   if (range === '2010-2020') return [2010, 2020];
@@ -235,3 +246,6 @@ function parseFoundedYearRange(
   return [null, null];
 }
 
+export const getUnfilteredCategoryBusinesses = cache((categoryId: string) =>
+  getFilteredBusinesses({ categoryId }),
+);

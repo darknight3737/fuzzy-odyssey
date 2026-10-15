@@ -1,4 +1,4 @@
-import { MetadataRoute } from 'next';
+import type { MetadataRoute } from 'next';
 
 import appConfig from '~/config/app.config';
 
@@ -7,7 +7,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
+      disallow: ['/home', '/admin', '/auth', '/api/'],
     },
-    sitemap: `${appConfig.url}/server-sitemap.xml`,
+    sitemap: `${appConfig.url}/sitemap.xml`,
   };
 }

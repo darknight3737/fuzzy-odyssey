@@ -18,6 +18,8 @@ import { HomeMobileNavigation } from './_components/home-mobile-navigation';
 import { HomeSidebar } from './_components/home-sidebar';
 import { loadUserWorkspace } from './_lib/server/load-user-workspace';
 
+export const metadata = { robots: { index: false, follow: false } };
+
 function UserHomeLayout({ children }: React.PropsWithChildren) {
   const state = use(getLayoutState());
 

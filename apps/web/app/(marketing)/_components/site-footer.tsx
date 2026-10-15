@@ -22,7 +22,7 @@ export function SiteFooter() {
         {
           heading: <Trans i18nKey="marketing:about" />,
           links: [
-            { href: '/blog', label: <Trans i18nKey="marketing:blog" /> },
+            { href: '/faq', label: <Trans i18nKey="marketing:faq" /> },
             { href: '/contact', label: <Trans i18nKey="marketing:contact" /> },
           ],
         },
@@ -30,8 +30,8 @@ export function SiteFooter() {
           heading: <Trans i18nKey="marketing:product" />,
           links: [
             {
-              href: '/docs',
-              label: <Trans i18nKey="marketing:documentation" />,
+              href: '/claim',
+              label: <>Reivindicar empresa</>,
             },
           ],
         },

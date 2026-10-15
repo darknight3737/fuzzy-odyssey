@@ -1,7 +1,4 @@
 {
-  "heading": "Melhores {{category}} em {{location}}",
-  "description": "Encontre os melhores provedores de {{category}} em {{location}}. {{count}} empresas encontradas."
+  "heading": "{{category}} em {{location}}",
+  "description": "Encontre empresas de {{category}} em {{location}}. {{count}} empresas encontradas."
 }
-
-
-

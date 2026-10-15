@@ -1,18 +1,17 @@
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { Trans } from '@kit/ui/trans';
 
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 import { withI18n } from '~/lib/i18n/with-i18n';
+import { pageMetadata } from '~/lib/seo';
 
 import { CategoryList } from './_components/category-list';
 
-export async function generateMetadata() {
-  const i18n = await createI18nServerInstance();
-
-  return {
-    title: i18n.t('categories:pageTitle'),
-    description: i18n.t('categories:pageDescription'),
-  };
+export function generateMetadata() {
+  return pageMetadata(
+    'Categorias de serviços B2B | Selletive',
+    'Explore empresas por especialidade. Descubra parceiros de marketing, design, tecnologia e outros serviços para sua empresa.',
+    '/categories',
+  );
 }
 
 async function CategoriesPage() {
@@ -21,7 +20,7 @@ async function CategoriesPage() {
   const { data: categories } = await client
     .from('categories')
     .select('id, name, slug, description, icon')
-    .eq('level', 1)
+    .eq('is_active', true)
     .order('name');
 
   return (
@@ -36,6 +35,3 @@ async function CategoriesPage() {
 }
 
 export default withI18n(CategoriesPage);
-
-
-

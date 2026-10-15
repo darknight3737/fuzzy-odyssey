@@ -8,9 +8,7 @@ import { parseLocationSlug } from './utils';
  * Simplified: Only creates the requested location, not parents
  * Parents are created on-demand when businesses are assigned
  */
-export async function getOrCreateLocationBySlug(
-  slug: string,
-): Promise<{
+export async function getOrCreateLocationBySlug(slug: string): Promise<{
   id: string;
   name: string;
   slug: string;
@@ -77,7 +75,10 @@ export async function getOrCreateLocationBySlug(
       } else {
         // Fallback to country
         const countryName = getCountryName(parsed.countryCode);
-        const countrySlug = generateCountrySlug(countryName, parsed.countryCode);
+        const countrySlug = generateCountrySlug(
+          countryName,
+          parsed.countryCode,
+        );
         const { data: country } = await client
           .from('locations')
           .select('id')
@@ -183,7 +184,10 @@ export function getCountryName(countryCode: string): string {
  * Generates a country slug following PRD pattern: [name]-[country-code]
  * Example: "brazil-br", "united-states-us"
  */
-export function generateCountrySlug(countryName: string, countryCode: string): string {
+export function generateCountrySlug(
+  countryName: string,
+  countryCode: string,
+): string {
   const nameSlug = countryName
     .toLowerCase()
     .normalize('NFD')
@@ -236,20 +240,38 @@ export async function getBusinessesByLocationSlug(
       logo_url,
       tier,
       business_categories!inner(category_id),
-      business_locations!inner(location_id)
+      business_locations!inner(location_id, locations(name, slug))
     `,
     )
     .eq('business_locations.location_id', locationId)
-    .in('tier', ['verified', 'highlight', 'spotlight']);
+    .in('tier', ['unclaimed', 'claimed', 'verified', 'highlight', 'spotlight']);
 
   if (categoryId) {
     query = query.eq('business_categories.category_id', categoryId);
   }
 
-  const { data } = await query
+  const { data, error } = await query
     .order('tier', { ascending: false })
     .limit(50);
 
-  return data || [];
+  if (error) throw error;
+  if (!data?.length) return [];
+  const { data: reviews } = await client
+    .from('reviews')
+    .select('business_id, rating')
+    .in(
+      'business_id',
+      data.map((b) => b.id),
+    )
+    .eq('status', 'approved');
+  return data.map((b) => {
+    const ratings = reviews?.filter((r) => r.business_id === b.id) ?? [];
+    return {
+      ...b,
+      average_rating: ratings.length
+        ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+        : null,
+      review_count: ratings.length,
+    };
+  });
 }
-

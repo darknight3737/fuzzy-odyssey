@@ -4,9 +4,7 @@ import { getSupabaseServerClient } from '@kit/supabase/server-client';
  * Resolves a category slug (could be alias) to the primary category
  * Returns the primary category data
  */
-export async function resolveCategoryFromSlug(
-  slug: string,
-): Promise<{
+export async function resolveCategoryFromSlug(slug: string): Promise<{
   id: string;
   name: string;
   slug: string;
@@ -19,6 +17,7 @@ export async function resolveCategoryFromSlug(
     .from('categories')
     .select('id, name, slug, description')
     .eq('slug', slug)
+    .eq('is_active', true)
     .single();
 
   if (category) {
@@ -38,6 +37,7 @@ export async function resolveCategoryFromSlug(
       .from('categories')
       .select('id, name, slug, description')
       .eq('id', alias.category_id)
+      .eq('is_active', true)
       .single();
 
     if (primaryCategory) {
@@ -47,4 +47,3 @@ export async function resolveCategoryFromSlug(
 
   return null;
 }
-

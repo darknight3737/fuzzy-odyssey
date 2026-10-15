@@ -10,6 +10,7 @@ import { AdminMobileNavigation } from '~/admin/_components/mobile-navigation';
 
 export const metadata = {
   title: `Super Admin`,
+  robots: { index: false, follow: false },
 };
 
 export const dynamic = 'force-dynamic';

@@ -8,7 +8,7 @@ import { BillingProviderSchema, createBillingSchema } from '@kit/billing';
 // and should match the provider in the database. We also add it here so we can validate
 // your configuration against the selected provider at build time.
 const provider = BillingProviderSchema.parse(
-  process.env.NEXT_PUBLIC_BILLING_PROVIDER,
+  process.env.NEXT_PUBLIC_BILLING_PROVIDER ?? 'stripe',
 );
 
 export default createBillingSchema({
@@ -19,7 +19,8 @@ export default createBillingSchema({
     {
       id: 'highlight',
       name: 'Highlight',
-      description: 'Boost your business visibility with enhanced listing features',
+      description:
+        'Boost your business visibility with enhanced listing features',
       currency: 'USD',
       badge: `Popular`,
       highlighted: true,
@@ -65,7 +66,8 @@ export default createBillingSchema({
     {
       id: 'spotlight',
       name: 'Spotlight',
-      description: 'Maximum visibility with premium placement and exclusive features',
+      description:
+        'Maximum visibility with premium placement and exclusive features',
       currency: 'USD',
       badge: `Premium`,
       plans: [

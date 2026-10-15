@@ -1,30 +1,56 @@
-import { SitePageHeader } from '~/(marketing)/_components/site-page-header';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
+import Link from 'next/link';
 
-export async function generateMetadata() {
-  const { t } = await createI18nServerInstance();
+import { pageMetadata } from '~/lib/seo';
 
-  return {
-    title: t('marketing:cookiePolicy'),
-  };
-}
-
-async function CookiePolicyPage() {
-  const { t } = await createI18nServerInstance();
-
+export const metadata = pageMetadata(
+  'Política de cookies | Selletive',
+  'Política de cookies da plataforma Selletive. Saiba como usar o serviço e proteger seus dados.',
+  '/cookie-policy',
+);
+export default function LegalPage() {
   return (
-    <div>
-      <SitePageHeader
-        title={t(`marketing:cookiePolicy`)}
-        subtitle={t(`marketing:cookiePolicyDescription`)}
-      />
-
-      <div className={'container mx-auto py-8'}>
-        <div>Your terms of service content here</div>
-      </div>
-    </div>
+    <main className="container mx-auto max-w-3xl flex-1 px-6 py-16">
+      <h1 className="font-serif text-4xl">Política de cookies</h1>
+      <section className="mt-8">
+        <h2 className="text-xl font-semibold">Cookies essenciais</h2>
+        <p className="text-muted-foreground mt-3 leading-relaxed">
+          Utilizamos cookies e armazenamento necessários para autenticação,
+          proteção contra requisições indevidas e preferências da interface.
+          Esses recursos permitem manter sua sessão e operar áreas restritas com
+          segurança.
+        </p>
+      </section>
+      <section className="mt-8">
+        <h2 className="text-xl font-semibold">Preferências</h2>
+        <p className="text-muted-foreground mt-3 leading-relaxed">
+          Preferências como idioma, aparência e estado de navegação podem ser
+          armazenadas no navegador. Você pode remover esses dados nas
+          configurações do navegador; isso pode encerrar sua sessão ou redefinir
+          preferências.
+        </p>
+      </section>
+      <section className="mt-8">
+        <h2 className="text-xl font-semibold">Medição opcional</h2>
+        <p className="text-muted-foreground mt-3 leading-relaxed">
+          Cookies de publicidade e medição não essenciais devem depender da
+          configuração e do consentimento aplicáveis. Esta política não autoriza
+          a ativação de rastreamento opcional sem a base legal necessária.
+        </p>
+      </section>
+      <section className="mt-8">
+        <h2 className="text-xl font-semibold">Controle e contato</h2>
+        <p className="text-muted-foreground mt-3 leading-relaxed">
+          Você pode bloquear ou excluir cookies no navegador. Para solicitar
+          esclarecimentos sobre o tratamento de dados, entre em contato com
+          nossa equipe.
+        </p>
+      </section>
+      <p className="mt-10">
+        Dúvidas ou solicitações?{' '}
+        <Link href="/contact" className="underline">
+          Entre em contato.
+        </Link>
+      </p>
+    </main>
   );
 }
-
-export default withI18n(CookiePolicyPage);
