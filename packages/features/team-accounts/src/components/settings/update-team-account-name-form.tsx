@@ -1,12 +1,11 @@
 'use client';
 
-import { useTransition } from 'react';
-
-import { isRedirectError } from 'next/dist/client/components/redirect-error';
+import { useRef } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Building, Link } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { Button } from '@kit/ui/button';
@@ -40,7 +39,6 @@ export const UpdateTeamAccountNameForm = (props: {
 
   path: string;
 }) => {
-  const [pending, startTransition] = useTransition();
   const t = useTranslations('teams');
 
   const form = useForm({
@@ -48,6 +46,28 @@ export const UpdateTeamAccountNameForm = (props: {
     defaultValues: {
       name: props.account.name,
       newSlug: '',
+    },
+  });
+
+  const toastId = useRef<string | number>('');
+
+  const { execute, isPending } = useAction(updateTeamAccountName, {
+    onExecute: () => {
+      toastId.current = toast.loading(t('updateTeamLoadingMessage'));
+    },
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        toast.success(t('updateTeamSuccessMessage'), {
+          id: toastId.current,
+        });
+      } else if (data?.error) {
+        toast.error(t(data.error), { id: toastId.current });
+      } else {
+        toast.error(t('updateTeamErrorMessage'), { id: toastId.current });
+      }
+    },
+    onError: () => {
+      toast.error(t('updateTeamErrorMessage'), { id: toastId.current });
     },
   });
 
@@ -61,41 +81,11 @@ export const UpdateTeamAccountNameForm = (props: {
           data-test={'update-team-account-name-form'}
           className={'flex flex-col space-y-4'}
           onSubmit={form.handleSubmit((data) => {
-            startTransition(async () => {
-              const toastId = toast.loading(t('updateTeamLoadingMessage'));
-
-              try {
-                const result = await updateTeamAccountName({
-                  slug: props.account.slug,
-                  name: data.name,
-                  newSlug: data.newSlug || undefined,
-                  path: props.path,
-                });
-
-                if (result.success) {
-                  toast.success(t('updateTeamSuccessMessage'), {
-                    id: toastId,
-                  });
-                } else if (result.error) {
-                  toast.error(t(result.error), {
-                    id: toastId,
-                  });
-                } else {
-                  toast.error(t('updateTeamErrorMessage'), {
-                    id: toastId,
-                  });
-                }
-              } catch (error) {
-                if (!isRedirectError(error)) {
-                  toast.error(t('updateTeamErrorMessage'), {
-                    id: toastId,
-                  });
-                } else {
-                  toast.success(t('updateTeamSuccessMessage'), {
-                    id: toastId,
-                  });
-                }
-              }
+            execute({
+              slug: props.account.slug,
+              name: data.name,
+              newSlug: data.newSlug || undefined,
+              path: props.path,
             });
           })}
         >
@@ -170,7 +160,7 @@ export const UpdateTeamAccountNameForm = (props: {
               type="submit"
               className={'w-full md:w-auto'}
               data-test={'update-team-submit-button'}
-              disabled={pending}
+              disabled={isPending}
             >
               <Trans i18nKey={'teams.updateTeamSubmitLabel'} />
             </Button>

@@ -1,10 +1,9 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
-
-import { isRedirectError } from 'next/dist/client/components/redirect-error';
+import { useMemo, useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
@@ -66,7 +65,17 @@ export function CreateTeamAccountDialog(
 
 function CreateOrganizationAccountForm(props: { onClose: () => void }) {
   const [error, setError] = useState<{ message?: string } | undefined>();
-  const [pending, startTransition] = useTransition();
+
+  const { execute, isPending } = useAction(createTeamAccountAction, {
+    onSuccess: ({ data }) => {
+      if (data?.error) {
+        setError({ message: data.message });
+      }
+    },
+    onError: () => {
+      setError({});
+    },
+  });
 
   const form = useForm({
     defaultValues: {
@@ -87,21 +96,7 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
     <Form {...form}>
       <form
         data-test={'create-team-form'}
-        onSubmit={form.handleSubmit((data) => {
-          startTransition(async () => {
-            try {
-              const result = await createTeamAccountAction(data);
-
-              if (result.error) {
-                setError({ message: result.message });
-              }
-            } catch (e) {
-              if (!isRedirectError(e)) {
-                setError({});
-              }
-            }
-          });
-        })}
+        onSubmit={form.handleSubmit((data) => execute(data))}
       >
         <div className={'flex flex-col space-y-4'}>
           <If condition={error}>
@@ -174,7 +169,7 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
             <Button
               variant={'outline'}
               type={'button'}
-              disabled={pending}
+              disabled={isPending}
               onClick={props.onClose}
             >
               <Trans i18nKey={'common.cancel'} />
@@ -183,9 +178,9 @@ function CreateOrganizationAccountForm(props: { onClose: () => void }) {
             <Button
               type="submit"
               data-test={'confirm-create-team-button'}
-              disabled={pending}
+              disabled={isPending}
             >
-              {pending ? (
+              {isPending ? (
                 <Trans i18nKey={'teams.creatingTeam'} />
               ) : (
                 <Trans i18nKey={'teams.createTeamSubmitLabel'} />

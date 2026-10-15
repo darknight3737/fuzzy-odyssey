@@ -46,6 +46,7 @@
     "lucide-react": "catalog:",
     "next": "catalog:",
     "next-intl": "catalog:",
+    "next-safe-action": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-hook-form": "catalog:",

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { Mail, Plus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useAction } from 'next-safe-action/hooks';
 import { useFieldArray, useForm } from 'react-hook-form';
 
 import { Alert, AlertDescription } from '@kit/ui/alert';
@@ -64,9 +65,32 @@ export function InviteMembersDialogContainer({
   accountSlug: string;
   userRoleHierarchy: number;
 }>) {
-  const [pending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
   const t = useTranslations('teams');
+  const toastId = useRef<string | number>('');
+
+  const { execute, isPending } = useAction(createInvitationsAction, {
+    onExecute: () => {
+      toastId.current = toast.loading(t('invitingMembers'));
+    },
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        toast.success(t('inviteMembersSuccessMessage'), {
+          id: toastId.current,
+        });
+      } else {
+        toast.error(t('inviteMembersErrorMessage'), {
+          id: toastId.current,
+        });
+      }
+
+      setIsOpen(false);
+    },
+    onError: () => {
+      toast.error(t('inviteMembersErrorMessage'), { id: toastId.current });
+      setIsOpen(false);
+    },
+  });
 
   // Evaluate policies when dialog is open
   const {
@@ -126,28 +150,12 @@ export function InviteMembersDialogContainer({
           <RolesDataProvider maxRoleHierarchy={userRoleHierarchy}>
             {(roles) => (
               <InviteMembersForm
-                pending={pending}
+                pending={isPending}
                 roles={roles}
                 onSubmit={(data) => {
-                  startTransition(async () => {
-                    const toastId = toast.loading(t('invitingMembers'));
-
-                    const result = await createInvitationsAction({
-                      accountSlug,
-                      invitations: data.invitations,
-                    });
-
-                    if (result.success) {
-                      toast.success(t('inviteMembersSuccessMessage'), {
-                        id: toastId,
-                      });
-                    } else {
-                      toast.error(t('inviteMembersErrorMessage'), {
-                        id: toastId,
-                      });
-                    }
-
-                    setIsOpen(false);
+                  execute({
+                    accountSlug,
+                    invitations: data.invitations,
                   });
                 }}
               />

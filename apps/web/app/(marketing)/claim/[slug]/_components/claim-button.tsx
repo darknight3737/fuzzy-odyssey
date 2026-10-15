@@ -21,8 +21,8 @@ export function ClaimButton({ slug }: { slug: string }) {
             setError('');
             try {
               const result = await claimBusinessAction({ slug });
-              if (result.success) router.push(`/home/businesses/${slug}`);
-              else setError(result.error);
+              if (result?.data?.success) router.push(`/home/businesses/${slug}`);
+              else setError(result?.data?.error || 'Não foi possível concluir. Confira os dados e tente novamente.');
             } catch {
               setError('Não foi possível concluir. Tente novamente.');
             }

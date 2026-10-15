@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
-import { enhanceAction } from '@kit/next/actions';
+import { authActionClient } from '@kit/next/safe-action';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import featureFlagsConfig from '~/config/feature-flags.config';
@@ -24,8 +24,9 @@ const enabled = featureFlagsConfig.enableTeamAccountBilling;
  * @name createTeamAccountCheckoutSession
  * @description Creates a checkout session for a team account.
  */
-export const createTeamAccountCheckoutSession = enhanceAction(
-  async (data) => {
+export const createTeamAccountCheckoutSession = authActionClient
+  .inputSchema(TeamCheckoutSchema)
+  .action(async ({ parsedInput: data }) => {
     if (!enabled) {
       throw new Error('Team account billing is not enabled');
     }
@@ -34,24 +35,19 @@ export const createTeamAccountCheckoutSession = enhanceAction(
     const service = createTeamBillingService(client);
 
     return service.createCheckout(data);
-  },
-  {
-    schema: TeamCheckoutSchema,
-  },
-);
+  });
 
 /**
  * @name createBillingPortalSession
  * @description Creates a Billing Session Portal and redirects the user to the
  * provider's hosted instance
  */
-export const createBillingPortalSession = enhanceAction(
-  async (formData: FormData) => {
+export const createBillingPortalSession = authActionClient
+  .inputSchema(TeamBillingPortalSchema)
+  .action(async ({ parsedInput: params }) => {
     if (!enabled) {
       throw new Error('Team account billing is not enabled');
     }
-
-    const params = TeamBillingPortalSchema.parse(Object.fromEntries(formData));
 
     const client = getSupabaseServerClient();
     const service = createTeamBillingService(client);
@@ -59,7 +55,5 @@ export const createBillingPortalSession = enhanceAction(
     // get url to billing portal
     const url = await service.createBillingPortalSession(params);
 
-    return redirect(url);
-  },
-  {},
-);
+    redirect(url);
+  });

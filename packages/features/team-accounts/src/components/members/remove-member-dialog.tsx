@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useAction } from 'next-safe-action/hooks';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
 import {
@@ -61,28 +61,26 @@ function RemoveMemberForm({
   userId: string;
   onSuccess: () => void;
 }) {
-  const [isSubmitting, startTransition] = useTransition();
-  const [error, setError] = useState(false);
-
-  const onMemberRemoved = () => {
-    startTransition(async () => {
-      try {
-        await removeMemberFromAccountAction({ accountId, userId });
-        onSuccess();
-      } catch {
-        setError(true);
-      }
-    });
-  };
+  const { execute, isPending, hasErrored } = useAction(
+    removeMemberFromAccountAction,
+    {
+      onSuccess: () => onSuccess(),
+    },
+  );
 
   return (
-    <form action={onMemberRemoved}>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        execute({ accountId, userId });
+      }}
+    >
       <div className={'flex flex-col space-y-6'}>
         <p className={'text-muted-foreground text-sm'}>
           <Trans i18nKey={'common.modalConfirmationQuestion'} />
         </p>
 
-        <If condition={error}>
+        <If condition={hasErrored}>
           <RemoveMemberErrorAlert />
         </If>
 
@@ -94,7 +92,7 @@ function RemoveMemberForm({
           <Button
             data-test={'confirm-remove-member'}
             variant={'destructive'}
-            disabled={isSubmitting}
+            disabled={isPending}
           >
             <Trans i18nKey={'teams.removeMemberSubmitLabel'} />
           </Button>

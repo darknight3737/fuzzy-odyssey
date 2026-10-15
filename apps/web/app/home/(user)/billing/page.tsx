@@ -2,7 +2,6 @@ import { getTranslations } from 'next-intl/server';
 
 import { resolveProductPlan } from '@kit/billing-gateway';
 import {
-  BillingPortalCard,
   CurrentLifetimeOrderCard,
   CurrentSubscriptionCard,
 } from '@kit/billing-gateway/components';
@@ -16,8 +15,8 @@ import { requireUserInServerComponent } from '~/lib/server/require-user-in-serve
 
 // local imports
 import { HomeLayoutPageHeader } from '../_components/home-page-header';
-import { createPersonalAccountBillingPortalSession } from '../billing/_lib/server/server-actions';
 import { PersonalAccountCheckoutForm } from './_components/personal-account-checkout-form';
+import { PersonalBillingPortalForm } from './_components/personal-billing-portal-form';
 import { loadPersonalAccountBillingPageData } from './_lib/server/personal-account-billing-page.loader';
 
 export const generateMetadata = async () => {
@@ -98,7 +97,7 @@ async function PersonalAccountBillingPage() {
             </div>
           </If>
 
-          <If condition={customerId}>{() => <CustomerBillingPortalForm />}</If>
+          <If condition={customerId}>{() => <PersonalBillingPortalForm />}</If>
         </div>
       </PageBody>
     </>
@@ -106,11 +105,3 @@ async function PersonalAccountBillingPage() {
 }
 
 export default PersonalAccountBillingPage;
-
-function CustomerBillingPortalForm() {
-  return (
-    <form action={createPersonalAccountBillingPortalSession}>
-      <BillingPortalCard />
-    </form>
-  );
-}

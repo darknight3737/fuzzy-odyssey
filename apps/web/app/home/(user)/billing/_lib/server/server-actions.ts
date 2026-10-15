@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
-import { enhanceAction } from '@kit/next/actions';
+import { authActionClient } from '@kit/next/safe-action';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import featureFlagsConfig from '~/config/feature-flags.config';
@@ -20,8 +20,9 @@ const enabled = featureFlagsConfig.enablePersonalAccountBilling;
  * @name createPersonalAccountCheckoutSession
  * @description Creates a checkout session for a personal account.
  */
-export const createPersonalAccountCheckoutSession = enhanceAction(
-  async function (data) {
+export const createPersonalAccountCheckoutSession = authActionClient
+  .inputSchema(PersonalAccountCheckoutSchema)
+  .action(async ({ parsedInput: data }) => {
     if (!enabled) {
       throw new Error('Personal account billing is not enabled');
     }
@@ -30,18 +31,14 @@ export const createPersonalAccountCheckoutSession = enhanceAction(
     const service = createUserBillingService(client);
 
     return await service.createCheckoutSession(data);
-  },
-  {
-    schema: PersonalAccountCheckoutSchema,
-  },
-);
+  });
 
 /**
  * @name createPersonalAccountBillingPortalSession
  * @description Creates a billing Portal session for a personal account
  */
-export const createPersonalAccountBillingPortalSession = enhanceAction(
-  async () => {
+export const createPersonalAccountBillingPortalSession =
+  authActionClient.action(async () => {
     if (!enabled) {
       throw new Error('Personal account billing is not enabled');
     }
@@ -52,7 +49,5 @@ export const createPersonalAccountBillingPortalSession = enhanceAction(
     // get url to billing portal
     const url = await service.createBillingPortalSession();
 
-    return redirect(url);
-  },
-  {},
-);
+    redirect(url);
+  });

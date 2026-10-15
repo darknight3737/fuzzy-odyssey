@@ -1,32 +1,24 @@
 'use server';
-
 import { revalidatePath } from 'next/cache';
-
-import { enhanceAction } from '@kit/next/actions';
+import { authActionClient } from '@kit/next/safe-action';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
-
 import { BusinessProfileSchema } from '~/lib/business/schema';
-
-export const updateBusinessAction = enhanceAction(
-  async ({ slug, ...data }, user) => {
+export const updateBusinessAction = authActionClient.inputSchema(BusinessProfileSchema).action(async ({ parsedInput: { slug, ...data }, ctx: { user } }) => {
     const client = getSupabaseServerClient();
     const { data: business, error } = await client
-      .from('businesses')
-      .update(data)
-      .eq('slug', slug)
-      .eq('account_id', user.id)
-      .select('id')
-      .maybeSingle();
+        .from('businesses')
+        .update(data)
+        .eq('slug', slug)
+        .eq('account_id', user.id)
+        .select('id')
+        .maybeSingle();
     if (error || !business)
-      return {
-        success: false,
-        error:
-          'Não foi possível salvar. Confira as informações e tente novamente.',
-      };
+        return {
+            success: false,
+            error: 'Não foi possível salvar. Confira as informações e tente novamente.',
+        };
     revalidatePath(`/company/${slug}`);
     revalidatePath(`/home/businesses/${slug}`);
     revalidatePath('/');
     return { success: true, error: '' };
-  },
-  { auth: true, schema: BusinessProfileSchema },
-);
+});

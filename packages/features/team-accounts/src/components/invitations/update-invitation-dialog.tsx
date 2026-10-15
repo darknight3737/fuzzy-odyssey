@@ -1,7 +1,8 @@
-import { useState, useTransition } from 'react';
+'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
@@ -81,23 +82,10 @@ function UpdateInvitationForm({
   setIsOpen: (isOpen: boolean) => void;
 }>) {
   const t = useTranslations('teams');
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<boolean>();
 
-  const onSubmit = ({ role }: { role: Role }) => {
-    startTransition(async () => {
-      try {
-        await updateInvitationAction({
-          invitationId,
-          role,
-        });
-
-        setIsOpen(false);
-      } catch {
-        setError(true);
-      }
-    });
-  };
+  const { execute, isPending, hasErrored } = useAction(updateInvitationAction, {
+    onSuccess: () => setIsOpen(false),
+  });
 
   const form = useForm({
     resolver: zodResolver(
@@ -122,10 +110,12 @@ function UpdateInvitationForm({
     <Form {...form}>
       <form
         data-test={'update-invitation-form'}
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(({ role }) => {
+          execute({ invitationId, role });
+        })}
         className={'flex flex-col space-y-6'}
       >
-        <If condition={error}>
+        <If condition={hasErrored}>
           <UpdateRoleErrorAlert />
         </If>
 
@@ -165,7 +155,7 @@ function UpdateInvitationForm({
           }}
         />
 
-        <Button type={'submit'} disabled={pending}>
+        <Button type={'submit'} disabled={isPending}>
           <Trans i18nKey={'teams.updateRoleSubmitLabel'} />
         </Button>
       </form>

@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
@@ -92,25 +91,11 @@ function UpdateMemberForm({
   roles: Role[];
   onSuccess: () => unknown;
 }>) {
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<boolean>();
   const t = useTranslations('teams');
 
-  const onSubmit = ({ role }: { role: Role }) => {
-    startTransition(async () => {
-      try {
-        await updateMemberRoleAction({
-          accountId: teamAccountId,
-          userId,
-          role,
-        });
-
-        onSuccess();
-      } catch {
-        setError(true);
-      }
-    });
-  };
+  const { execute, isPending, hasErrored } = useAction(updateMemberRoleAction, {
+    onSuccess: () => onSuccess(),
+  });
 
   const form = useForm({
     resolver: zodResolver(
@@ -135,10 +120,16 @@ function UpdateMemberForm({
     <Form {...form}>
       <form
         data-test={'update-member-role-form'}
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(({ role }) => {
+          execute({
+            accountId: teamAccountId,
+            userId,
+            role,
+          });
+        })}
         className={'flex w-full flex-col space-y-6'}
       >
-        <If condition={error}>
+        <If condition={hasErrored}>
           <UpdateRoleErrorAlert />
         </If>
 
@@ -179,7 +170,7 @@ function UpdateMemberForm({
           <Button
             type="submit"
             data-test={'confirm-update-member-role'}
-            disabled={pending}
+            disabled={isPending}
           >
             <Trans i18nKey={'teams.updateRoleSubmitLabel'} />
           </Button>

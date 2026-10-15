@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 
 import dynamic from 'next/dynamic';
 
 import { TriangleAlert } from 'lucide-react';
+import { useAction } from 'next-safe-action/hooks';
 
 import { PlanPicker } from '@kit/billing-gateway/components';
 import { useAppEvents } from '@kit/shared/events';
@@ -39,12 +40,25 @@ const EmbeddedCheckout = dynamic(
 export function PersonalAccountCheckoutForm(props: {
   customerId: string | null | undefined;
 }) {
-  const [pending, startTransition] = useTransition();
   const [error, setError] = useState(false);
   const appEvents = useAppEvents();
 
   const [checkoutToken, setCheckoutToken] = useState<string | undefined | null>(
     undefined,
+  );
+
+  const { execute, isPending } = useAction(
+    createPersonalAccountCheckoutSession,
+    {
+      onSuccess: ({ data }) => {
+        if (data?.checkoutToken) {
+          setCheckoutToken(data.checkoutToken);
+        }
+      },
+      onError: () => {
+        setError(true);
+      },
+    },
   );
 
   // only allow trial if the user is not already a customer
@@ -81,27 +95,18 @@ export function PersonalAccountCheckoutForm(props: {
           </If>
 
           <PlanPicker
-            pending={pending}
+            pending={isPending}
             config={billingConfig}
             canStartTrial={canStartTrial}
             onSubmit={({ planId, productId }) => {
-              startTransition(async () => {
-                try {
-                  appEvents.emit({
-                    type: 'checkout.started',
-                    payload: { planId },
-                  });
+              appEvents.emit({
+                type: 'checkout.started',
+                payload: { planId },
+              });
 
-                  const { checkoutToken } =
-                    await createPersonalAccountCheckoutSession({
-                      planId,
-                      productId,
-                    });
-
-                  setCheckoutToken(checkoutToken);
-                } catch {
-                  setError(true);
-                }
+              execute({
+                planId,
+                productId,
               });
             }}
           />

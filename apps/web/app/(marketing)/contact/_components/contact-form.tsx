@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
@@ -23,11 +24,18 @@ import { ContactEmailSchema } from '~/(marketing)/contact/_lib/contact-email.sch
 import { sendContactEmail } from '~/(marketing)/contact/_lib/server/server-actions';
 
 export function ContactForm() {
-  const [pending, startTransition] = useTransition();
-
   const [state, setState] = useState({
     success: false,
     error: false,
+  });
+
+  const { execute, isPending } = useAction(sendContactEmail, {
+    onSuccess: () => {
+      setState({ success: true, error: false });
+    },
+    onError: () => {
+      setState({ error: true, success: false });
+    },
   });
 
   const form = useForm({
@@ -52,15 +60,7 @@ export function ContactForm() {
       <form
         className={'flex flex-col space-y-4'}
         onSubmit={form.handleSubmit((data) => {
-          startTransition(async () => {
-            try {
-              await sendContactEmail(data);
-
-              setState({ success: true, error: false });
-            } catch {
-              setState({ error: true, success: false });
-            }
-          });
+          execute(data);
         })}
       >
         <FormField
@@ -124,7 +124,7 @@ export function ContactForm() {
           }}
         />
 
-        <Button disabled={pending} type={'submit'}>
+        <Button disabled={isPending} type={'submit'}>
           <Trans i18nKey={'marketing.sendMessage'} />
         </Button>
       </form>

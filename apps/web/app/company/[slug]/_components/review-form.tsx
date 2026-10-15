@@ -38,8 +38,8 @@ export function ReviewForm({ businessId }: { businessId: string }) {
                 title: String(data.get('title')),
                 content: String(data.get('content')),
               });
-              if (result.success) setSent(true);
-              else setMessage(result.error);
+              if (result?.data?.success) setSent(true);
+              else setMessage(result?.data?.error || 'Não foi possível concluir. Confira os dados e tente novamente.');
             } catch {
               setMessage(
                 'Não foi possível enviar. Confira os campos e tente novamente.',

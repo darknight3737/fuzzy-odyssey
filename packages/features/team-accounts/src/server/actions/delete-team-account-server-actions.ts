@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { enhanceAction } from '@kit/next/actions';
+import { authActionClient } from '@kit/next/safe-action';
 import { createOtpApi } from '@kit/otp';
 import { getLogger } from '@kit/shared/logger';
 import type { Database } from '@kit/supabase/database';
@@ -17,13 +17,10 @@ import { createDeleteTeamAccountService } from '../services/delete-team-account.
 const enableTeamAccountDeletion =
   process.env.NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_DELETION === 'true';
 
-export const deleteTeamAccountAction = enhanceAction(
-  async (formData: FormData, user) => {
+export const deleteTeamAccountAction = authActionClient
+  .inputSchema(DeleteTeamAccountSchema)
+  .action(async ({ parsedInput: params, ctx: { user } }) => {
     const logger = await getLogger();
-
-    const params = DeleteTeamAccountSchema.parse(
-      Object.fromEntries(formData.entries()),
-    );
 
     const otpService = createOtpApi(getSupabaseServerClient());
 
@@ -61,13 +58,8 @@ export const deleteTeamAccountAction = enhanceAction(
     logger.info(ctx, `Team account request successfully sent`);
 
     revalidatePath('/', 'layout');
-
-    return redirect('/home');
-  },
-  {
-    auth: true,
-  },
-);
+    redirect('/home');
+  });
 
 async function deleteTeamAccount(params: {
   accountId: string;

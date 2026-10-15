@@ -20,7 +20,7 @@ export function ReviewModeration({ id }: { id: string }) {
                 try {
                   const result = await moderateReviewAction({ id, status });
                   setMessage(
-                    result.success
+                    result?.data?.success
                       ? 'Moderação salva.'
                       : 'Não foi possível salvar.',
                   );

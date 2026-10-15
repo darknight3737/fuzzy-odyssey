@@ -2,7 +2,7 @@
 
 import * as z from 'zod';
 
-import { enhanceAction } from '@kit/next/actions';
+import { authActionClient } from '@kit/next/safe-action';
 import { getLogger } from '@kit/shared/logger';
 import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 
@@ -25,8 +25,9 @@ const SendOtpEmailSchema = z.object({
 /**
  * Server action to generate an OTP and send it via email
  */
-export const sendOtpEmailAction = enhanceAction(
-  async function (data: z.output<typeof SendOtpEmailSchema>, user) {
+export const sendOtpEmailAction = authActionClient
+  .inputSchema(SendOtpEmailSchema)
+  .action(async ({ parsedInput: data, ctx: { user } }) => {
     const logger = await getLogger();
     const ctx = { name: 'send-otp-email', userId: user.id };
     const email = user.email;
@@ -87,9 +88,4 @@ export const sendOtpEmailAction = enhanceAction(
           error instanceof Error ? error.message : 'Failed to send OTP email',
       };
     }
-  },
-  {
-    schema: SendOtpEmailSchema,
-    auth: true,
-  },
-);
+  });
