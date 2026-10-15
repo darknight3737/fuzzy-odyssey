@@ -1,7 +1,6 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-import { CsrfError, createCsrfProtect } from '@edge-csrf/nextjs';
 import createNextIntlMiddleware from 'next-intl/middleware';
 
 import { isSuperAdmin } from '@kit/admin';
@@ -10,14 +9,12 @@ import { getSafeRedirectPath } from '@kit/shared/utils';
 import { checkRequiresMultiFactorAuthentication } from '@kit/supabase/check-requires-mfa';
 import { createMiddlewareClient } from '@kit/supabase/middleware-client';
 
-import appConfig from "~/config/app.config";
-import pathsConfig from "~/config/paths.config";
+import pathsConfig from '~/config/paths.config';
 
-const CSRF_SECRET_COOKIE = "csrfSecret";
-const NEXT_ACTION_HEADER = "next-action";
+const NEXT_ACTION_HEADER = 'next-action';
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|images|locales|assets|sitemap.xml|robots.txt|api/*).*)"],
+  matcher: ['/((?!_next/static|_next/image|images|locales|assets|sitemap.xml|robots.txt|api/*).*)'],
 };
 
 // create i18n middleware once at module scope
@@ -40,14 +37,11 @@ export default async function proxy(request: NextRequest) {
   // this helps us log and trace requests
   setRequestId(request);
 
-  // apply CSRF protection for mutating requests
-  const csrfResponse = await withCsrfMiddleware(request, secureHeadersResponse);
-
   // Resolve missing directory URLs before streaming begins, preserving a true
   // HTTP 404 for crawlers instead of a streamed 200 with an error screen.
   const missingDirectoryPage = await isMissingDirectoryPage(
     request,
-    csrfResponse,
+    secureHeadersResponse,
   );
   if (missingDirectoryPage) {
     return new NextResponse(
@@ -67,7 +61,10 @@ export default async function proxy(request: NextRequest) {
 
   // if a pattern handler exists, call it
   if (handlePattern) {
-    const patternHandlerResponse = await handlePattern(request, csrfResponse);
+    const patternHandlerResponse = await handlePattern(
+      request,
+      secureHeadersResponse,
+    );
 
     // if a pattern handler returns a response, return it
     if (patternHandlerResponse) {
@@ -78,42 +75,15 @@ export default async function proxy(request: NextRequest) {
   // append the action path to the request headers
   // which is useful for knowing the action path in server actions
   if (isServerAction(request)) {
-    csrfResponse.headers.set("x-action-path", request.nextUrl.pathname);
+    secureHeadersResponse.headers.set(
+      'x-action-path',
+      request.nextUrl.pathname,
+    );
   }
 
   // if no pattern handler returned a response,
   // return the session response
-  return csrfResponse;
-}
-
-async function withCsrfMiddleware(request: NextRequest, response: NextResponse) {
-  // set up CSRF protection
-  const csrfProtect = createCsrfProtect({
-    cookie: {
-      secure: appConfig.production,
-      name: CSRF_SECRET_COOKIE,
-    },
-    // ignore CSRF errors for server actions since protection is built-in
-    ignoreMethods: isServerAction(request)
-      ? ["POST"]
-      : // always ignore GET, HEAD, and OPTIONS requests
-        ["GET", "HEAD", "OPTIONS"],
-  });
-
-  try {
-    await csrfProtect(request, response);
-
-    return response;
-  } catch (error) {
-    // if there is a CSRF error, return a 403 response
-    if (error instanceof CsrfError) {
-      return NextResponse.json('Invalid CSRF token', {
-        status: 403,
-      });
-    }
-
-    throw error;
-  }
+  return secureHeadersResponse;
 }
 
 function isServerAction(request: NextRequest) {
@@ -123,7 +93,7 @@ function isServerAction(request: NextRequest) {
 }
 
 async function adminMiddleware(request: NextRequest, response: NextResponse) {
-  const isAdminPath = request.nextUrl.pathname.startsWith("/admin");
+  const isAdminPath = request.nextUrl.pathname.startsWith('/admin');
 
   if (!isAdminPath) {
     return;
@@ -134,7 +104,9 @@ async function adminMiddleware(request: NextRequest, response: NextResponse) {
   // If user is not logged in, redirect to sign in page.
   // This should never happen, but just in case.
   if (!data?.claims || error) {
-    return NextResponse.redirect(new URL(pathsConfig.auth.signIn, request.nextUrl.origin).href);
+    return NextResponse.redirect(
+      new URL(pathsConfig.auth.signIn, request.nextUrl.origin).href,
+    );
   }
 
   const client = createMiddlewareClient(request, response);
@@ -142,7 +114,7 @@ async function adminMiddleware(request: NextRequest, response: NextResponse) {
 
   // If user is not an admin, redirect to 404 page.
   if (!userIsSuperAdmin) {
-    return NextResponse.redirect(new URL("/404", request.nextUrl.origin).href);
+    return NextResponse.redirect(new URL('/404', request.nextUrl.origin).href);
   }
 
   // in all other cases, return the response
@@ -156,17 +128,17 @@ async function getPatterns() {
   let URLPattern = globalThis.URLPattern;
 
   if (!URLPattern) {
-    const { URLPattern: polyfill } = await import("urlpattern-polyfill");
+    const { URLPattern: polyfill } = await import('urlpattern-polyfill');
     URLPattern = polyfill as typeof URLPattern;
   }
 
   return [
     {
-      pattern: new URLPattern({ pathname: "/admin/*?" }),
+      pattern: new URLPattern({ pathname: '/admin/*?' }),
       handler: adminMiddleware,
     },
     {
-      pattern: new URLPattern({ pathname: "/auth/*?" }),
+      pattern: new URLPattern({ pathname: '/auth/*?' }),
       handler: async (req: NextRequest, res: NextResponse) => {
         const { data } = await getUser(req, res);
 
@@ -182,16 +154,18 @@ async function getPatterns() {
         // redirect to home page.
         if (!isVerifyMfa) {
           const nextPath = getSafeRedirectPath(
-            req.nextUrl.searchParams.get("next"),
+            req.nextUrl.searchParams.get('next'),
             pathsConfig.app.home,
           );
 
-          return NextResponse.redirect(new URL(nextPath, req.nextUrl.origin).href);
+          return NextResponse.redirect(
+            new URL(nextPath, req.nextUrl.origin).href,
+          );
         }
       },
     },
     {
-      pattern: new URLPattern({ pathname: "/home/*?" }),
+      pattern: new URLPattern({ pathname: '/home/*?' }),
       handler: async (req: NextRequest, res: NextResponse) => {
         const { data } = await getUser(req, res);
         const { origin, pathname: next } = req.nextUrl;
@@ -211,7 +185,9 @@ async function getPatterns() {
 
         // If user requires multi-factor authentication, redirect to MFA page.
         if (requiresMultiFactorAuthentication) {
-          return NextResponse.redirect(new URL(pathsConfig.auth.verifyMfa, origin).href);
+          return NextResponse.redirect(
+            new URL(pathsConfig.auth.verifyMfa, origin).href,
+          );
         }
       },
     },
@@ -222,17 +198,14 @@ async function getPatterns() {
  * Match URL patterns to specific handlers.
  * @param url
  */
-let cachedPatterns: Awaited<ReturnType<typeof getPatterns>> | null = null;
-
 async function matchUrlPattern(url: string) {
-  cachedPatterns ??= await getPatterns();
-  const patterns = cachedPatterns;
+  const patterns = await getPatterns();
   const input = url.split('?')[0];
 
   for (const pattern of patterns) {
     const patternResult = pattern.pattern.exec(input);
 
-    if (patternResult !== null && "pathname" in patternResult) {
+    if (patternResult !== null && 'pathname' in patternResult) {
       return pattern.handler;
     }
   }
@@ -243,7 +216,7 @@ async function matchUrlPattern(url: string) {
  * @param request
  */
 function setRequestId(request: Request) {
-  request.headers.set("x-correlation-id", crypto.randomUUID());
+  request.headers.set('x-correlation-id', crypto.randomUUID());
 }
 
 /**
