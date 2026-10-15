@@ -24,6 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@kit/ui/form';
+import { useAsyncDialog } from '@kit/ui/hooks/use-async-dialog';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
 
@@ -49,9 +50,14 @@ export function UpdateMemberRoleDialog({
   userRole: Role;
   userRoleHierarchy: number;
 }) {
+  const { dialogProps, isPending, setIsPending, setOpen } = useAsyncDialog({
+    open,
+    onOpenChange,
+  });
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} disablePointerDismissal>
-      <DialogContent>
+    <Dialog {...dialogProps}>
+      <DialogContent showCloseButton={!isPending}>
         <DialogHeader>
           <DialogTitle>
             <Trans i18nKey={'teams.updateMemberRoleModalHeading'} />
@@ -69,7 +75,12 @@ export function UpdateMemberRoleDialog({
               teamAccountId={teamAccountId}
               userRole={userRole}
               roles={data}
-              onSuccess={() => onOpenChange(false)}
+              isPending={isPending}
+              setIsPending={setIsPending}
+              onSuccess={() => {
+                setIsPending(false);
+                setOpen(false);
+              }}
             />
           )}
         </RolesDataProvider>
@@ -83,18 +94,24 @@ function UpdateMemberForm({
   userRole,
   teamAccountId,
   roles,
+  isPending,
+  setIsPending,
   onSuccess,
 }: React.PropsWithChildren<{
   userId: string;
   userRole: Role;
   teamAccountId: string;
   roles: Role[];
+  isPending: boolean;
+  setIsPending: (pending: boolean) => void;
   onSuccess: () => unknown;
 }>) {
   const t = useTranslations('teams');
 
-  const { execute, isPending, hasErrored } = useAction(updateMemberRoleAction, {
+  const { execute, hasErrored } = useAction(updateMemberRoleAction, {
+    onExecute: () => setIsPending(true),
     onSuccess: () => onSuccess(),
+    onSettled: () => setIsPending(false),
   });
 
   const form = useForm({
@@ -163,7 +180,7 @@ function UpdateMemberForm({
         />
 
         <div className="flex justify-end gap-x-2">
-          <AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>
             <Trans i18nKey={'common.cancel'} />
           </AlertDialogCancel>
 

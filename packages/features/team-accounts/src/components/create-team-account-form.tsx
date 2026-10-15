@@ -28,7 +28,9 @@ import {
 import { createTeamAccountAction } from '../server/actions/create-team-account-server-actions';
 
 export function CreateTeamAccountForm(props: {
-  onCancel?: () => void;
+  onClose?: () => void;
+  isPending?: boolean;
+  setIsPending?: (isPending: boolean) => void;
   submitLabel?: string;
 }) {
   const [error, setError] = useState<{ message?: string } | undefined>();
@@ -36,6 +38,10 @@ export function CreateTeamAccountForm(props: {
   const { execute, isPending } = useAction(createTeamAccountAction, {
     onExecute: () => {
       setError(undefined);
+
+      if (props.setIsPending) {
+        props.setIsPending(true);
+      }
     },
     onSuccess: ({ data }) => {
       if (data?.error) {
@@ -44,6 +50,11 @@ export function CreateTeamAccountForm(props: {
     },
     onError: () => {
       setError({});
+    },
+    onSettled: () => {
+      if (props.setIsPending) {
+        props.setIsPending(false);
+      }
     },
   });
 
@@ -133,12 +144,12 @@ export function CreateTeamAccountForm(props: {
           </If>
 
           <div className={'flex justify-end space-x-2'}>
-            <If condition={!!props.onCancel}>
+            <If condition={!!props.onClose}>
               <Button
                 variant={'outline'}
                 type={'button'}
-                disabled={isPending}
-                onClick={props.onCancel}
+                disabled={isPending || props.isPending}
+                onClick={props.onClose}
               >
                 <Trans i18nKey={'common.cancel'} />
               </Button>
@@ -147,9 +158,9 @@ export function CreateTeamAccountForm(props: {
             <Button
               type="submit"
               data-test={'confirm-create-team-button'}
-              disabled={isPending}
+              disabled={isPending || props.isPending}
             >
-              {isPending ? (
+              {isPending || props.isPending ? (
                 <Trans i18nKey={'teams.creatingTeam'} />
               ) : (
                 <Trans

@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@kit/ui/dialog';
+import { useAsyncDialog } from '@kit/ui/hooks/use-async-dialog';
 import { Trans } from '@kit/ui/trans';
 
 import { CreateTeamAccountForm } from './create-team-account-form';
@@ -17,13 +18,14 @@ export function CreateTeamAccountDialog(
     setIsOpen: (isOpen: boolean) => void;
   }>,
 ) {
+  const { dialogProps, isPending, setIsPending, setOpen } = useAsyncDialog({
+    open: props.isOpen,
+    onOpenChange: props.setIsOpen,
+  });
+
   return (
-    <Dialog
-      open={props.isOpen}
-      onOpenChange={props.setIsOpen}
-      disablePointerDismissal
-    >
-      <DialogContent>
+    <Dialog {...dialogProps}>
+      <DialogContent showCloseButton={!isPending}>
         <DialogHeader>
           <DialogTitle>
             <Trans i18nKey={'teams.createTeamModalHeading'} />
@@ -34,7 +36,11 @@ export function CreateTeamAccountDialog(
           </DialogDescription>
         </DialogHeader>
 
-        <CreateTeamAccountForm onCancel={() => props.setIsOpen(false)} />
+        <CreateTeamAccountForm
+          isPending={isPending}
+          setIsPending={setIsPending}
+          onClose={() => setOpen(false)}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -30,6 +30,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@kit/ui/form';
+import { useAsyncDialog } from '@kit/ui/hooks/use-async-dialog';
 import { If } from '@kit/ui/if';
 import { Input } from '@kit/ui/input';
 import {
@@ -45,16 +46,17 @@ import { refreshAuthSession } from '../../../server/personal-accounts-server-act
 
 export function MultiFactorAuthSetupDialog(props: { userId: string }) {
   const t = useTranslations();
-  const [isOpen, setIsOpen] = useState(false);
+  const { dialogProps, isPending, setIsPending, setOpen } = useAsyncDialog();
 
   const onEnrollSuccess = useCallback(() => {
-    setIsOpen(false);
+    setIsPending(false);
+    setOpen(false);
 
     return toast.success(t(`account.multiFactorSetupSuccess` as never));
-  }, [t]);
+  }, [t, setIsPending, setOpen]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen} disablePointerDismissal>
+    <Dialog {...dialogProps}>
       <DialogTrigger
         render={
           <Button>
@@ -63,7 +65,7 @@ export function MultiFactorAuthSetupDialog(props: { userId: string }) {
         }
       />
 
-      <DialogContent>
+      <DialogContent showCloseButton={!isPending}>
         <DialogHeader>
           <DialogTitle>
             <Trans i18nKey={'account.setupMfaButtonLabel'} />
@@ -77,7 +79,9 @@ export function MultiFactorAuthSetupDialog(props: { userId: string }) {
         <div>
           <MultiFactorAuthSetupForm
             userId={props.userId}
-            onCancel={() => setIsOpen(false)}
+            isPending={isPending}
+            setIsPending={setIsPending}
+            onCancel={() => setOpen(false)}
             onEnrolled={onEnrollSuccess}
           />
         </div>
@@ -90,10 +94,14 @@ function MultiFactorAuthSetupForm({
   onEnrolled,
   onCancel,
   userId,
+  isPending,
+  setIsPending,
 }: React.PropsWithChildren<{
   userId: string;
   onCancel: () => void;
   onEnrolled: () => void;
+  isPending: boolean;
+  setIsPending: (pending: boolean) => void;
 }>) {
   const verifyCodeMutation = useVerifyCodeMutation(userId);
 
@@ -110,10 +118,7 @@ function MultiFactorAuthSetupForm({
     },
   });
 
-  const [state, setState] = useState({
-    loading: false,
-    error: '',
-  });
+  const [error, setError] = useState('');
 
   const factorId = useWatch({
     name: 'factorId',
@@ -128,10 +133,8 @@ function MultiFactorAuthSetupForm({
       verificationCode: string;
       factorId: string;
     }) => {
-      setState({
-        loading: true,
-        error: '',
-      });
+      setIsPending(true);
+      setError('');
 
       try {
         await verifyCodeMutation.mutateAsync({
@@ -141,25 +144,18 @@ function MultiFactorAuthSetupForm({
 
         await refreshAuthSession();
 
-        setState({
-          loading: false,
-          error: '',
-        });
-
         onEnrolled();
       } catch (error) {
         const message = (error as Error).message || `Unknown error`;
 
-        setState({
-          loading: false,
-          error: message,
-        });
+        setIsPending(false);
+        setError(message);
       }
     },
-    [onEnrolled, verifyCodeMutation],
+    [onEnrolled, verifyCodeMutation, setIsPending],
   );
 
-  if (state.error) {
+  if (error) {
     return <ErrorAlert />;
   }
 
@@ -168,6 +164,7 @@ function MultiFactorAuthSetupForm({
       <div className={'flex justify-center'}>
         <FactorQrCode
           userId={userId}
+          isPending={isPending}
           onCancel={onCancel}
           onSetFactorId={(factorId) =>
             verificationCodeForm.setValue('factorId', factorId)
@@ -220,17 +217,22 @@ function MultiFactorAuthSetupForm({
               />
 
               <div className={'flex justify-end space-x-2'}>
-                <Button type={'button'} variant={'ghost'} onClick={onCancel}>
+                <Button
+                  type={'button'}
+                  variant={'ghost'}
+                  disabled={isPending}
+                  onClick={onCancel}
+                >
                   <Trans i18nKey={'common.cancel'} />
                 </Button>
 
                 <Button
                   disabled={
-                    !verificationCodeForm.formState.isValid || state.loading
+                    !verificationCodeForm.formState.isValid || isPending
                   }
                   type={'submit'}
                 >
-                  {state.loading ? (
+                  {isPending ? (
                     <Trans i18nKey={'account.verifyingCode'} />
                   ) : (
                     <Trans i18nKey={'account.enableMfaFactor'} />
@@ -249,8 +251,10 @@ function FactorQrCode({
   onSetFactorId,
   onCancel,
   userId,
+  isPending,
 }: React.PropsWithChildren<{
   userId: string;
+  isPending: boolean;
   onCancel: () => void;
   onSetFactorId: (factorId: string) => void;
 }>) {
@@ -304,6 +308,7 @@ function FactorQrCode({
   if (!factorName) {
     return (
       <FactorNameForm
+        isPending={isPending}
         onCancel={onCancel}
         onSetFactorName={async (name) => {
           const response = await enrollFactorMutation.mutateAsync(name);
@@ -347,6 +352,7 @@ function FactorQrCode({
 
 function FactorNameForm(
   props: React.PropsWithChildren<{
+    isPending: boolean;
     onSetFactorName: (name: string) => void;
     onCancel: () => void;
   }>,
@@ -395,11 +401,16 @@ function FactorNameForm(
           />
 
           <div className={'flex justify-end space-x-2'}>
-            <Button type={'button'} variant={'ghost'} onClick={props.onCancel}>
+            <Button
+              type={'button'}
+              variant={'ghost'}
+              disabled={props.isPending}
+              onClick={props.onCancel}
+            >
               <Trans i18nKey={'common.cancel'} />
             </Button>
 
-            <Button type={'submit'}>
+            <Button type={'submit'} disabled={props.isPending}>
               <Trans i18nKey={'account.factorNameSubmitLabel'} />
             </Button>
           </div>
