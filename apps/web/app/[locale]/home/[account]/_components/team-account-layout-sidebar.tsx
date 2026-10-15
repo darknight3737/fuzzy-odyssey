@@ -6,7 +6,7 @@ import {
   SidebarHeader,
 } from '@kit/ui/sidebar';
 
-import { ProfileAccountDropdownContainer } from '~/components//personal-account-dropdown-container';
+import { ProfileAccountDropdownContainer } from '~/components/personal-account-dropdown-container';
 import { getTeamAccountSidebarConfig } from '~/config/team-account-navigation.config';
 import { TeamAccountNotifications } from '~/home/[account]/_components/team-account-notifications';
 
@@ -72,7 +72,10 @@ function SidebarContainer(props: {
 
       <SidebarFooter>
         <SidebarContent>
-          <ProfileAccountDropdownContainer user={props.user} />
+          <ProfileAccountDropdownContainer
+            user={props.user}
+            accountSlug={account}
+          />
         </SidebarContent>
       </SidebarFooter>
     </Sidebar>

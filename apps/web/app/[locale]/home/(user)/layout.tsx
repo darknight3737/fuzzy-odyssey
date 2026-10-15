@@ -10,6 +10,8 @@ import { Page, PageMobileNavigation, PageNavigation } from '@kit/ui/page';
 import { SidebarProvider } from '@kit/ui/sidebar';
 
 import { AppLogo } from '~/components/app-logo';
+import featuresFlagConfig from '~/config/feature-flags.config';
+import pathsConfig from '~/config/paths.config';
 import { personalAccountNavigationConfig } from '~/config/personal-account-navigation.config';
 
 // home imports
@@ -42,6 +44,8 @@ async function SidebarLayout({ children }: React.PropsWithChildren) {
     redirect('/');
   }
 
+  await redirectIfTeamsOnly(workspace);
+
   return (
     <UserWorkspaceContextProvider value={workspace}>
       <SidebarProvider defaultOpen={state.open}>
@@ -61,8 +65,10 @@ async function SidebarLayout({ children }: React.PropsWithChildren) {
   );
 }
 
-function HeaderLayout({ children }: React.PropsWithChildren) {
-  const workspace = use(loadUserWorkspace());
+async function HeaderLayout({ children }: React.PropsWithChildren) {
+  const workspace = await loadUserWorkspace();
+
+  await redirectIfTeamsOnly(workspace);
 
   return (
     <UserWorkspaceContextProvider value={workspace}>
@@ -93,6 +99,31 @@ function MobileNavigation({
       <HomeMobileNavigation workspace={workspace} />
     </>
   );
+}
+
+async function redirectIfTeamsOnly(
+  workspace: Awaited<ReturnType<typeof loadUserWorkspace>>,
+) {
+  if (featuresFlagConfig.enableTeamsOnly) {
+    const firstTeam = workspace.accounts[0];
+
+    if (firstTeam?.value) {
+      const cookieStore = await cookies();
+      const lastSelected = cookieStore.get('last-selected-team')?.value;
+
+      const preferred = lastSelected
+        ? workspace.accounts.find((a) => a.value === lastSelected)
+        : undefined;
+
+      const team = preferred ?? firstTeam;
+
+      redirect(
+        pathsConfig.app.accountHome.replace('[account]', team.value!),
+      );
+    } else {
+      redirect(pathsConfig.app.createTeam);
+    }
+  }
 }
 
 async function getLayoutState() {

@@ -8,7 +8,8 @@ import { Trans } from '@kit/ui/trans';
 import pathsConfig from '~/config/paths.config';
 import { UserRound } from 'lucide-react';
 const paths = {
-    home: pathsConfig.app.home,
+  home: pathsConfig.app.home,
+  profileSettings: pathsConfig.app.personalAccountSettings,
 };
 const features = {
     enableThemeToggle: false,

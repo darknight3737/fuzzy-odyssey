@@ -22,7 +22,6 @@ export function HomeAccountSelector(props: {
   }>;
 
   userId: string;
-  collisionPadding?: number;
 }) {
   const router = useRouter();
   const context = useContext(SidebarContext);
@@ -30,12 +29,13 @@ export function HomeAccountSelector(props: {
   return (
     <AccountSelector
       collapsed={!context?.open}
-      collisionPadding={props.collisionPadding ?? 20}
       accounts={props.accounts}
       features={features}
       userId={props.userId}
       onAccountChange={(value) => {
         if (value) {
+          document.cookie = `last-selected-team=${encodeURIComponent(value)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+
           const path = pathsConfig.app.accountHome.replace('[account]', value);
           router.replace(path);
         }
