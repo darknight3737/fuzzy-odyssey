@@ -7,6 +7,8 @@
  * 2. Multiple files: messages/${locale}/*.json (namespaces in separate files for lazy loading)
  *
  */
+import { locale as localeRootParam } from 'next/root-params';
+
 import { getRequestConfig } from 'next-intl/server';
 
 import { routing } from '@kit/i18n/routing';
@@ -27,9 +29,12 @@ const namespaces = [
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  // Get the locale from the request (provided by middleware)
-  let locale = await requestLocale;
+export default getRequestConfig(async ({ locale: localeOverride }) => {
+  // Resolve the locale from the `[locale]` root param rather than from
+  // `requestLocale`. Reading `requestLocale` lazily calls `headers()`, which
+  // opts every consumer into dynamic rendering and makes next-intl unusable
+  // inside a `use cache` boundary.
+  let locale = localeOverride ?? (await localeRootParam());
 
   // Validate that the locale is supported, fallback to default if not
   if (!locale || !routing.locales.includes(locale as never)) {
