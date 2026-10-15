@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { useSignInWithOtp } from '@kit/supabase/hooks/use-sign-in-with-otp';
 import { useVerifyOtp } from '@kit/supabase/hooks/use-verify-otp';
@@ -191,7 +191,7 @@ function OtpEmailForm({
     defaultValues: { email: '' },
   });
 
-  const handleSendOtp = async ({ email }: z.infer<typeof EmailSchema>) => {
+  const handleSendOtp = async ({ email }: z.output<typeof EmailSchema>) => {
     await signInMutation.mutateAsync({
       email,
       options: { captchaToken: captcha.token, shouldCreateUser },

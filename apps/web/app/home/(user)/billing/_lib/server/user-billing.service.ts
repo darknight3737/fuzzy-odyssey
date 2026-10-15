@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 
 import { SupabaseClient } from '@supabase/supabase-js';
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { createAccountsApi } from '@kit/accounts/api';
 import { getProductPlanPair } from '@kit/billing';
@@ -42,7 +42,7 @@ class UserBillingService {
   async createCheckoutSession({
     planId,
     productId,
-  }: z.infer<typeof PersonalAccountCheckoutSchema>) {
+  }: z.output<typeof PersonalAccountCheckoutSchema>) {
     // get the authenticated user
     const { data: user, error } = await requireUser(this.client);
 

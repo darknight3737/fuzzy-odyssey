@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * @name RESERVED_NAMES_ARRAY
@@ -40,9 +40,7 @@ export function containsNonLatinCharacters(value: string): boolean {
  * @description Schema for validating URL-friendly slugs
  */
 export const SlugSchema = z
-  .string({
-    description: 'URL-friendly identifier for the team',
-  })
+  .string()
   .min(2)
   .max(50)
   .regex(SLUG_REGEX, {
@@ -62,9 +60,7 @@ export const SlugSchema = z
  * @description Schema for team name - allows non-Latin characters
  */
 export const TeamNameSchema = z
-  .string({
-    description: 'The name of the team account',
-  })
+  .string()
   .min(2)
   .max(50)
   .refine(

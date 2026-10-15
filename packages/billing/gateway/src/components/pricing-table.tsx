@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import { ArrowRight, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import {
   BillingConfig,
@@ -122,14 +122,14 @@ function PricingItem(
 
     selectable: boolean;
 
-    primaryLineItem: z.infer<typeof LineItemSchema> | undefined;
+    primaryLineItem: z.output<typeof LineItemSchema> | undefined;
 
     redirectToCheckout?: boolean;
     alwaysDisplayMonthlyPrice?: boolean;
 
     plan: {
       id: string;
-      lineItems: z.infer<typeof LineItemSchema>[];
+      lineItems: z.output<typeof LineItemSchema>[];
       interval?: Interval;
       name?: string;
       href?: string;

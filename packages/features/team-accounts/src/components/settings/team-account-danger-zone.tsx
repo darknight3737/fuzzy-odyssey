@@ -4,7 +4,7 @@ import { useFormStatus } from 'react-dom';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { ErrorBoundary } from '@kit/monitoring/components';
 import { VerifyOtpForm } from '@kit/otp/components';

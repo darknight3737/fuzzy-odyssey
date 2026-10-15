@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 
 import { cva } from 'class-variance-authority';
 import { ChevronDown } from 'lucide-react';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { cn, isRouteActive } from '../lib/utils';
 import { Button } from '../shadcn/button';
@@ -22,7 +22,7 @@ import { If } from './if';
 import type { NavigationConfigSchema } from './navigation-config.schema';
 import { Trans } from './trans';
 
-export type SidebarConfig = z.infer<typeof NavigationConfigSchema>;
+export type SidebarConfig = z.output<typeof NavigationConfigSchema>;
 
 export { SidebarContext };
 

@@ -1,5 +1,5 @@
 import { CreditCard, Home, User } from 'lucide-react';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { NavigationConfigSchema } from '@kit/ui/navigation-schema';
 
@@ -37,7 +37,7 @@ const routes = [
         : undefined,
     ].filter((route) => !!route),
   },
-] satisfies z.infer<typeof NavigationConfigSchema>['routes'];
+] satisfies z.output<typeof NavigationConfigSchema>['routes'];
 
 export const personalAccountNavigationConfig = NavigationConfigSchema.parse({
   routes,

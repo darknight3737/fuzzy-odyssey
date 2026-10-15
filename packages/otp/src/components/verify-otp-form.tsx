@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
 import { Button } from '@kit/ui/button';
@@ -108,7 +108,7 @@ export function VerifyOtpForm({
   };
 
   // Handle OTP verification
-  const handleVerifyOtp = (data: z.infer<typeof VerifyOtpSchema>) => {
+  const handleVerifyOtp = (data: z.output<typeof VerifyOtpSchema>) => {
     setVerificationSuccess(true);
     onSuccess(data.otp);
   };

@@ -3,7 +3,7 @@ import { use } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { TeamAccountWorkspaceContextProvider } from '@kit/team-accounts/components';
 import { Page, PageMobileNavigation, PageNavigation } from '@kit/ui/page';

@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../../shadcn/button';
@@ -19,7 +19,7 @@ const NewsletterFormSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
 });
 
-type NewsletterFormValues = z.infer<typeof NewsletterFormSchema>;
+type NewsletterFormValues = z.output<typeof NewsletterFormSchema>;
 
 interface NewsletterSignupProps extends React.HTMLAttributes<HTMLDivElement> {
   onSignup: (data: NewsletterFormValues) => void;

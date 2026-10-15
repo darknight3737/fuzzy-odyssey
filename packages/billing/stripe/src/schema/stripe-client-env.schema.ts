@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 const isHostedMode = process.env.STRIPE_UI_MODE === 'hosted_page';
 
