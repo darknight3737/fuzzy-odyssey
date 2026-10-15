@@ -1,5 +1,4 @@
 import 'server-only';
-
 import type { EvaluationResult } from '@kit/policies';
 import { createPoliciesEvaluator } from '@kit/policies';
 

@@ -1,5 +1,4 @@
 import 'server-only';
-
 import { authActionClient } from '@kit/next/safe-action';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 

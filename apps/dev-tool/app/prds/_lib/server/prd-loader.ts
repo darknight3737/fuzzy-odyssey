@@ -1,6 +1,6 @@
-import { relative } from 'node:path';
-
 import { PRDManager } from '@kit/mcp-server/prd-manager';
+
+import { relative } from 'node:path';
 
 interface PRDSummary {
   filename: string;

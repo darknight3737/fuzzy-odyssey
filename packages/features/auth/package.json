@@ -1,12 +1,13 @@
 {
   "name": "@kit/auth",
-  "private": true,
   "version": "0.1.0",
-  "scripts": {
-    "clean": "git clean -xdf .turbo node_modules",
-    "format": "prettier --check \"**/*.{ts,tsx}\"",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+  "private": true,
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
   },
   "exports": {
     "./sign-in": "./src/sign-in.ts",
@@ -19,10 +20,12 @@
     "./resend-email-link": "./src/components/resend-auth-link-form.tsx",
     "./oauth-provider-logo-image": "./src/components/oauth-provider-logo-image.tsx"
   },
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@kit/eslint-config": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
     "@kit/shared": "workspace:*",
     "@kit/supabase": "workspace:*",
     "@kit/tsconfig": "workspace:*",
@@ -37,13 +40,5 @@
     "react-hook-form": "catalog:",
     "sonner": "^2.0.7",
     "zod": "catalog:"
-  },
-  "prettier": "@kit/prettier-config",
-  "typesVersions": {
-    "*": {
-      "*": [
-        "src/*"
-      ]
-    }
   }
 }

@@ -1,5 +1,4 @@
 import 'server-only';
-
 import { cache } from 'react';
 
 import { createAccountsApi } from '@kit/accounts/api';

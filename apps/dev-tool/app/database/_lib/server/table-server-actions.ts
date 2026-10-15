@@ -1,8 +1,8 @@
 'use server';
 
-import { relative } from 'path';
-
 import { DatabaseTool } from '@kit/mcp-server/database';
+
+import { relative } from 'path';
 
 export async function getTableDetailsAction(
   tableName: string,

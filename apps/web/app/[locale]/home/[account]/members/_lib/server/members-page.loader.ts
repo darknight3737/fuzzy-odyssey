@@ -1,5 +1,4 @@
 import 'server-only';
-
 import { SupabaseClient } from '@supabase/supabase-js';
 
 import { loadTeamWorkspace } from '~/home/[account]/_lib/server/team-account-workspace.loader';

@@ -763,10 +763,8 @@ export function SelectStory() {
             <h4 className="text-sm font-semibold">Keyboard Navigation</h4>
             <p className="text-muted-foreground text-sm">
               • Space/Enter opens the select
-              <br />
-              • Arrow keys navigate options
-              <br />
-              • Escape closes the dropdown
+              <br />• Arrow keys navigate options
+              <br />• Escape closes the dropdown
               <br />• Type to search/filter options
             </p>
           </div>

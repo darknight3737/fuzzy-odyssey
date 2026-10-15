@@ -1,5 +1,4 @@
 import 'server-only';
-
 import { cache } from 'react';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';

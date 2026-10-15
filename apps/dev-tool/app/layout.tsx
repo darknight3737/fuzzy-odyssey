@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 
-import { DevToolLayout } from '@/components/app-layout';
-import { RootProviders } from '@/components/root-providers';
 import { getMessages } from 'next-intl/server';
 
+import { DevToolLayout } from '@/components/app-layout';
+import { RootProviders } from '@/components/root-providers';
 import '../styles/globals.css';
 
 export const metadata: Metadata = {

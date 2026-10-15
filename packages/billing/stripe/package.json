@@ -1,18 +1,22 @@
 {
   "name": "@kit/stripe",
-  "private": true,
   "version": "0.1.0",
-  "scripts": {
-    "clean": "git clean -xdf .turbo node_modules",
-    "format": "prettier --check \"**/*.{ts,tsx}\"",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "start": "docker run --rm -it --name=stripe -v ~/.config/stripe:/root/.config/stripe stripe/stripe-cli:latest listen --forward-to http://host.docker.internal:3000/api/billing/webhook"
+  "private": true,
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
   },
-  "prettier": "@kit/prettier-config",
   "exports": {
     ".": "./src/index.ts",
     "./components": "./src/components/index.ts"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "typecheck": "tsc --noEmit",
+    "start": "docker run --rm -it --name=stripe -v ~/.config/stripe:/root/.config/stripe stripe/stripe-cli:latest listen --forward-to http://host.docker.internal:3000/api/billing/webhook"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "catalog:",
@@ -21,8 +25,6 @@
   },
   "devDependencies": {
     "@kit/billing": "workspace:*",
-    "@kit/eslint-config": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
     "@kit/shared": "workspace:*",
     "@kit/supabase": "workspace:*",
     "@kit/tsconfig": "workspace:*",
@@ -32,12 +34,5 @@
     "next": "catalog:",
     "react": "catalog:",
     "zod": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "*": [
-        "src/*"
-      ]
-    }
   }
 }

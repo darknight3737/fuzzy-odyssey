@@ -1,8 +1,9 @@
 import { test } from '@playwright/test';
-import { join } from 'node:path';
-import { cwd } from 'node:process';
 
 import { AuthPageObject } from './authentication/auth.po';
+
+import { join } from 'node:path';
+import { cwd } from 'node:process';
 
 const testAuthFile = join(cwd(), '.auth/test@makerkit.dev.json');
 const ownerAuthFile = join(cwd(), '.auth/owner@makerkit.dev.json');

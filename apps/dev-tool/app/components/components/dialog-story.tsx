@@ -822,10 +822,8 @@ export function DialogStory() {
             <h4 className="text-sm font-semibold">Focus Management</h4>
             <p className="text-muted-foreground text-sm">
               • Focus moves to dialog when opened
-              <br />
-              • Focus returns to trigger when closed
-              <br />
-              • Tab navigation stays within dialog
+              <br />• Focus returns to trigger when closed
+              <br />• Tab navigation stays within dialog
               <br />• Escape key closes the dialog
             </p>
           </div>

@@ -1,5 +1,4 @@
 import 'server-only';
-
 import { getLogger } from '@kit/shared/logger';
 
 import { getLemonSqueezyEnv } from '../schema/lemon-squeezy-server-env.schema';

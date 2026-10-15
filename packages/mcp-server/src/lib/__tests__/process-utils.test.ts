@@ -1,4 +1,3 @@
-import { createServer } from 'node:net';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import {
@@ -10,6 +9,8 @@ import {
   killProcess,
   spawnDetached,
 } from '../process-utils';
+
+import { createServer } from 'node:net';
 
 const pidsToCleanup: number[] = [];
 

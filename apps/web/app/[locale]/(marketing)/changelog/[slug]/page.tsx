@@ -1,7 +1,6 @@
 import { cache } from 'react';
 
 import type { Metadata } from 'next';
-
 import { notFound } from 'next/navigation';
 
 import { createCmsClient } from '@kit/cms';

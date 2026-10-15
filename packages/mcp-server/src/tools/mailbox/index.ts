@@ -1,5 +1,4 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { Socket } from 'node:net';
 
 import { execFileAsync } from '../../lib/process-utils';
 import {
@@ -14,6 +13,8 @@ import {
   KitEmailsSetReadStatusInputSchema,
   KitEmailsSetReadStatusOutputSchema,
 } from './schema';
+
+import { Socket } from 'node:net';
 
 type TextContent = {
   type: 'text';

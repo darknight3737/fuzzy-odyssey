@@ -1,13 +1,13 @@
+import {
+  type KitStatusDeps,
+  createKitStatusService,
+} from '@kit/mcp-server/status';
+
 import { execFile } from 'node:child_process';
 import { access, readFile, stat } from 'node:fs/promises';
 import { Socket } from 'node:net';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-
-import {
-  type KitStatusDeps,
-  createKitStatusService,
-} from '@kit/mcp-server/status';
 
 const execFileAsync = promisify(execFile);
 

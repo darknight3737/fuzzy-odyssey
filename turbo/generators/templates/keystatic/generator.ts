@@ -1,4 +1,5 @@
 import type { PlopTypes } from '@turbo/gen';
+
 import { execSync } from 'node:child_process';
 
 export function createKeystaticAdminGenerator(plop: PlopTypes.NodePlopAPI) {

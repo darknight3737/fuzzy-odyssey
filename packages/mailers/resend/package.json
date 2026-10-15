@@ -1,6 +1,5 @@
 {
   "name": "@kit/resend",
-  "private": true,
   "version": "0.1.0",
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",
@@ -25,5 +24,18 @@
         "src/*"
       ]
     }
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@kit/mailers-shared": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "zod": "catalog:"
   }
 }

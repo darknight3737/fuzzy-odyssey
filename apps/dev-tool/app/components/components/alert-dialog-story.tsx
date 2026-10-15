@@ -839,10 +839,8 @@ export function AlertDialogStory() {
             <h4 className="text-sm font-semibold">Focus Management</h4>
             <p className="text-muted-foreground text-sm">
               • Focus moves to Cancel button by default
-              <br />
-              • Tab navigation between Cancel and Action
-              <br />
-              • Escape key activates Cancel action
+              <br />• Tab navigation between Cancel and Action
+              <br />• Escape key activates Cancel action
               <br />• Enter key activates Action button when focused
             </p>
           </div>
@@ -850,10 +848,8 @@ export function AlertDialogStory() {
             <h4 className="text-sm font-semibold">Content Guidelines</h4>
             <p className="text-muted-foreground text-sm">
               • Use clear, specific titles and descriptions
-              <br />
-              • Explain consequences of the action
-              <br />
-              • Use action-specific button labels
+              <br />• Explain consequences of the action
+              <br />• Use action-specific button labels
               <br />• Always provide a way to cancel
             </p>
           </div>
@@ -861,8 +857,7 @@ export function AlertDialogStory() {
             <h4 className="text-sm font-semibold">Visual Design</h4>
             <p className="text-muted-foreground text-sm">
               • Use appropriate icons and colors for severity
-              <br />
-              • Make destructive actions visually distinct
+              <br />• Make destructive actions visually distinct
               <br />• Ensure sufficient contrast for all text
             </p>
           </div>
@@ -881,8 +876,7 @@ export function AlertDialogStory() {
             <h4 className="text-sm font-semibold">Title Guidelines</h4>
             <p className="text-muted-foreground text-sm">
               • Be specific about the action (not just "Are you sure?")
-              <br />
-              • Use active voice ("Delete account" not "Account deletion")
+              <br />• Use active voice ("Delete account" not "Account deletion")
               <br />• Keep it concise but descriptive
             </p>
           </div>
@@ -890,10 +884,8 @@ export function AlertDialogStory() {
             <h4 className="text-sm font-semibold">Description Guidelines</h4>
             <p className="text-muted-foreground text-sm">
               • Explain what will happen
-              <br />
-              • Mention if the action is irreversible
-              <br />
-              • Provide context about consequences
+              <br />• Mention if the action is irreversible
+              <br />• Provide context about consequences
               <br />• Use plain, non-technical language
             </p>
           </div>
@@ -901,10 +893,8 @@ export function AlertDialogStory() {
             <h4 className="text-sm font-semibold">Button Labels</h4>
             <p className="text-muted-foreground text-sm">
               • Use specific verbs ("Delete", "Save", "Continue")
-              <br />
-              • Match the action being performed
-              <br />
-              • Avoid generic labels when possible
+              <br />• Match the action being performed
+              <br />• Avoid generic labels when possible
               <br />• Make the primary action clear
             </p>
           </div>

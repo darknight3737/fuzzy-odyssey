@@ -1,6 +1,4 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { access, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 
 import { execFileAsync } from '../../lib/process-utils';
 import {
@@ -11,6 +9,9 @@ import {
   KitPrerequisitesInputSchema,
   KitPrerequisitesOutputSchema,
 } from './schema';
+
+import { access, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 export function registerKitPrerequisitesTool(
   server: McpServer,

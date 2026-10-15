@@ -1,6 +1,5 @@
 {
   "name": "@kit/next",
-  "private": true,
   "version": "0.1.0",
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",
@@ -34,5 +33,27 @@
         "src/*"
       ]
     }
+  },
+  "exports": {
+    "./actions": "./src/actions/index.ts",
+    "./safe-action": "./src/actions/safe-action-client.ts",
+    "./routes": "./src/routes/index.ts"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next-safe-action": "catalog:"
+  },
+  "devDependencies": {
+    "@kit/auth": "workspace:*",
+    "@kit/monitoring": "workspace:*",
+    "@kit/supabase": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
+    "@supabase/supabase-js": "catalog:",
+    "@types/node": "catalog:",
+    "next": "catalog:",
+    "zod": "catalog:"
   }
 }

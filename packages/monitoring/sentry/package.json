@@ -1,6 +1,5 @@
 {
   "name": "@kit/sentry",
-  "private": true,
   "version": "0.1.0",
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",
@@ -32,5 +31,24 @@
         "src/*"
       ]
     }
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./provider": "./src/components/provider.tsx",
+    "./config/client": "./src/sentry.client.config.ts",
+    "./config/server": "./src/sentry.client.server.ts"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sentry/nextjs": "catalog:"
+  },
+  "devDependencies": {
+    "@kit/monitoring-core": "workspace:*",
+    "@kit/tsconfig": "workspace:*",
+    "@types/react": "catalog:",
+    "react": "catalog:"
   }
 }

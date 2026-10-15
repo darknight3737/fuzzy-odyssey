@@ -20,7 +20,8 @@ export function createAsyncDialogState(initialOpen = false): AsyncDialogState {
     setPending: (targetSessionId, pending) => {
       if (targetSessionId !== sessionId) return;
 
-      const currentPendingCount = pendingCountBySession.get(targetSessionId) ?? 0;
+      const currentPendingCount =
+        pendingCountBySession.get(targetSessionId) ?? 0;
       const nextPendingCount = pending
         ? currentPendingCount + 1
         : Math.max(0, currentPendingCount - 1);

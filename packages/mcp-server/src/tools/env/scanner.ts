@@ -1,7 +1,3 @@
-import fs from 'fs/promises';
-import { existsSync } from 'node:fs';
-import path from 'path';
-
 import { envVariables } from './model';
 import {
   AppEnvState,
@@ -11,6 +7,10 @@ import {
   ScanFs,
   ScanOptions,
 } from './types';
+
+import fs from 'fs/promises';
+import { existsSync } from 'node:fs';
+import path from 'path';
 
 // Define precedence order for each mode
 const ENV_FILE_PRECEDENCE: Record<EnvMode, string[]> = {

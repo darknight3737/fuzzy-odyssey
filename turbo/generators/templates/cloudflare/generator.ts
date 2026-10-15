@@ -1,7 +1,8 @@
 import type { PlopTypes } from '@turbo/gen';
-import { execSync } from 'node:child_process';
 
 import packageJson from '../../../../package.json';
+
+import { execSync } from 'node:child_process';
 
 export function createCloudflareGenerator(plop: PlopTypes.NodePlopAPI) {
   plop.setGenerator('cloudflare', {
@@ -78,9 +79,7 @@ export function createCloudflareGenerator(plop: PlopTypes.NodePlopAPI) {
           stdio: 'inherit',
         });
 
-        execSync(
-          `pnpm run format:fix`,
-        );
+        execSync(`pnpm run format:fix`);
 
         return 'Package scaffolded';
       },

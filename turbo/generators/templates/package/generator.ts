@@ -1,4 +1,5 @@
 import type { PlopTypes } from '@turbo/gen';
+
 import { execSync } from 'node:child_process';
 
 export function createPackageGenerator(plop: PlopTypes.NodePlopAPI) {
@@ -39,11 +40,6 @@ export function createPackageGenerator(plop: PlopTypes.NodePlopAPI) {
       },
       {
         type: 'add',
-        path: 'packages/{{ name }}/eslint.config.mjs',
-        templateFile: 'templates/package/eslint.config.mjs.hbs',
-      },
-      {
-        type: 'add',
         path: 'packages/{{ name }}/index.ts',
         template: "export * from './src';",
       },
@@ -78,9 +74,7 @@ export function createPackageGenerator(plop: PlopTypes.NodePlopAPI) {
           stdio: 'inherit',
         });
 
-        execSync(
-          `pnpm run format:fix`,
-        );
+        execSync(`pnpm run format:fix`);
 
         return 'Package scaffolded';
       },

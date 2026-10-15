@@ -1,14 +1,14 @@
 {
   "name": "@kit/supabase",
-  "private": true,
   "version": "0.1.0",
-  "scripts": {
-    "clean": "git clean -xdf .turbo node_modules",
-    "format": "prettier --check \"**/*.{ts,tsx}\"",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+  "private": true,
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
   },
-  "prettier": "@kit/prettier-config",
   "exports": {
     "./server-client": "./src/clients/server-client.ts",
     "./server-admin-client": "./src/clients/server-admin-client.ts",
@@ -21,12 +21,14 @@
     "./auth": "./src/auth.ts",
     "./types": "./src/types.ts"
   },
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@kit/shared": "workspace:*"
   },
   "devDependencies": {
-    "@kit/eslint-config": "workspace:*",
-    "@kit/prettier-config": "workspace:*",
     "@kit/tsconfig": "workspace:*",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "catalog:",
@@ -35,12 +37,5 @@
     "next": "catalog:",
     "react": "catalog:",
     "zod": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "*": [
-        "src/*"
-      ]
-    }
   }
 }

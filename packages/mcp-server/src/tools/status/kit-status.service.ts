@@ -1,6 +1,6 @@
-import { join } from 'node:path';
-
 import type { KitStatusInput, KitStatusOutput } from './schema';
+
+import { join } from 'node:path';
 
 interface VariantDescriptor {
   variant: string;

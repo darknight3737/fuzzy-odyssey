@@ -1,8 +1,9 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { readFile, readdir, stat } from 'node:fs/promises';
-import { join } from 'node:path';
 import postgres from 'postgres';
 import * as z from 'zod/v3';
+
+import { readFile, readdir, stat } from 'node:fs/promises';
+import { join } from 'node:path';
 
 const DATABASE_URL =
   process.env.DATABASE_URL ||
@@ -360,7 +361,7 @@ export class DatabaseTool {
 
     try {
       return await readFile(filePath, 'utf8');
-    } catch (error) {
+    } catch (_error) {
       throw new Error(`Schema file "${fileName}" not found`);
     }
   }
@@ -457,7 +458,7 @@ export class DatabaseTool {
       // Fallback to schema files
       const enumContent = await this.getSchemaContent('01-enums.sql');
       return this.parseEnums(enumContent);
-    } catch (error) {
+    } catch (_error) {
       return {};
     }
   }
@@ -609,7 +610,7 @@ export class DatabaseTool {
         onDelete: fk.delete_rule,
         onUpdate: fk.update_rule,
       }));
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }
@@ -676,7 +677,7 @@ export class DatabaseTool {
         };
       }
       return result;
-    } catch (error) {
+    } catch (_error) {
       return {};
     }
   }

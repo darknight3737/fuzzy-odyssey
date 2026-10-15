@@ -2,8 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 
-import { EnvMode } from '@/app/variables/lib/types';
-
 import {
   Select,
   SelectContent,
@@ -11,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kit/ui/select';
+
+import { EnvMode } from '@/app/variables/lib/types';
 
 export function EnvModeSelector({ mode }: { mode: EnvMode }) {
   const router = useRouter();
