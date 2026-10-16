@@ -37,6 +37,10 @@ try {
   );
   await page.goto(`${site}/docs`);
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
+    'Documentação',
+  );
+  await page.goto(`${site}/docs/getting-started/getting-started`);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(
     'Introduction',
   );
   const missing = await page.request.get(
