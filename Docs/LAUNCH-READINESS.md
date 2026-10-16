@@ -77,14 +77,14 @@ Na migração para v4, todas as migrações foram aplicadas a um PostgreSQL 17 i
 
 ## Dependências externas e pendências de lançamento
 
-Não existe projeto Vercel vinculado ao repositório nas conexões consultadas. Nenhum projeto Supabase disponível pôde ser identificado como pertencente à Selletive. Nenhuma infraestrutura paga foi criada e nenhum banco remoto foi modificado.
+Em 16/10/2026, a Selletive passou a ter um projeto Supabase próprio na organização Sesterce e um preview em Cloudflare Workers. As migrações foram aplicadas sem inserir empresas e usuários fictícios. Bookselects não foi alterado. Consulte [o relatório do deploy](CLOUDFLARE-DEPLOYMENT.md) para recursos, validação, recuperação e limites do preview.
 
-Para publicar:
+Antes do lançamento público:
 
-1. Identificar o projeto Supabase correto, aplicar as migrações e configurar Auth/URLs de retorno e o provedor de e-mail.
-2. Configurar `NEXT_PUBLIC_SITE_URL` com o domínio HTTPS definitivo, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLIC_KEY` e as demais variáveis do ambiente. A chave de serviço deve permanecer exclusivamente no servidor.
-3. Revisar os dados fictícios já existentes na migração histórica `20250927170839_fictional-businesses.sql`. Eles não devem ser publicados como empresas reais. Não foram removidos de nenhum banco externo.
-4. Configurar o administrador com MFA, validar os fluxos de autenticação reais e publicar a aplicação.
-5. Cadastrar o sitemap definitivo no Search Console.
+1. Configurar o provedor de e-mail, validar confirmação, recuperação de senha e os fluxos completos de autenticação no destino definitivo.
+2. Conectar o domínio HTTPS definitivo e ajustar `NEXT_PUBLIC_SITE_URL` e os redirects de Auth. As variáveis do preview já usam o projeto correto; a chave de serviço permanece no servidor.
+3. Cadastrar empresas reais. A migração histórica `20250927170839_fictional-businesses.sql` foi registrada sem executar seus dados fictícios em produção; preservar essa exceção em futuras implantações.
+4. Configurar o administrador com MFA e validar acesso administrativo e moderação.
+5. Retirar o bloqueio de indexação do preview no build e runtime e cadastrar o sitemap definitivo no Search Console.
 
 A página pública oferece claim gratuito e contato para opções de destaque. O boilerplate de cobrança foi preservado, mas a sincronização automática de assinaturas com os planos das empresas não foi concluída. Não há checkout pago anunciado na página de preços. A identificação jurídica do responsável pelo tratamento e os canais institucionais definitivos precisam ser definidos antes do lançamento.
