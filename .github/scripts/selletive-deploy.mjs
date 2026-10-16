@@ -121,18 +121,19 @@ async function prepare() {
   const subdomain = await request('cloudflare', '/workers/subdomain');
   assert.equal(subdomain.subdomain, 'frd-monteiro97');
   if (process.argv[2] === 'infrastructure') {
-    const namespaces = await request(
-      'cloudflare',
-      '/storage/kv/namespaces?per_page=100',
-    );
-    assert(
-      namespaces.some(
-        (item) =>
-          item.id === cacheNamespace &&
-          item.title === 'selletive-opennext-cache',
+    // This namespace was provisioned and verified via MCP. Deploy does not need
+    // account-wide KV-management access or bulk writes to unrelated namespaces.
+    const config = JSON.parse(
+      (await readFile('apps/web/wrangler.jsonc', 'utf8')).replace(
+        /,\s*([}\]])/g,
+        '$1',
       ),
-      'Selletive cache namespace unavailable; never reuse another project namespace',
     );
+    assert.equal(config.account_id, account);
+    assert.equal(config.name, 'selletive');
+    assert.deepEqual(config.kv_namespaces, [
+      { binding: 'NEXT_INC_CACHE_KV', id: cacheNamespace },
+    ]);
     return;
   }
   await migrate();
