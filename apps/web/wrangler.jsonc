@@ -13,10 +13,10 @@
     "directory": ".open-next/assets",
   },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "selletive" }],
-  "r2_buckets": [
+  "kv_namespaces": [
     {
-      "binding": "NEXT_INC_CACHE_R2_BUCKET",
-      "bucket_name": "selletive-opennext-cache",
+      "binding": "NEXT_INC_CACHE_KV",
+      "id": "ef2629839c3943ca9eee730a912c5d88",
     },
   ],
   "durable_objects": {

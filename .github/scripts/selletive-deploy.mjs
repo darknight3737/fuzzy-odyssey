@@ -7,7 +7,7 @@ const project = 'cnagsmkfjkxyxlefrkhu';
 const organization = 'kkqpanpyzsijqhbrlqnk';
 const account = '197b766a23439aced586d68ea5ec5463';
 const site = 'https://selletive.frd-monteiro97.workers.dev';
-const bucket = 'selletive-opennext-cache';
+const cacheNamespace = 'ef2629839c3943ca9eee730a912c5d88';
 const migrationPath = 'apps/web/supabase/migrations';
 const fixtures = '20250927170839';
 const secretFile = `${process.env.RUNNER_TEMP}/selletive-worker-secrets.json`;
@@ -121,10 +121,18 @@ async function prepare() {
   const subdomain = await request('cloudflare', '/workers/subdomain');
   assert.equal(subdomain.subdomain, 'frd-monteiro97');
   if (process.argv[2] === 'infrastructure') {
-    const buckets = await request('cloudflare', '/r2/buckets');
-    if (!buckets.buckets.some((item) => item.name === bucket)) {
-      await request('cloudflare', '/r2/buckets', 'POST', { name: bucket });
-    }
+    const namespaces = await request(
+      'cloudflare',
+      '/storage/kv/namespaces?per_page=100',
+    );
+    assert(
+      namespaces.some(
+        (item) =>
+          item.id === cacheNamespace &&
+          item.title === 'selletive-opennext-cache',
+      ),
+      'Selletive cache namespace unavailable; never reuse another project namespace',
+    );
     return;
   }
   await migrate();
