@@ -8,6 +8,7 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const ENABLE_REACT_COMPILER = process.env.ENABLE_REACT_COMPILER === 'true';
+const IS_CLOUDFLARE_BUILD = process.env.CLOUDFLARE_BUILD === 'true';
 
 if (
   process.env.NODE_ENV === 'development' &&
@@ -63,9 +64,12 @@ const config = {
           position: 'bottom-right',
         },
   reactCompiler: ENABLE_REACT_COMPILER,
-  cacheComponents: true,
-  partialPrefetching: true,
+  // The Workers adapter cannot reliably resume Next 16.4's prerendered shells.
+  // Render complete responses there while retaining the data-cache directives.
+  cacheComponents: !IS_CLOUDFLARE_BUILD,
+  partialPrefetching: !IS_CLOUDFLARE_BUILD,
   experimental: {
+    useCache: IS_CLOUDFLARE_BUILD ? true : undefined,
     globalNotFound: true,
     mdxRs: true,
     turbopackFileSystemCacheForDev: true,

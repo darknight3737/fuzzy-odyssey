@@ -35,6 +35,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck
         run: pnpm typecheck
+      - name: Verify cache bootstrap and eviction
+        run: node .github/scripts/test-selletive-cache.mjs
+      - name: Validate canonical Makerkit static-rendering assertions
+        run: pnpm --filter web exec next build --webpack
       - name: Build Cloudflare preview
         run: pnpm --filter web cloudflare:build
       - name: Prepare prerender cache assets

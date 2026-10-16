@@ -12,6 +12,7 @@ const config = defineCloudflareConfig({
   enableCacheInterception: false,
 });
 
-config.buildCommand = 'pnpm exec next build --webpack';
+config.buildCommand =
+  'node ../../.github/scripts/build-selletive-cloudflare.mjs';
 
 export default config;

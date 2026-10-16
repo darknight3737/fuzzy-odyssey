@@ -9,12 +9,27 @@ const cache: Pick<typeof kvIncrementalCache, 'get' | 'set' | 'delete'> & {
   name: 'selletive-kv-with-build-assets',
   async get(key, cacheType) {
     const cached = await kvIncrementalCache.get(key, cacheType);
+    if (
+      cached?.value &&
+      'type' in cached.value &&
+      cached.value.type === 'route' &&
+      cached.value.meta?.headers?.['x-selletive-cache-deleted'] === '1'
+    ) {
+      return null;
+    }
     if (cached || cacheType === 'composable') return cached;
 
     return staticAssetsIncrementalCache.get(key, cacheType);
   },
   set: kvIncrementalCache.set.bind(kvIncrementalCache),
-  delete: kvIncrementalCache.delete.bind(kvIncrementalCache),
+  async delete(key) {
+    // An explicit eviction must not resurrect the immutable build-time entry.
+    await kvIncrementalCache.set(key, {
+      type: 'route',
+      body: '',
+      meta: { status: 204, headers: { 'x-selletive-cache-deleted': '1' } },
+    });
+  },
 };
 
 export default cache;
