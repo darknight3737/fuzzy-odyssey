@@ -37,6 +37,8 @@ jobs:
         run: pnpm typecheck
       - name: Build Cloudflare preview
         run: pnpm --filter web cloudflare:build
+      - name: Prepare prerender cache assets
+        run: node .github/scripts/prepare-selletive-cache.mjs
       - name: Prepare Selletive cache infrastructure
         run: node .github/scripts/selletive-deploy.mjs infrastructure
       - name: Deploy Selletive preview
