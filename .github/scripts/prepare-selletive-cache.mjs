@@ -8,3 +8,10 @@ await cp(
   { recursive: true },
 );
 console.log('Prepared deployment-local prerender cache assets');
+
+// Workers exposes additional text modules in its read-only /bundle filesystem.
+// Keep the repository CMS available on cold reads, independently of KV expiry.
+await cp('apps/web/content', 'apps/web/.open-next/content', {
+  recursive: true,
+});
+console.log('Prepared read-only Keystatic content modules');

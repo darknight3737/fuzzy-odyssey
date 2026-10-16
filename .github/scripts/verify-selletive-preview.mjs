@@ -31,6 +31,14 @@ try {
   );
   await page.goto(`${site}/categories`);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await page.goto(`${site}/blog/saas-starter-guide`);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(
+    'A Comprehensive Starter Kit',
+  );
+  await page.goto(`${site}/docs`);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(
+    'Introduction',
+  );
   const missing = await page.request.get(
     `${site}/company/selletive-missing-smoke-test`,
   );
