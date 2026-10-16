@@ -8,8 +8,6 @@
   "workers_dev": true,
   "preview_urls": true,
   "keep_vars": true,
-  // next-themes serializes a function into HTML; esbuild name helpers cannot
-  // follow that function into the browser's inline script.
   "keep_names": false,
   "assets": {
     "binding": "ASSETS",
