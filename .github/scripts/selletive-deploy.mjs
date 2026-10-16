@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { randomBytes } from 'node:crypto';
+import { createHmac } from 'node:crypto';
 import { appendFile, readFile, readdir, writeFile } from 'node:fs/promises';
 
 // Intentionally fixed destinations: never accept a project/account from input.
@@ -120,12 +120,14 @@ async function prepare() {
   assert.equal(destination.name.toLowerCase(), 'selletive');
   const subdomain = await request('cloudflare', '/workers/subdomain');
   assert.equal(subdomain.subdomain, 'frd-monteiro97');
-  await migrate();
-
-  const buckets = await request('cloudflare', '/r2/buckets');
-  if (!buckets.buckets.some((item) => item.name === bucket)) {
-    await request('cloudflare', '/r2/buckets', 'POST', { name: bucket });
+  if (process.argv[2] === 'infrastructure') {
+    const buckets = await request('cloudflare', '/r2/buckets');
+    if (!buckets.buckets.some((item) => item.name === bucket)) {
+      await request('cloudflare', '/r2/buckets', 'POST', { name: bucket });
+    }
+    return;
   }
+  await migrate();
 
   const keys = await request(
     'supabase',
@@ -153,7 +155,12 @@ async function prepare() {
     MAILER_PROVIDER: 'resend',
     LOGGER: 'console',
     SELLETIVE_DEPLOYMENT_STAGE: 'preview',
-    SUPABASE_DB_WEBHOOK_SECRET: mask(randomBytes(32).toString('hex')),
+    // Stable across redeploys; never use a short-lived deployment token here.
+    SUPABASE_DB_WEBHOOK_SECRET: mask(
+      createHmac('sha256', secretKey)
+        .update(`selletive:${project}:database-webhook:v1`)
+        .digest('hex'),
+    ),
   };
   await writeFile(secretFile, JSON.stringify(runtime), { mode: 0o600 });
   for (const [name, value] of Object.entries(runtime)) {
