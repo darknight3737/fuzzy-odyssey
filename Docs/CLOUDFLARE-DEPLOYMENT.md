@@ -1,6 +1,6 @@
 # Selletive: preparação do deploy Cloudflare
 
-Estado em 15/10/2026: **não publicado**. Esta configuração é uma preparação de preview, não uma implantação validada.
+Estado em 15/10/2026: **banco implantado; build remoto aprovado; publicação aguardando ativação do R2**. O preview ainda não foi publicado nem validado remotamente.
 
 ## Recursos identificados
 
@@ -13,8 +13,8 @@ Estado em 15/10/2026: **não publicado**. Esta configuração é uma preparaçã
 
 ## Bloqueios atuais
 
-1. O MCP Supabase lê o projeto, mas `apply_migration` falhou duas vezes com `Invalid or expired requestState`. Após as falhas, `public` continua sem tabelas e o histórico sem migrações. Não tentar executar a aplicação contra esse banco antes da implantação do esquema.
-2. Wrangler não está autenticado. O MCP Cloudflare não compartilha a credencial com o terminal; a consulta das permissões para criar um token também foi negada. É necessário disponibilizar `CLOUDFLARE_API_TOKEN` como segredo do ambiente, com Workers Scripts e Workers R2 Storage para a conta acima. Não colocar valores em Git ou no chat.
+1. A conta Cloudflare ainda não habilitou R2. A API retorna código `10042`, “Please enable R2 through the Cloudflare Dashboard”. A automação parou antes de criar bucket ou publicar Worker. A ativação no painel pode exigir cadastro de faturamento.
+2. A autenticação foi resolvida com os segredos `CLOUDFLARE_API_TOKEN` e `SUPABASE_ACCESS_TOKEN` no GitHub. Eles são usados exclusivamente pela automação. O terminal local não precisa receber cópias.
 3. OpenNext compila, mas o runtime local Workers ainda falha em PPR: busca/perfil podem retornar somente o shell e React 412; em outros requests há conteúdo e React 419. Os mesmos fluxos passaram no servidor Next.js. Não publicar como preview funcional antes de resolver e repetir os testes.
 
 ## Configuração preparada
@@ -35,9 +35,9 @@ O preview usa `SELLETIVE_DEPLOYMENT_STAGE=preview`, `robots.txt` bloqueando craw
 
 As migrações estão em `apps/web/supabase/migrations`, não em `supabase/migrations` na raiz. Verificar o diretório configurado na integração GitHub antes de confiar em implantação automática.
 
-Aplicar a sequência de migrações preservando as versões originais. A migração `20250927170839_fictional-businesses.sql` cria usuários de demonstração e empresas fictícias: não executar no banco de produção; registrar essa versão como aplicada sem executar o conteúdo e documentar essa exceção no histórico de implantação. A migração anterior contém o catálogo de categorias e deve ser aplicada normalmente. Não alterar os arquivos históricos para esconder essa diferença.
+A sequência de 21 migrações foi registrada preservando as versões originais via Management API na automação GitHub. Foram conferidas 87 categorias, zero empresas e zero usuários; as tabelas públicas têm RLS habilitado. A verificação de advisors reportou avisos sobre cinco RPCs SECURITY DEFINER intencionalmente acessíveis a usuários autenticados (reivindicação e funções do Makerkit), sem erro de tabela sem RLS. [Referência do advisor](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable). A migração `20250927170839_fictional-businesses.sql` cria usuários de demonstração e empresas fictícias: não executar no banco de produção; registrar essa versão como aplicada sem executar o conteúdo e documentar essa exceção no histórico de implantação. A migração anterior contém o catálogo de categorias e deve ser aplicada normalmente. Não alterar os arquivos históricos para esconder essa diferença.
 
-Depois do esquema, conferir RLS/grants, advisors, Storage, cron e chaves. Configurar Auth com a URL final e redirects de confirmação/recuperação; verificar SMTP e os segredos de serviços usados. Só então recompilar e testar cadastro, confirmação, login, reivindicação, edição, diretório e contato no destino remoto.
+Auth foi configurado com a URL de preview e redirects do mesmo domínio, mantendo confirmação de e-mail. As chaves da própria Selletive são obtidas pela Management API, mascaradas nos logs e enviadas com o Worker de forma atômica por `--secrets-file`. Billing fica desativado no preview, pois Stripe não está configurado. SMTP próprio e Resend ainda não foram configurados; não prometer envio irrestrito de e-mails. Após a publicação, validar cadastro, confirmação, login, reivindicação, edição, diretório, contato e CMS no destino remoto.
 
 ## Evidência local
 
@@ -51,3 +51,9 @@ Depois do esquema, conferir RLS/grants, advisors, Storage, cron e chaves. Config
 A revisão também confirmou que, sem binding `IMAGES`, o adaptador entrega imagens raster no tamanho original. Antes do lançamento, configurar otimização ou aceitar esse custo de tráfego. Validar ainda uma leitura fria do CMS: copiar conteúdo para o standalone não comprova acesso ao filesystem no Workers após expiração do cache.
 
 O backup anterior à migração Makerkit continua no tag `backup/selletive-before-makerkit-v4-20261015` e no bundle `/workspace/selletive-pre-v4-20261015.bundle`. A versão v4 validada em Node está no tag `selletive-makerkit-v4.1.6-verified-20261015`.
+
+## Automação GitHub
+
+Workflow `.github/workflows/selletive-preview.yml`, acionado por push em `deploy/selletive-cloudflare`. Os IDs do destino e o nome Selletive são conferidos antes das alterações. Migrações já aplicadas são preservadas em uma nova execução. O segredo de webhook deriva de uma chave estável do projeto e não muda a cada build. Nenhum endpoint do Bookselects é usado.
+
+Execução `38834808184`: preparação do Supabase, instalação, typecheck e build Cloudflare aprovados; infraestrutura R2 bloqueada por serviço desativado. Ainda não houve deploy. Depois de ativar R2, repetir a automação. O teste remoto exige banco saudável e conteúdo renderizado no navegador, incluindo home → busca e categorias; apenas HTTP 200 não aprova o preview.
