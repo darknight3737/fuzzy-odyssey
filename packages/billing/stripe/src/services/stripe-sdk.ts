@@ -17,5 +17,6 @@ export async function createStripeClient() {
 
   return new Stripe(stripeServerEnv.secretKey, {
     apiVersion: STRIPE_API_VERSION,
+    httpClient: Stripe.createFetchHttpClient(),
   });
 }

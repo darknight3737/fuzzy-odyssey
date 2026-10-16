@@ -26,7 +26,11 @@
     "supabase:typegen": "pnpm run supabase:typegen:packages && pnpm run supabase:typegen:app",
     "supabase:typegen:packages": "supabase gen types typescript --local > ../../packages/supabase/src/database.types.ts",
     "supabase:typegen:app": "supabase gen types typescript --local > ./lib/database.types.ts",
-    "supabase:db:dump:local": "supabase db dump --local --data-only"
+    "supabase:db:dump:local": "supabase db dump --local --data-only",
+    "cloudflare:build": "CLOUDFLARE_BUILD=true SELLETIVE_DEPLOYMENT_STAGE=preview opennextjs-cloudflare build",
+    "cloudflare:preview": "opennextjs-cloudflare preview",
+    "cloudflare:deploy": "opennextjs-cloudflare deploy",
+    "cloudflare:typegen": "wrangler types --env-interface CloudflareEnv .wrangler/cloudflare-env.d.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "catalog:",
@@ -74,6 +78,7 @@
   "devDependencies": {
     "@kit/tsconfig": "workspace:*",
     "@next/bundle-analyzer": "catalog:",
+    "@opennextjs/cloudflare": "1.20.12",
     "@tailwindcss/postcss": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -83,7 +88,8 @@
     "pino-pretty": "catalog:",
     "supabase": "catalog:",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "wrangler": "4.151.0"
   },
   "browserslist": [
     "last 1 versions",

@@ -52,3 +52,9 @@ node-compile-cache/
 # prds
 .prds/
 .bug-hunt/
+# Cloudflare local state, secrets and generated output
+.open-next/
+.wrangler/
+.dev.vars
+.dev.vars.*
+cloudflare-env.d.ts

@@ -1,4 +1,5 @@
 import withBundleAnalyzer from '@next/bundle-analyzer';
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 // Create next-intl plugin with the request config path
@@ -7,6 +8,13 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const ENABLE_REACT_COMPILER = process.env.ENABLE_REACT_COMPILER === 'true';
+
+if (
+  process.env.NODE_ENV === 'development' &&
+  process.env.CLOUDFLARE_DEV === 'true'
+) {
+  await initOpenNextCloudflareForDev();
+}
 
 const INTERNAL_PACKAGES = [
   '@kit/ui',

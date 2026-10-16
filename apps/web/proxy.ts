@@ -46,15 +46,17 @@ export default async function proxy(request: NextRequest) {
     secureHeadersResponse,
   );
   if (missingDirectoryPage) {
-    return new NextResponse(
-      `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow"><title>Página não encontrada | Selletive</title></head><body><main><p>Selletive</p><h1>Página não encontrada</h1><p>O perfil ou a categoria pode ter mudado.</p><a href="/categories">Explorar empresas</a></main></body></html>`,
-      {
-        status: 404,
-        headers: {
-          'Content-Type': 'text/html; charset=utf-8',
-          'X-Robots-Tag': 'noindex, follow',
+    return withPreviewRobots(
+      new NextResponse(
+        `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow"><title>Página não encontrada | Selletive</title></head><body><main><p>Selletive</p><h1>Página não encontrada</h1><p>O perfil ou a categoria pode ter mudado.</p><a href="/categories">Explorar empresas</a></main></body></html>`,
+        {
+          status: 404,
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'X-Robots-Tag': 'noindex, follow',
+          },
         },
-      },
+      ),
     );
   }
 
@@ -70,7 +72,7 @@ export default async function proxy(request: NextRequest) {
 
     // if a pattern handler returns a response, return it
     if (patternHandlerResponse) {
-      return patternHandlerResponse;
+      return withPreviewRobots(patternHandlerResponse);
     }
   }
 
@@ -85,7 +87,15 @@ export default async function proxy(request: NextRequest) {
 
   // if no pattern handler returned a response,
   // return the session response
-  return secureHeadersResponse;
+  return withPreviewRobots(secureHeadersResponse);
+}
+
+function withPreviewRobots(response: NextResponse) {
+  if (process.env.SELLETIVE_DEPLOYMENT_STAGE === 'preview') {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  }
+
+  return response;
 }
 
 function isServerAction(request: NextRequest) {
