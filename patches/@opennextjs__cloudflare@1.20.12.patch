@@ -1,0 +1,22 @@
+--- a/dist/cli/build/patches/plugins/module-loading.js
++++ b/dist/cli/build/patches/plugins/module-loading.js
+@@ -17,15 +17,15 @@
+       field: name
+       regex: ^getModuleLoadingSignal$
+   has:
+-    pattern: $SIGNAL = new $CACHE_SIGNAL.CacheSignal()
++    pattern: $SIGNAL = new $CACHE_SIGNAL.CacheSignal($$$ARGS)
+     stopBy: end
+ fix: |-
+   {
+-    const requestStore = globalThis.__openNextAls?.getStore();
++    const requestStore = globalThis.__openNextAls?.getStore() ?? globalThis[Symbol.for("__cloudflare-context__")];
+     if (requestStore) {
+-      return requestStore.moduleLoadingSignal ??= new $CACHE_SIGNAL.CacheSignal();
++      return requestStore.moduleLoadingSignal ??= new $CACHE_SIGNAL.CacheSignal($$$ARGS);
+     }
+-    return $SIGNAL ??= new $CACHE_SIGNAL.CacheSignal();
++    return $SIGNAL ??= new $CACHE_SIGNAL.CacheSignal($$$ARGS);
+   }
+ `;
+ export const patchModuleLoadingSignal = {

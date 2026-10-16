@@ -36,7 +36,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
       - name: Verify cache bootstrap and eviction
-        run: node .github/scripts/test-selletive-cache.mjs
+        run: |
+          node .github/scripts/test-selletive-cache.mjs
+          node .github/scripts/test-selletive-module-loading.mjs
       - name: Validate canonical Makerkit static-rendering assertions
         run: pnpm --filter web exec next build --webpack
       - name: Build Cloudflare preview

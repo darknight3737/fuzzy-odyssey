@@ -3,9 +3,15 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const bundle = await readFile(join(process.argv[2], 'worker.js'), 'utf8');
-const start = bundle.indexOf('// .open-next/selletive-runtime/timers.js');
-assert(start >= 0, 'Worker bundler removed the timer bootstrap');
-const bootstrap = bundle.slice(start, start + 500);
-assert.match(bootstrap, /globalThis\.setImmediate\s*=/);
-assert.match(bootstrap, /globalThis\.clearImmediate\s*=/);
-console.log('Bundled Node immediate bootstrap retained');
+const signals = [
+  ...bundle.matchAll(
+    /function getModuleLoadingSignal\(\)\s*\{([\s\S]*?)\n\s*\}/g,
+  ),
+];
+assert(signals.length, 'Missing Next module-loading signal implementation');
+for (const [, implementation] of signals) {
+  assert.match(implementation, /requestStore/);
+  assert.match(implementation, /__openNextAls/);
+  assert.match(implementation, /CacheSignal\(null\)/);
+}
+console.log('Bundled module-loading signals are scoped to each request');

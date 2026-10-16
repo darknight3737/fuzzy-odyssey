@@ -3,6 +3,9 @@ packages:
   - packages/**
   - tooling/*
 
+patchedDependencies:
+  '@opennextjs/cloudflare@1.20.12': patches/@opennextjs__cloudflare@1.20.12.patch
+
 allowBuilds:
   '@parcel/watcher': true
   '@sentry/cli': true

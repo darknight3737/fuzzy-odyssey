@@ -250,6 +250,9 @@ catalogs:
       specifier: 4.6.7
       version: 4.6.7
 
+patchedDependencies:
+  '@opennextjs/cloudflare@1.20.12': d0fa93502b0ff693b6a76a203b7e930ee2fd7c12c22776f86aa4df335ff134ee
+
 importers:
 
   .:
@@ -525,7 +528,7 @@ importers:
         version: 16.4.1
       '@opennextjs/cloudflare':
         specifier: 1.20.12
-        version: 1.20.12(next@16.4.1(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@26.6.3)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(supports-color@10.2.2)(wrangler@4.151.0(@types/node@26.6.3))
+        version: 1.20.12(patch_hash=d0fa93502b0ff693b6a76a203b7e930ee2fd7c12c22776f86aa4df335ff134ee)(next@16.4.1(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@26.6.3)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(supports-color@10.2.2)(wrangler@4.151.0(@types/node@26.6.3))
       '@tailwindcss/postcss':
         specifier: 'catalog:'
         version: 4.3.3
@@ -10642,7 +10645,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@opennextjs/cloudflare@1.20.12(next@16.4.1(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@26.6.3)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(supports-color@10.2.2)(wrangler@4.151.0(@types/node@26.6.3))':
+  '@opennextjs/cloudflare@1.20.12(patch_hash=d0fa93502b0ff693b6a76a203b7e930ee2fd7c12c22776f86aa4df335ff134ee)(next@16.4.1(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.0)(@types/node@26.6.3)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(supports-color@10.2.2)(wrangler@4.151.0(@types/node@26.6.3))':
     dependencies:
       '@ast-grep/napi': 0.45.3
       '@dotenvx/dotenvx': 2.35.0

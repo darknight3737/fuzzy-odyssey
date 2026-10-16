@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, readFile, realpath, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
 
 // Cloudflare reserves cdn-cgi paths: these cache assets are only available
 // through the Worker's ASSETS binding, never as public cache JSON downloads.
@@ -17,27 +19,24 @@ await cp('apps/web/content', 'apps/web/.open-next/content', {
 });
 console.log('Prepared read-only Keystatic content modules');
 
-// Next 16 captures the global immediate timer pair when its modules load.
-// Seed both from the same Node API before any generated Worker dependencies.
-const workerPath = 'apps/web/.open-next/worker.js';
-const bootstrap = 'import "./selletive-runtime/timers.js";\n';
-const worker = await readFile(workerPath, 'utf8');
-assert(worker.includes('runWithCloudflareRequestContext'));
-await mkdir('apps/web/.open-next/selletive-runtime', { recursive: true });
-// The application package has sideEffects:false. Explicitly retain this module
-// when Wrangler tree-shakes the generated deployment bundle.
-await writeFile(
-  'apps/web/.open-next/selletive-runtime/package.json',
-  JSON.stringify({ type: 'module', sideEffects: true }),
+// OpenNext applies this fix to the server bundle, but its external middleware
+// can bundle a separate Next copy. Apply the same AST rule there as well.
+const plugin = await realpath(
+  'apps/web/node_modules/@opennextjs/cloudflare/dist/cli/build/patches/plugins/module-loading.js',
 );
-await writeFile(
-  'apps/web/.open-next/selletive-runtime/timers.js',
-  `import { setImmediate, clearImmediate } from 'node:timers';
-globalThis.setImmediate = setImmediate;
-globalThis.clearImmediate = clearImmediate;
-`,
+const require = createRequire(plugin);
+const { patchCode } = await import(
+  pathToFileURL(
+    require.resolve('@opennextjs/aws/build/patch/astCodePatcher.js'),
+  )
 );
-if (!worker.startsWith(bootstrap)) {
-  await writeFile(workerPath, bootstrap + worker);
-}
-console.log('Prepared Node immediate timers before Next initialization');
+const { moduleLoadingSignalRule } = await import(pathToFileURL(plugin));
+const middlewarePath = 'apps/web/.open-next/middleware/handler.mjs';
+const middleware = patchCode(
+  await readFile(middlewarePath, 'utf8'),
+  moduleLoadingSignalRule,
+);
+assert(middleware.includes('__cloudflare-context__'));
+assert(middleware.includes('requestStore.moduleLoadingSignal'));
+await writeFile(middlewarePath, middleware);
+console.log('Scoped middleware module-loading signals to each request');
