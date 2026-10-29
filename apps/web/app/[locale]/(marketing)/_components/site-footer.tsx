@@ -1,73 +1,55 @@
 import { cacheLife } from 'next/cache';
+import Link from 'next/link';
 
-import { Footer } from '@kit/ui/marketing';
-import { Trans } from '@kit/ui/trans';
+import { Compass } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
-import { AppLogo } from '~/components/app-logo';
-import appConfig from '~/config/app.config';
+import styles from '../marketing.module.css';
 
-/**
- * `new Date()` can't be prerendered — it changes every render. Caching it makes
- * the value stable for the prerender and refreshes it daily.
- */
 async function getCopyrightYear() {
   'use cache';
   cacheLife('days');
-
   return new Date().getFullYear();
 }
 
 export async function SiteFooter() {
-  const year = await getCopyrightYear();
+  const [year, t] = await Promise.all([getCopyrightYear(), getTranslations('marketing.home')]);
+  const sections = [
+    { title: t('footerExplore'), links: [
+      { href: '/categories', label: t('footerCategories') },
+      { href: '/search', label: t('footerSearch') },
+      { href: '/claim', label: t('footerCompanies') },
+    ] },
+    { title: t('footerHelp'), links: [
+      { href: '/faq', label: t('footerFaq') },
+      { href: '/contact', label: t('footerContact') },
+      { href: '/claim', label: t('footerClaim') },
+    ] },
+    { title: t('footerLegal'), links: [
+      { href: '/terms-of-service', label: t('footerTerms') },
+      { href: '/privacy-policy', label: t('footerPrivacy') },
+      { href: '/cookie-policy', label: t('footerCookies') },
+    ] },
+  ];
 
   return (
-    <Footer
-      logo={<AppLogo className="w-[85px] md:w-[95px]" />}
-      description={<Trans i18nKey="marketing.footerDescription" />}
-      copyright={
-        <Trans
-          i18nKey="marketing.copyright"
-          values={{
-            product: appConfig.name,
-            year,
-          }}
-        />
-      }
-      sections={[
-        {
-          heading: <Trans i18nKey="marketing.about" />,
-          links: [
-            { href: '/faq', label: <Trans i18nKey="marketing.faq" /> },
-            { href: '/contact', label: <Trans i18nKey="marketing.contact" /> },
-          ],
-        },
-        {
-          heading: <Trans i18nKey="marketing.product" />,
-          links: [
-            {
-              href: '/claim',
-              label: <>Reivindicar empresa</>,
-            },
-          ],
-        },
-        {
-          heading: <Trans i18nKey="marketing.legal" />,
-          links: [
-            {
-              href: '/terms-of-service',
-              label: <Trans i18nKey="marketing.termsOfService" />,
-            },
-            {
-              href: '/privacy-policy',
-              label: <Trans i18nKey="marketing.privacyPolicy" />,
-            },
-            {
-              href: '/cookie-policy',
-              label: <Trans i18nKey="marketing.cookiePolicy" />,
-            },
-          ],
-        },
-      ]}
-    />
+    <footer className={styles.footer}>
+      <div className={styles.footerInner}>
+        <div className={styles.footerTop}>
+          <div className={styles.footerBrand}>
+            <Link href="/" aria-label="Selletive" className={styles.logo}><Compass aria-hidden="true" /> selletive</Link>
+            <p className={styles.footerTagline}>{t('footerTagline')}</p>
+            <p className={styles.footerDescription}>{t('footerDescription')}</p>
+          </div>
+          {sections.map((section) => (
+            <div key={section.title} className={styles.footerGroup}>
+              <h2>{section.title}</h2>
+              <ul>{section.links.map((link) => <li key={link.href}><Link href={link.href}>{link.label}</Link></li>)}</ul>
+            </div>
+          ))}
+        </div>
+        <div className={styles.footerBottom}><p>{t('footerCopyright', { year })}</p><p>{t('footerNote')}</p></div>
+      </div>
+    </footer>
   );
 }

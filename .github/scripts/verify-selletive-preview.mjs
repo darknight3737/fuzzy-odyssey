@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { appendFile } from 'node:fs/promises';
+import { appendFile, mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 
 const require = createRequire(
@@ -20,7 +20,7 @@ try {
   // Best-effort cancellation stress supplements the deterministic installed-Next
   // map-isolation regression. Then verify complete responses across routes.
   const routes = [
-    ['/', 'O próximo passo'],
+    ['/', 'Sua próxima grande parceria'],
     ['/categories', 'categorias'],
     ['/search', 'Encontre seu próximo parceiro'],
   ];
@@ -68,13 +68,58 @@ try {
   assert.equal(response.status(), 200);
   assert.match(response.headers()['x-robots-tag'], /noindex/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
-    'O próximo passo',
+    'Sua próxima grande parceria',
   );
-  await page.locator('#provider-search:visible').fill('Selletive preview');
+  await page.locator('[data-test="homepage-search-input"]:visible').fill('Selletive preview');
   await page.locator('[data-test="homepage-search"]:visible').click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
     'Selletive preview',
   );
+  const screenshots = `${process.env.RUNNER_TEMP}/selletive-homepage`;
+  await mkdir(screenshots, { recursive: true });
+  for (const width of [320, 390, 768, 1024, 1440]) {
+    const context = await browser.newContext({ viewport: { width, height: 960 } });
+    try {
+      const home = await context.newPage();
+      home.on('pageerror', (error) => errors.push(error.message));
+      await home.goto(site);
+      await expect(home.locator('[data-test="workable-home"]:visible')).toBeVisible();
+      await home.evaluate(() => document.fonts.ready);
+      assert(await home.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Homepage overflow at ${width}px`);
+      await expect(home.getByRole('textbox', { name: 'Qual serviço sua empresa precisa?' })).toBeVisible();
+      await home.screenshot({ path: `${screenshots}/home-${width}.png`, fullPage: true });
+      if (width === 390) {
+        await home.getByRole('button', { name: 'Abrir menu' }).click();
+        await home.getByRole('menuitem', { name: 'Explorar empresas' }).click();
+        await expect(home).toHaveURL(/\/categories$/);
+        await expect(home.getByRole('heading', { level: 1 })).toBeVisible();
+      }
+      if (width === 1440) {
+        await home.keyboard.press('Tab');
+        await expect(home.getByRole('link', { name: 'Ir para o conteúdo' })).toBeFocused();
+        await home.keyboard.press('Enter');
+        await expect(home.locator('#main-content')).toBeFocused();
+        await home.getByRole('textbox', { name: 'Qual serviço sua empresa precisa?' }).fill('Design & Tecnologia');
+        await home.getByRole('textbox', { name: 'Qual serviço sua empresa precisa?' }).press('Enter');
+        await expect(home).toHaveURL(/q=Design/);
+        assert.equal(new URL(home.url()).searchParams.get('q'), 'Design & Tecnologia');
+      }
+    } finally {
+      await context.close();
+    }
+  }
+  // The search remains usable as a native GET before JavaScript hydrates.
+  const noJs = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const home = await noJs.newPage();
+    await home.goto(site);
+    await home.locator('[data-test="homepage-search-input"]:visible').fill('Marketing');
+    await home.locator('[data-test="homepage-search"]:visible').click();
+    await expect(home).toHaveURL(/q=Marketing/);
+    await expect(home.getByRole('heading', { level: 1 })).toContainText('Marketing');
+  } finally {
+    await noJs.close();
+  }
   await page.goto(`${site}/categories`);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await page.goto(`${site}/blog/saas-starter-guide`);

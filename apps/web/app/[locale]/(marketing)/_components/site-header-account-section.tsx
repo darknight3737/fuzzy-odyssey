@@ -42,8 +42,8 @@ function AuthUserIcon() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label={'Account menu'}
-        className={'hover:bg-accent rounded-full p-2'}
+        aria-label={'Menu da conta'}
+        className={'hover:bg-accent flex size-11 items-center justify-center rounded-full'}
       >
         <UserRound className={'h-5 w-5'} />
       </DropdownMenuTrigger>

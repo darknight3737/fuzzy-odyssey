@@ -42,6 +42,11 @@ jobs:
         run: node .github/scripts/selletive-deploy.mjs
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Lint and format
+        run: |
+          pnpm lint:fix
+          pnpm format:fix
+          git diff > "$RUNNER_TEMP/selletive-formatting.patch"
       - name: Typecheck
         run: pnpm typecheck
       - name: Verify cache bootstrap and eviction
@@ -74,6 +79,14 @@ jobs:
         run: pnpm --filter web-e2e exec playwright install --with-deps chromium
       - name: Verify remote preview
         run: node .github/scripts/verify-selletive-preview.mjs
+      - name: Upload homepage review artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selletive-homepage-review
+          path: |
+            ${{ runner.temp }}/selletive-homepage/
+            ${{ runner.temp }}/selletive-formatting.patch
       - name: Remove temporary secrets
         if: always()
         run: rm -f "$RUNNER_TEMP/selletive-worker-secrets.json"
