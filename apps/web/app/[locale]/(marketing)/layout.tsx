@@ -1,13 +1,9 @@
-import { Inter } from 'next/font/google';
-
 import { Trans } from '@kit/ui/trans';
 
 import { SiteFooter } from '~/(marketing)/_components/site-footer';
 import { SiteHeader } from '~/(marketing)/_components/site-header';
 
 import styles from './marketing.module.css';
-
-const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 /**
  * Fails the build if anything in the marketing subtree renders per request,
@@ -24,7 +20,7 @@ export const ensureStatic = 'navigation';
  */
 function SiteLayout(props: React.PropsWithChildren) {
   return (
-    <div className={`${styles.shell} ${inter.className}`}>
+    <div className={styles.shell}>
       <a href="#main-content" className={styles.skipLink}>
         <Trans i18nKey="marketing.home.skipLink" />
       </a>

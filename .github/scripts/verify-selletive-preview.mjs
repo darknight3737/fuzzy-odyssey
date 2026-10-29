@@ -95,6 +95,20 @@ try {
         home.locator('[data-test="workable-home"]:visible'),
       ).toBeVisible();
       await home.evaluate(() => document.fonts.ready);
+      const typography = await home.evaluate(() => ({
+        body: getComputedStyle(document.body).fontFamily,
+        heading: getComputedStyle(document.querySelector('#hero-title')).fontFamily,
+        editorial: getComputedStyle(document.querySelector('#hero-title span')).fontFamily,
+        loaded: [...document.fonts]
+          .filter((face) => face.status === 'loaded')
+          .map((face) => face.family.replaceAll('"', '').replaceAll("'", '')),
+      }));
+      assert(typography.body.includes('Suisse Intl'), 'Suisse body font missing');
+      assert(typography.heading.includes('Suisse Intl'), 'Suisse heading font missing');
+      assert(typography.editorial.includes('Suisse Works'), 'Suisse editorial font missing');
+      assert(typography.loaded.includes('Suisse Intl'), 'Suisse Intl failed to load');
+      assert(typography.loaded.includes('Suisse Works'), 'Suisse Works failed to load');
+
       assert(
         await home.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,

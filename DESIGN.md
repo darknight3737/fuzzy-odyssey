@@ -12,11 +12,11 @@ scope: Descoberta e comparação de fornecedores B2B
 
 ## 1. Direção e alcance
 
-A Selletive adota a linguagem visual da referência Workable como base integral: branco dominante, verde floresta profundo, mint luminoso, superfícies suavemente coloridas, uma única família tipográfica e espaçamento generoso. A adaptação muda o conteúdo e os padrões de interação para descoberta, avaliação e comparação de fornecedores B2B. Não busca uma nova direção estética.
+A Selletive adota a linguagem visual da referência Workable como base integral: branco dominante, verde floresta profundo, mint luminoso, superfícies suavemente coloridas, a família tipográfica Suisse e espaçamento generoso. A adaptação muda o conteúdo e os padrões de interação para descoberta, avaliação e comparação de fornecedores B2B. Não busca uma nova direção estética.
 
 O percurso principal é **encontrar → filtrar → avaliar → comparar → entrar em contato**. A interface deve tornar esse percurso evidente, conservando o caráter limpo e confiante da referência.
 
-Este documento é uma especificação para implementação futura. Não indica que os tokens já estejam aplicados ou que os fluxos descritos já existam no produto. Tema escuro está fora desta versão. Os valores abaixo são decisões do sistema Selletive, não uma declaração de medidas oficiais do Workable.
+Este documento especifica a direção do sistema. A tipografia Suisse está aplicada globalmente com os arquivos disponíveis; os demais tokens e fluxos devem ser conferidos na implementação. Tema escuro está fora desta versão. Os valores abaixo são decisões do sistema Selletive, não uma declaração de medidas oficiais do Workable.
 
 ### Decisões confirmadas
 
@@ -27,7 +27,7 @@ Este documento é uma especificação para implementação futura. Não indica q
 | Público prioritário | Compradores descobrindo e comparando fornecedores |
 | Densidade | Respiro e proporções da referência; listas conservam leitura confortável |
 | Tema | Somente claro |
-| Entrega desta etapa | Documentação; nenhuma alteração de tela, CSS ou componente |
+| Tipografia | Família Suisse; aplicação global em marketing e dashboard |
 
 ### O que vem da referência
 
@@ -149,7 +149,26 @@ O verde da marca não significa automaticamente sucesso. Toda mensagem de estado
 
 ## 4. Tipografia
 
-**Família única:** `Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`. Inter é a substituta indicada pela referência, não uma fonte oficial do Workable confirmada. Evitar fonte adicional de display. Usar pesos reais 400, 500, 600 e 700.
+**Família exclusiva: Suisse.** Suisse Screen e Suisse Int’l dominam o sistema. Estabelecer hierarquia primeiro por peso, tamanho, espaçamento e proporção; introduzir outra subfamília somente com uma função visual clara.
+
+| Subfamília | Papel | Aplicação |
+| --- | --- | --- |
+| **Suisse Int’l** | Identidade institucional | Headlines, títulos, headings e branding; autoridade e sofisticação |
+| **Suisse Screen** | Interface funcional | Textos, navegação, botões, cards, filtros, reviews, tabelas e dashboards; legibilidade |
+| **Suisse Works** | Destaque editorial seletivo | Headlines especiais, frases de impacto, landing pages e conteúdo editorial; preferir itálicos reais quando disponíveis |
+| **Suisse Int’l Mono** | Complemento técnico moderado | Eyebrows, badges, labels técnicos, métricas e pequenos metadados |
+
+Não é necessário usar as quatro subfamílias em cada página. Diretórios, comparações e dashboards permanecem predominantemente sans-serif. Works cria momentos editoriais nas páginas de marketing; não deve ocupar textos corridos de interface. Evitar múltiplas subfamílias no mesmo componente sem justificativa visual. Labels de formulários permanecem funcionais em Screen; Mono é uma exceção intencional, não uma regra para todo label ou número.
+
+**Suisse Neue não integra o sistema principal.** Pode ser explorada futuramente como alternativa editorial à Works; não usar ambas como vozes serifadas recorrentes.
+
+### Arquivos disponíveis e carregamento
+
+A implementação inicial dispõe de Int’l Regular (400), Medium (500), Semibold (600) e Works Bold (700). Screen, Int’l Mono e Works Italic ainda não foram fornecidas: até sua inclusão, o papel funcional usa Int’l; código e blocos pré-formatados preservam fallback monoespaçado do sistema, sem simular outra subfamília. Destaques editoriais usam o Bold real disponível; não fabricar um arquivo itálico ou declarar uma fonte estática como variável. Pesos 700 de Int’l usam o peso real mais próximo disponível (600).
+
+Tokens globais: `font-sans` → Screen com fallback Int’l; `font-heading` → Int’l; `font-editorial` → Works; `font-mono` → Int’l Mono com fallback monoespaçado do sistema enquanto o arquivo não estiver disponível. Fontes de sistema são apenas fallback de carregamento/falha, não vozes adicionais da identidade.
+
+Publicar somente os quatro WOFF2 usados, em caminhos versionados; manter os arquivos de origem fora do commit de publicação. Hospedar no próprio domínio, sem pedidos a provedores externos. Usar `font-display: swap`, carregar cada face somente quando usada e evitar preload global de todas as variações. Revisar quebras de linha e estabilidade visual em desktop e mobile após o deploy. Incluir Screen, Mono e itálicos reais somente quando os respectivos arquivos estiverem disponíveis.
 
 | Token | Desktop | Mobile | Peso | Entrelinha | Tracking |
 | --- | --- | --- | --- | --- | --- |
@@ -625,7 +644,7 @@ Faixa forest, texto branco, botão mint com texto verde quase preto. Padding de 
 ### Fidelidade visual
 
 - Paleta forest, teal e mint da referência preservada.
-- Inter e escala tipográfica coerentes entre páginas.
+- Suisse e escala tipográfica coerentes entre páginas; Screen/Int’l predominantes, Works seletiva e Mono moderada.
 - Navbar, hero, cards e footer respeitam proporções documentadas.
 - Respiro de 80px nas seções desktop e cards com raios de 12px.
 - Nenhum tema escuro ou direção visual adicional introduzido.

@@ -61,6 +61,8 @@
   letter-spacing: -2px;
 }
 .heroTitle span {
+  font-family: var(--font-suisse-editorial);
+  font-weight: 700;
   color: var(--primary);
   display: block;
 }

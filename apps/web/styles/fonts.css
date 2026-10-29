@@ -1,0 +1,40 @@
+/* Only supplied, real weights are registered. Screen and Mono await font files. */
+@font-face {
+  font-family: 'Suisse Intl';
+  src: url('/fonts/suisse/intl-regular-v1.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Suisse Intl';
+  src: url('/fonts/suisse/intl-medium-v1.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Suisse Intl';
+  src: url('/fonts/suisse/intl-semibold-v1.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Suisse Works';
+  src: url('/fonts/suisse/works-bold-v1.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+:root {
+  --font-suisse-ui: 'Suisse Screen', 'Suisse Intl', Arial, sans-serif;
+  --font-suisse-heading: 'Suisse Intl', Arial, sans-serif;
+  --font-suisse-editorial: 'Suisse Works', Georgia, serif;
+  --font-suisse-mono: 'Suisse Intl Mono', monospace;
+}
