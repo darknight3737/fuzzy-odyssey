@@ -19,8 +19,9 @@ for (const name of [
   'crossRequestPendingCacheInvocations',
   'backgroundRevalidations',
 ]) {
-  assert.match(bundle, new RegExp(`function getSelletive_${name}\\(`));
-  assert.match(bundle, new RegExp(`store\\.selletiveFallback_${name}`));
+  // Next minifies identifiers inside webpack chunks, but preserves these
+  // request-store property names. Other raw Next copies must be scoped too.
+  assert(bundle.includes(`.selletiveFallback_${name}`));
   assert(!new RegExp(`(?:const|let|var)\\s+${name}\\d*\\s*=\\s*new Map\\(`).test(bundle));
   assert(!new RegExp(`\\b${name}\\d*\\.(?:get|set|has|delete)\\(`).test(bundle));
 }

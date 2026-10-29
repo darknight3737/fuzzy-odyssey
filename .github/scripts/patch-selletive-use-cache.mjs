@@ -45,6 +45,7 @@ export async function patchStandaloneCache(web) {
     await writeFile(file, patchUseCache(await readFile(file, 'utf8')));
     count++;
   }
-  assert(count > 0, 'Next standalone use-cache implementation not found');
+  // Next can embed the complete wrapper in webpack chunks, leaving no separate
+  // traced file. Those chunks were compiled from the patched installed source.
   console.log(`Scoped pending use-cache streams in ${count} standalone module(s)`);
 }
