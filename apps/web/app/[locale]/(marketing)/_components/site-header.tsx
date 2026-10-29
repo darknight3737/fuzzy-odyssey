@@ -12,8 +12,9 @@ import {
   DropdownMenuTrigger,
 } from '@kit/ui/dropdown-menu';
 
-import styles from '../marketing.module.css';
 import { SiteHeaderAccountSection } from './site-header-account-section';
+
+import styles from '../marketing.module.css';
 
 export function SiteHeader() {
   const t = useTranslations('marketing.home');
@@ -30,18 +31,37 @@ export function SiteHeader() {
           <Compass aria-hidden="true" /> selletive
         </Link>
         <nav aria-label={t('navExplore')} className={styles.desktopNav}>
-          {links.map((link) => <Link key={link.href} href={link.href}>{link.label}</Link>)}
+          {links.map((link) => (
+            <Link key={link.href} href={link.href}>
+              {link.label}
+            </Link>
+          ))}
         </nav>
         <div className={styles.actions}>
-          <Link href="/claim" className={styles.companyLink}>{t('navBusiness')} <ArrowUpRight size={16} aria-hidden="true" /></Link>
+          <Link href="/claim" className={styles.companyLink}>
+            {t('navBusiness')} <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
           <SiteHeaderAccountSection />
           <div className={styles.mobileMenu}>
             <DropdownMenu>
-              <DropdownMenuTrigger aria-label={t('navMenu')} className={styles.mobileMenuTrigger}><Menu size={24} aria-hidden="true" /></DropdownMenuTrigger>
+              <DropdownMenuTrigger
+                aria-label={t('navMenu')}
+                className={styles.mobileMenuTrigger}
+              >
+                <Menu size={24} aria-hidden="true" />
+              </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                {[...links, { href: '/claim', label: t('navBusiness') }].map((link) => (
-                  <DropdownMenuItem key={link.href} className="min-h-11" render={<Link href={link.href} />}>{link.label}</DropdownMenuItem>
-                ))}
+                {[...links, { href: '/claim', label: t('navBusiness') }].map(
+                  (link) => (
+                    <DropdownMenuItem
+                      key={link.href}
+                      className="min-h-11"
+                      render={<Link href={link.href} />}
+                    >
+                      {link.label}
+                    </DropdownMenuItem>
+                  ),
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

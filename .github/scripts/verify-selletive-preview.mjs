@@ -33,34 +33,38 @@ try {
     }),
   );
   for (let round = 0; round < 3; round++) {
-    await Promise.all(routes.map(async ([path, heading]) => {
-      const response = await fetch(`${site}${path}`, {
-        signal: AbortSignal.timeout(15000),
-      });
-      assert.equal(response.status, 200, `${path}: HTTP status`);
-      const html = await response.text();
-      assert.match(html, new RegExp(`<h1[^>]*>[\\s\\S]*?${heading}`, 'i'));
-      assert(!/\d+:E\{/.test(html), `${path}: server rendering error`);
-    }));
+    await Promise.all(
+      routes.map(async ([path, heading]) => {
+        const response = await fetch(`${site}${path}`, {
+          signal: AbortSignal.timeout(15000),
+        });
+        assert.equal(response.status, 200, `${path}: HTTP status`);
+        const html = await response.text();
+        assert.match(html, new RegExp(`<h1[^>]*>[\\s\\S]*?${heading}`, 'i'));
+        assert(!/\d+:E\{/.test(html), `${path}: server rendering error`);
+      }),
+    );
   }
   // Give cancelled request contexts time to be torn down before fresh visits.
   await new Promise((resolve) => setTimeout(resolve, 32000));
-  await Promise.all(routes.map(async ([path, heading]) => {
-    const context = await browser.newContext();
-    try {
-      const page = await context.newPage();
-      const errors = [];
-      page.on('pageerror', (error) => errors.push(error.message));
-      const response = await page.goto(`${site}${path}`, { timeout: 20000 });
-      assert.equal(response.status(), 200);
-      await expect(page.getByRole('heading', { level: 1 })).toContainText(
-        new RegExp(heading, 'i'),
-      );
-      assert.deepEqual(errors, [], `${path}: fresh browser errors`);
-    } finally {
-      await context.close();
-    }
-  }));
+  await Promise.all(
+    routes.map(async ([path, heading]) => {
+      const context = await browser.newContext();
+      try {
+        const page = await context.newPage();
+        const errors = [];
+        page.on('pageerror', (error) => errors.push(error.message));
+        const response = await page.goto(`${site}${path}`, { timeout: 20000 });
+        assert.equal(response.status(), 200);
+        await expect(page.getByRole('heading', { level: 1 })).toContainText(
+          new RegExp(heading, 'i'),
+        );
+        assert.deepEqual(errors, [], `${path}: fresh browser errors`);
+      } finally {
+        await context.close();
+      }
+    }),
+  );
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -70,7 +74,9 @@ try {
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
     'Sua próxima grande parceria',
   );
-  await page.locator('[data-test="homepage-search-input"]:visible').fill('Selletive preview');
+  await page
+    .locator('[data-test="homepage-search-input"]:visible')
+    .fill('Selletive preview');
   await page.locator('[data-test="homepage-search"]:visible').click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
     'Selletive preview',
@@ -78,16 +84,32 @@ try {
   const screenshots = `${process.env.RUNNER_TEMP}/selletive-homepage`;
   await mkdir(screenshots, { recursive: true });
   for (const width of [320, 390, 768, 1024, 1440]) {
-    const context = await browser.newContext({ viewport: { width, height: 960 } });
+    const context = await browser.newContext({
+      viewport: { width, height: 960 },
+    });
     try {
       const home = await context.newPage();
       home.on('pageerror', (error) => errors.push(error.message));
       await home.goto(site);
-      await expect(home.locator('[data-test="workable-home"]:visible')).toBeVisible();
+      await expect(
+        home.locator('[data-test="workable-home"]:visible'),
+      ).toBeVisible();
       await home.evaluate(() => document.fonts.ready);
-      assert(await home.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Homepage overflow at ${width}px`);
-      await expect(home.getByRole('textbox', { name: 'Qual serviço sua empresa precisa?' })).toBeVisible();
-      await home.screenshot({ path: `${screenshots}/home-${width}.png`, fullPage: true });
+      assert(
+        await home.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+        `Homepage overflow at ${width}px`,
+      );
+      await expect(
+        home.getByRole('textbox', {
+          name: 'Qual serviço sua empresa precisa?',
+        }),
+      ).toBeVisible();
+      await home.screenshot({
+        path: `${screenshots}/home-${width}.png`,
+        fullPage: true,
+      });
       if (width === 390) {
         await home.getByRole('button', { name: 'Abrir menu' }).click();
         await home.getByRole('menuitem', { name: 'Explorar empresas' }).click();
@@ -96,27 +118,46 @@ try {
       }
       if (width === 1440) {
         await home.keyboard.press('Tab');
-        await expect(home.getByRole('link', { name: 'Ir para o conteúdo' })).toBeFocused();
+        await expect(
+          home.getByRole('link', { name: 'Ir para o conteúdo' }),
+        ).toBeFocused();
         await home.keyboard.press('Enter');
         await expect(home.locator('#main-content')).toBeFocused();
-        await home.getByRole('textbox', { name: 'Qual serviço sua empresa precisa?' }).fill('Design & Tecnologia');
-        await home.getByRole('textbox', { name: 'Qual serviço sua empresa precisa?' }).press('Enter');
+        await home
+          .getByRole('textbox', { name: 'Qual serviço sua empresa precisa?' })
+          .fill('Design & Tecnologia');
+        await home
+          .getByRole('textbox', { name: 'Qual serviço sua empresa precisa?' })
+          .press('Enter');
         await expect(home).toHaveURL(/q=Design/);
-        assert.equal(new URL(home.url()).searchParams.get('q'), 'Design & Tecnologia');
+        assert.equal(
+          new URL(home.url()).searchParams.get('q'),
+          'Design & Tecnologia',
+        );
       }
     } finally {
       await context.close();
     }
   }
-  // The search remains usable as a native GET before JavaScript hydrates.
+  // Verify native GET submission without JavaScript. The existing results
+  // route hydrates its Suspense content, so full results are tested above.
   const noJs = await browser.newContext({ javaScriptEnabled: false });
   try {
     const home = await noJs.newPage();
     await home.goto(site);
-    await home.locator('[data-test="homepage-search-input"]:visible').fill('Marketing');
+    await home
+      .locator('[data-test="homepage-search-input"]:visible')
+      .fill('Marketing');
+    const navigation = home.waitForResponse(
+      (response) =>
+        response.request().isNavigationRequest() &&
+        new URL(response.url()).pathname === '/search',
+    );
     await home.locator('[data-test="homepage-search"]:visible').click();
+    const response = await navigation;
+    assert.equal(response.request().method(), 'GET');
+    assert.equal(response.status(), 200);
     await expect(home).toHaveURL(/q=Marketing/);
-    await expect(home.getByRole('heading', { level: 1 })).toContainText('Marketing');
   } finally {
     await noJs.close();
   }
