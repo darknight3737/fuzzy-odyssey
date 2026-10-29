@@ -1,4 +1,6 @@
-.shell {
+.shell,
+.header,
+.footer {
   --background: #fff;
   --foreground: #0f161e;
   --card: #fff;
@@ -34,6 +36,11 @@
   --border-control: #7b8983;
   --inverse-muted: #c4ded4;
   --shadow-sm: 0 2px 8px rgb(1 38 32 / 0.06);
+  color-scheme: light;
+  color: var(--foreground);
+}
+
+.shell {
   display: flex;
   flex-direction: column;
   min-height: 100vh;

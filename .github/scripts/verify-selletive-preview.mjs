@@ -163,6 +163,10 @@ try {
   }
   await page.goto(`${site}/categories`);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.getByRole('contentinfo')).toHaveCSS(
+    'background-color',
+    'rgb(1, 38, 32)',
+  );
   await page.goto(`${site}/blog/saas-starter-guide`);
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
     'A Comprehensive Starter Kit',
