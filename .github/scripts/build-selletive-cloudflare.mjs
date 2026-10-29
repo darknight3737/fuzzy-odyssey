@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-import { patchStandaloneCache } from './patch-selletive-use-cache.mjs';
+import { patchStandaloneCache, patchUseCache } from './patch-selletive-use-cache.mjs';
 
 assert.equal(process.env.CLOUDFLARE_BUILD, 'true');
 const web = new URL('../../apps/web/', import.meta.url);
@@ -44,6 +44,18 @@ try {
       declaration,
       '// PPR-only declaration omitted in the Cloudflare SSR target.',
     );
+    patched.push({ file, original, generated });
+    await writeFile(file, generated);
+  }
+  // The RSC cache wrapper is embedded in webpack app chunks as well as traced
+  // into standalone. Patch both source variants before compiling those chunks.
+  for (const prefix of ['', 'esm/']) {
+    const file = new URL(
+      `node_modules/next/dist/${prefix}server/use-cache/use-cache-wrapper.js`,
+      web,
+    );
+    const original = await readFile(file, 'utf8');
+    const generated = patchUseCache(original);
     patched.push({ file, original, generated });
     await writeFile(file, generated);
   }

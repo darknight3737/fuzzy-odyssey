@@ -5,6 +5,11 @@ import { glob, readFile, writeFile } from 'node:fs/promises';
 // await I/O owned by a finished request. Keep persisted cache entries shared,
 // but scope both in-flight maps to the same request store as module loading.
 export function patchUseCache(source) {
+  if (source.includes('function getSelletive_crossRequestPendingCacheInvocations()')) {
+    assert(source.includes('function getSelletive_backgroundRevalidations()'));
+    assert(!/\b(?:crossRequestPendingCacheInvocations|backgroundRevalidations)\./.test(source));
+    return source;
+  }
   for (const name of [
     'crossRequestPendingCacheInvocations',
     'backgroundRevalidations',
