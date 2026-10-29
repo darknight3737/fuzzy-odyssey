@@ -1,6 +1,6 @@
 # Selletive: deploy Cloudflare
 
-Estado em 16/10/2026: banco implantado; Worker publicado e preview validado remotamente. URL: https://selletive.frd-monteiro97.workers.dev.
+Estado em 28/10/2026: banco reativado; Worker publicado com isolamento de operações pendentes do Next; preview validado remotamente. URL: https://selletive.frd-monteiro97.workers.dev.
 
 ## Recursos exclusivos da Selletive
 
@@ -46,20 +46,17 @@ Workflow `.github/workflows/selletive-preview.yml`, acionado por push em `deploy
 
 Os segredos GitHub `CLOUDFLARE_API_TOKEN` e `SUPABASE_ACCESS_TOKEN` são usados pela automação. As chaves do próprio projeto são obtidas pela Management API, mascaradas nos logs e enviadas atomicamente ao Worker com `--secrets-file`. O arquivo temporário é removido ao final. O webhook usa uma chave derivada estável do projeto. Os IDs do destino são conferidos antes das alterações. Nenhum endpoint do Bookselects é usado.
 
-Comandos locais, com variáveis da aplicação configuradas:
+O desenvolvimento edita os fontes nesta máquina; aplicação, builds e testes executam somente na nuvem. Não iniciar Next, Supabase, Wrangler preview ou servidores de teste localmente. O workflow recompila com a URL e a chave pública da Selletive e valida o site publicado com navegador remoto.
 
-```bash
-pnpm --filter web cloudflare:build
-node .github/scripts/prepare-selletive-cache.mjs
-pnpm --filter web cloudflare:typegen
-pnpm --filter web cloudflare:preview
-```
+Para recuperação da aplicação sem alterar o banco, o workflow aceita `application_only=true` no acionamento manual. Esse modo exige `apps/web/supabase` sem diferenças contra a tag `selletive-cloudflare-preview-verified-20261016`, usa a variável GitHub `SELLETIVE_PUBLIC_KEY` e preserva os secrets existentes do Worker. Não modifica Auth ou migrações. O caminho completo continua exigindo `SUPABASE_ACCESS_TOKEN` válido; em 28/10/2026 o token salvo retornou HTTP 401 e precisa ser renovado antes de um deploy com mudanças no banco.
 
-Os artefatos locais de QA usam um Supabase descartável e não devem ser publicados. A automação recompila com a URL e as chaves da Selletive.
+O Next 16.4 mantém mapas de preenchimento e revalidação de `use cache` e um sinal de carregamento de módulos compartilhados no processo. Requisições Workers encerradas não podem fornecer I/O pendente às visitas seguintes. O build Cloudflare passa a isolar esses controles pelo contexto de cada requisição nas variantes CJS e ESM do Next **antes** de compilar os chunks das páginas, além da inspeção posterior do bundle. Os fontes instalados são restaurados no `finally`. O cache persistido continua compartilhado; apenas operações em andamento deixam de atravessar requisições. Os testes de CI cobrem promessas pendentes entre contextos, respostas completas com prazo, acessos concorrentes e novas sessões de navegador. Cancelamentos remotos são uma carga adicional de melhor esforço; a regressão determinística usa o código do Next instalado na CI.
 
 Backup anterior à migração: tag `backup/selletive-before-makerkit-v4-20261015`, commit `367c5abd7978395ee84f8b906706e176a1464cda` e bundle `/workspace/selletive-pre-v4-20261015.bundle`. A versão v4 validada em Node está no tag `selletive-makerkit-v4.1.6-verified-20261015`. Commits do deploy permanecem no branch próprio para recuperação independente.
 
 ## Verificação
+
+- [Recuperação verificada em 28/10/2026 — execução 40796599664](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/40796599664): typecheck, regressões de cache/carregamento de módulos, dois builds, inspeção do bundle, deploy e navegador remoto aprovados. Requisições concorrentes e novas sessões passaram. Acesso do Brasil confirmou início, categorias e busca com HTTP 200, HTML completo e sem registros de erro de renderização, em aproximadamente 3 segundos por página. Não houve execução local da aplicação ou dos testes.
 
 - [Execução final 38923580838](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/38923580838): todas as etapas aprovadas, incluindo os dois builds, isolamento de requisições, inspeção do bundle, deploy e navegador remoto.
 - Build Next.js canônico, bundle OpenNext e typecheck de 32 pacotes aprovados nas validações anteriores.
