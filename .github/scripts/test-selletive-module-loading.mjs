@@ -4,6 +4,8 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 
+import { patchModuleLoading } from './patch-selletive-use-cache.mjs';
+
 const plugin = await realpath(
   'apps/web/node_modules/@opennextjs/cloudflare/dist/cli/build/patches/plugins/module-loading.js',
 );
@@ -18,8 +20,15 @@ const source = await readFile(
   'apps/web/node_modules/next/dist/server/app-render/module-loading/track-module-loading.instance.js',
   'utf8',
 );
-const patched = patchCode(source, moduleLoadingSignalRule);
+const patched = patchModuleLoading(source);
 assert.notEqual(patched, source, 'Adapter did not match installed Next.js');
+const adapterPatched = patchCode(source, moduleLoadingSignalRule);
+assert.notEqual(adapterPatched, source, 'Adapter did not match installed Next.js');
+const esmSource = await readFile(
+  'apps/web/node_modules/next/dist/esm/server/app-render/module-loading/track-module-loading.instance.js',
+  'utf8',
+);
+assert.notEqual(patchModuleLoading(esmSource), esmSource);
 
 let requestStore;
 let cloudflareStore;

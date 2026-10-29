@@ -1,6 +1,19 @@
 import assert from 'node:assert/strict';
 import { glob, readFile, writeFile } from 'node:fs/promises';
 
+export function patchModuleLoading(source) {
+  const implementation = /function getModuleLoadingSignal\(\) \{\n    if \(!_moduleLoadingSignal\) \{\n        _moduleLoadingSignal = new ((?:_cachesignal\.)?CacheSignal)\(null\);\n    \}\n    return _moduleLoadingSignal;\n\}/;
+  assert(implementation.test(source), 'Next module-loading implementation changed');
+  return source.replace(implementation, (_, constructor) => `function getModuleLoadingSignal() {
+    const requestStore = globalThis.__openNextAls?.getStore()
+      ?? globalThis[Symbol.for("__cloudflare-context__")];
+    if (requestStore) {
+      return requestStore.moduleLoadingSignal ??= new ${constructor}(null);
+    }
+    return _moduleLoadingSignal ??= new ${constructor}(null);
+}`);
+}
+
 // Next 16.4 shares pending streams between requests. A Worker request must not
 // await I/O owned by a finished request. Keep persisted cache entries shared,
 // but scope both in-flight maps to the same request store as module loading.

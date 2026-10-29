@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-import { patchStandaloneCache, patchUseCache } from './patch-selletive-use-cache.mjs';
+import { patchModuleLoading, patchStandaloneCache, patchUseCache } from './patch-selletive-use-cache.mjs';
 
 assert.equal(process.env.CLOUDFLARE_BUILD, 'true');
 const web = new URL('../../apps/web/', import.meta.url);
@@ -58,6 +58,14 @@ try {
     const generated = patchUseCache(original);
     patched.push({ file, original, generated });
     await writeFile(file, generated);
+    const loadingFile = new URL(
+      `node_modules/next/dist/${prefix}server/app-render/module-loading/track-module-loading.instance.js`,
+      web,
+    );
+    const loadingOriginal = await readFile(loadingFile, 'utf8');
+    const loadingGenerated = patchModuleLoading(loadingOriginal);
+    patched.push({ file: loadingFile, original: loadingOriginal, generated: loadingGenerated });
+    await writeFile(loadingFile, loadingGenerated);
   }
   assert(!interrupted, `Build interrupted: ${interrupted}`);
   const exitCode = await new Promise((resolve, reject) => {
