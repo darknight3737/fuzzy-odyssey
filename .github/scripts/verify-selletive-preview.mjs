@@ -17,17 +17,20 @@ assert.match(await robots.text(), /Disallow: \//);
 
 const browser = await chromium.launch();
 try {
-  // A single successful warm response misses poisoned-isolate hangs. Abort
-  // visits, then overlap different cached routes and verify full responses.
+  // Best-effort cancellation stress supplements the deterministic installed-Next
+  // map-isolation regression. Then verify complete responses across routes.
   const routes = [
     ['/', 'O próximo passo'],
     ['/categories', 'categorias'],
     ['/search', 'Encontre seu próximo parceiro'],
   ];
   await Promise.allSettled(
-    routes.map(([path]) => fetch(`${site}${path}`, {
-      signal: AbortSignal.timeout(100),
-    })),
+    routes.map(async ([path]) => {
+      const response = await fetch(`${site}${path}`, {
+        signal: AbortSignal.timeout(800),
+      });
+      await response.body?.cancel();
+    }),
   );
   for (let round = 0; round < 3; round++) {
     await Promise.all(routes.map(async ([path, heading]) => {

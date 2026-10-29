@@ -21,6 +21,7 @@ for (const name of [
 ]) {
   assert.match(bundle, new RegExp(`function getSelletive_${name}\\(`));
   assert.match(bundle, new RegExp(`store\\.selletiveFallback_${name}`));
-  assert(!bundle.includes(`const ${name} = new Map()`));
+  assert(!new RegExp(`(?:const|let|var)\\s+${name}\\d*\\s*=\\s*new Map\\(`).test(bundle));
+  assert(!new RegExp(`\\b${name}\\d*\\.(?:get|set|has|delete)\\(`).test(bundle));
 }
 console.log('Bundled pending cache streams are scoped to each request');

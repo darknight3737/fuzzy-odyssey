@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { createHmac } from 'node:crypto';
 import { appendFile, readFile, readdir, writeFile } from 'node:fs/promises';
 
@@ -11,6 +12,7 @@ const cacheNamespace = 'ef2629839c3943ca9eee730a912c5d88';
 const migrationPath = 'apps/web/supabase/migrations';
 const fixtures = '20250927170839';
 const secretFile = `${process.env.RUNNER_TEMP}/selletive-worker-secrets.json`;
+const applicationOnly = process.env.SELLETIVE_APPLICATION_ONLY === 'true';
 
 function mask(value) {
   if (value) console.log(`::add-mask::${value}`);
@@ -114,10 +116,20 @@ async function migrate() {
 }
 
 async function prepare() {
-  const destination = await request('supabase', `/projects/${project}`);
-  assert.equal(destination.id, project);
-  assert.equal(destination.organization_id, organization);
-  assert.equal(destination.name.toLowerCase(), 'selletive');
+  if (applicationOnly) {
+    // This recovery path cannot silently skip a new schema or migration.
+    execFileSync('git', [
+      'diff', '--exit-code',
+      'selletive-cloudflare-preview-verified-20261016', 'HEAD',
+      '--', 'apps/web/supabase',
+    ], { stdio: 'pipe' });
+    assert(process.env.SELLETIVE_PUBLIC_KEY?.startsWith('sb_publishable_'));
+  } else {
+    const destination = await request('supabase', `/projects/${project}`);
+    assert.equal(destination.id, project);
+    assert.equal(destination.organization_id, organization);
+    assert.equal(destination.name.toLowerCase(), 'selletive');
+  }
   const subdomain = await request('cloudflare', '/workers/subdomain');
   assert.equal(subdomain.subdomain, 'frd-monteiro97');
   if (process.argv[2] === 'infrastructure') {
@@ -136,9 +148,11 @@ async function prepare() {
     ]);
     return;
   }
-  await migrate();
+  if (!applicationOnly) await migrate();
 
-  const keys = await request(
+  const keys = applicationOnly ? [{
+    type: 'publishable', api_key: process.env.SELLETIVE_PUBLIC_KEY,
+  }] : await request(
     'supabase',
     `/projects/${project}/api-keys?reveal=true`,
   );
@@ -150,11 +164,11 @@ async function prepare() {
     keys.find((key) => key.type === 'secret')?.api_key ??
       keys.find((key) => key.name === 'service_role')?.api_key,
   );
-  assert(publicKey && secretKey, 'Selletive API keys unavailable');
+  assert(publicKey && (applicationOnly || secretKey), 'Selletive API keys unavailable');
   const runtime = {
     NEXT_PUBLIC_SUPABASE_URL: `https://${project}.supabase.co`,
     NEXT_PUBLIC_SUPABASE_PUBLIC_KEY: publicKey,
-    SUPABASE_SECRET_KEY: secretKey,
+    ...(!applicationOnly && { SUPABASE_SECRET_KEY: secretKey }),
     NEXT_PUBLIC_SITE_URL: site,
     NEXT_PUBLIC_DEFAULT_LOCALE: 'pt',
     NEXT_PUBLIC_BILLING_PROVIDER: 'stripe',
@@ -165,18 +179,20 @@ async function prepare() {
     LOGGER: 'console',
     SELLETIVE_DEPLOYMENT_STAGE: 'preview',
     // Stable across redeploys; never use a short-lived deployment token here.
-    SUPABASE_DB_WEBHOOK_SECRET: mask(
+    ...(!applicationOnly && { SUPABASE_DB_WEBHOOK_SECRET: mask(
       createHmac('sha256', secretKey)
         .update(`selletive:${project}:database-webhook:v1`)
         .digest('hex'),
-    ),
+    ) }),
   };
-  await writeFile(secretFile, JSON.stringify(runtime), { mode: 0o600 });
+  if (!applicationOnly) {
+    await writeFile(secretFile, JSON.stringify(runtime), { mode: 0o600 });
+  }
   for (const [name, value] of Object.entries(runtime)) {
     assert(!value.includes('\n'));
     await appendFile(process.env.GITHUB_ENV, `${name}=${value}\n`);
   }
-  await request('supabase', `/projects/${project}/config/auth`, 'PATCH', {
+  if (!applicationOnly) await request('supabase', `/projects/${project}/config/auth`, 'PATCH', {
     site_url: site,
     uri_allow_list: `${site}/**`,
     mailer_autoconfirm: false,

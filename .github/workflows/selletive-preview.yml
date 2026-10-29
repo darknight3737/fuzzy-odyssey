@@ -4,6 +4,11 @@ on:
   push:
     branches: [deploy/selletive-cloudflare]
   workflow_dispatch:
+    inputs:
+      application_only:
+        description: 'Preserve existing Worker secrets; require unchanged verified database migrations'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -23,8 +28,12 @@ jobs:
       SELLETIVE_DEPLOYMENT_STAGE: preview
       NEXT_TELEMETRY_DISABLED: '1'
       WRANGLER_SEND_METRICS: 'false'
+      SELLETIVE_APPLICATION_ONLY: ${{ inputs.application_only && 'true' || 'false' }}
+      SELLETIVE_PUBLIC_KEY: ${{ vars.SELLETIVE_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
@@ -56,7 +65,11 @@ jobs:
         run: |
           pnpm exec wrangler deploy --dry-run --outdir "$RUNNER_TEMP/selletive-worker-bundle"
           node ../../.github/scripts/verify-selletive-worker-bundle.mjs "$RUNNER_TEMP/selletive-worker-bundle"
-          pnpm exec wrangler deploy --secrets-file "$RUNNER_TEMP/selletive-worker-secrets.json"
+          if [ -f "$RUNNER_TEMP/selletive-worker-secrets.json" ]; then
+            pnpm exec wrangler deploy --secrets-file "$RUNNER_TEMP/selletive-worker-secrets.json"
+          else
+            pnpm exec wrangler deploy
+          fi
       - name: Install preview test browser
         run: pnpm --filter web-e2e exec playwright install --with-deps chromium
       - name: Verify remote preview
