@@ -3,6 +3,8 @@ import { spawn } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
+import { patchStandaloneCache } from './patch-selletive-use-cache.mjs';
+
 assert.equal(process.env.CLOUDFLARE_BUILD, 'true');
 const web = new URL('../../apps/web/', import.meta.url);
 const assertions = [
@@ -58,6 +60,7 @@ try {
     );
   });
   process.exitCode = exitCode;
+  if (exitCode === 0) await patchStandaloneCache(web);
 } finally {
   for (const { file, original, generated } of patched.reverse()) {
     const current = await readFile(file, 'utf8');

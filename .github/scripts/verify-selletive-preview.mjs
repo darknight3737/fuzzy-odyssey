@@ -7,7 +7,9 @@ const require = createRequire(
 );
 const { chromium, expect } = require('@playwright/test');
 const site = 'https://selletive.frd-monteiro97.workers.dev';
-const health = await fetch(`${site}/api/healthcheck`);
+const health = await fetch(`${site}/api/healthcheck`, {
+  signal: AbortSignal.timeout(15000),
+});
 assert(health.ok);
 assert.equal((await health.json()).services.database, true);
 const robots = await fetch(`${site}/robots.txt`);
@@ -15,6 +17,47 @@ assert.match(await robots.text(), /Disallow: \//);
 
 const browser = await chromium.launch();
 try {
+  // A single successful warm response misses poisoned-isolate hangs. Abort
+  // visits, then overlap different cached routes and verify full responses.
+  const routes = [
+    ['/', 'O próximo passo'],
+    ['/categories', 'categorias'],
+    ['/search', 'Encontre seu próximo parceiro'],
+  ];
+  await Promise.allSettled(
+    routes.map(([path]) => fetch(`${site}${path}`, {
+      signal: AbortSignal.timeout(100),
+    })),
+  );
+  for (let round = 0; round < 3; round++) {
+    await Promise.all(routes.map(async ([path, heading]) => {
+      const response = await fetch(`${site}${path}`, {
+        signal: AbortSignal.timeout(15000),
+      });
+      assert.equal(response.status, 200, `${path}: HTTP status`);
+      const html = await response.text();
+      assert.match(html, new RegExp(`<h1[^>]*>[\\s\\S]*?${heading}`, 'i'));
+      assert(!/\d+:E\{/.test(html), `${path}: server rendering error`);
+    }));
+  }
+  // Give cancelled request contexts time to be torn down before fresh visits.
+  await new Promise((resolve) => setTimeout(resolve, 32000));
+  await Promise.all(routes.map(async ([path, heading]) => {
+    const context = await browser.newContext();
+    try {
+      const page = await context.newPage();
+      const errors = [];
+      page.on('pageerror', (error) => errors.push(error.message));
+      const response = await page.goto(`${site}${path}`, { timeout: 20000 });
+      assert.equal(response.status(), 200);
+      await expect(page.getByRole('heading', { level: 1 })).toContainText(
+        new RegExp(heading, 'i'),
+      );
+      assert.deepEqual(errors, [], `${path}: fresh browser errors`);
+    } finally {
+      await context.close();
+    }
+  }));
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));

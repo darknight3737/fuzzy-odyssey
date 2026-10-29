@@ -1,5 +1,14 @@
 # Makerkit SaaS Starter
 
+## Selletive development workflow
+
+Edit source locally; run the application and all tests only in cloud CI or against
+the deployed Cloudflare preview. Never start the app, Supabase, Wrangler preview,
+or test servers locally. Push to `deploy/selletive-cloudflare` to trigger
+`.github/workflows/selletive-preview.yml`, which builds, checks, deploys, and
+verifies the remote preview. Read `Docs/CLOUDFLARE-DEPLOYMENT.md` before deployment
+changes. The Verification instructions below apply to cloud CI, not this machine.
+
 ## Monorepo Structure
 
 | Directory           | Purpose                       | Details                           |

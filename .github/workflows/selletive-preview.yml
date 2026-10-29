@@ -39,6 +39,7 @@ jobs:
         run: |
           node .github/scripts/test-selletive-cache.mjs
           node .github/scripts/test-selletive-module-loading.mjs
+          node .github/scripts/test-selletive-use-cache.mjs
       - name: Validate canonical Makerkit static-rendering assertions
         run: pnpm --filter web exec next build --webpack
       - name: Build Cloudflare preview
