@@ -103,11 +103,13 @@ try {
           .filter((face) => face.status === 'loaded')
           .map((face) => face.family.replaceAll('"', '').replaceAll("'", '')),
       }));
-      assert(typography.body.includes('Suisse Intl'), 'Suisse body font missing');
+      assert(typography.body.includes('Suisse Screen'), 'Suisse body font missing');
       assert(typography.heading.includes('Suisse Intl'), 'Suisse heading font missing');
       assert(typography.editorial.includes('Suisse Works'), 'Suisse editorial font missing');
       assert(typography.loaded.includes('Suisse Intl'), 'Suisse Intl failed to load');
       assert(typography.loaded.includes('Suisse Works'), 'Suisse Works failed to load');
+      assert(typography.loaded.includes('Suisse Screen'), 'Suisse Screen failed to load');
+      assert(typography.loaded.includes('Suisse Intl Mono'), 'Suisse Mono failed to load');
 
       assert(
         await home.evaluate(
@@ -125,6 +127,30 @@ try {
         fullPage: true,
       });
       if (width === 390) {
+        await home.evaluate(() => {
+          const probe = document.createElement('span');
+          probe.id = 'suisse-glyph-probe';
+          probe.textContent = '123456789áéãç@&';
+          probe.style.cssText = 'position:absolute;left:-9999px;font-weight:400';
+          document.body.append(probe);
+        });
+        await home.evaluate(() => document.fonts.ready);
+        const cdp = await context.newCDPSession(home);
+        await cdp.send('DOM.enable');
+        await cdp.send('CSS.enable');
+        const { root } = await cdp.send('DOM.getDocument');
+        const { nodeId } = await cdp.send('DOM.querySelector', {
+          nodeId: root.nodeId,
+          selector: '#suisse-glyph-probe',
+        });
+        const { fonts } = await cdp.send('CSS.getPlatformFontsForNode', { nodeId });
+        assert(fonts.length > 0, 'Suisse glyph probe rendered no font');
+        assert(
+          fonts.every((font) => /Suisse.*Int/i.test(font.familyName)),
+          `Trial glyph fallback failed: ${JSON.stringify(fonts)}`,
+        );
+        await cdp.detach();
+        await home.locator('#suisse-glyph-probe').evaluate((node) => node.remove());
         await home.getByRole('button', { name: 'Abrir menu' }).click();
         await home.getByRole('menuitem', { name: 'Explorar empresas' }).click();
         await expect(home).toHaveURL(/\/categories$/);

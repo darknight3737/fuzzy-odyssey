@@ -1,4 +1,4 @@
-/* Only supplied, real weights are registered. Screen and Mono await font files. */
+/* Screen Trial aliases accented glyphs: expose only verified ASCII characters. */
 @font-face {
   font-family: 'Suisse Intl';
   src: url('/fonts/suisse/intl-regular-v1.woff2') format('woff2');
@@ -31,10 +31,53 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Suisse Screen';
+  src: url('/fonts/suisse/screen-regular-v1.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+20, U+2C-30, U+41-5A, U+61-7A;
+}
+
+@font-face {
+  font-family: 'Suisse Screen';
+  src: url('/fonts/suisse/screen-medium-v1.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+20, U+2C-30, U+41-5A, U+61-7A;
+}
+
+@font-face {
+  font-family: 'Suisse Screen';
+  src: url('/fonts/suisse/screen-semibold-v1.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+20, U+2C-30, U+41-5A, U+61-7A;
+}
+
+@font-face {
+  font-family: 'Suisse Works';
+  src: url('/fonts/suisse/works-italic-v1.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  unicode-range: U+20, U+2C-30, U+41-5A, U+61-7A, U+A0, U+AD, U+B6-B7, U+C0-D6, U+D8-F6, U+F8-131, U+134-137, U+139-148, U+14A-17E, U+218-21B, U+232-233, U+237, U+1E80-1E85, U+1ECA-1ECD, U+1EE4-1EE5, U+1EF2-1EF3, U+2019, U+2022;
+}
+
+@font-face {
+  font-family: 'Suisse Intl Mono';
+  src: url('/fonts/suisse/intl-mono-regular-v1.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   --font-suisse-ui: 'Suisse Screen', 'Suisse Intl', Arial, sans-serif;
   --font-suisse-heading: 'Suisse Intl', Arial, sans-serif;
-  --font-suisse-editorial: 'Suisse Works', Georgia, serif;
+  --font-suisse-editorial: 'Suisse Works', 'Suisse Intl', Georgia, serif;
   --font-suisse-mono: 'Suisse Intl Mono', monospace;
 }
