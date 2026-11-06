@@ -16,6 +16,8 @@ Executar somente na nuvem, pelo workflow `Selletive Preview`, usando `applicatio
 
 O workflow inclui typecheck, lint/formatação, builds Next/OpenNext, geração dos tipos de bindings, regressões de hierarquia/paginação/falhas/URLs e renderização dos links. A verificação remota confere os PNGs, metadados de categoria, exclusão de categorias vazias, bloqueio de origem não autorizada e largura efetiva de uma imagem otimizada, além das verificações existentes.
 
+O runner é Ubuntu 24.04 e a verificação usa o Chrome já instalado na imagem oficial via `SELLETIVE_BROWSER_CHANNEL=chrome`. Isso evita depender de uma instalação adicional de Chromium/apt durante cada publicação. As mesmas asserções Playwright são preservadas. Referências: [imagem do runner](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md), [canais suportados pelo Playwright](https://playwright.dev/docs/browsers#google-chrome--microsoft-edge).
+
 Revisão adversarial: Track A sem bloqueios; Track B identificou uma expectativa incorreta no teste remoto para associações somente a categorias inativas. Uma revisão independente confirmou o problema e o teste passou a filtrar categorias ativas. Nenhum esquema ou política foi alterado.
 
 Referências: [Next ImageResponse](https://nextjs.org/docs/app/api-reference/functions/image-response), [OpenNext Images](https://opennext.js.org/cloudflare/howtos/image), [Cloudflare Images binding](https://developers.cloudflare.com/images/optimization/binding/), [limites e preços](https://developers.cloudflare.com/images/pricing/). A documentação do Next foi lida do pacote exato 16.4.1 do projeto, extraído em diretório temporário porque não há dependências instaladas nesta máquina.

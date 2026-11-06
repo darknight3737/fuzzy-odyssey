@@ -19,11 +19,13 @@ A aplicação no repositório implementa o diretório gratuito, com interface mi
 - Renderização dos dados no servidor, metadados próprios e URLs canônicas.
 - `Organization` nos perfis; `ItemList` e `BreadcrumbList` nas páginas locais; `WebSite` na home e FAQ correspondente ao texto visível.
 - Escape de JSON-LD para impedir que dados do banco fechem a tag de script.
-- Sitemap indexado e dividido em lotes de 1.000 URLs. Empresas, categorias e combinações locais reais são incluídas. Não há produto cartesiano de cidades e especialidades sem empresas.
+- Sitemap indexado e dividido em lotes de 1.000 URLs. Empresas, categorias com empresas (inclusive em descendentes ativos) e combinações locais reais são incluídas. Categorias vazias ficam fora do sitemap e de seu índice. Não há produto cartesiano de cidades e especialidades sem empresas.
 - Páginas locais/categorias vazias e resultados de busca recebem `noindex`. Parâmetros de filtros não criam novas URLs canônicas indexáveis.
 - URLs de diretório inexistentes são verificadas no middleware antes do streaming e retornam HTTP 404.
 - Aliases locais redirecionam permanentemente para o slug principal.
 - Datas do sitemap vêm do conteúdo; páginas estáticas não inventam uma atualização a cada acesso.
+- Especialidades ativas e localidades dos perfis têm links para as páginas correspondentes. Imagens sociais PNG de 1.200 × 630 usam os dados públicos de empresas/categorias, com uma imagem padrão para o site.
+- Imagens de perfis e cards reservam dimensões; assets locais e Storage público permitido usam otimização do Cloudflare, com fallback para o original. Logos externos continuam carregados pelo navegador. Consulte [os ajustes de SEO](SEO-IMPROVEMENTS.md).
 - Fontes nativas eliminam a dependência de downloads de fontes durante a compilação e no primeiro carregamento.
 
 ## Entrada de empresas

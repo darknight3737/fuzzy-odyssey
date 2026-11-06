@@ -15,7 +15,9 @@ assert.equal((await health.json()).services.database, true);
 const robots = await fetch(`${site}/robots.txt`);
 assert.match(await robots.text(), /Disallow: \//);
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({
+  channel: process.env.SELLETIVE_BROWSER_CHANNEL || undefined,
+});
 try {
   const siteImage = await fetch(`${site}/api/og/site/default?v=1`);
   assert.equal(siteImage.status, 200, 'Default sharing image');

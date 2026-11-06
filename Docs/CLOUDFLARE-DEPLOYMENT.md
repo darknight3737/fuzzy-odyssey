@@ -76,4 +76,12 @@ A URL é pública. `robots.txt` bloqueia crawling e `X-Robots-Tag` usa noindex/n
 
 Stripe não está configurado; billing está desativado. SMTP próprio/Resend e OAuth Google ainda precisam de credenciais/configuração. O serviço padrão de e-mail do Supabase tem restrições e não permite prometer cadastro aberto com entrega irrestrita. Confirmação de e-mail e pagamentos não estão aprovados em produção; o formulário de contato persiste no banco e foi verificado sem depender de SMTP.
 
-Sem binding IMAGES, imagens raster são entregues no tamanho original. As telas de autenticação ainda contêm textos padrão em inglês. Esses pontos não impedem visualizar o preview, mas devem ser tratados antes do lançamento público.
+Desde 06/11/2026, o binding `IMAGES` habilita otimização de assets locais e imagens públicas do Storage do projeto nas origens permitidas. Perfis e cards usam dimensões explícitas e fallback para a imagem original caso a otimização falhe. Logos de outros domínios são carregados diretamente pelo navegador. A entrega remota de uma imagem solicitada com largura 64 foi conferida como 64 × 46 pixels. Não houve contratação ou alteração de assinatura do Cloudflare Images.
+
+As telas de autenticação ainda contêm textos padrão em inglês e precisam de revisão antes do lançamento público.
+
+## Ajustes de SEO em 06/11/2026
+
+Links de especialidade/local nos perfis, exclusão de categorias vazias do sitemap (preservando ancestrais com empresas em descendentes ativos), imagens sociais PNG por empresa/categoria e otimização de imagens estão descritos em [SEO-IMPROVEMENTS.md](SEO-IMPROVEMENTS.md).
+
+Durante a validação, o Supabase da Selletive estava `INACTIVE`. O projeto `cnagsmkfjkxyxlefrkhu` foi reativado pela integração conectada e voltou a `ACTIVE_HEALTHY`; o healthcheck do Worker confirmou `database: true`. Não houve migração ou alteração de dados/esquema. A implantação usou `application_only=true`, preservando os secrets existentes.
