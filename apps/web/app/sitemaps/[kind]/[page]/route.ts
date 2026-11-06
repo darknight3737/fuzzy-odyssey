@@ -1,3 +1,4 @@
+import { getIndexableCategories } from '~/lib/categories/sitemap';
 import {
   SITEMAP_PAGE_SIZE,
   absoluteUrl,
@@ -29,23 +30,24 @@ export async function GET(
       '/terms-of-service',
       '/cookie-policy',
     ].map((path) => ({ path }));
-  else if (kind === 'companies' || kind === 'categories') {
-    const { data, error } =
-      kind === 'companies'
-        ? await client
+  else if (kind === 'categories') {
+    try {
+      paths = (await getIndexableCategories()).slice(start, end + 1).map((row) => ({
+        path: `/categories/${row.slug}`,
+        updated: row.updated_at,
+      }));
+    } catch {
+      return new Response('Unavailable', { status: 503 });
+    }
+  } else if (kind === 'companies') {
+    const { data, error } = await client
             .from('businesses')
             .select('slug,updated_at')
-            .order('slug')
-            .range(start, end)
-        : await client
-            .from('categories')
-            .select('slug,updated_at')
-            .eq('is_active', true)
             .order('slug')
             .range(start, end);
     if (error) return new Response('Unavailable', { status: 503 });
     paths = (data ?? []).map((row) => ({
-      path: `/${kind === 'companies' ? 'company' : 'categories'}/${row.slug}`,
+      path: `/company/${row.slug}`,
       updated: row.updated_at,
     }));
   } else if (kind === 'locations') {

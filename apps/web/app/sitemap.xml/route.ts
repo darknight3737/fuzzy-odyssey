@@ -1,3 +1,4 @@
+import { getIndexableCategories } from '~/lib/categories/sitemap';
 import {
   SITEMAP_PAGE_SIZE,
   absoluteUrl,
@@ -10,10 +11,9 @@ export async function GET() {
   const client = getDirectoryClient();
   const results = await Promise.all([
     client.from('businesses').select('id', { count: 'exact', head: true }),
-    client
-      .from('categories')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_active', true),
+    getIndexableCategories()
+      .then((categories) => ({ count: categories.length, error: null }))
+      .catch(() => ({ count: null, error: true })),
     client
       .from('directory_pages')
       .select('category_slug', { count: 'exact', head: true }),
