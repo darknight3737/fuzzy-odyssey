@@ -26,3 +26,7 @@ A tabela de dedupe é operacional e descartável; os agregados são dados persis
 A migração é gerada de `schemas/21-business-analytics.sql` com `supabase db diff` em banco descartável de GitHub Actions; revokes explícitos são adicionados após revisar o diff. O workflow `selletive-database.yml` aplica todas as migrações, executa pgTAP, ataca acesso entre contas/MFA/tier/reassignment, prova 16 submissões paralelas contando uma vez e verifica ausência de drift nos objetos novos. Tipos são gerados pelo banco na CI.
 
 O workflow do preview executa typecheck, lint/formatação, regressões do endpoint, builds Next/OpenNext e verificação remota. Não executar aplicação ou testes localmente.
+
+Resultado de 06/11/2026: [CI 42311030489](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/42311030489) aprovada: 378 testes pgTAP, 16 envios concorrentes contando uma vez, ausência de drift nos objetos novos, typecheck, lint/formatação, regressões de SEO/ingestão, build canônico e navegador com coleta, contatos, login, painel, exclusão do proprietário e downgrade. Todos os fixtures foram descartados no runner.
+
+Publicação pendente: a integração Supabase retornou confirmação expirada ao aplicar a migração; nenhuma tabela de analytics foi criada no projeto hospedado. O token Management API da automação de deploy também segue sem renovação. Não alterar a referência de esquema verificado do deploy de recuperação antes de aplicar e conferir esta migração.

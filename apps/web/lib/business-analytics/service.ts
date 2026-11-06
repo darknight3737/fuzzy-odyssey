@@ -1,12 +1,13 @@
 import 'server-only';
-
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '~/lib/database.types';
 
 import type { InterestEvent } from './events';
 
-export function createBusinessAnalyticsService(client: SupabaseClient<Database>) {
+export function createBusinessAnalyticsService(
+  client: SupabaseClient<Database>,
+) {
   return {
     async record(input: {
       businessId: string;

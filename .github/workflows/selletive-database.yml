@@ -106,6 +106,12 @@ jobs:
             sleep 1
           done
           node .github/scripts/verify-business-analytics-browser.mjs
+      - name: Validate Cloudflare build without deployment
+        if: inputs.application
+        run: |
+          mkdir -p apps/web/.wrangler
+          pnpm --filter web cloudflare:typegen
+          pnpm --filter web cloudflare:build
       - uses: actions/upload-artifact@v4
         if: always()
         with:

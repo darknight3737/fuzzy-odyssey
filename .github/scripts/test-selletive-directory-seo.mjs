@@ -243,7 +243,10 @@ const { BusinessInfo } = load(
     },
     '@kit/ui/trans': { Trans: ({ defaults }) => defaults },
     '~/lib/seo': { safeWebsite: () => undefined },
-    './business-interest': { BusinessContactLink: ({ businessId: _id, event: _event, ...props }) => React.createElement('a', props) },
+    './business-interest': {
+      BusinessContactLink: ({ businessId: _id, event: _event, ...props }) =>
+        React.createElement('a', props),
+    },
   },
 );
 const business = {
