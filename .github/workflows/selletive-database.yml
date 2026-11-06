@@ -1,5 +1,8 @@
 name: Selletive Database Verification
 on:
+  push:
+    branches: [deploy/selletive-cloudflare]
+    paths: ['.github/workflows/selletive-database.yml', 'apps/web/supabase/**']
   workflow_dispatch:
     inputs:
       generate:
@@ -23,11 +26,11 @@ jobs:
           supabase db diff --help
           supabase start -x studio,imgproxy,logflare,vector
       - name: Generate migration
-        if: inputs.generate
+        if: inputs.generate || hashFiles('apps/web/supabase/migrations/*business_analytics.sql') == ''
         working-directory: apps/web
         run: supabase db diff -f business_analytics
       - name: Apply migrations and prove isolation
-        if: ${{ !inputs.generate }}
+        if: ${{ !inputs.generate && hashFiles('apps/web/supabase/migrations/*business_analytics.sql') != '' }}
         working-directory: apps/web
         run: |
           supabase db reset
@@ -35,7 +38,7 @@ jobs:
           supabase db diff > /tmp/schema-diff.sql
           if grep -E 'business_analytics|record_business_interest' /tmp/schema-diff.sql; then exit 1; fi
       - name: Generate types
-        if: ${{ !inputs.generate }}
+        if: ${{ !inputs.generate && hashFiles('apps/web/supabase/migrations/*business_analytics.sql') != '' }}
         working-directory: apps/web
         run: supabase gen types typescript --local > /tmp/database.types.ts
       - uses: actions/upload-artifact@v4
