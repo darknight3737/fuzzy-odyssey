@@ -5,7 +5,10 @@ export function socialImageUrl(
   slug: string,
   version: string | null = '1',
 ) {
-  const url = new URL(`/api/og/${kind}/${encodeURIComponent(slug)}`, appConfig.url);
+  const url = new URL(
+    `/api/og/${kind}/${encodeURIComponent(slug)}`,
+    appConfig.url,
+  );
   url.searchParams.set('v', version ?? '1');
   return url.href;
 }

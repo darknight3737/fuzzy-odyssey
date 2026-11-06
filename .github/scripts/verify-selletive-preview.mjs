@@ -23,35 +23,59 @@ try {
   const png = Buffer.from(await siteImage.arrayBuffer());
   assert.equal(png.readUInt32BE(16), 1200, 'Sharing image width');
   assert.equal(png.readUInt32BE(20), 630, 'Sharing image height');
-  const missingImage = await fetch(`${site}/api/og/company/selletive-missing-smoke-test`);
+  const missingImage = await fetch(
+    `${site}/api/og/company/selletive-missing-smoke-test`,
+  );
   assert.equal(missingImage.status, 404);
-  const invalidOrigin = await fetch(`${site}/_next/image?url=https%3A%2F%2Fexample.com%2Flogo.png&w=64&q=75`);
+  const invalidOrigin = await fetch(
+    `${site}/_next/image?url=https%3A%2F%2Fexample.com%2Flogo.png&w=64&q=75`,
+  );
   assert.equal(invalidOrigin.status, 400, 'Unapproved image origin');
 
   const imagePage = await browser.newPage();
   try {
-    const response = await imagePage.goto(`${site}/_next/image?url=%2Fimages%2Fbilling.webp&w=64&q=75`);
+    const response = await imagePage.goto(
+      `${site}/_next/image?url=%2Fimages%2Fbilling.webp&w=64&q=75`,
+    );
     assert.equal(response.status(), 200, 'Optimized image response');
     await expect(imagePage.locator('img')).toBeVisible();
-    await expect.poll(() => imagePage.locator('img').evaluate((image) => image.naturalWidth)).toBe(64);
+    await expect
+      .poll(() =>
+        imagePage.locator('img').evaluate((image) => image.naturalWidth),
+      )
+      .toBe(64);
   } finally {
     await imagePage.close();
   }
 
-  const directoryRequire = createRequire(new URL('../../apps/web/package.json', import.meta.url));
+  const directoryRequire = createRequire(
+    new URL('../../apps/web/package.json', import.meta.url),
+  );
   const { createClient } = directoryRequire('@supabase/supabase-js');
-  const directory = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { data: categories, error: categoriesError } = await directory.from('categories').select('slug,updated_at').eq('is_active', true).limit(1);
+  const directory = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY,
+    {
+      auth: { persistSession: false, autoRefreshToken: false },
+    },
+  );
+  const { data: categories, error: categoriesError } = await directory
+    .from('categories')
+    .select('slug,updated_at')
+    .eq('is_active', true)
+    .limit(1);
   assert.ifError(categoriesError);
   if (categories.length) {
     const category = categories[0];
     const sharingPage = await browser.newPage();
     try {
       await sharingPage.goto(`${site}/categories/${category.slug}`);
-      const imageUrl = await sharingPage.locator('meta[property="og:image"]').getAttribute('content');
-      assert(new URL(imageUrl).pathname === `/api/og/category/${category.slug}`);
+      const imageUrl = await sharingPage
+        .locator('meta[property="og:image"]')
+        .getAttribute('content');
+      assert(
+        new URL(imageUrl).pathname === `/api/og/category/${category.slug}`,
+      );
       const image = await fetch(imageUrl);
       assert.equal(image.status, 200, 'Category sharing image');
       assert.match(image.headers.get('content-type'), /image\/png/);
@@ -61,13 +85,24 @@ try {
     }
   }
 
-  const { data: assignments, error: assignmentError } = await directory.from('business_categories').select('category_id,categories!inner(id),businesses!inner(id)').eq('categories.is_active', true).limit(1);
+  const { data: assignments, error: assignmentError } = await directory
+    .from('business_categories')
+    .select('category_id,categories!inner(id),businesses!inner(id)')
+    .eq('categories.is_active', true)
+    .limit(1);
   assert.ifError(assignmentError);
   const categorySitemap = await fetch(`${site}/sitemaps/categories/0`);
   if (!assignments.length) {
-    assert.equal(categorySitemap.status, 404, 'Empty categories stay out of sitemap');
+    assert.equal(
+      categorySitemap.status,
+      404,
+      'Empty categories stay out of sitemap',
+    );
     const sitemapIndex = await (await fetch(`${site}/sitemap.xml`)).text();
-    assert(!sitemapIndex.includes('/sitemaps/categories/'), 'No empty category shard advertised');
+    assert(
+      !sitemapIndex.includes('/sitemaps/categories/'),
+      'No empty category shard advertised',
+    );
   } else {
     assert.equal(categorySitemap.status, 200);
   }
@@ -152,19 +187,42 @@ try {
       await home.evaluate(() => document.fonts.ready);
       const typography = await home.evaluate(() => ({
         body: getComputedStyle(document.body).fontFamily,
-        heading: getComputedStyle(document.querySelector('#hero-title')).fontFamily,
-        editorial: getComputedStyle(document.querySelector('#hero-title span')).fontFamily,
+        heading: getComputedStyle(document.querySelector('#hero-title'))
+          .fontFamily,
+        editorial: getComputedStyle(document.querySelector('#hero-title span'))
+          .fontFamily,
         loaded: [...document.fonts]
           .filter((face) => face.status === 'loaded')
           .map((face) => face.family.replaceAll('"', '').replaceAll("'", '')),
       }));
-      assert(typography.body.includes('Suisse Screen'), 'Suisse body font missing');
-      assert(typography.heading.includes('Suisse Intl'), 'Suisse heading font missing');
-      assert(typography.editorial.includes('Suisse Works'), 'Suisse editorial font missing');
-      assert(typography.loaded.includes('Suisse Intl'), 'Suisse Intl failed to load');
-      assert(typography.loaded.includes('Suisse Works'), 'Suisse Works failed to load');
-      assert(typography.loaded.includes('Suisse Screen'), 'Suisse Screen failed to load');
-      assert(typography.loaded.includes('Suisse Intl Mono'), 'Suisse Mono failed to load');
+      assert(
+        typography.body.includes('Suisse Screen'),
+        'Suisse body font missing',
+      );
+      assert(
+        typography.heading.includes('Suisse Intl'),
+        'Suisse heading font missing',
+      );
+      assert(
+        typography.editorial.includes('Suisse Works'),
+        'Suisse editorial font missing',
+      );
+      assert(
+        typography.loaded.includes('Suisse Intl'),
+        'Suisse Intl failed to load',
+      );
+      assert(
+        typography.loaded.includes('Suisse Works'),
+        'Suisse Works failed to load',
+      );
+      assert(
+        typography.loaded.includes('Suisse Screen'),
+        'Suisse Screen failed to load',
+      );
+      assert(
+        typography.loaded.includes('Suisse Intl Mono'),
+        'Suisse Mono failed to load',
+      );
 
       assert(
         await home.evaluate(
@@ -186,7 +244,8 @@ try {
           const probe = document.createElement('span');
           probe.id = 'suisse-glyph-probe';
           probe.textContent = '123456789áéãç@&';
-          probe.style.cssText = 'position:absolute;left:-9999px;font-weight:400';
+          probe.style.cssText =
+            'position:absolute;left:-9999px;font-weight:400';
           document.body.append(probe);
         });
         await home.evaluate(() => document.fonts.ready);
@@ -198,14 +257,18 @@ try {
           nodeId: root.nodeId,
           selector: '#suisse-glyph-probe',
         });
-        const { fonts } = await cdp.send('CSS.getPlatformFontsForNode', { nodeId });
+        const { fonts } = await cdp.send('CSS.getPlatformFontsForNode', {
+          nodeId,
+        });
         assert(fonts.length > 0, 'Suisse glyph probe rendered no font');
         assert(
           fonts.every((font) => /Suisse.*Int/i.test(font.familyName)),
           `Trial glyph fallback failed: ${JSON.stringify(fonts)}`,
         );
         await cdp.detach();
-        await home.locator('#suisse-glyph-probe').evaluate((node) => node.remove());
+        await home
+          .locator('#suisse-glyph-probe')
+          .evaluate((node) => node.remove());
         await home.getByRole('button', { name: 'Abrir menu' }).click();
         await home.getByRole('menuitem', { name: 'Explorar empresas' }).click();
         await expect(home).toHaveURL(/\/categories$/);

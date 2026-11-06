@@ -3,7 +3,9 @@ import { safeWebsite } from '~/lib/seo';
 export function directoryImageSource(value: string) {
   if (value.startsWith('/images/') && !value.includes('\\')) {
     const url = new URL(value, 'https://selletive.invalid');
-    return url.pathname.startsWith('/images/') ? `${url.pathname}${url.search}` : undefined;
+    return url.pathname.startsWith('/images/')
+      ? `${url.pathname}${url.search}`
+      : undefined;
   }
   return safeWebsite(value);
 }

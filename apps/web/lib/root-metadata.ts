@@ -18,7 +18,9 @@ export const generateRootMetadata = (): Metadata => {
       siteName: appConfig.name,
       title: appConfig.title,
       description: appConfig.description,
-      images: [socialImageMetadata(socialImageUrl('site', 'default'), appConfig.title)],
+      images: [
+        socialImageMetadata(socialImageUrl('site', 'default'), appConfig.title),
+      ],
     },
     twitter: {
       card: 'summary_large_image',

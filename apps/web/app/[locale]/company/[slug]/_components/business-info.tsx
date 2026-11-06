@@ -114,15 +114,22 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
                 <div className={'flex flex-wrap gap-2'}>
                   {business.business_categories.map(
                     (bc, idx) =>
-                      bc.categories && (
-                        bc.categories.is_active ? (
-                          <Link key={idx} href={`/categories/${bc.categories.slug}`} data-test="business-category-link">
-                            <Badge variant={'outline'}>{bc.categories.name}</Badge>
-                          </Link>
-                        ) : (
-                          <Badge key={idx} variant={'outline'}>{bc.categories.name}</Badge>
-                        )
-                      ),
+                      bc.categories &&
+                      (bc.categories.is_active ? (
+                        <Link
+                          key={idx}
+                          href={`/categories/${bc.categories.slug}`}
+                          data-test="business-category-link"
+                        >
+                          <Badge variant={'outline'}>
+                            {bc.categories.name}
+                          </Badge>
+                        </Link>
+                      ) : (
+                        <Badge key={idx} variant={'outline'}>
+                          {bc.categories.name}
+                        </Badge>
+                      )),
                   )}
                 </div>
               </div>
@@ -141,15 +148,20 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
                 <div className={'flex flex-wrap gap-2'}>
                   {business.business_locations.map(
                     (bl, idx) =>
-                      bl.locations && (
-                        primaryCategory ? (
-                          <Link key={idx} href={`/${primaryCategory.slug}/${bl.locations.slug}`} data-test="business-location-link">
-                            <Badge variant={'outline'}>{bl.locations.name}</Badge>
-                          </Link>
-                        ) : (
-                          <Badge key={idx} variant={'outline'}>{bl.locations.name}</Badge>
-                        )
-                      ),
+                      bl.locations &&
+                      (primaryCategory ? (
+                        <Link
+                          key={idx}
+                          href={`/${primaryCategory.slug}/${bl.locations.slug}`}
+                          data-test="business-location-link"
+                        >
+                          <Badge variant={'outline'}>{bl.locations.name}</Badge>
+                        </Link>
+                      ) : (
+                        <Badge key={idx} variant={'outline'}>
+                          {bl.locations.name}
+                        </Badge>
+                      )),
                   )}
                 </div>
               </div>

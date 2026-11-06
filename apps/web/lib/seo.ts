@@ -17,8 +17,20 @@ export function pageMetadata(
     description,
     alternates: { canonical: url },
     robots: { index, follow: true },
-    openGraph: { title, description, url, type: 'website', locale: 'pt_BR', images: [socialImageMetadata(image, title)] },
-    twitter: { card: 'summary_large_image', title, description, images: [image] },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: 'website',
+      locale: 'pt_BR',
+      images: [socialImageMetadata(image, title)],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image],
+    },
   };
 }
 
