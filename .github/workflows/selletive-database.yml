@@ -23,6 +23,9 @@ jobs:
       - name: Start disposable database (CI only)
         working-directory: apps/web
         run: |
+          if [ "${{ inputs.generate }}" = "true" ]; then
+            rm -f supabase/migrations/*business_analytics.sql
+          fi
           supabase db diff --help
           supabase start -x studio,imgproxy,logflare,vector
       - name: Generate migration
