@@ -5,6 +5,10 @@ on:
     paths: ['.github/workflows/selletive-database.yml', 'apps/web/supabase/**']
   workflow_dispatch:
     inputs:
+      application:
+        description: Verify application and browser flow against disposable database
+        type: boolean
+        default: false
       generate:
         description: Generate analytics migration from declarative schema
         type: boolean
@@ -48,6 +52,60 @@ jobs:
         if: always()
         working-directory: apps/web
         run: supabase gen types typescript --local --schema public > /tmp/database.types.ts
+      - uses: pnpm/action-setup@v6
+        if: inputs.application
+      - name: Install application dependencies
+        if: inputs.application
+        run: pnpm install --frozen-lockfile
+      - name: Prepare isolated application environment
+        if: inputs.application
+        working-directory: apps/web
+        run: |
+          supabase status -o json > "$RUNNER_TEMP/analytics-supabase.json"
+          node --input-type=module <<'JS'
+          import { readFileSync, appendFileSync } from 'node:fs';
+          const status = JSON.parse(readFileSync(`${process.env.RUNNER_TEMP}/analytics-supabase.json`, 'utf8'));
+          const values = {
+            NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54321',
+            NEXT_PUBLIC_SUPABASE_PUBLIC_KEY: status.PUBLISHABLE_KEY || status.ANON_KEY,
+            SUPABASE_SECRET_KEY: status.SECRET_KEY || status.SERVICE_ROLE_KEY,
+            NEXT_PUBLIC_SITE_URL: 'http://localhost:3000',
+            NEXT_PUBLIC_CI: 'true', NEXT_PUBLIC_DEFAULT_LOCALE: 'pt',
+            NEXT_PUBLIC_ENABLE_PERSONAL_ACCOUNT_BILLING: 'false',
+            NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_BILLING: 'false',
+            NEXT_TELEMETRY_DISABLED: '1',
+          };
+          if (!values.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY || !values.SUPABASE_SECRET_KEY) throw new Error('Missing isolated keys');
+          for (const [key, value] of Object.entries(values)) {
+            if (key.includes('KEY')) console.log(`::add-mask::${value}`);
+            appendFileSync(process.env.GITHUB_ENV, `${key}=${value}\n`);
+          }
+          JS
+      - name: Typecheck, lint and format
+        if: inputs.application
+        run: |
+          cp /tmp/database.types.ts apps/web/lib/database.types.ts
+          cp /tmp/database.types.ts packages/supabase/src/database.types.ts
+          pnpm lint:fix
+          pnpm format:fix
+          git diff > /tmp/analytics-formatting.patch
+          pnpm typecheck
+          node .github/scripts/test-selletive-directory-seo.mjs
+          node .github/scripts/test-selletive-business-analytics.mjs
+      - name: Build application in CI
+        if: inputs.application
+        run: pnpm --filter web exec next build --webpack
+      - name: Start application in CI only
+        if: inputs.application
+        run: pnpm --filter web exec next start --port 3000 > /tmp/analytics-next.log 2>&1 &
+      - name: Verify browser flow against disposable database
+        if: inputs.application
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://localhost:3000/api/healthcheck > /dev/null; then break; fi
+            sleep 1
+          done
+          node .github/scripts/verify-business-analytics-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -56,3 +114,5 @@ jobs:
             apps/web/supabase/migrations/*business_analytics.sql
             /tmp/database.types.ts
             /tmp/schema-diff.sql
+            /tmp/analytics-formatting.patch
+            /tmp/analytics-next.log

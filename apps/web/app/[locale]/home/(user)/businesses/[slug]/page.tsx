@@ -6,6 +6,7 @@ import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
+import { BusinessAnalytics } from './_components/business-analytics';
 import { BusinessEditor } from './_components/business-editor';
 
 export const metadata = {
@@ -27,7 +28,7 @@ async function ManageBusinessPage({
   const { data: b, error } = await client
     .from('businesses')
     .select(
-      'slug,name,description,website,email,phone,logo_url,employee_count,founded_year,works_remotely',
+      'id,tier,slug,name,description,website,email,phone,logo_url,employee_count,founded_year,works_remotely',
     )
     .eq('slug', slug)
     .eq('account_id', user.id)
@@ -45,6 +46,7 @@ async function ManageBusinessPage({
           Ver perfil público ↗
         </Link>
       </div>
+      <BusinessAnalytics client={client} businessId={b.id} tier={b.tier} />
       <BusinessEditor
         values={{
           slug: b.slug,

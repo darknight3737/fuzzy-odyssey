@@ -159,6 +159,64 @@ export type Database = {
           },
         ]
       }
+      business_analytics_daily: {
+        Row: {
+          business_id: string
+          count: number
+          day: string
+          event: string
+        }
+        Insert: {
+          business_id: string
+          count?: number
+          day: string
+          event: string
+        }
+        Update: {
+          business_id?: string
+          count?: number
+          day?: string
+          event?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_analytics_daily_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_analytics_dedupe: {
+        Row: {
+          business_id: string
+          day: string
+          event: string
+          visitor_hash: string
+        }
+        Insert: {
+          business_id: string
+          day: string
+          event: string
+          visitor_hash: string
+        }
+        Update: {
+          business_id?: string
+          day?: string
+          event?: string
+          visitor_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_analytics_dedupe_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_awards: {
         Row: {
           business_id: string
@@ -750,7 +808,7 @@ export type Database = {
       }
       locations: {
         Row: {
-          coordinates: unknown | null
+          coordinates: unknown
           country_code: string | null
           created_at: string | null
           created_by: string | null
@@ -764,7 +822,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          coordinates?: unknown | null
+          coordinates?: unknown
           country_code?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -778,7 +836,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          coordinates?: unknown | null
+          coordinates?: unknown
           country_code?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -808,7 +866,7 @@ export type Database = {
           expires_at: string
           id: string
           last_verification_at: string | null
-          last_verification_ip: unknown | null
+          last_verification_ip: unknown
           last_verification_user_agent: string | null
           metadata: Json | null
           nonce: string
@@ -826,7 +884,7 @@ export type Database = {
           expires_at: string
           id?: string
           last_verification_at?: string | null
-          last_verification_ip?: unknown | null
+          last_verification_ip?: unknown
           last_verification_user_agent?: string | null
           metadata?: Json | null
           nonce: string
@@ -844,7 +902,7 @@ export type Database = {
           expires_at?: string
           id?: string
           last_verification_at?: string | null
-          last_verification_ip?: unknown | null
+          last_verification_ip?: unknown
           last_verification_user_agent?: string | null
           metadata?: Json | null
           nonce?: string
@@ -1448,10 +1506,7 @@ export type Database = {
         Args: { target_team_account_id: string; target_user_id: string }
         Returns: boolean
       }
-      claim_business: {
-        Args: { business_slug: string }
-        Returns: string
-      }
+      claim_business: { Args: { business_slug: string }; Returns: string }
       create_invitation: {
         Args: { account_id: string; email: string; role: string }
         Returns: {
@@ -1464,6 +1519,12 @@ export type Database = {
           invited_by: string
           role: string
           updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "invitations"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       create_nonce: {
@@ -1492,6 +1553,12 @@ export type Database = {
           slug: string | null
           updated_at: string | null
           updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "accounts"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       get_account_invitations: {
@@ -1525,18 +1592,9 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_config: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_nonce_status: {
-        Args: { p_id: string }
-        Returns: Json
-      }
-      get_upper_system_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_config: { Args: never; Returns: Json }
+      get_nonce_status: { Args: { p_id: string }; Returns: Json }
+      get_upper_system_role: { Args: never; Returns: string }
       has_active_subscription: {
         Args: { target_account_id: string }
         Returns: boolean
@@ -1569,33 +1627,28 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_aal2: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_account_owner: {
-        Args: { account_id: string }
-        Returns: boolean
-      }
+      is_aal2: { Args: never; Returns: boolean }
+      is_account_owner: { Args: { account_id: string }; Returns: boolean }
       is_account_team_member: {
         Args: { target_account_id: string }
         Returns: boolean
       }
-      is_mfa_compliant: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_set: {
-        Args: { field_name: string }
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_mfa_compliant: { Args: never; Returns: boolean }
+      is_set: { Args: { field_name: string }; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
       is_team_member: {
         Args: { account_id: string; user_id: string }
         Returns: boolean
+      }
+      record_business_interest: {
+        Args: {
+          p_actor_id?: string
+          p_business_id: string
+          p_day?: string
+          p_event: string
+          p_visitor_hash: string
+        }
+        Returns: undefined
       }
       revoke_nonce: {
         Args: { p_id: string; p_reason?: string }
@@ -1632,6 +1685,12 @@ export type Database = {
           website: string | null
           works_remotely: boolean
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "businesses"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       team_account_workspace: {
         Args: { account_slug: string }
@@ -1673,6 +1732,12 @@ export type Database = {
           total_amount: number
           updated_at: string
         }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       upsert_subscription: {
         Args: {
@@ -1705,6 +1770,12 @@ export type Database = {
           trial_ends_at: string | null
           trial_starts_at: string | null
           updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "subscriptions"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       verify_nonce: {
@@ -1917,3 +1988,4 @@ export const Constants = {
     },
   },
 } as const
+

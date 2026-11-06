@@ -6,7 +6,10 @@ import { Trans } from '@kit/ui/trans';
 
 import { safeWebsite } from '~/lib/seo';
 
+import { BusinessContactLink } from './business-interest';
+
 type Business = {
+  id: string;
   description: string | null;
   website: string | null;
   phone: string | null;
@@ -57,14 +60,16 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
                 <strong className={'text-sm'}>
                   <Trans i18nKey={'business.website'} defaults={'Website:'} />
                 </strong>{' '}
-                <a
+                <BusinessContactLink
+                  businessId={business.id}
+                  event="website"
                   href={safeWebsite(business.website)}
                   target={'_blank'}
                   rel={'noopener noreferrer'}
                   className={'text-primary hover:underline'}
                 >
                   {business.website}
-                </a>
+                </BusinessContactLink>
               </div>
             )}
 
@@ -73,9 +78,9 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
                 <strong className={'text-sm'}>
                   <Trans i18nKey={'business.phone'} defaults={'Phone:'} />
                 </strong>{' '}
-                <a href={`tel:${business.phone}`} className={'text-primary'}>
+                <BusinessContactLink businessId={business.id} event="phone" href={`tel:${business.phone}`} className={'text-primary'}>
                   {business.phone}
-                </a>
+                </BusinessContactLink>
               </div>
             )}
 
@@ -84,9 +89,9 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
                 <strong className={'text-sm'}>
                   <Trans i18nKey={'business.email'} defaults={'Email:'} />
                 </strong>{' '}
-                <a href={`mailto:${business.email}`} className={'text-primary'}>
+                <BusinessContactLink businessId={business.id} event="email" href={`mailto:${business.email}`} className={'text-primary'}>
                   {business.email}
-                </a>
+                </BusinessContactLink>
               </div>
             )}
           </div>

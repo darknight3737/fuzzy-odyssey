@@ -14,5 +14,17 @@
   "languages": "Languages:",
   "priceRange": "Price:",
   "deliveryTime": "Delivery:",
-  "noReviews": "No reviews yet. Be the first to review!"
+  "noReviews": "No reviews yet. Be the first to review!",
+  "analyticsTitle": "Profile performance",
+  "analyticsViews": "Profile views",
+  "analyticsWebsite": "Website clicks",
+  "analyticsPhone": "Phone clicks",
+  "analyticsEmail": "Email clicks",
+  "analyticsLocked": "Analytics is available on Highlight and Spotlight plans.",
+  "analyticsPeriod": "Last 30 days, including today",
+  "analyticsExplanation": "Interest indicators, not confirmed leads. Each network counts once per action, profile and UTC day; shared networks may be undercounted. Signed-in owner visits, known bots and DNT/GPC visitors are excluded. Blockers may prevent collection.",
+  "analyticsEmpty": "No events in this period yet. Data starts when collection is enabled; earlier history is unavailable.",
+  "analyticsDaily": "View daily counts",
+  "analyticsDay": "Day (UTC)",
+  "analyticsUnavailable": "Profile metrics could not be loaded. Reload the page to try again."
 }

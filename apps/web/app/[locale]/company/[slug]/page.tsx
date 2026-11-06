@@ -12,6 +12,7 @@ import { socialImageUrl } from '~/lib/social-images';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { BusinessHeader } from './_components/business-header';
+import { BusinessView } from './_components/business-interest';
 import { BusinessInfo } from './_components/business-info';
 import { BusinessServices } from './_components/business-services';
 import { ReviewsSection } from './_components/reviews-section';
@@ -96,6 +97,7 @@ async function BusinessProfilePage({ params }: Props) {
         <Link href="/">Início</Link> / <Link href="/categories">Empresas</Link>{' '}
         / {business.name}
       </nav>
+      <BusinessView businessId={business.id} />
       <BusinessHeader business={business} />
       {business.tier === 'unclaimed' && (
         <div className="bg-muted/30 mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border p-5">

@@ -58,6 +58,7 @@ jobs:
       - name: Verify directory SEO and image bindings
         run: |
           node .github/scripts/test-selletive-directory-seo.mjs
+          node .github/scripts/test-selletive-business-analytics.mjs
           mkdir -p apps/web/.wrangler
           pnpm --filter web cloudflare:typegen
       - name: Validate canonical Makerkit static-rendering assertions

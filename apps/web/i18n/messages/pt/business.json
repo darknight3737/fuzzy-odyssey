@@ -14,5 +14,17 @@
   "languages": "Idiomas:",
   "priceRange": "Preço:",
   "deliveryTime": "Prazo:",
-  "noReviews": "Ainda não há avaliações. Seja o primeiro a avaliar!"
+  "noReviews": "Ainda não há avaliações. Seja o primeiro a avaliar!",
+  "analyticsTitle": "Desempenho do perfil",
+  "analyticsViews": "Visualizações",
+  "analyticsWebsite": "Cliques no site",
+  "analyticsPhone": "Cliques no telefone",
+  "analyticsEmail": "Cliques no e-mail",
+  "analyticsLocked": "Analytics está disponível nos planos Highlight e Spotlight.",
+  "analyticsPeriod": "Últimos 30 dias, incluindo hoje",
+  "analyticsExplanation": "Indicadores de interesse, não leads confirmados. Cada conexão conta uma vez por ação, perfil e dia (UTC); redes compartilhadas podem ficar subestimadas. Acessos do proprietário autenticado, robôs conhecidos e visitantes com DNT/GPC são excluídos. Bloqueadores podem impedir a coleta.",
+  "analyticsEmpty": "Ainda não há eventos neste período. Os dados começam na ativação da coleta; não existe histórico anterior.",
+  "analyticsDaily": "Ver dados por dia",
+  "analyticsDay": "Dia (UTC)",
+  "analyticsUnavailable": "Não foi possível carregar os indicadores agora. Recarregue a página para tentar novamente."
 }
