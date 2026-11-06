@@ -11,7 +11,7 @@ export const GET = enhanceRouteHandler(
     const slug = params.slug ?? '';
     if (
       (kind !== 'site' && kind !== 'company' && kind !== 'category') ||
-      !/^[a-z0-9-]{1,180}$/.test(slug)
+      !/^[\p{L}\p{N}_-]{1,200}$/u.test(slug)
     ) {
       return new Response('Not found', { status: 404 });
     }

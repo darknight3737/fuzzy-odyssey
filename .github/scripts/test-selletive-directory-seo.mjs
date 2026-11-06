@@ -200,6 +200,9 @@ async function image(kind, slug, query = '') {
 assert.equal((await image('unknown', 'acme')).status, 404);
 assert.equal((await image('site', 'unknown')).status, 404);
 assert.equal((await image('company', '../private')).status, 404);
+assert.equal((await image('company', 'a'.repeat(200))).status, 307);
+assert.equal((await image('company', 'agência-ação')).status, 307);
+assert.equal((await image('company', 'a'.repeat(201))).status, 404);
 const redirect = await image('company', 'acme', '?title=Injected');
 assert.equal(redirect.status, 307);
 assert.equal(
