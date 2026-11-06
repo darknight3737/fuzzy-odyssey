@@ -21,3 +21,11 @@ O runner é Ubuntu 24.04 e a verificação usa o Chrome já instalado na imagem 
 Revisão adversarial: Track A sem bloqueios; Track B identificou uma expectativa incorreta no teste remoto para associações somente a categorias inativas. Uma revisão independente confirmou o problema e o teste passou a filtrar categorias ativas. Nenhum esquema ou política foi alterado.
 
 Referências: [Next ImageResponse](https://nextjs.org/docs/app/api-reference/functions/image-response), [OpenNext Images](https://opennext.js.org/cloudflare/howtos/image), [Cloudflare Images binding](https://developers.cloudflare.com/images/optimization/binding/), [limites e preços](https://developers.cloudflare.com/images/pricing/). A documentação do Next foi lida do pacote exato 16.4.1 do projeto, extraído em diretório temporário porque não há dependências instaladas nesta máquina.
+
+## Resultado em 06/11/2026
+
+[CI 42274912002 aprovado](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/42274912002), commit de aplicação `f9627dcf`: typecheck, lint/formatação, regressões, geração dos tipos, builds Next/OpenNext, deploy e verificação remota com Chrome 156 passaram. O preview permanece em https://selletive.frd-monteiro97.workers.dev, bloqueado para indexação.
+
+Confirmados remotamente: PNG de 1.200 × 630, metadados/imagem de categoria, imagem de empresa inexistente com 404, origem de imagem não autorizada com 400, imagem otimizada embutida com largura real 64, exclusão de categorias vazias do sitemap, ausência de erros de navegador, navegação e responsividade nos tamanhos existentes do teste. O PNG padrão também foi inspecionado visualmente; a imagem otimizada foi conferida como 64 × 46 pixels.
+
+Os links de perfis e os casos de hierarquia/paginação/falha foram exercitados com fixtures isoladas no CI. A verificação remota usou o catálogo disponível, sem inserir empresas ou usuários de teste no banco. Nenhuma aplicação ou suíte de testes foi executada localmente.

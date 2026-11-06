@@ -1,6 +1,6 @@
 # Selletive: deploy Cloudflare
 
-Estado em 28/10/2026: banco reativado; Worker publicado com isolamento de operações pendentes do Next; preview validado remotamente. URL: https://selletive.frd-monteiro97.workers.dev.
+Estado em 06/11/2026: banco reativado; Worker publicado com isolamento de operações pendentes do Next, ajustes de SEO e imagens; preview validado remotamente. URL: https://selletive.frd-monteiro97.workers.dev.
 
 ## Recursos exclusivos da Selletive
 
@@ -55,6 +55,8 @@ O Next 16.4 mantém mapas de preenchimento e revalidação de `use cache` e um s
 Backup anterior à migração: tag `backup/selletive-before-makerkit-v4-20261015`, commit `367c5abd7978395ee84f8b906706e176a1464cda` e bundle `/workspace/selletive-pre-v4-20261015.bundle`. A versão v4 validada em Node está no tag `selletive-makerkit-v4.1.6-verified-20261015`. Commits do deploy permanecem no branch próprio para recuperação independente.
 
 ## Verificação
+
+- [SEO e imagens verificados em 06/11/2026 — execução 42274912002](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/42274912002): typecheck, lint/formatação, regressões, tipos de bindings, dois builds, deploy e navegador Chrome aprovados. PNGs sociais, metadados, sitemap vazio, origem de imagem bloqueada e largura real da imagem otimizada foram conferidos. O runner usa Ubuntu 24.04 com Chrome pré-instalado, preservando todas as asserções do teste. Consulte [o relatório de SEO](SEO-IMPROVEMENTS.md).
 
 - [Recuperação verificada em 28/10/2026 — execução 40796599664](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/40796599664): typecheck, regressões de cache/carregamento de módulos, dois builds, inspeção do bundle, deploy e navegador remoto aprovados. Requisições concorrentes e novas sessões passaram. Acesso do Brasil confirmou início, categorias e busca com HTTP 200, HTML completo e sem registros de erro de renderização, em aproximadamente 3 segundos por página. Não houve execução local da aplicação ou dos testes.
 
