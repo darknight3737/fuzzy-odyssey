@@ -36,11 +36,13 @@ export default function LegalPage() {
           diários ao proprietário da empresa nos planos com analytics. Para
           evitar repetições, o servidor transforma o endereço de conexão em um
           identificador criptográfico que muda diariamente. Não gravamos o IP
-          original, histórico de navegação ou cookies nessa coleta. As chaves de
-          deduplicação do dia atual e anterior são mantidas até a próxima coleta
-          que as remova; os totais diários não contêm essas chaves. Respeitamos
-          os sinais Do Not Track (DNT) e Global Privacy Control (GPC). Um clique
-          não confirma uma ligação, mensagem, venda ou contratação.
+          original, URLs de origem, user-agent ou cookies nessa coleta. As
+          chaves ficam associadas ao perfil, ao tipo de interação e ao dia para
+          evitar repetições. Chaves do dia atual e anterior são mantidas até a
+          próxima coleta que as remova; os totais diários não contêm essas
+          chaves. Respeitamos os sinais Do Not Track (DNT) e Global Privacy
+          Control (GPC). Um clique não confirma uma ligação, mensagem, venda ou
+          contratação.
         </p>
       </section>
       <section className="mt-8">
