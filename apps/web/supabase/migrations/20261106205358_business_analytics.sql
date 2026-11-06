@@ -21,6 +21,8 @@ alter table "public"."business_analytics_dedupe" enable row level security;
 
 CREATE UNIQUE INDEX business_analytics_daily_pkey ON public.business_analytics_daily USING btree (business_id, day, event);
 
+CREATE INDEX business_analytics_dedupe_business ON public.business_analytics_dedupe USING btree (business_id);
+
 CREATE INDEX business_analytics_dedupe_day ON public.business_analytics_dedupe USING btree (day);
 
 CREATE UNIQUE INDEX business_analytics_dedupe_pkey ON public.business_analytics_dedupe USING btree (visitor_hash, day, business_id, event);
@@ -55,7 +57,7 @@ alter table "public"."business_analytics_dedupe" validate constraint "business_a
 
 set check_function_bodies = off;
 
-CREATE OR REPLACE FUNCTION public.record_business_interest(p_business_id uuid, p_event text, p_visitor_hash text, p_actor_id uuid DEFAULT NULL::uuid)
+CREATE OR REPLACE FUNCTION public.record_business_interest(p_business_id uuid, p_event text, p_visitor_hash text, p_actor_id uuid DEFAULT NULL::uuid, p_day date DEFAULT ((statement_timestamp() AT TIME ZONE 'UTC'::text))::date)
  RETURNS void
  LANGUAGE plpgsql
  SET search_path TO ''
@@ -64,6 +66,9 @@ declare
   today date := (statement_timestamp() at time zone 'UTC')::date;
   inserted integer;
 begin
+  if p_day is null or p_day not in (today, today - 1) then
+    raise exception 'Invalid interest day' using errcode = '22023';
+  end if;
   if p_event not in ('view', 'website', 'phone', 'email') or p_event is null
     or p_visitor_hash is null or p_visitor_hash !~ '^[a-f0-9]{64}$' then
     raise exception 'Invalid interest event' using errcode = '22023';
@@ -78,26 +83,26 @@ begin
   -- Serialize one daily network hash, including parallel retries and profiles.
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_visitor_hash, 0));
   if (select count(*) from public.business_analytics_dedupe
-    where visitor_hash = p_visitor_hash and day = today) >= 200 then return; end if;
+    where visitor_hash = p_visitor_hash and day = p_day) >= 200 then return; end if;
   insert into public.business_analytics_dedupe(visitor_hash, day, business_id, event)
-    values (p_visitor_hash, today, p_business_id, p_event) on conflict do nothing;
+    values (p_visitor_hash, p_day, p_business_id, p_event) on conflict do nothing;
   get diagnostics inserted = row_count;
   if inserted > 0 then
     insert into public.business_analytics_daily(business_id, day, event)
-      values (p_business_id, today, p_event)
+      values (p_business_id, p_day, p_event)
       on conflict (business_id, day, event) do update
       set count = public.business_analytics_daily.count + 1;
   end if;
-  -- Keep only today's pseudonymous dedupe keys; aggregates contain no visitor keys.
-  delete from public.business_analytics_dedupe where day < today;
+  -- Keep current and previous UTC day keys to dedupe requests crossing midnight.
+  delete from public.business_analytics_dedupe where day < today - 1;
 end;
 $function$
 ;
 
 revoke all on public.business_analytics_daily from anon, authenticated, service_role;
 revoke all on public.business_analytics_dedupe from anon, authenticated, service_role;
-revoke all on function public.record_business_interest(uuid,text,text,uuid) from public, anon, authenticated;
-grant execute on function public.record_business_interest(uuid,text,text,uuid) to service_role;
+revoke all on function public.record_business_interest(uuid,text,text,uuid,date) from public, anon, authenticated;
+grant execute on function public.record_business_interest(uuid,text,text,uuid,date) to service_role;
 grant select on table "public"."business_analytics_daily" to "authenticated";
 
 grant delete on table "public"."business_analytics_daily" to "service_role";

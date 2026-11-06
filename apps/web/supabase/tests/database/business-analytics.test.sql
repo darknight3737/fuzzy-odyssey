@@ -17,6 +17,11 @@ select is((select count from public.business_analytics_daily where business_id='
 select throws_ok($$select public.record_business_interest('21000000-0000-0000-0000-000000000001','unknown',repeat('d',64))$$, '22023', 'Invalid interest event', 'Unknown event rejected');
 select public.record_business_interest('21000000-0000-0000-0000-000000000099', 'view', repeat('d',64));
 select is((select count(*) from public.business_analytics_daily where business_id='21000000-0000-0000-0000-000000000099'), 0::bigint, 'Nonexistent profiles do not count');
+select public.record_business_interest('21000000-0000-0000-0000-000000000001', 'view', repeat('d',64), null, ((now() at time zone 'UTC')::date - 1));
+select public.record_business_interest('21000000-0000-0000-0000-000000000001', 'view', repeat('d',64), null, ((now() at time zone 'UTC')::date - 1));
+select is((select count from public.business_analytics_daily where day=((now() at time zone 'UTC')::date-1) and business_id='21000000-0000-0000-0000-000000000001' and event='view'),1::bigint,'Cross-midnight retries stay in the trusted request day');
+select throws_ok($$select public.record_business_interest('21000000-0000-0000-0000-000000000001','view',repeat('d',64),null,current_date+1)$$,'22023','Invalid interest day','Future day rejected');
+delete from public.business_analytics_daily where business_id='21000000-0000-0000-0000-000000000001' and day=((now() at time zone 'UTC')::date-1);
 reset role;
 
 set local role anon;

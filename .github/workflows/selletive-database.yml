@@ -17,6 +17,9 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
       - uses: supabase/setup-cli@v3
         with:
           version: 2.113.0
@@ -38,12 +41,13 @@ jobs:
         run: |
           supabase db reset
           supabase test db
+          node ../../.github/scripts/verify-business-analytics-concurrency.mjs
           supabase db diff > /tmp/schema-diff.sql
           if grep -E 'business_analytics|record_business_interest' /tmp/schema-diff.sql; then exit 1; fi
       - name: Generate types
         if: always()
         working-directory: apps/web
-        run: supabase gen types typescript --local > /tmp/database.types.ts
+        run: supabase gen types typescript --local --schema public > /tmp/database.types.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
