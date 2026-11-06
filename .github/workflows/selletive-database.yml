@@ -38,7 +38,7 @@ jobs:
           supabase db diff > /tmp/schema-diff.sql
           if grep -E 'business_analytics|record_business_interest' /tmp/schema-diff.sql; then exit 1; fi
       - name: Generate types
-        if: ${{ !inputs.generate && hashFiles('apps/web/supabase/migrations/*business_analytics.sql') != '' }}
+        if: always()
         working-directory: apps/web
         run: supabase gen types typescript --local > /tmp/database.types.ts
       - uses: actions/upload-artifact@v4

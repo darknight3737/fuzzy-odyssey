@@ -58,14 +58,18 @@ do $$begin
   begin
     update public.businesses set tier='verified' where slug='claim-qa';
     raise exception 'Self verification unexpectedly allowed';
-  exception when raise_exception then
-    if sqlerrm <> 'Trust fields are managed by the platform' then raise; end if;
+  exception
+    when insufficient_privilege then null; -- Immutable column grants reject before trigger.
+    when raise_exception then
+      if sqlerrm <> 'Trust fields are managed by the platform' then raise; end if;
   end;
   begin
     update public.businesses set account_id='10000000-0000-0000-0000-000000000002' where slug='claim-qa';
     raise exception 'Ownership reassignment unexpectedly allowed';
-  exception when raise_exception then
-    if sqlerrm <> 'Trust fields are managed by the platform' then raise; end if;
+  exception
+    when insufficient_privilege then null; -- Immutable column grants reject before trigger.
+    when raise_exception then
+      if sqlerrm <> 'Trust fields are managed by the platform' then raise; end if;
   end;
   update public.businesses set description='Owner edit succeeded' where slug='claim-qa';
   if not exists(select 1 from public.businesses where slug='claim-qa' and description='Owner edit succeeded') then raise exception 'Owner edit failed'; end if;

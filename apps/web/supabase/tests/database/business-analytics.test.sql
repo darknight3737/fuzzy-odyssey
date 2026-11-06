@@ -1,0 +1,56 @@
+begin;
+select no_plan();
+select tests.create_supabase_user('analytics_owner', 'owner@analytics.test');
+select tests.create_supabase_user('analytics_other', 'other@analytics.test');
+insert into public.businesses(id, account_id, name, slug, tier, website, phone, email)
+values ('21000000-0000-0000-0000-000000000001', tests.get_supabase_uid('analytics_owner'),
+  'Analytics test', 'analytics-isolation-test', 'highlight', 'https://example.com', '123', 'hello@example.com');
+
+set local role service_role;
+select public.record_business_interest('21000000-0000-0000-0000-000000000001', 'view', repeat('a',64));
+select public.record_business_interest('21000000-0000-0000-0000-000000000001', 'view', repeat('a',64));
+select is((select count from public.business_analytics_daily where business_id='21000000-0000-0000-0000-000000000001' and event='view'), 1::bigint, 'Retries and repeat visits count once');
+select public.record_business_interest('21000000-0000-0000-0000-000000000001', 'view', repeat('b',64));
+select public.record_business_interest('21000000-0000-0000-0000-000000000001', 'website', repeat('a',64));
+select public.record_business_interest('21000000-0000-0000-0000-000000000001', 'view', repeat('c',64), tests.get_supabase_uid('analytics_owner'));
+select is((select count from public.business_analytics_daily where business_id='21000000-0000-0000-0000-000000000001' and event='view'), 2::bigint, 'Different daily network counts; owner does not count');
+select throws_ok($$select public.record_business_interest('21000000-0000-0000-0000-000000000001','unknown',repeat('d',64))$$, '22023', 'Invalid interest event', 'Unknown event rejected');
+select public.record_business_interest('21000000-0000-0000-0000-000000000099', 'view', repeat('d',64));
+select is((select count(*) from public.business_analytics_daily where business_id='21000000-0000-0000-0000-000000000099'), 0::bigint, 'Nonexistent profiles do not count');
+reset role;
+
+set local role anon;
+select throws_ok($$select * from public.business_analytics_daily$$,'42501',null,'Anonymous visitors cannot read aggregates');
+select throws_ok($$select public.record_business_interest('21000000-0000-0000-0000-000000000001','view',repeat('d',64))$$,'42501',null,'Anonymous callers cannot bypass ingestion');
+reset role;
+select makerkit.authenticate_as('analytics_other');
+select is_empty($$select * from public.business_analytics_daily$$,'Other personal account cannot read metrics');
+select throws_ok($$insert into public.business_analytics_daily values ('21000000-0000-0000-0000-000000000001',current_date,'view',999)$$,'42501',null,'Authenticated users cannot forge counts');
+select throws_ok($$update public.business_analytics_daily set business_id='21000000-0000-0000-0000-000000000099'$$,'42501',null,'Authenticated users cannot reparent counts');
+select throws_ok($$delete from public.business_analytics_daily$$,'42501',null,'Authenticated users cannot delete counts');
+select throws_ok($$truncate public.business_analytics_daily$$,'42501',null,'TRUNCATE cannot bypass RLS');
+select throws_ok($$select public.record_business_interest('21000000-0000-0000-0000-000000000001','view',repeat('d',64))$$,'42501',null,'Authenticated users cannot invoke writer');
+select makerkit.authenticate_as('analytics_owner');
+select is((select sum(count)::bigint from public.business_analytics_daily),3::bigint,'Paid personal owner can read aggregate metrics');
+select throws_ok($$select * from public.business_analytics_dedupe$$,'42501',null,'Even paid owner cannot read visitor hashes');
+select makerkit.set_mfa_factor();
+select is_empty($$select * from public.business_analytics_daily$$,'MFA-enrolled owner at AAL1 cannot read');
+select makerkit.set_session_aal('aal2');
+select is((select sum(count)::bigint from public.business_analytics_daily),3::bigint,'MFA owner at AAL2 can read');
+reset role;
+update public.businesses set tier='claimed' where id='21000000-0000-0000-0000-000000000001';
+select makerkit.authenticate_as('analytics_owner');
+select makerkit.set_session_aal('aal2');
+select is_empty($$select * from public.business_analytics_daily$$,'Downgrade immediately removes analytics access');
+reset role;
+update public.businesses set tier='spotlight', account_id=tests.get_supabase_uid('analytics_other') where id='21000000-0000-0000-0000-000000000001';
+select makerkit.authenticate_as('analytics_owner');
+select makerkit.set_session_aal('aal2');
+select is_empty($$select * from public.business_analytics_daily$$,'Former owner loses access after reassignment');
+select makerkit.authenticate_as('analytics_other');
+select is((select sum(count)::bigint from public.business_analytics_daily),3::bigint,'Current Spotlight owner can read');
+reset role;
+-- Neither role, including the writer, inherits residual TRUNCATE privileges.
+select is_empty($$select r, t from unnest(array['anon','authenticated','service_role']) r cross join unnest(array['business_analytics_daily','business_analytics_dedupe']) t where has_table_privilege(r,'public.'||t,'TRUNCATE')$$,'No API role has TRUNCATE');
+select * from finish();
+rollback;
