@@ -12,8 +12,8 @@ import { socialImageUrl } from '~/lib/social-images';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { BusinessHeader } from './_components/business-header';
-import { BusinessView } from './_components/business-interest';
 import { BusinessInfo } from './_components/business-info';
+import { BusinessView } from './_components/business-interest';
 import { BusinessServices } from './_components/business-services';
 import { ReviewsSection } from './_components/reviews-section';
 

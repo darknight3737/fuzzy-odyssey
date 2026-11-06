@@ -78,7 +78,12 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
                 <strong className={'text-sm'}>
                   <Trans i18nKey={'business.phone'} defaults={'Phone:'} />
                 </strong>{' '}
-                <BusinessContactLink businessId={business.id} event="phone" href={`tel:${business.phone}`} className={'text-primary'}>
+                <BusinessContactLink
+                  businessId={business.id}
+                  event="phone"
+                  href={`tel:${business.phone}`}
+                  className={'text-primary'}
+                >
                   {business.phone}
                 </BusinessContactLink>
               </div>
@@ -89,7 +94,12 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
                 <strong className={'text-sm'}>
                   <Trans i18nKey={'business.email'} defaults={'Email:'} />
                 </strong>{' '}
-                <BusinessContactLink businessId={business.id} event="email" href={`mailto:${business.email}`} className={'text-primary'}>
+                <BusinessContactLink
+                  businessId={business.id}
+                  event="email"
+                  href={`mailto:${business.email}`}
+                  className={'text-primary'}
+                >
                   {business.email}
                 </BusinessContactLink>
               </div>
