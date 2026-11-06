@@ -32,19 +32,21 @@ export async function GET(
     ].map((path) => ({ path }));
   else if (kind === 'categories') {
     try {
-      paths = (await getIndexableCategories()).slice(start, end + 1).map((row) => ({
-        path: `/categories/${row.slug}`,
-        updated: row.updated_at,
-      }));
+      paths = (await getIndexableCategories())
+        .slice(start, end + 1)
+        .map((row) => ({
+          path: `/categories/${row.slug}`,
+          updated: row.updated_at,
+        }));
     } catch {
       return new Response('Unavailable', { status: 503 });
     }
   } else if (kind === 'companies') {
     const { data, error } = await client
-            .from('businesses')
-            .select('slug,updated_at')
-            .order('slug')
-            .range(start, end);
+      .from('businesses')
+      .select('slug,updated_at')
+      .order('slug')
+      .range(start, end);
     if (error) return new Response('Unavailable', { status: 503 });
     paths = (data ?? []).map((row) => ({
       path: `/company/${row.slug}`,
