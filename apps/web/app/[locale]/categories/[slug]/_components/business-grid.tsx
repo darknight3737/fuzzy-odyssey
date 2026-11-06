@@ -6,6 +6,8 @@ import { Badge } from '@kit/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
 import { Trans } from '@kit/ui/trans';
 
+import { DirectoryImage } from '~/components/directory-image';
+
 import { BusinessRating } from './business-rating';
 
 type Business = {
@@ -57,14 +59,12 @@ export function BusinessGrid({ businesses }: BusinessGridProps) {
                 <div className={'mb-3 flex items-start justify-between'}>
                   <div className={'flex items-start gap-3'}>
                     {business.logo_url && (
-                      // Logos may be hosted on any company domain.
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <DirectoryImage
                         src={business.logo_url}
                         width={48}
                         height={48}
                         loading="lazy"
-                        decoding="async"
+                        sizes="48px"
                         alt={business.name}
                         className={'h-12 w-12 rounded object-cover'}
                       />

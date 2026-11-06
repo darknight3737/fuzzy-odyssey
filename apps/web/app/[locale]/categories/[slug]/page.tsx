@@ -6,6 +6,7 @@ import { connection } from 'next/server';
 
 import { getAllLocationsForFilter } from '~/lib/locations/search';
 import { pageMetadata } from '~/lib/seo';
+import { socialImageUrl } from '~/lib/social-images';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { BusinessGridWrapper } from './_components/business-grid-wrapper';
@@ -50,6 +51,7 @@ export async function generateMetadata({ params, searchParams }: Props) {
       `Encontre empresas de ${category.name}. Compare especialidades, localização e avaliações na Selletive.`,
     `/categories/${category.slug}`,
     hasCompanies,
+    socialImageUrl('category', category.slug, category.updated_at),
   );
 }
 

@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 
 import appConfig from '~/config/app.config';
+import { socialImageMetadata, socialImageUrl } from '~/lib/social-images';
 
 /**
  * @name generateRootMetadata
@@ -17,11 +18,13 @@ export const generateRootMetadata = (): Metadata => {
       siteName: appConfig.name,
       title: appConfig.title,
       description: appConfig.description,
+      images: [socialImageMetadata(socialImageUrl('site', 'default'), appConfig.title)],
     },
     twitter: {
       card: 'summary_large_image',
       title: appConfig.title,
       description: appConfig.description,
+      images: [socialImageUrl('site', 'default')],
     },
     icons: {
       icon: '/images/favicon/favicon.ico',

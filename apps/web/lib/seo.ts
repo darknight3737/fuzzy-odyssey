@@ -2,11 +2,14 @@ import type { Metadata } from 'next';
 
 import appConfig from '~/config/app.config';
 
+import { socialImageMetadata, socialImageUrl } from './social-images';
+
 export function pageMetadata(
   title: string,
   description: string,
   path: string,
   index = true,
+  image = socialImageUrl('site', 'default'),
 ): Metadata {
   const url = new URL(path, appConfig.url).href;
   return {
@@ -14,8 +17,8 @@ export function pageMetadata(
     description,
     alternates: { canonical: url },
     robots: { index, follow: true },
-    openGraph: { title, description, url, type: 'website', locale: 'pt_BR' },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { title, description, url, type: 'website', locale: 'pt_BR', images: [socialImageMetadata(image, title)] },
+    twitter: { card: 'summary_large_image', title, description, images: [image] },
   };
 }
 

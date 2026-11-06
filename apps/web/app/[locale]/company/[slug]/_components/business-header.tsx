@@ -1,5 +1,7 @@
 import { Badge } from '@kit/ui/badge';
 
+import { DirectoryImage } from '~/components/directory-image';
+
 type Business = {
   name: string;
   logo_url: string | null;
@@ -16,9 +18,13 @@ export function BusinessHeader({ business }: BusinessHeaderProps) {
     <div className={'mb-8'}>
       {business.cover_image_url && (
         <div className={'mb-6 h-64 w-full overflow-hidden rounded-lg'}>
-          <img
+          <DirectoryImage
             src={business.cover_image_url}
             alt={business.name}
+            width={1280}
+            height={256}
+            sizes="(max-width: 1280px) 100vw, 1280px"
+            loading="eager"
             className={'h-full w-full object-cover'}
           />
         </div>
@@ -26,9 +32,12 @@ export function BusinessHeader({ business }: BusinessHeaderProps) {
 
       <div className={'flex items-start gap-6'}>
         {business.logo_url && (
-          <img
+          <DirectoryImage
             src={business.logo_url}
             alt={business.name}
+            width={96}
+            height={96}
+            sizes="96px"
             className={'h-24 w-24 rounded-lg object-cover shadow-md'}
           />
         )}

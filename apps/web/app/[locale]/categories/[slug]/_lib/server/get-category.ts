@@ -11,7 +11,7 @@ export const getCategoryBySlug = cache(async (slug: string) => {
 
   const { data, error } = await client
     .from('categories')
-    .select('id, name, slug, description')
+    .select('id, name, slug, description, updated_at')
     .eq('slug', slug)
     .eq('is_active', true)
     .single();

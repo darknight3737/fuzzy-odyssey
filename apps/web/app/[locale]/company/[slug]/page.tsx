@@ -8,6 +8,7 @@ import { If } from '@kit/ui/if';
 
 import appConfig from '~/config/app.config';
 import { pageMetadata, safeWebsite, serializeJsonLd } from '~/lib/seo';
+import { socialImageUrl } from '~/lib/social-images';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { BusinessHeader } from './_components/business-header';
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: Props) {
 
   const { data: business, error } = await client
     .from('businesses')
-    .select('name, description, logo_url')
+    .select('name, description, updated_at')
     .eq('slug', slug)
     .single();
 
@@ -38,6 +39,8 @@ export async function generateMetadata({ params }: Props) {
     business.description?.slice(0, 160) ||
       `Conheça ${business.name}, seus serviços e informações de contato na Selletive.`,
     `/company/${slug}`,
+    true,
+    socialImageUrl('company', slug, business.updated_at),
   );
 }
 
@@ -51,7 +54,7 @@ async function BusinessProfilePage({ params }: Props) {
     .select(
       `
       *,
-      business_categories(categories(name, slug)),
+      business_categories(is_primary, categories(name, slug, is_active)),
       business_locations(locations(name, slug)),
       business_services(*),
       business_awards(*),

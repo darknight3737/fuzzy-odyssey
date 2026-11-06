@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { Badge } from '@kit/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
 import { Trans } from '@kit/ui/trans';
@@ -14,7 +16,8 @@ type Business = {
   business_languages: string[] | null;
   works_remotely: boolean;
   business_categories?: Array<{
-    categories: { name: string; slug: string } | null;
+    is_primary: boolean;
+    categories: { name: string; slug: string; is_active: boolean } | null;
   }>;
   business_locations?: Array<{
     locations: { name: string; slug: string } | null;
@@ -26,6 +29,12 @@ type BusinessInfoProps = {
 };
 
 export function BusinessInfo({ business }: BusinessInfoProps) {
+  const activeCategories = business.business_categories?.filter(
+    (entry) => entry.categories?.is_active,
+  );
+  const primaryCategory = (
+    activeCategories?.find((entry) => entry.is_primary) ?? activeCategories?.[0]
+  )?.categories;
   return (
     <div className={'mb-8 grid gap-6 md:grid-cols-3'}>
       <Card className={'md:col-span-2'}>
@@ -106,9 +115,13 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
                   {business.business_categories.map(
                     (bc, idx) =>
                       bc.categories && (
-                        <Badge key={idx} variant={'outline'}>
-                          {bc.categories.name}
-                        </Badge>
+                        bc.categories.is_active ? (
+                          <Link key={idx} href={`/categories/${bc.categories.slug}`} data-test="business-category-link">
+                            <Badge variant={'outline'}>{bc.categories.name}</Badge>
+                          </Link>
+                        ) : (
+                          <Badge key={idx} variant={'outline'}>{bc.categories.name}</Badge>
+                        )
                       ),
                   )}
                 </div>
@@ -129,9 +142,13 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
                   {business.business_locations.map(
                     (bl, idx) =>
                       bl.locations && (
-                        <Badge key={idx} variant={'outline'}>
-                          {bl.locations.name}
-                        </Badge>
+                        primaryCategory ? (
+                          <Link key={idx} href={`/${primaryCategory.slug}/${bl.locations.slug}`} data-test="business-location-link">
+                            <Badge variant={'outline'}>{bl.locations.name}</Badge>
+                          </Link>
+                        ) : (
+                          <Badge key={idx} variant={'outline'}>{bl.locations.name}</Badge>
+                        )
                       ),
                   )}
                 </div>

@@ -1,5 +1,7 @@
 import { cache } from 'react';
 
+import { getActiveCategories } from '~/lib/categories/sitemap';
+import { getCategoryTreeIds } from '~/lib/categories/visibility';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 type FilterParams = {
@@ -39,17 +41,8 @@ export async function getFilteredBusinesses(
 ): Promise<BusinessWithRating[]> {
   const client = getDirectoryClient();
 
-  const { data: categoryTree } = await client
-    .from('categories')
-    .select('id,parent_id')
-    .eq('is_active', true);
-  const categoryIds = new Set([params.categoryId]);
-  for (let depth = 0; depth < 3; depth++) {
-    for (const category of categoryTree ?? []) {
-      if (category.parent_id && categoryIds.has(category.parent_id))
-        categoryIds.add(category.id);
-    }
-  }
+  const categoryTree = await getActiveCategories();
+  const categoryIds = getCategoryTreeIds(params.categoryId, categoryTree);
 
   // Get location ID if filtering by location
   let locationId: string | null = null;

@@ -104,6 +104,7 @@ function getImagesConfig() {
     remotePatterns.push({
       protocol: 'https',
       hostname,
+      pathname: '/storage/v1/object/public/**',
     });
   }
 
