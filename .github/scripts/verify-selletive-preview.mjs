@@ -36,9 +36,15 @@ try {
 
   const imagePage = await browser.newPage();
   try {
-    const response = await imagePage.goto(
-      `${site}/_next/image?url=%2Fimages%2Fbilling.webp&w=64&q=75`,
+    await imagePage.goto(site);
+    const imageUrl = `${site}/_next/image?url=%2Fimages%2Fbilling.webp&w=64&q=75`;
+    const imageResponse = imagePage.waitForResponse(
+      (response) => response.url() === imageUrl,
     );
+    await imagePage.setContent(
+      `<img alt="Optimized image" src="${imageUrl.replaceAll('&', '&amp;')}">`,
+    );
+    const response = await imageResponse;
     assert.equal(response.status(), 200, 'Optimized image response');
     await expect(imagePage.locator('img')).toBeVisible();
     await expect
