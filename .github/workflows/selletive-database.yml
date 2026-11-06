@@ -1,0 +1,48 @@
+name: Selletive Database Verification
+on:
+  workflow_dispatch:
+    inputs:
+      generate:
+        description: Generate analytics migration from declarative schema
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  database:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.113.0
+      - name: Start disposable database (CI only)
+        working-directory: apps/web
+        run: |
+          supabase db diff --help
+          supabase start -x studio,imgproxy,logflare,vector
+      - name: Generate migration
+        if: inputs.generate
+        working-directory: apps/web
+        run: supabase db diff -f business_analytics
+      - name: Apply migrations and prove isolation
+        if: ${{ !inputs.generate }}
+        working-directory: apps/web
+        run: |
+          supabase db reset
+          supabase test db
+          supabase db diff > /tmp/schema-diff.sql
+          if grep -E 'business_analytics|record_business_interest' /tmp/schema-diff.sql; then exit 1; fi
+      - name: Generate types
+        if: ${{ !inputs.generate }}
+        working-directory: apps/web
+        run: supabase gen types typescript --local > /tmp/database.types.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selletive-database
+          path: |
+            apps/web/supabase/migrations/*business_analytics.sql
+            /tmp/database.types.ts
+            /tmp/schema-diff.sql
