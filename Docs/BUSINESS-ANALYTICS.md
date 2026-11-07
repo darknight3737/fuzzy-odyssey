@@ -32,3 +32,9 @@ Resultado de 06/11/2026: [CI 42311030489](https://github.com/darknight3737/fuzzy
 Em 07/11/2026 a migração foi aplicada e conferida no Supabase hospedado, após ajustar a permissão do plugin com autorização do Fernando. A publicação da aplicação segue pelo modo de recuperação com baseline de esquema atualizado e verificado; o token Management API do GitHub permanece inválido.
 
 [Validação final 42312733640](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/42312733640) aprovada: repetiu todos os testes e o navegador, gerou bindings e compilou o bundle OpenNext/Cloudflare sem publicação. Revisões adversariais de qualidade, lógica e RLS concluíram código pronto e isolamento comprovado no escopo testado.
+
+## Publicado em 07/11/2026
+
+[Deploy e navegador remoto aprovados](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/42395994411). Worker `selletive`, versão `bc0ea354-8a5e-4a21-9dfd-4720cf1c5479`, em https://selletive.frd-monteiro97.workers.dev. A migração foi aplicada no Supabase e registrada como `20261106205358`. O painel fica em `/home/businesses/[slug]` para o proprietário em Highlight/Spotlight.
+
+O deploy repetiu typecheck, lint/formatação, regressões de cache/SEO/ingestão, builds Next/OpenNext, inspeção do bundle e verificação por Chrome remoto. Requisições ao preview publicado confirmaram banco saudável, endpoint de evento respondendo 204, origem externa bloqueada com 403, campo de contador forjado rejeitado com 400 e política de privacidade atualizada. O evento de verificação usou ID inexistente e não criou empresa ou histórico fictício.

@@ -1,6 +1,6 @@
 # Selletive: deploy Cloudflare
 
-Estado em 06/11/2026: banco reativado; Worker publicado com isolamento de operações pendentes do Next, ajustes de SEO e imagens; preview validado remotamente. URL: https://selletive.frd-monteiro97.workers.dev.
+Estado em 07/11/2026: analytics por empresa publicado, migração aplicada e preview validado remotamente; ajustes de SEO, imagens e isolamento de requisições preservados. URL: https://selletive.frd-monteiro97.workers.dev.
 
 ## Recursos exclusivos da Selletive
 
@@ -95,3 +95,5 @@ A migração `20261106205358_business_analytics.sql` foi aplicada ao projeto Sel
 A referência do deploy de recuperação passa para a tag `selletive-analytics-schema-verified-20261107`, no commit `d50c5cd2`, cujo diretório Supabase corresponde à migração aplicada e validada na CI. A checagem de igualdade do diretório inteiro permanece; alterações futuras de esquema não podem passar silenciosamente por `application_only=true`. O deploy da aplicação preserva os secrets existentes.
 
 O token Management API salvo no GitHub continuou retornando 401 em 07/11 ([execução 42381335853](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/42381335853)). A integração conectada foi configurada, com autorização do Fernando, para permitir leituras e perguntar antes de alterações; a migração concluiu após esse ajuste.
+
+Analytics publicado: [execução 42395994411](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/42395994411) aprovada, incluindo os dois builds, deploy, inspeção do bundle e navegador remoto. Versão Worker `bc0ea354-8a5e-4a21-9dfd-4720cf1c5479`. Conferência direta do endpoint: 204 para evento válido de perfil inexistente, 403 para origem externa, 400 para contador forjado. Banco saudável; nenhum perfil ou evento fictício foi persistido. Veja [BUSINESS-ANALYTICS.md](BUSINESS-ANALYTICS.md).

@@ -2138,7 +2138,7 @@ type Category = {
 
 * **Review & Testimonial Management:** Allow businesses to view and respond to reviews (for verified and above).
 
-* **Analytics Dashboard:** Provide basic analytics on profile views and engagement (for highlight and above). Implementation and cloud verification completed on 2026-11-06; hosted migration/deployment pending integration confirmation. See [implementation details](BUSINESS-ANALYTICS.md).
+* **Analytics Dashboard:** Provide basic analytics on profile views and engagement (for highlight and above). Implementation and cloud verification completed on 2026-11-06; hosted migration and Cloudflare preview publication verified on 2026-11-07. See [implementation details](BUSINESS-ANALYTICS.md).
 
 * **SEO Requirements:** All business profiles must include proper meta titles, descriptions, structured data (JSON-LD), H1 tags, canonical URLs, and optimized URL slugs.
 
