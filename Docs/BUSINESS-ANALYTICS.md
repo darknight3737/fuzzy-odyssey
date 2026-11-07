@@ -29,6 +29,6 @@ O workflow do preview executa typecheck, lint/formatação, regressões do endpo
 
 Resultado de 06/11/2026: [CI 42311030489](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/42311030489) aprovada: 378 testes pgTAP, 16 envios concorrentes contando uma vez, ausência de drift nos objetos novos, typecheck, lint/formatação, regressões de SEO/ingestão, build canônico e navegador com coleta, contatos, login, painel, exclusão do proprietário e downgrade. Todos os fixtures foram descartados no runner.
 
-Publicação pendente: a integração Supabase retornou confirmação expirada ao aplicar a migração; nenhuma tabela de analytics foi criada no projeto hospedado. O token Management API da automação de deploy também segue sem renovação. Não alterar a referência de esquema verificado do deploy de recuperação antes de aplicar e conferir esta migração.
+Em 07/11/2026 a migração foi aplicada e conferida no Supabase hospedado, após ajustar a permissão do plugin com autorização do Fernando. A publicação da aplicação segue pelo modo de recuperação com baseline de esquema atualizado e verificado; o token Management API do GitHub permanece inválido.
 
 [Validação final 42312733640](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/42312733640) aprovada: repetiu todos os testes e o navegador, gerou bindings e compilou o bundle OpenNext/Cloudflare sem publicação. Revisões adversariais de qualidade, lógica e RLS concluíram código pronto e isolamento comprovado no escopo testado.
