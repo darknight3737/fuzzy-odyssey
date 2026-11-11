@@ -133,9 +133,15 @@ def candidate_type(industry, description, keywords):
     return ""
 
 
-def prepare(input_path, output_dir, limit):
+def prepare(input_path, output_dir, limit, exclude_reviewed=None, existing_businesses=None):
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
+    excluded_ids = set()
+    for filename in exclude_reviewed or []:
+        excluded_ids.update(json.loads(line)['id'] for line in Path(filename).read_text().splitlines() if line.strip())
+    excluded_domains = set()
+    if existing_businesses:
+        excluded_domains = {website_domain(row.get('website')) for row in json.loads(Path(existing_businesses).read_text())}
     raw_rows = []
     with open(input_path, newline="", encoding="utf-8-sig") as source:
         reader = csv.DictReader(source)
@@ -151,6 +157,8 @@ def prepare(input_path, output_dir, limit):
         company_id = clean(row.get("Apollo Account Id"))
         name = clean(row.get("Company Name"))
         domain = website_domain(row.get("Website"))
+        if company_id in excluded_ids or domain in excluded_domains:
+            continue
         industry = clean(row.get("Industry"))
         description = clean(row.get("Short Description"))
         city = clean(row.get("Company City"))
@@ -188,8 +196,8 @@ def prepare(input_path, output_dir, limit):
             "industry": clean(row.get("Industry")),
             "city": clean(row.get("Company City")),
             "state": normalize_state(row.get("Company State")),
-            "description": description[:600],
-            "keywords": keywords[:350],
+            "description": description,
+            "keywords": keywords,
         })
         full_rows.append({
             "id": company_id,
@@ -228,9 +236,11 @@ def main():
     parser.add_argument("--input", required=True, help="Apollo CSV export")
     parser.add_argument("--output-dir", required=True, help="Directory for generated files")
     parser.add_argument("--limit", type=int, default=400, help="Maximum candidate count (default: 400)")
+    parser.add_argument("--exclude-reviewed", action='append', default=[], help="Prior candidates NDJSON; skip these Apollo IDs")
+    parser.add_argument("--existing-businesses", help="Live businesses JSON; skip existing website domains")
     args = parser.parse_args()
     try:
-        prepare(args.input, args.output_dir, args.limit)
+        prepare(args.input, args.output_dir, args.limit, args.exclude_reviewed, args.existing_businesses)
     except (OSError, ValueError, csv.Error) as error:
         print(f"prepare.py: {error}", file=sys.stderr)
         return 2

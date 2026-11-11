@@ -10,6 +10,21 @@ avaliações inventadas. Não cria usuários nem altera permissões/RLS.
 python3 scripts/selletive-import/prepare.py --input /caminho/apollo.csv --output-dir /tmp/selletive-import --limit 400
 ```
 
+Para continuar sem reavaliar empresas já analisadas:
+
+```sh
+python3 scripts/selletive-import/prepare.py --input /caminho/apollo.csv --output-dir /tmp/novo-lote --limit 360 --exclude-reviewed /caminho/lote-anterior/candidates.ndjson --existing-businesses /tmp/novo-lote/businesses.json
+```
+
+`--exclude-reviewed` aceita múltiplos arquivos. `--existing-businesses` usa um
+snapshot público atualizado e paginado para excluir domínios já cadastrados.
+As descrições e palavras-chave são preservadas integralmente: não corte o texto
+por número de caracteres antes da classificação. Para economizar tokens, envie
+nome, domínio e descrição completa; consulte palavras-chave apenas quando úteis.
+Escolha as categorias mais específicas sustentadas pelos serviços descritos.
+Ao atingir a meta, guarde as decisões aprovadas excedentes para o próximo lote;
+não as marque como rejeitadas por qualidade.
+
 A limpeza e a deduplicação rodam sem tokens. O CSV original, `rows.json`, as
 classificações, os snapshots e o payload ficam fora do Git. `Account Owner` no
 Apollo é o responsável no CRM, nunca o proprietário da empresa na Selletive.
