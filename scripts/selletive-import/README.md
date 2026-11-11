@@ -25,6 +25,22 @@ Escolha as categorias mais específicas sustentadas pelos serviços descritos.
 Ao atingir a meta, guarde as decisões aprovadas excedentes para o próximo lote;
 não as marque como rejeitadas por qualidade.
 
+Para reduzir tokens em lotes maiores, use regras conservadoras sobre as
+descrições completas, sem enviar todos os registros ao modelo:
+
+```sh
+python3 scripts/selletive-import/classify_explicit.py --candidates /tmp/novo-lote/candidates.ndjson --categories /tmp/novo-lote/categories.json --output /tmp/novo-lote/classified.ndjson
+```
+
+O classificador exige identidade compatível, um prestador de serviços no início
+do texto e serviço específico junto de verbo de oferta na mesma frase. Cada
+categoria conserva a frase de evidência. Casos sem regra, produtos e frases com
+negação ficam de fora; ausência de classificação não significa rejeição da
+empresa. Uma frase que mistura serviço oferecido e outro negado também é
+ignorada por precaução. Revise uma amostra com Luna e encaminhe apenas dúvidas
+que sejam necessárias para completar a meta. Não infira serviços a partir de
+tecnologias utilizadas ou do setor dos clientes.
+
 A limpeza e a deduplicação rodam sem tokens. O CSV original, `rows.json`, as
 classificações, os snapshots e o payload ficam fora do Git. `Account Owner` no
 Apollo é o responsável no CRM, nunca o proprietário da empresa na Selletive.
