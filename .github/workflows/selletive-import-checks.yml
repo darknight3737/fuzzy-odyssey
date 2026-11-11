@@ -1,0 +1,40 @@
+name: Selletive Import Checks
+
+on:
+  push:
+    branches: ['codex/apollo-import-*']
+    paths: ['scripts/selletive-import/**', '.github/workflows/selletive-import-checks.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v6
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Verify restricted import and data preparation
+        run: |
+          node --test scripts/selletive-import/edge-import.test.mjs
+          python3 -m unittest discover -s scripts/selletive-import -p '*_test.py'
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Lint and format
+        run: |
+          pnpm lint:fix
+          pnpm format:fix
+          git diff > "$RUNNER_TEMP/selletive-import-formatting.patch"
+      - name: Save formatter patch
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selletive-import-formatting
+          path: ${{ runner.temp }}/selletive-import-formatting.patch
