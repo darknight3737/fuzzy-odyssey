@@ -11,8 +11,8 @@ test('restricted import refuses unauthorised calls, preserves existing profiles 
   const token = 'test-import-token';
   const sha = createHash('sha256').update(token).digest('hex');
   const source = (await readFile(new URL('./edge-import.js', import.meta.url), 'utf8'))
-    .replace('const TOKEN_SHA256 = "__TOKEN_SHA256__";', `const TOKEN_SHA256 = "${sha}";`)
-    .replace('const EXPIRES_AT = "__EXPIRES_AT__";', 'const EXPIRES_AT = "2099-01-01T00:00:00Z";');
+    .replace('__TOKEN_SHA256__', sha)
+    .replace('__EXPIRES_AT__', '2099-01-01T00:00:00Z');
   const ids = [1, 2, 3, 4, 5].map((n) => `11111111-1111-4111-8111-${String(n).padStart(12, '0')}`);
   const business = (id, website) => ({ id, name: id, slug: id, website, account_id: null, tier: 'unclaimed', verification_status: 'pending', domain_rating: 0 });
   const payload = {
@@ -41,6 +41,7 @@ test('restricted import refuses unauthorised calls, preserves existing profiles 
     assert.equal(options.method, 'POST', 'updates and deletes are forbidden');
     writes++;
     const rows = JSON.parse(options.body);
+    if (table === 'businesses') for (const row of rows) { row.created_at = '2026-11-11T00:00:00Z'; row.updated_at = row.created_at; }
     database[table].push(...rows);
     return Response.json(rows, { status: 201 });
   };
@@ -68,6 +69,15 @@ test('restricted import refuses unauthorised calls, preserves existing profiles 
     const retry = await (await handler(request())).json();
     assert.equal(retry.counts.businesses, 0);
     assert.equal(writes, writesBeforeRetry, 'retry must not write existing profiles or links');
+    database.business_locations.length = 0;
+    const repair = await (await handler(request())).json();
+    assert.equal(repair.counts.businesses, 0);
+    assert.equal(repair.counts.business_locations, 1, 'retry repairs missing associations of untouched imported profiles');
+    assert.equal(database.business_locations.length, 1);
+    database.business_locations.length = 0;
+    database.businesses.find((row) => row.id === ids[0]).account_id = 'new-owner';
+    const claimed = await (await handler(request())).json();
+    assert.equal(claimed.counts.business_locations, 0, 'a claimed profile is never repaired by this importer');
   } finally {
     globalThis.fetch = realFetch;
     delete globalThis.Deno;

@@ -67,6 +67,16 @@ function host(value) {
     return "";
   }
 }
+function canonical(value) {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value && typeof value === "object") return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]));
+  return value;
+}
+function untouchedImport(existing, proposed) {
+  if (existing.account_id !== null || existing.tier !== "unclaimed" || !existing.created_at || existing.created_at !== existing.updated_at) return false;
+  return Object.keys(proposed).filter((key) => !["created_at", "updated_at"].includes(key)).every((key) =>
+    JSON.stringify(canonical(existing[key])) === JSON.stringify(canonical(proposed[key])));
+}
   let apiKey;
 async function rest(method, path, body, prefer, range) {
   const headers = { apikey: apiKey, authorization: `Bearer ${apiKey}`, accept: "application/json" };
@@ -90,7 +100,7 @@ async function rest(method, path, body, prefer, range) {
 async function readAll(table, select) {
   const rows = [];
   for (let from = 0; ; from += PAGE) {
-    const page = await rest("GET", `${table}?select=${select}&order=id.asc&limit=${PAGE}`, undefined, undefined, `${from}-${from + PAGE - 1}`);
+    const page = await rest("GET", `${table}?select=${select}&order=id.asc&limit=${PAGE}&offset=${from}`);
     if (!Array.isArray(page)) throw new Error(`invalid ${table} response`);
     rows.push(...page);
     if (page.length < PAGE) return rows;
@@ -113,7 +123,7 @@ async function run(progress, counts) {
 
   progress.stage = "preflight";
   const [oldBusinesses, oldCategories, oldLocations] = await Promise.all([
-    readAll("businesses", "id,website,account_id,tier"),
+    readAll("businesses", "*"),
     readAll("categories", "id,slug"),
     readAll("locations", "id,slug"),
   ]);
@@ -145,10 +155,15 @@ async function run(progress, counts) {
   for (const link of payload.business_locations) if (!locationIds.has(link.location_id)) throw new Error("business location reference missing");
   progress.stage = "business preflight";
   const oldIds = new Set(oldBusinesses.map((row) => row.id));
+  const oldById = new Map(oldBusinesses.map((row) => [row.id, row]));
   const oldHosts = new Set(oldBusinesses.map((row) => host(row.website)).filter(Boolean));
   const candidates = [];
+  const resumableIds = new Set();
   for (const business of payload.businesses) {
-    if (oldIds.has(business.id)) counts.skipped_existing_id++;
+    if (oldIds.has(business.id)) {
+      counts.skipped_existing_id++;
+      if (untouchedImport(oldById.get(business.id), business)) resumableIds.add(business.id);
+    }
     else if (host(business.website) && oldHosts.has(host(business.website))) counts.skipped_website++;
     else candidates.push(business);
   }
@@ -165,8 +180,15 @@ async function run(progress, counts) {
     counts.businesses += inserted.length;
     for (const row of inserted) insertedIds.add(row.id);
   }
-  const categoryLinks = payload.business_categories.filter((row) => insertedIds.has(row.business_id));
-  const locationLinks = payload.business_locations.filter((row) => insertedIds.has(row.business_id));
+  const [oldCategoryLinks, oldLocationLinks] = await Promise.all([
+    readAll("business_categories", "business_id,category_id"),
+    readAll("business_locations", "business_id,location_id"),
+  ]);
+  const categoryKeys = new Set(oldCategoryLinks.map((row) => `${row.business_id}:${row.category_id}`));
+  const locationKeys = new Set(oldLocationLinks.map((row) => `${row.business_id}:${row.location_id}`));
+  const eligible = new Set([...insertedIds, ...resumableIds]);
+  const categoryLinks = payload.business_categories.filter((row) => eligible.has(row.business_id) && !categoryKeys.has(`${row.business_id}:${row.category_id}`));
+  const locationLinks = payload.business_locations.filter((row) => eligible.has(row.business_id) && !locationKeys.has(`${row.business_id}:${row.location_id}`));
   progress.stage = "business_categories";
   await insertBatches("business_categories", categoryLinks, "business_id,category_id", (rows) => { counts.business_categories += rows.length; });
   progress.stage = "business_locations";

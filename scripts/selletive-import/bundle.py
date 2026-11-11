@@ -22,10 +22,8 @@ def bundle(directory):
     token = secrets.token_hex(32)
     expiry = (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
     source = Path(__file__).with_name('edge-import.js').read_text()
-    source = source.replace('const TOKEN_SHA256 = "__TOKEN_SHA256__";',
-                            'const TOKEN_SHA256 = ' + json.dumps(hashlib.sha256(token.encode()).hexdigest()) + ';', 1)
-    source = source.replace('const EXPIRES_AT = "__EXPIRES_AT__";',
-                            'const EXPIRES_AT = ' + json.dumps(expiry) + ';', 1)
+    source = source.replace('__TOKEN_SHA256__', hashlib.sha256(token.encode()).hexdigest(), 1)
+    source = source.replace('__EXPIRES_AT__', expiry, 1)
     (output / 'main.js').write_text(source)
     (output / 'payload.json').write_bytes(payload)
     authorization = run / 'authorization.json'

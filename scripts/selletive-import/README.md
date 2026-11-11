@@ -57,7 +57,8 @@ Ao concluir, substitua a função por um handler que sempre responde HTTP 410.
 ## Segurança, retomada e limites
 
 O executor só insere dados. Ignora IDs existentes e domínios já cadastrados;
-não altera perfis reivindicados nem os vínculos de empresas preexistentes.
+não altera perfis reivindicados. A retomada completa apenas vínculos ausentes de
+perfis com mesmo ID e conteúdo do lote, sem proprietário e sem edições desde a criação.
 Categorias e localidades existentes são reutilizadas após conferir ID/slug.
 Não há chave de serviço no repositório ou no computador: a função usa o segredo
 do próprio ambiente Supabase, com destino fixo.
@@ -65,9 +66,9 @@ do próprio ambiente Supabase, com destino fixo.
 Cada requisição REST é transacional; **o lote inteiro não é uma transação**.
 Falhas retornam estágio, contagens e `complete:false`; pode haver registros
 parciais. Não declare o lote completo antes de reconciliar todos os vínculos.
-Uma repetição após sucesso não duplica empresas. Uma repetição após falha pula
-IDs existentes e não repara vínculos faltantes: reconcilie-os separadamente,
-validando propriedade atual antes de qualquer reparo. Não faça rollback com
+Uma repetição após sucesso não duplica empresas. Após falha, a retomada verifica
+conteúdo, propriedade e timestamps antes de completar vínculos ausentes; perfis
+reivindicados ou editados ficam fora desse reparo. Não faça rollback com
 DELETE em massa; qualquer remoção exige IDs do manifesto e conferência de que o
 perfil continua não reivindicado. Chamadas concorrentes não substituem a fila
 operacional: execute apenas uma por lote.
