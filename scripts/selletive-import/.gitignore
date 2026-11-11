@@ -6,3 +6,4 @@ rows.json
 manifest.json
 authorization.json
 edge-bundle/
+.runs/

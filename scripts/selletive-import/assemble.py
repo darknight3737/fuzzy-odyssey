@@ -72,9 +72,10 @@ def assemble(args):
     sources = {}
     with open(args.input, encoding='utf-8-sig', newline='') as source:
         for record in csv.DictReader(source):
-            selected = candidates.get(record['Apollo Account Id'])
+            source_id = clean(record['Apollo Account Id'])
+            selected = candidates.get(source_id)
             if selected and (clean(record['Company Name']), website_domain(record['Website']), clean(record['Company City']), normalize_state(record['Company State'])) == (selected['name'], selected['domain'], selected['city'], selected['state']):
-                sources.setdefault(record['Apollo Account Id'], record)
+                sources.setdefault(source_id, record)
     if set(sources) != set(candidates):
         raise ValueError('Source identity changed after candidate preparation')
     categories = {r['slug']: r for r in json.loads((directory / 'categories.json').read_text())}
@@ -124,7 +125,7 @@ def assemble(args):
         business_id = stable_id('apollo', row['id'])
         businesses.append(dict(
             id=business_id, name=row['name'], slug=slug(row['name'])[:140] + '-' + row['id'][-8:],
-            description=description, website=optional_url(source['Website']),
+            description=description, website=optional_url(source['Website']) or 'https://' + row['domain'],
             phone=normalize_phone(source['Company Phone'], 'Brazil') or None,
             logo_url=optional_url(source['Logo Url']),
             employee_count=optional_int(source['# Employees'], 0, 10000000),
