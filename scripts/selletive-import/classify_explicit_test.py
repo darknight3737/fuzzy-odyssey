@@ -5,7 +5,7 @@ from classify_explicit import classify
 
 class ExplicitServiceTests(unittest.TestCase):
     allowed = {'seo-services', 'video-production', 'wordpress-development', 'azure-consulting',
-               'design-services-specific', 'web-development-services-specific'}
+               'design-services-specific', 'web-development-services-specific', 'ppc-sem'}
 
     def decide(self, description):
         return classify({'id': 'example', 'name': 'Acme Digital', 'description': description}, self.allowed)
@@ -28,6 +28,10 @@ class ExplicitServiceTests(unittest.TestCase):
     def test_product_platform_is_not_a_service_agency(self):
         result = self.decide('Acme Digital is a SaaS platform for agency customers. It provides SEO analytics.')
         self.assertTrue(result['exclude'])
+
+    def test_portuguese_sem_is_not_the_search_advertising_acronym(self):
+        result = self.decide('Acme Digital é uma agência. Oferece SEO sem custos adicionais.')
+        self.assertEqual(result['categories'], ['seo-services'])
 
 
 if __name__ == '__main__':

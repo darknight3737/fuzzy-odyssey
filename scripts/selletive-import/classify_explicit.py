@@ -13,7 +13,7 @@ from prepare import ascii_fold, clean
 # One tuple per supported category: slug aliases, Portuguese service label, service phrases.
 SERVICES = [
     (("seo-services",), "otimização para mecanismos de busca (SEO)", (r"SEO", r"search engine optimization")),
-    (("ppc-sem", "paid-media"), "mídia paga (PPC/SEM)", (r"paid media", r"PPC", r"pay-per-click", r"SEM")),
+    (("ppc-sem", "paid-media"), "mídia paga (PPC/SEM)", (r"paid media", r"paid search", r"PPC", r"pay-per-click", r"search engine marketing", r"SEM campaigns", r"SEM services")),
     (("social-media-marketing",), "marketing e gestão de redes sociais", (r"social media management", r"social media marketing")),
     (("content-marketing",), "marketing e criação de conteúdo", (r"content marketing", r"content creation")),
     (("email-marketing",), "e-mail marketing", (r"email marketing", r"e-mail marketing")),
