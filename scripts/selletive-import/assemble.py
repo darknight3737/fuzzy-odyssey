@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from prepare import clean, normalize_phone
+from prepare import clean, normalize_phone, normalize_state, website_domain
 
 NAMESPACE = uuid.UUID('d2181ad8-7618-4fe3-8c55-1e08eaefc718')
 EXTRA_CATEGORIES = {
@@ -21,9 +21,13 @@ EXTRA_CATEGORIES = {
     'social-media-marketing': ('Marketing em redes sociais', 'marketing-services'),
     'content-marketing': ('Marketing de conteúdo', 'marketing-services'),
     'email-marketing': ('E-mail marketing', 'marketing-services'),
-    'video-production': ('Produção de vídeo', 'design-services'),
-    'software-development': ('Desenvolvimento de software', 'web-development-services'),
-    'mobile-app-development': ('Desenvolvimento de aplicativos', 'web-development-services'),
+    'video-production': ('Produção de vídeo', 'video-services'),
+    'software-development': ('Desenvolvimento de software', 'software-development-services'),
+    'mobile-app-development': ('Desenvolvimento de aplicativos', 'software-development-services'),
+}
+EXTRA_BRANCHES = {
+    'video-services': ('Vídeo e animação', 'creative-visual'),
+    'software-development-services': ('Software e aplicativos', 'development-product'),
 }
 STATE_NAMES = dict(zip(
     'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(),
@@ -65,8 +69,14 @@ def assemble(args):
     ids = [d['id'] for d in decisions]
     if len(set(ids)) != len(ids) or set(ids) != set(candidates):
         raise ValueError('Decisions must cover every candidate exactly once')
+    sources = {}
     with open(args.input, encoding='utf-8-sig', newline='') as source:
-        sources = {r['Apollo Account Id']: r for r in csv.DictReader(source) if r['Apollo Account Id'] in candidates}
+        for record in csv.DictReader(source):
+            selected = candidates.get(record['Apollo Account Id'])
+            if selected and (clean(record['Company Name']), website_domain(record['Website']), clean(record['Company City']), normalize_state(record['Company State'])) == (selected['name'], selected['domain'], selected['city'], selected['state']):
+                sources.setdefault(record['Apollo Account Id'], record)
+    if set(sources) != set(candidates):
+        raise ValueError('Source identity changed after candidate preparation')
     categories = {r['slug']: r for r in json.loads((directory / 'categories.json').read_text())}
     existing_locations = {r['slug']: r for r in json.loads((directory / 'locations.json').read_text())}
     new_categories, locations, businesses, category_links, location_links = {}, {}, [], [], []
@@ -75,9 +85,10 @@ def assemble(args):
 
     def category(key):
         if key not in categories:
-            name, parent = EXTRA_CATEGORIES[key]
+            name, parent = (EXTRA_BRANCHES if key in EXTRA_BRANCHES else EXTRA_CATEGORIES)[key]
+            parent_category = category(parent)
             categories[key] = dict(id=stable_id('category', key), name=name, slug=key,
-                                   parent_id=categories[parent]['id'], level=3, is_active=True)
+                                   parent_id=parent_category['id'], level=2 if key in EXTRA_BRANCHES else 3, is_active=True)
             new_categories[key] = categories[key]
         return categories[key]
 
@@ -126,13 +137,22 @@ def assemble(args):
         for order, key in enumerate(keys):
             current = category(key)
             leaf = True
+            visited, expected_level = set(), 3
             while current:
+                if current['id'] in visited or current['level'] != expected_level or not current['is_active']:
+                    raise ValueError('Invalid category ancestry: ' + key)
+                visited.add(current['id'])
                 if current['id'] not in assigned:
                     category_links.append(dict(business_id=business_id, category_id=current['id'],
                                                is_primary=leaf and order == 0, display_order=order if leaf else 10 + current['level']))
                     assigned.add(current['id'])
                 parent = current['parent_id']
+                if bool(parent) != (expected_level > 1):
+                    raise ValueError('Incomplete category ancestry: ' + key)
                 current = next((c for c in categories.values() if c['id'] == parent), None) if parent else None
+                if parent and current is None:
+                    raise ValueError('Missing category ancestor: ' + key)
+                expected_level -= 1
                 leaf = False
         country = location('Brasil', 'brazil-br', 'country')
         state_code = row['state'].lower()
