@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAction } from 'next-safe-action/hooks';
@@ -47,6 +47,12 @@ export function ContactForm() {
       message: '',
     },
   });
+
+  const { getValues, setValue } = form;
+  useEffect(() => {
+    const subject = new URLSearchParams(window.location.search).get('subject')?.trim();
+    if (subject && !getValues('message')) setValue('message', subject.slice(0, 250) + '\n\n');
+  }, [getValues, setValue]);
 
   if (state.success) {
     return <SuccessAlert />;
