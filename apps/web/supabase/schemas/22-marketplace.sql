@@ -103,7 +103,7 @@ grant update(title,client_name,industry,project_type,description,challenge,solut
 drop policy reviews_insert_auth on public.reviews;
 create policy reviews_insert_auth on public.reviews for insert to authenticated with check (
  status='pending' and user_id=(select auth.uid()) and not is_verified and
- exists(select 1 from public.businesses b where b.id=business_id and b.tier in ('verified','highlight','spotlight') and b.account_id is distinct from (select auth.uid())));
+ exists(select 1 from public.businesses b where b.id=business_id and b.tier in ('verified','highlight','spotlight') and b.account_id is distinct from (select auth.uid()) and not public.has_role_on_account(b.account_id)));
 create policy review_responses_tier_insert on public.review_responses as restrictive for insert to authenticated with check (
  exists(select 1 from public.reviews r join public.businesses b on b.id=r.business_id where r.id=review_id and r.status='approved' and b.tier in ('verified','highlight','spotlight')));
 create policy review_responses_tier_update on public.review_responses as restrictive for update to authenticated using (

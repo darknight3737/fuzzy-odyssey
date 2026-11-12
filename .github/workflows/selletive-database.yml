@@ -1,7 +1,7 @@
 name: Selletive Database Verification
 on:
   push:
-    branches: [deploy/selletive-cloudflare]
+    branches: [deploy/selletive-cloudflare, codex/selletive-marketplace-complete]
     paths: ['.github/workflows/selletive-database.yml', 'apps/web/supabase/**']
   workflow_dispatch:
     inputs:
@@ -33,7 +33,7 @@ jobs:
           supabase db diff --help
           supabase start -x studio,imgproxy,logflare,vector
       - name: Generate migration
-        if: inputs.generate
+        if: inputs.generate || hashFiles('apps/web/supabase/migrations/*marketplace.sql') == ''
         working-directory: apps/web
         run: |
           supabase db diff -f marketplace
@@ -41,7 +41,7 @@ jobs:
           supabase test db
           supabase db diff > /tmp/schema-diff.sql
       - name: Apply migrations and prove isolation
-        if: ${{ !inputs.generate }}
+        if: ${{ !inputs.generate && hashFiles('apps/web/supabase/migrations/*marketplace.sql') != '' }}
         working-directory: apps/web
         run: |
           supabase db reset

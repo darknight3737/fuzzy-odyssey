@@ -7,5 +7,14 @@ select ok(not has_function_privilege('authenticated','public.attest_business_bad
 select ok(not has_function_privilege('authenticated','public.apply_marketplace_subscription(jsonb)','execute'), 'billing updates are service-only');
 select ok(not has_column_privilege('authenticated','public.business_cases','business_id','update'), 'case cannot be reparented');
 select ok(not has_column_privilege('authenticated','public.business_gallery','business_id','update'), 'gallery image cannot be reparented');
+select tests.create_supabase_user('market_buyer', 'market-buyer@example.com');
+select tests.create_supabase_user('market_attacker', 'market-attacker@example.com');
+set local role postgres;
+insert into public.lead_briefs(buyer_user_id,title,description,buyer_name,buyer_email)
+ values(tests.get_supabase_uid('market_buyer'),'Private project','A private project brief','Buyer','market-buyer@example.com');
+select makerkit.authenticate_as('market_attacker');
+select is_empty($$select id from public.lead_briefs where title='Private project'$$, 'another buyer cannot read the brief');
+select throws_ok($$insert into public.lead_briefs(buyer_user_id,title,description) values (tests.get_supabase_uid('market_buyer'),'Forged brief','A forged project brief')$$, null, null, 'another buyer cannot insert a brief');
+select throws_ok($$select public.apply_marketplace_subscription('{}'::jsonb)$$, null, null, 'buyer cannot update subscription');
 select * from finish();
 rollback;
