@@ -1,6 +1,6 @@
 /**
  * Selletive Billing Configuration
- * Highlight ($19/mo) and Spotlight ($129/mo) tiers for business promotion
+ * Destaque (R$99/mês) and Spotlight (R$299/mês) tiers for business promotion
  */
 import { BillingProviderSchema, createBillingSchema } from '@kit/billing';
 
@@ -18,10 +18,10 @@ export default createBillingSchema({
   products: [
     {
       id: 'highlight',
-      name: 'Highlight',
+      name: 'Destaque',
       description:
         'Boost your business visibility with enhanced listing features',
-      currency: 'USD',
+      currency: 'BRL',
       badge: `Popular`,
       highlighted: true,
       plans: [
@@ -34,7 +34,7 @@ export default createBillingSchema({
             {
               id: 'price_highlight_monthly',
               name: 'Highlight Tier',
-              cost: 19.99,
+              cost: 99,
               type: 'flat' as const,
             },
           ],
@@ -48,7 +48,7 @@ export default createBillingSchema({
             {
               id: 'price_highlight_yearly',
               name: 'Highlight Tier',
-              cost: 199.99,
+              cost: 990,
               type: 'flat' as const,
             },
           ],
@@ -68,7 +68,7 @@ export default createBillingSchema({
       name: 'Spotlight',
       description:
         'Maximum visibility with premium placement and exclusive features',
-      currency: 'USD',
+      currency: 'BRL',
       badge: `Premium`,
       plans: [
         {
@@ -80,7 +80,7 @@ export default createBillingSchema({
             {
               id: 'price_spotlight_monthly',
               name: 'Spotlight Tier',
-              cost: 129.99,
+              cost: 299,
               type: 'flat' as const,
             },
           ],
@@ -94,23 +94,23 @@ export default createBillingSchema({
             {
               id: 'price_spotlight_yearly',
               name: 'Spotlight Tier',
-              cost: 1299.99,
+              cost: 2990,
               type: 'flat' as const,
             },
           ],
         },
       ],
       features: [
-        'Top placement in all search results',
+        'Exposição em segmentos contratados',
         'Premium badge and highlighting',
         'Advanced analytics with lead tracking',
         'Priority customer support',
         'Featured placement on category pages',
         'Enhanced profile customization',
-        'Signal matching priority',
-        'Exclusive marketplace benefits',
-        'Custom SEO optimization',
-        'Dedicated account manager',
+        
+        
+        
+        
       ],
     },
   ],
