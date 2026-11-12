@@ -153,8 +153,12 @@ try {
   await expect(page.getByText('55 resultados encontrados')).toBeVisible();
   await expect(page.locator('article')).toHaveCount(24);
   await page.getByRole('link', { name: 'Próxima →' }).click();
+  await expect(page).toHaveURL(/page=2$/);
+  await expect(page.getByText('Página 2',{exact:true})).toBeVisible();
   await expect(page.locator('article')).toHaveCount(24);
   await page.getByRole('link', { name: 'Próxima →' }).click();
+  await expect(page).toHaveURL(/page=3$/);
+  await expect(page.getByText('Página 3',{exact:true})).toBeVisible();
   await expect(page.locator('article')).toHaveCount(7);
   await page.goto(`${site}/search?q=${token}&kind=software&sort=rating`);
   await expect(page.getByText('2 resultados encontrados')).toBeVisible();
