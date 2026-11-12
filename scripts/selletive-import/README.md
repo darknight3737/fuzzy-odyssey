@@ -53,8 +53,9 @@ Revise os candidatos com Luna em lotes compactos. Cada decisão NDJSON contém:
 `id`, `categories` (1–3 slugs específicos, principal primeiro), `description_pt`
 (frase curta factual), `reason` e `exclude` booleano. Use a descrição como
  evidência; palavras-chave só como apoio. Não use a coluna Technologies como
-prova de serviços vendidos. Exclua software próprio sem prestação de serviços,
-empresas fora do escopo e divergências de identidade. Preserve as decisões para
+prova de serviços vendidos. Inclua serviços B2B e software vendido a empresas;
+exclua negócios voltados apenas ao consumidor, vendedores de bens sem serviço
+compatível e divergências de identidade. Preserve as decisões para
 reuso: apenas registros novos/alterados precisam de nova classificação.
 
 ## Aprovação e execução
@@ -140,3 +141,27 @@ restrito. Reconcile o total e os vínculos ao final; confira que os perfis e
 vínculos anteriores permanecem idênticos. Arquive a triagem completa e as
 pendências em `.runs/`, sem tokens temporários de autorização, e desative o
 endpoint após terminar.
+
+## Continuação restrita a fornecedores B2B
+
+O escopo confirmado é serviços B2B e software empresarial. Use somente a fila
+privada de pendências; empresas publicadas não passam por reclassificação.
+
+```sh
+python3 scripts/selletive-import/classify_b2b.py --candidates /tmp/triagem/pending-candidates.ndjson --categories /tmp/triagem/classification-categories.json --output /tmp/triagem/b2b-decisions.ndjson
+```
+
+Uma identidade direta, como agência de marketing ou consultoria de TI, pode
+sustentar uma categoria genérica de serviço. A identidade deve descrever a
+própria empresa: uma agência citada como cliente não comprova esse serviço.
+Software de recrutamento pertence a software de RH; oferecer uma plataforma de
+e-commerce não comprova desenvolvimento de e-commerce para clientes.
+
+A folha genérica de software empresarial exige produto comercial de software
+ou SaaS e evidência de compradores empresariais. Use uma folha mais específica
+quando a finalidade estiver comprovada. Uso interno de ferramentas e projetos
+de desenvolvimento sob encomenda não comprovam venda de produto próprio.
+
+`scope_b2b.out_of_scope()` só é aplicado após ausência de classificação positiva.
+Ele registra motivo e frase de evidência para exclusões claras na fila privada.
+Uma abstenção continua sendo pendência, não exclusão por setor do Apollo.

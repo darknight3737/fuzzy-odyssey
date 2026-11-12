@@ -19,6 +19,9 @@ BRANCHES = {
     'business-software': ('Software para empresas', 'development-product'),
 }
 LEAVES = {
+    'enterprise-software': ('Software empresarial', 'business-software'),
+    'ecommerce-software': ('Software de comércio eletrônico', 'business-software'),
+    'workflow-automation-software': ('Software de automação de processos', 'business-software'),
     'erp-software': ('Software ERP', 'business-software'),
     'crm-software': ('Software CRM', 'business-software'),
     'hr-software': ('Software de recursos humanos', 'business-software'),
