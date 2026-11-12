@@ -432,3 +432,17 @@ create policy business_media_insert on storage.objects for insert to authenticat
  bucket_id='business-media' and exists(select 1 from public.businesses b where b.id::text=(storage.foldername(name))[1] and (public.is_account_owner(b.account_id) or public.has_permission((select auth.uid()),b.account_id,'settings.manage'::public.app_permissions)) and (((storage.foldername(name))[2]='logo' and b.tier in ('claimed','verified','highlight','spotlight')) or ((storage.foldername(name))[2]='gallery' and b.tier in ('highlight','spotlight')))) and public.is_mfa_compliant());
 create policy business_media_delete on storage.objects for delete to authenticated using (
  bucket_id='business-media' and exists(select 1 from public.businesses b where b.id::text=(storage.foldername(name))[1] and (public.is_account_owner(b.account_id) or public.has_permission((select auth.uid()),b.account_id,'settings.manage'::public.app_permissions))) and public.is_mfa_compliant());
+
+
+-- Existing imported products are identified only by an explicitly primary
+-- category under the software catalog; service assignments are preserved.
+with recursive primary_software_catalog as (
+ select id from public.categories where slug='business-software'
+ union
+ select c.id from public.categories c join primary_software_catalog sc on c.parent_id=sc.id
+)
+update public.businesses b set offering_kind='software'
+where b.offering_kind='service' and exists (
+ select 1 from public.business_categories bc join primary_software_catalog sc on sc.id=bc.category_id
+ where bc.business_id=b.id and bc.is_primary
+);

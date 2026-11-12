@@ -18,6 +18,7 @@ type Business = {
   slug: string;
   description: string | null;
   logo_url: string | null;
+  offering_kind?: string;
 };
 
 type LocationStructuredDataProps = {
@@ -49,7 +50,7 @@ export function LocationStructuredData({
       '@type': 'ListItem',
       position: index + 1,
       item: {
-        '@type': 'LocalBusiness',
+        '@type': business.offering_kind === 'software' ? 'SoftwareApplication' : 'LocalBusiness',
         '@id': `${appConfig.url}/company/${business.slug}`,
         name: business.name,
         description: business.description || undefined,
@@ -67,7 +68,7 @@ export function LocationStructuredData({
       {
         '@type': 'ListItem',
         position: 1,
-        name: 'Home',
+        name: 'Início',
         item: appConfig.url,
       },
       {

@@ -42,6 +42,7 @@ jobs:
           sed -i -E '/^revoke (delete|insert|select|update) on table "public"\."(business_awards|business_cases|business_categories|business_locations|business_services|businesses|categories|category_aliases|locations|reviews|review_responses|verification_badges)" from "(anon|authenticated|service_role)";$/d' "$migration"
           grep -E '^(revoke|grant) ' supabase/schemas/22-marketplace.sql >> "$migration"
           sed -n "/^insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)/,/^ on conflict(id).*;$/p" supabase/schemas/22-marketplace.sql >> "$migration"
+          sed -n "/^with recursive primary_software_catalog as (/,$p" supabase/schemas/22-marketplace.sql >> "$migration"
           supabase db reset
           supabase test db
           supabase db diff > /tmp/schema-diff.sql
