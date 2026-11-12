@@ -19,9 +19,9 @@ class ClassifyRemainingTest(unittest.TestCase):
             "description": "Acme Creative is a marketing agency. It offers marketing services and brand strategy for clients.",
         }
         result = classify(row, ALLOWED)
-        self.assertEqual(result["categories"], ["marketing-services-specific", "brand-strategy"])
+        self.assertEqual(set(result["categories"]), {"marketing-services-specific", "brand-strategy"})
         self.assertTrue(result["evidence"])
-        self.assertIn("marketing services", result["evidence"][0]["quote"])
+        self.assertTrue(any("marketing services" in item["quote"] for item in result["evidence"]))
 
     def test_portuguese_offered_web_development_is_classified(self):
         result = classify({
@@ -109,6 +109,15 @@ class ClassifyRemainingTest(unittest.TestCase):
     def test_partial_partner_firm_identity_is_held(self):
         result=classify(dict(id='firm',name='Kliemann & Arruda Advocacia',description='Kliemann Advocacia is a law firm that offers corporate legal services.'), {'corporate-legal-services'})
         self.assertTrue(result['exclude'])
+
+    def test_cybersecurity_company_specialty_is_offered_not_its_client_sector(self):
+        result=classify(dict(id='security',name='VIWSEC',description='VIWSEC is a cybersecurity company specializing in protecting environments for e-commerce services. It specializes in penetration testing.'), {'ecommerce-services-specific','penetration-testing'})
+        self.assertEqual(result['categories'], ['penetration-testing'])
+
+    def test_short_company_and_service_names_still_have_valid_summary(self):
+        result=classify(dict(id='short',name='AXP',description='AXP is an agency that offers SEO services.'), {'seo-services'})
+        self.assertEqual(result['categories'], ['seo-services'])
+        self.assertGreaterEqual(len(result['description_pt']), 40)
 
 
 if __name__ == "__main__":

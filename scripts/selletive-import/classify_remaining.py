@@ -138,7 +138,7 @@ PROVIDER = re.compile(
     r"advertising company|advertising firm|production studio|photography studio|"
     r"IT services company|IT solutions provider|IT consultancy|IT consulting(?: and corporate technology)? company|technology services company|"
     r"information technology (?:and )?services company|software house|consulting and services firm|"
-    r"accounting firm|accountancy firm|law firm|business consulting firm|insurance broker|HR (?:consultancy|consulting firm)|cybersecurity (?:consulting )?firm|data services company|"
+    r"accounting firm|accountancy firm|law firm|business consulting firm|insurance broker|HR (?:consultancy|consulting firm)|cybersecurity (?:consulting )?(?:firm|company)|data services company|"
     r"consultoria|empresa de (?:tecnologia|software|marketing|publicidade|design)|"
     r"est[uú]dio (?:criativo|de design|de desenvolvimento|de produ[cç][aã]o)|"
     r"provedor(?:a)? de servi[cç]os)\b", re.I)
@@ -187,7 +187,7 @@ def classify(row, allowed_slugs):
         found = {}
     selected = list(found)[:3]
     labels = [found[slug][0] for slug in selected]
-    description_pt = f"{name} oferece {', '.join(labels)}." if labels else ""
+    description_pt = f"{name} oferece {', '.join(labels)} como parte de seus serviços." if labels else ""
     if len(description_pt) < 40 or len(description_pt) > 650:
         selected, description_pt = [], ""
     if selected:
