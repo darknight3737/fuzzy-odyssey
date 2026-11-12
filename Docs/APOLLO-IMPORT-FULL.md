@@ -209,3 +209,22 @@ Seis lotes de 300 foram concluídos. O endpoint temporário foi desativado (HTTP
 [CI concluído com sucesso](https://github.com/darknight3737/fuzzy-odyssey/actions/runs/43137799009): testes do importador e classificadores, typecheck, lint e formatação.
 
 A meta de publicar todas as 13.293 linhas ainda não foi atingida: 10.117 aguardam classificação segura; as demais pendências incluem ausência de dados, duplicatas e um registro fora do Brasil. A fila para continuar sem reavaliar as empresas publicadas está em `scripts/selletive-import/.runs/20261111-all/pending-candidates.ndjson`.
+
+## Setores das empresas pendentes
+
+O setor do Apollo serve para priorizar revisao; ele nao comprova servicos vendidos.
+
+| Setor original | Pendentes |
+|---|---:|
+| information technology & services | 4088 |
+| marketing & advertising | 837 |
+| financial services | 829 |
+| management consulting | 735 |
+| health, wellness & fitness | 452 |
+| food & beverages | 236 |
+| human resources | 211 |
+| e-learning | 172 |
+| accounting | 161 |
+| investment management | 152 |
+| environmental services | 121 |
+| facilities services | 111 |
