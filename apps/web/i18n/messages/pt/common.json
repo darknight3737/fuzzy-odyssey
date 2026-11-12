@@ -7,6 +7,14 @@
   "loading": "Carregando...",
   "tryAgain": "Tentar novamente",
   "routes": {
+    "home": "Início",
+    "account": "Account",
+    "members": "Members",
+    "billing": "Cobrança",
+    "dashboard": "Dashboard",
+    "settings": "Configurações",
+    "profile": "Perfil",
+    "application": "Aplicação",
     "leads": "Pedidos e oportunidades",
     "newOffering": "Cadastrar solução"
   }
