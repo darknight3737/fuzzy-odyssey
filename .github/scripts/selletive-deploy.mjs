@@ -120,7 +120,7 @@ async function prepare() {
     // This recovery path cannot silently skip a new schema or migration.
     execFileSync('git', [
       'diff', '--exit-code',
-      'selletive-analytics-schema-verified-20261107', 'HEAD',
+      'selletive-marketplace-schema-verified-20261112', 'HEAD',
       '--', 'apps/web/supabase',
     ], { stdio: 'pipe' });
     assert(process.env.SELLETIVE_PUBLIC_KEY?.startsWith('sb_publishable_'));
