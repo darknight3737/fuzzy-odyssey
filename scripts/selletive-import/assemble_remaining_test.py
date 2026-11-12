@@ -10,11 +10,11 @@ from assemble import assemble
 
 
 class AssembleRemainingTest(unittest.TestCase):
-    def make_payload(self, state, conflicting_leaf=False):
+    def make_payload(self, state, conflicting_leaf=False, count=200):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             candidates, decisions, sources = [], [], []
-            for index in range(200):
+            for index in range(count):
                 identity = 'fixture' + str(index)
                 name, domain = 'Company ' + str(index), 'fixture' + str(index) + '.com.br'
                 candidates.append(dict(id=identity,name=name,domain=domain,city='',state=state))
@@ -38,6 +38,12 @@ class AssembleRemainingTest(unittest.TestCase):
                 writer=csv.DictWriter(f,fieldnames=list(sources[0]));writer.writeheader();writer.writerows(sources)
             assemble(argparse.Namespace(directory=str(root),input=str(root/'input.csv'),decisions=[str(root/'decisions.ndjson')]))
             return json.loads((root/'payload.json').read_text())
+
+    def test_final_small_batch_keeps_all_required_links(self):
+        payload = self.make_payload('', count=1)
+        self.assertEqual(len(payload['businesses']), 1)
+        self.assertEqual(len(payload['business_categories']), 3)
+        self.assertEqual(len(payload['business_locations']), 1)
 
     def test_known_country_with_unknown_city_and_state_is_not_fabricated(self):
         payload=self.make_payload('')

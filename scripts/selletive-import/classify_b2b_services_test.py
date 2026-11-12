@@ -11,6 +11,10 @@ class ClassifyB2BServicesTest(unittest.TestCase):
             row = {"name": "Scaza", "description": f"Scaza is an {identity}. It offers a SaaS platform and mobile app for real estate agencies."}
             self.assertEqual(classify(row, {slug})["categories"], [])
 
+    def test_consulting_software_is_not_a_consulting_service(self):
+        row = {"name": "Acme IT", "description": "Acme IT is an IT consulting company. It offers IT consulting software for businesses."}
+        self.assertEqual(classify(row, {"it-consulting-services"})["categories"], [])
+
     def test_mixed_product_vendor_needs_a_separate_offered_service(self):
         row = {"name": "Acme Dev", "description": "Acme Dev is a software development company. It offers a SaaS platform for companies. It also provides custom software development services for clients."}
         decision = classify(row, {"software-development"})

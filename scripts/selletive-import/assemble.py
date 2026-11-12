@@ -180,8 +180,8 @@ def assemble(args):
                 places.append(location(row['city'], slug(row['city']) + '-' + state_code + '-br', 'city', state['id'], state_code))
         for place in places:
             location_links.append(dict(business_id=business_id, location_id=place['id'], is_primary=place['id'] == places[-1]['id']))
-    if not 200 <= len(businesses) <= 600:
-        raise ValueError('Pilot requires 200–600 approved companies')
+    if not 1 <= len(businesses) <= 600:
+        raise ValueError('Import requires 1–600 approved companies')
     payload = dict(categories=list(new_categories.values()), locations=sorted(locations.values(), key=lambda r: {'country': 0, 'state': 1, 'city': 2}[r['type']]),
                    businesses=businesses, business_categories=category_links, business_locations=location_links)
     encoded = json.dumps(payload, ensure_ascii=False, separators=(',', ':'))

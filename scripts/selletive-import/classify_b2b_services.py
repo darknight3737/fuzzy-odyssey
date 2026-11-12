@@ -78,7 +78,7 @@ def classify(row, allowed_slugs):
         # Product descriptions can contradict a boilerplate provider identity.
         # In that case require a separate, explicit offered service statement.
         if slug in CORROBORATING_SERVICE and PRODUCT_CONTEXT.search(" ".join(parts[1:])):
-            corroboration = next((s for s in parts[1:] if SERVICE.search(s) and CORROBORATING_SERVICE[slug].search(s) and not NEGATIVE.search(s) and not INTERNAL.search(s)), "")
+            corroboration = next((s for s in parts[1:] if SERVICE.search(s) and CORROBORATING_SERVICE[slug].search(s) and not NEGATIVE.search(s) and not INTERNAL.search(s) and not re.search(r"\b(?:consulting|development|services?)\s+(?:software|platform|tools?|apps?)\b", s, re.I)), "")
             if not corroboration:
                 continue
             direct.append((slug, label, corroboration))

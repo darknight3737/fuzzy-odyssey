@@ -135,7 +135,7 @@ salva apenas os dados conhecidos, sem inferir localização. A localização mai
 específica conhecida é a principal. Cidade sem estado permanece no endereço,
 mas não cria uma associação geográfica ambígua.
 
-Separe decisões aprovadas em lotes equilibrados de 200–350 empresas e preserve
+Separe decisões aprovadas em lotes de até 350 empresas, aceitando lotes finais menores, e preserve
 os manifestos individuais. Execute sequencialmente com o mesmo executor
 restrito. Reconcile o total e os vínculos ao final; confira que os perfis e
 vínculos anteriores permanecem idênticos. Arquive a triagem completa e as
