@@ -88,7 +88,9 @@ def website_domain(value):
         return ""
     if host in SOCIAL_DOMAINS or any(host.endswith("." + item) for item in SOCIAL_DOMAINS):
         return ""
-    if host.endswith((".pages.dev", ".github.io", ".vercel.app", ".webflow.io", ".netlify.app")):
+    # A tenant's hosted site can be its real company website. The shared
+    # hosting root itself is not a company-specific destination.
+    if host in {"pages.dev", "github.io", "vercel.app", "webflow.io", "netlify.app"}:
         return ""
     if not re.fullmatch(r"[a-z0-9.-]+", host) or ".." in host or host.startswith("."):
         return ""

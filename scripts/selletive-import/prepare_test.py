@@ -33,9 +33,16 @@ class ImportPreparationTests(unittest.TestCase):
     def test_shared_domains_and_non_http_urls_are_not_company_websites(self):
         for value in ['https://instagram.com/agency', 'https://m.facebook.com/page',
                       'ftp://agency.com', 'https://user:password@agency.com',
-                      'https://agency.vercel.app', 'not a domain']:
+                      'https://vercel.app', 'https://webflow.io', 'not a domain']:
             self.assertEqual(website_domain(value), '', value)
         self.assertEqual(website_domain('http://WWW.Agency.com.br/about'), 'agency.com.br')
+
+    def test_hosted_company_sites_keep_their_distinct_tenant_domains(self):
+        for host in ['agency.vercel.app', 'agency.pages.dev', 'agency.github.io',
+                     'agency.webflow.io', 'agency.netlify.app']:
+            self.assertEqual(website_domain('https://' + host + '/about'), host)
+        self.assertNotEqual(website_domain('https://alpha.vercel.app'),
+                            website_domain('https://beta.vercel.app'))
 
     def test_apollo_state_and_spreadsheet_phone_formats(self):
         self.assertEqual(normalize_state('State of Sao Paulo'), 'SP')
