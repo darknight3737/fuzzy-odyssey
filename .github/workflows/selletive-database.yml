@@ -10,7 +10,7 @@ on:
         type: boolean
         default: false
       generate:
-        description: Generate analytics migration from declarative schema
+        description: Generate marketplace migration from declarative schema
         type: boolean
         default: false
 permissions:
@@ -30,17 +30,18 @@ jobs:
       - name: Start disposable database (CI only)
         working-directory: apps/web
         run: |
-          if [ "${{ inputs.generate }}" = "true" ]; then
-            rm -f supabase/migrations/*business_analytics.sql
-          fi
           supabase db diff --help
           supabase start -x studio,imgproxy,logflare,vector
       - name: Generate migration
-        if: inputs.generate || hashFiles('apps/web/supabase/migrations/*business_analytics.sql') == ''
+        if: inputs.generate
         working-directory: apps/web
-        run: supabase db diff -f business_analytics
+        run: |
+          supabase db diff -f marketplace
+          supabase db reset
+          supabase test db
+          supabase db diff > /tmp/schema-diff.sql
       - name: Apply migrations and prove isolation
-        if: ${{ !inputs.generate && hashFiles('apps/web/supabase/migrations/*business_analytics.sql') != '' }}
+        if: ${{ !inputs.generate }}
         working-directory: apps/web
         run: |
           supabase db reset
@@ -117,7 +118,7 @@ jobs:
         with:
           name: selletive-database
           path: |
-            apps/web/supabase/migrations/*business_analytics.sql
+            apps/web/supabase/migrations/*marketplace.sql
             /tmp/database.types.ts
             /tmp/schema-diff.sql
             /tmp/analytics-formatting.patch
