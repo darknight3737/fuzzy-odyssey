@@ -56,6 +56,8 @@ GENERIC_PRODUCT_PROOF = re.compile(r"\b(?:offers?|provides?|sells?|markets?|comm
 SOFTWARE_PRODUCT_IDENTITY = re.compile(r"\b(?:is|are|é|são)\b.{0,50}\b(?:SaaS platform|software platform|software product|SaaS company|software company|software empresarial)\b", re.I)
 COMMERCIAL_PLAN = re.compile(r"\b(?:offers?|provides?|offering)\b.{0,45}\b(?:tailored|paid|subscription|pricing|commercial)?\s*plans?\s+(?:like|such as|named|called)\s+[A-Z][A-Za-z0-9.-]+|\b(?:SaaS|software|platform|app) subscription plans?\b", re.I)
 CONSUMER_APP = re.compile(r"\b(?:consumer[- ]only app|consumer app|app for consumers|application for consumers|personal use app|app for individuals|consumer shopping app|ride[- ]hailing app|food delivery app for consumers)\b", re.I)
+SOFTWARE_NATURE = re.compile(r"\b(?:software|SaaS|(?:business|enterprise|workflow) (?:management )?system)\b", re.I)
+CONSUMER_PRODUCT_BUYER = re.compile(r"\b(?:for individuals|for consumers|to individuals|to consumers|para pessoas f[ií]sicas|para consumidores)\b", re.I)
 SERVICE_ONLY_PRODUCT_SENTENCE = re.compile(r"\b(?:custom software development|software development(?: services?)?|custom development|consulting services?|implementation services?|integration services?|professional services?|software development for clients|custom software for clients|software (?:consulting|support|implementation|integration|development|customization) services?|SaaS implementation|expertise in (?:software|SaaS|platform)|servi[cç]os? de desenvolvimento de software|desenvolvimento de software sob medida|consultoria de software)\b", re.I)
 INDIRECT_ROLE = re.compile(r"\b(?:software|platform|provider|vendor|provides?|offers?|serves?|clients?|customers?|tools?|products?|sells?|develops?|apps?|applications?|designed|for|to|with|that|which|who|software|plataforma|fornece|oferece|clientes|ferramentas|produtos|para|com)\b", re.I)
 
@@ -154,6 +156,10 @@ def fallback(row, allowed):
         # Generic enterprise software is the last resort for a clearly sold
         # software product with an explicit business buyer relationship.
         if not found and "enterprise-software" in allowed and product_quotes and B2B_BUYER_RELATION.search(desc) and not CONSUMER_APP.search(desc):
+            # A platform may sell investments, credits or consumer services.
+            # Its product quote must establish software (or product plans),
+            # rather than borrowing software or business clients elsewhere.
+            product_quotes = [s for s in product_quotes if not CONSUMER_PRODUCT_BUYER.search(s) and (SOFTWARE_NATURE.search(s) or COMMERCIAL_PLAN.search(s))]
             product_quote = next((s for s in product_quotes if GENERIC_PRODUCT_PROOF.search(s) and not SERVICE_ONLY_PRODUCT_SENTENCE.search(s)), "")
             if not product_quote:
                 product_quote = next((s for s in product_quotes if SOFTWARE_PRODUCT_IDENTITY.search(s) and not SERVICE_ONLY_PRODUCT_SENTENCE.search(s)), "")

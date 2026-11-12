@@ -6,6 +6,16 @@ from classify_b2b import classify
 
 
 class ClassifyB2BTest(unittest.TestCase):
+    def test_nonsoftware_platforms_and_consumer_product_buyers_stay_pending(self):
+        descriptions = (
+            "Acme offers a platform for companies to buy tokenized carbon credits.",
+            "Acme is an investment fund. It offers a platform connecting entrepreneurs to companies and investors.",
+            "Acme offers consulting to companies. For individuals, it provides a software platform for personal carbon tracking.",
+        )
+        for description in descriptions:
+            with self.subTest(description=description):
+                self.assertEqual(classify({"name": "Acme", "description": description}, {"enterprise-software"})["categories"], [])
+
     def test_identity_only_service_providers_are_classified(self):
         cases = [
             ("Acme Marketing", "Acme Marketing is a marketing agency.", "marketing-services-specific"),
