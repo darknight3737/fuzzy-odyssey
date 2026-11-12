@@ -86,6 +86,32 @@ try {
   await expect(page.locator('body')).toContainText(first.name);
   await expect(page.locator('body')).toContainText(second.name);
   await page.screenshot({ path: join(output, 'briefing.png'), fullPage: true });
+  await page.getByLabel('Título do projeto').fill('Pedido de demonstração CI');
+  await page.getByLabel('Descreva sua necessidade, objetivos e contexto').fill('Quero comparar os dois produtos para a operação comercial da minha empresa.');
+  await page.getByLabel('Seu nome').fill('Comprador CI');
+  await page.getByLabel('Autorizo compartilhar').check();
+  await page.getByRole('button', {name:'Enviar pedido gratuitamente'}).click();
+  await page.waitForURL('**/home/leads?sent=1');
+  await page.getByRole('link', {name:/Pedido de demonstração CI/}).click();
+  const conversation = page.url();
+  await expect(page.getByRole('heading', {name:'Pedido de demonstração CI'})).toBeVisible();
+  await expect(page.getByRole('heading', {name:first.name})).toBeVisible();
+  await expect(page.getByRole('heading', {name:second.name})).toBeVisible();
+  const seller = await browser.newPage();
+  await seller.goto(site+'/auth/sign-in?next='+encodeURIComponent(new URL(conversation).pathname));
+  await seller.locator('input[name="email"]').fill(`${token}@example.test`);
+  await seller.locator('input[name="password"]').fill(password);
+  await seller.locator('button[type="submit"]').click();
+  await seller.waitForURL(conversation);
+  await seller.getByLabel('Sua mensagem').first().fill('Posso apresentar o produto amanhã.');
+  await seller.getByRole('button',{name:'Enviar mensagem'}).first().click();
+  await expect(seller.getByText('Posso apresentar o produto amanhã.')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('Posso apresentar o produto amanhã.')).toBeVisible();
+  await page.getByRole('button',{name:'Encerrar pedido'}).click();
+  await expect(page.getByText('Este pedido foi encerrado.').first()).toBeVisible();
+  await seller.close();
+
   assert.deepEqual(errors, [], 'No browser errors');
 } finally {
   if (browser) await browser.close();

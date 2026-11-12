@@ -7,9 +7,9 @@ import {Form,FormField,FormItem,FormLabel,FormControl,FormMessage} from '@kit/ui
 import {Button} from '@kit/ui/button';
 import {LeadSchema} from '~/lib/leads/schema';
 import {submitLeadAction} from '../_lib/actions';
-export function BriefForm({providers,categories,email}:{providers:{id:string;name:string}[];categories:{id:string;name:string}[];email:string}){
+export function BriefForm({providers,categories,email,kind}:{providers:{id:string;name:string}[];categories:{id:string;name:string}[];email:string;kind:'service'|'software'}){
  const [requestId]=useState(()=>crypto.randomUUID());
- const form=useForm({resolver:zodResolver(LeadSchema),defaultValues:{request_id:requestId,title:'',description:'',buyer_name:'',buyer_email:email,buyer_phone:'',company_name:'',budget:'',category_id:'',offering_kind:'service' as 'service'|'software',timeline:'',business_ids:providers.map(p=>p.id),consent:false as true}});
+ const form=useForm({resolver:zodResolver(LeadSchema),defaultValues:{request_id:requestId,title:'',description:'',buyer_name:'',buyer_email:email,buyer_phone:'',company_name:'',budget:'',category_id:'',offering_kind:kind,timeline:'',business_ids:providers.map(p=>p.id),consent:false as true}});
  const action=useAction(submitLeadAction);
  const input='w-full rounded-xl border bg-background px-4 py-3';
  return <Form {...form}><form onSubmit={form.handleSubmit(action.execute)} className="space-y-6" data-test="project-brief-form">

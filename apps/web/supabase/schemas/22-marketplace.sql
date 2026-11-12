@@ -242,6 +242,7 @@ declare actor uuid := auth.uid(); brief uuid; target uuid; targets uuid[]; reque
 begin
  if actor is null or not public.is_mfa_compliant() then raise exception 'Authentication required'; end if;
  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(actor::text,0));
+ if p_payload->'consent' is distinct from 'true'::jsonb then raise exception 'Buyer consent required'; end if;
  request_key := (p_payload->>'request_id')::uuid;
  if request_key is null then raise exception 'Request id required'; end if;
  select id into brief from public.lead_briefs where buyer_user_id=actor and request_id=request_key;

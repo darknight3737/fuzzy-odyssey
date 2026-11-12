@@ -6,8 +6,7 @@ import type { LeadSchema } from './schema';
 export function createLeadService(client: SupabaseClient<Database>) {
  return {
   async create(input: z.infer<typeof LeadSchema>) {
-   const {consent: _consent, ...payload}=input;
-   const {data,error}=await client.rpc('create_lead_brief',{p_payload:payload});
+   const {data,error}=await client.rpc('create_lead_brief',{p_payload:input});
    if(error) throw new Error('Não foi possível enviar. Confira os destinatários e tente novamente.');
    return data;
   },
