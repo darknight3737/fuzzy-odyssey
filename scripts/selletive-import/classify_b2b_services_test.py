@@ -6,6 +6,17 @@ from classify_b2b_services import classify
 
 
 class ClassifyB2BServicesTest(unittest.TestCase):
+    def test_product_only_details_override_boilerplate_provider_identity(self):
+        for identity, slug in (("IT services and consulting company", "it-consulting-services"), ("software development company", "software-development")):
+            row = {"name": "Scaza", "description": f"Scaza is an {identity}. It offers a SaaS platform and mobile app for real estate agencies."}
+            self.assertEqual(classify(row, {slug})["categories"], [])
+
+    def test_mixed_product_vendor_needs_a_separate_offered_service(self):
+        row = {"name": "Acme Dev", "description": "Acme Dev is a software development company. It offers a SaaS platform for companies. It also provides custom software development services for clients."}
+        decision = classify(row, {"software-development"})
+        self.assertEqual(decision["categories"], ["software-development"])
+        self.assertIn("custom software development services", decision["evidence"][0]["quote"])
+
     def test_identity_and_explicit_it_consulting_offer_are_required(self):
         allowed = {"it-consulting-services"}
         good = classify({

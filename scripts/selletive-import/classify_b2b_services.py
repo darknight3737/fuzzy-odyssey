@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from prepare import clean
-from classify_b2b import NEGATIVE, PROVIDER, identity_ok, primary_identity
+from classify_b2b import INTERNAL, NEGATIVE, SERVICE, identity_ok, primary_identity
 
 
 DIRECT = [
@@ -33,6 +33,10 @@ OFFERED = [
 OFFER_VERB = re.compile(r"\b(?:offers?|provides?|delivers?|services? include|offerings? include|provides?|oferece|presta|fornece|servi[cç]os? incluem|inclui)\b", re.I)
 PRODUCT_CONTEXT = re.compile(r"\b(?:SaaS|software|platform|product|tool|system|application|app|plataforma|produto|ferramenta|sistema|aplicativo|aplica[cç][aã]o|uses?|using|utiliza|usa)\b", re.I)
 B2B_BUYER = re.compile(r"\b(?:for|serves?|serving|supports?|supporting|targets?|targeting|clients? (?:are|that are)|clientes? empresariais|para empresas|atende empresas)\b.{0,55}\b(?:business(?:es)?|companies|organizations|institutions|employers|enterprises|corporate clients|empresas|organiza[cç][oõ]es|institui[cç][oõ]es)\b|\b(?:business|corporate|commercial) clients?\b", re.I)
+CORROBORATING_SERVICE = {
+    "it-consulting-services": re.compile(r"\b(?:IT consulting|technology consulting|IT consultancy|consulting services?|managed IT services?|IT support services?|implementation services?|consultoria de TI|servi[cç]os? de consultoria)\b", re.I),
+    "software-development": re.compile(r"\b(?:custom software|bespoke software|software development services?|application development services?|custom application development|desenvolvimento de software sob medida|software personalizado)\b", re.I),
+}
 
 
 def sentences(text):
@@ -70,6 +74,14 @@ def classify(row, allowed_slugs):
         if slug in {"financial-consulting", "design-services-specific"} and not B2B_BUYER.search(description):
             continue
         if slug == "design-services-specific" and re.search(r"\binterior design\b", opener, re.I):
+            continue
+        # Product descriptions can contradict a boilerplate provider identity.
+        # In that case require a separate, explicit offered service statement.
+        if slug in CORROBORATING_SERVICE and PRODUCT_CONTEXT.search(" ".join(parts[1:])):
+            corroboration = next((s for s in parts[1:] if SERVICE.search(s) and CORROBORATING_SERVICE[slug].search(s) and not NEGATIVE.search(s) and not INTERNAL.search(s)), "")
+            if not corroboration:
+                continue
+            direct.append((slug, label, corroboration))
             continue
         direct.append((slug, label, opener))
     if direct:
