@@ -12,7 +12,7 @@ function subscribe(callback: () => void) {
   window.addEventListener(event, callback);
   return () => { window.removeEventListener('storage', callback); window.removeEventListener(event, callback); };
 }
-function snapshot() { return localStorage.getItem(key) || empty; }
+function snapshot() { try { return localStorage.getItem(key) || empty; } catch { return empty; } }
 function read(value: string): SavedBusiness[] {
   try { const parsed: unknown = JSON.parse(value); return Array.isArray(parsed) ? parsed.filter((item): item is SavedBusiness => !!item && typeof item.id === 'string' && typeof item.name === 'string' && typeof item.slug === 'string').slice(0, 5) : []; } catch { return []; }
 }

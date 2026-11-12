@@ -65,6 +65,12 @@ async function BusinessProfilePage({ params }: Props) {
     `,
     )
     .eq('slug', slug)
+    .order('created_at', { referencedTable: 'reviews', ascending: false })
+    .limit(24, { referencedTable: 'reviews' })
+    .limit(15, { referencedTable: 'business_cases' })
+    .limit(20, { referencedTable: 'business_gallery' })
+    .limit(50, { referencedTable: 'business_services' })
+    .limit(50, { referencedTable: 'business_awards' })
     .single();
 
   if (error && error.code !== 'PGRST116') throw error;
@@ -73,7 +79,7 @@ async function BusinessProfilePage({ params }: Props) {
   const caseLimit = business.tier === 'claimed' ? 1 : business.tier === 'verified' ? 3 : ['highlight', 'spotlight'].includes(business.tier) ? 15 : 0;
   const socials = business.social_links && typeof business.social_links === 'object' && !Array.isArray(business.social_links) ? business.social_links : {};
   const address = business.address && typeof business.address === 'object' && !Array.isArray(business.address) ? business.address : {};
-  const { data: products } = await client.from('businesses').select('name,slug').eq('vendor_business_id', business.id).eq('offering_kind', 'software');
+  const { data: products } = await client.from('businesses').select('name,slug').eq('vendor_business_id', business.id).eq('offering_kind', 'software').limit(24);
   const { data: vendor } = business.vendor_business_id ? await client.from('businesses').select('name,slug').eq('id', business.vendor_business_id).maybeSingle() : { data: null };
   const cases = (business.business_cases ?? []).slice(0, caseLimit);
 
