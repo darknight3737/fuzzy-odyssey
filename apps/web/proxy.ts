@@ -380,6 +380,7 @@ async function isMissingDirectoryPage(
       'changelog',
       'docs',
       'claim',
+      'projects',
       'sitemaps',
     ].includes(first)
   )
