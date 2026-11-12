@@ -106,3 +106,37 @@ operacional: execute apenas uma por lote.
 
 Não houve validação externa de todas as afirmações do Apollo. Os perfis importados
 continuam pendentes de verificação; revisões futuras devem consultar o site oficial.
+
+## Triagem do arquivo inteiro
+
+Para processar todos os registros, sem limitar a setores ou exigir cidade/estado
+que não existem na origem:
+
+```sh
+python3 scripts/selletive-import/prepare_remaining.py --input /caminho/apollo.csv --existing-businesses /tmp/snapshots/businesses.json --directory /tmp/triagem
+python3 scripts/selletive-import/taxonomy_additions.py --categories /tmp/snapshots/categories.json --output /tmp/triagem/classification-categories.json
+python3 scripts/selletive-import/classify_remaining.py --candidates /tmp/triagem/candidates.ndjson --categories /tmp/triagem/classification-categories.json --output /tmp/triagem/decisions.ndjson
+```
+
+`ledger-prepared.json` contabiliza **cada linha** do CSV, inclusive duplicatas e
+registros sem dados suficientes. Nunca trate abstenções das regras como prova
+que a empresa não presta o serviço: são pendências. Preserve também bloqueios
+manuais de identidade de revisões anteriores.
+
+As novas categorias completam serviços profissionais, gestão de TI, dados/IA e
+software empresarial previstos no PRD. `taxonomy_additions.py` gera uma visão
+prospectiva para a classificação. **O assembler recebe o snapshot real**, sem
+categorias prospectivas: ele cria apenas as folhas utilizadas e seus ancestrais.
+Não sobrescreva nem reclassifique perfis já publicados.
+
+O país Brasil é obrigatório. Se estado/cidade não constam no CSV, a importação
+salva apenas os dados conhecidos, sem inferir localização. A localização mais
+específica conhecida é a principal. Cidade sem estado permanece no endereço,
+mas não cria uma associação geográfica ambígua.
+
+Separe decisões aprovadas em lotes equilibrados de 200–350 empresas e preserve
+os manifestos individuais. Execute sequencialmente com o mesmo executor
+restrito. Reconcile o total e os vínculos ao final; confira que os perfis e
+vínculos anteriores permanecem idênticos. Arquive a triagem completa e as
+pendências em `.runs/`, sem tokens temporários de autorização, e desative o
+endpoint após terminar.

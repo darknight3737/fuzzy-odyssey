@@ -13,6 +13,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from prepare import clean, normalize_phone, normalize_state, website_domain
+from taxonomy_additions import BRANCHES, LEAVES
 
 NAMESPACE = uuid.UUID('d2181ad8-7618-4fe3-8c55-1e08eaefc718')
 EXTRA_CATEGORIES = {
@@ -29,6 +30,9 @@ EXTRA_BRANCHES = {
     'video-services': ('Vídeo e animação', 'creative-visual'),
     'software-development-services': ('Software e aplicativos', 'development-product'),
 }
+EXTRA_BRANCHES.update(BRANCHES)
+EXTRA_CATEGORIES.update(LEAVES)
+
 STATE_NAMES = dict(zip(
     'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(),
     ['Acre', 'Alagoas', 'Amapá', 'Amazonas', 'Bahia', 'Ceará', 'Distrito Federal',
@@ -85,12 +89,21 @@ def assemble(args):
     timestamp = datetime.now(timezone.utc).isoformat()
 
     def category(key):
-        if key not in categories:
-            name, parent = (EXTRA_BRANCHES if key in EXTRA_BRANCHES else EXTRA_CATEGORIES)[key]
+        definitions = EXTRA_BRANCHES if key in EXTRA_BRANCHES else EXTRA_CATEGORIES
+        if key in definitions:
+            name, parent = definitions[key]
             parent_category = category(parent)
-            categories[key] = dict(id=stable_id('category', key), name=name, slug=key,
-                                   parent_id=parent_category['id'], level=2 if key in EXTRA_BRANCHES else 3, is_active=True)
-            new_categories[key] = categories[key]
+            level = 2 if key in EXTRA_BRANCHES else 3
+            if key in categories:
+                current = categories[key]
+                if current['level'] != level or current['parent_id'] != parent_category['id'] or not current['is_active']:
+                    raise ValueError('Existing category conflicts with configured hierarchy: ' + key)
+            else:
+                categories[key] = dict(id=stable_id('category', key), name=name, slug=key,
+                                       parent_id=parent_category['id'], level=level, is_active=True)
+                new_categories[key] = categories[key]
+        elif key not in categories:
+            raise ValueError('Missing category: ' + key)
         return categories[key]
 
     def location(name, key, kind, parent=None, state=None):
@@ -120,8 +133,10 @@ def assemble(args):
         if row['domain'] in seen_domains:
             raise ValueError('Duplicate domain')
         seen_domains.add(row['domain'])
-        if source['Company Country'] != 'Brazil' or row['state'] not in STATE_NAMES:
-            raise ValueError('Pilot requires a known Brazilian location')
+        if source['Company Country'] != 'Brazil':
+            raise ValueError('Import requires a known Brazilian country')
+        if row['state'] and row['state'] not in STATE_NAMES:
+            raise ValueError('Unknown state code')
         business_id = stable_id('apollo', row['id'])
         businesses.append(dict(
             id=business_id, name=row['name'], slug=slug(row['name'])[:140] + '-' + row['id'][-8:],
@@ -130,7 +145,7 @@ def assemble(args):
             logo_url=optional_url(source['Logo Url']),
             employee_count=optional_int(source['# Employees'], 0, 10000000),
             founded_year=optional_int(source['Founded Year'], 1800, datetime.now().year),
-            address=dict(city=row['city'], state=row['state'], country='BR'),
+            address={key: value for key, value in dict(city=row['city'], state=row['state'], country='BR').items() if value},
             account_id=None, tier='unclaimed', verification_status='pending', domain_rating=0,
             created_at=timestamp, updated_at=timestamp,
         ))
@@ -156,11 +171,15 @@ def assemble(args):
                 expected_level -= 1
                 leaf = False
         country = location('Brasil', 'brazil-br', 'country')
-        state_code = row['state'].lower()
-        state = location(STATE_NAMES[row['state']], 'estado-de-' + slug(STATE_NAMES[row['state']]) + '-' + state_code + '-br', 'state', country['id'], state_code)
-        city = location(row['city'], slug(row['city']) + '-' + state_code + '-br', 'city', state['id'], state_code)
-        for place in [country, state, city]:
-            location_links.append(dict(business_id=business_id, location_id=place['id'], is_primary=place['type'] == 'city'))
+        places = [country]
+        if row['state']:
+            state_code = row['state'].lower()
+            state = location(STATE_NAMES[row['state']], 'estado-de-' + slug(STATE_NAMES[row['state']]) + '-' + state_code + '-br', 'state', country['id'], state_code)
+            places.append(state)
+            if row['city']:
+                places.append(location(row['city'], slug(row['city']) + '-' + state_code + '-br', 'city', state['id'], state_code))
+        for place in places:
+            location_links.append(dict(business_id=business_id, location_id=place['id'], is_primary=place['id'] == places[-1]['id']))
     if not 200 <= len(businesses) <= 600:
         raise ValueError('Pilot requires 200–600 approved companies')
     payload = dict(categories=list(new_categories.values()), locations=sorted(locations.values(), key=lambda r: {'country': 0, 'state': 1, 'city': 2}[r['type']]),
