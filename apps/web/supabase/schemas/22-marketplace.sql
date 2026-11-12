@@ -151,11 +151,17 @@ grant execute on function public.dispatch_lead(uuid,uuid) to service_role;
 
 -- Attestations must be written only by a trusted link checker.
 revoke insert,update,delete on public.verification_badges from anon,authenticated;
-create function public.attest_business_badge(p_badge_id uuid,p_verified boolean) returns void language sql security definer set search_path = '' as $$
+create function public.attest_business_badge(p_badge_id uuid,p_verified boolean,p_expected_website text) returns void language plpgsql security definer set search_path = '' as $$
+declare target uuid;
+begin
+ select b.id into target from public.verification_badges badge join public.businesses b on b.id=badge.business_id
+ where badge.id=p_badge_id and b.website=p_expected_website for update of b, badge;
+ if target is null then raise exception 'Badge or website changed during verification'; end if;
  update public.verification_badges set is_verified=p_verified, last_checked=now(), verified_at=case when p_verified then now() else null end where id=p_badge_id;
-$$;
-revoke all on function public.attest_business_badge(uuid,boolean) from public,anon,authenticated;
-grant execute on function public.attest_business_badge(uuid,boolean) to service_role;
+ if p_verified then update public.businesses set verification_status='verified',tier=case when tier='claimed' then 'verified'::public.business_tier else tier end where id=target; end if;
+end; $$;
+revoke all on function public.attest_business_badge(uuid,boolean,text) from public,anon,authenticated;
+grant execute on function public.attest_business_badge(uuid,boolean,text) to service_role;
 
 -- Paid gallery writes are serialized on the business row, including concurrent requests.
 create table public.business_gallery (
@@ -313,11 +319,11 @@ create function public.enforce_business_features() returns trigger language plpg
 begin
  if current_user in ('anon','authenticated') then
   if tg_op='INSERT' then
-   if new.cover_image_url is not null or new.video_url is not null or new.calendar_url is not null then raise exception 'Paid plan required'; end if;
-  elsif new.tier not in ('highlight','spotlight') and (new.cover_image_url is distinct from old.cover_image_url or new.video_url is distinct from old.video_url or new.calendar_url is distinct from old.calendar_url) then
+   if new.cover_image_url is not null or new.video_url is not null or new.calendar_url is not null or new.crm_url is not null then raise exception 'Paid plan required'; end if;
+  elsif new.tier not in ('highlight','spotlight') and (new.cover_image_url is distinct from old.cover_image_url or new.video_url is distinct from old.video_url or new.calendar_url is distinct from old.calendar_url or new.crm_url is distinct from old.crm_url) then
    raise exception 'Paid plan required';
   end if;
-  if new.vendor_business_id is not null and not exists(select 1 from public.businesses v where v.id=new.vendor_business_id and v.account_id=new.account_id and new.account_id is not null) then raise exception 'Vendor must belong to the same account'; end if;
+  if new.vendor_business_id is not null and not exists(select 1 from public.businesses v where v.id=new.vendor_business_id and v.account_id=new.account_id and new.account_id is not null and v.offering_kind='service' and new.offering_kind='software') then raise exception 'Vendor must belong to the same account'; end if;
  end if;
  return new;
 end; $$;
@@ -338,4 +344,31 @@ alter table public.businesses
  add column deployment text[] not null default '{}',
  add column buyer_sizes text[] not null default '{}',
  add column support_languages text[] not null default '{}',
- add column profile_details jsonb not null default '{}'::jsonb check(jsonb_typeof(profile_details)='object');
+ add column profile_details jsonb not null default '{}'::jsonb check(jsonb_typeof(profile_details)='object'),
+ add column crm_url text;
+alter table public.reviews add column dimensions jsonb not null default '{}'::jsonb check(jsonb_typeof(dimensions)='object');
+
+-- The definer lookup avoids recursive brief/recipient RLS while checking caller identity.
+create function public.owns_lead_brief(p_id uuid) returns boolean language sql stable security definer set search_path='' as $$
+ select auth.uid() is not null and exists(select 1 from public.lead_briefs where id=p_id and buyer_user_id=auth.uid());
+$$;
+revoke all on function public.owns_lead_brief(uuid) from public,anon;
+grant execute on function public.owns_lead_brief(uuid) to authenticated;
+create policy lead_recipients_buyer_read on public.lead_recipients for select to authenticated using(public.owns_lead_brief(brief_id));
+
+create function public.create_marketplace_offering(p_payload jsonb) returns uuid language plpgsql security definer set search_path='' as $$
+declare actor uuid:=auth.uid(); new_id uuid; category uuid; categories uuid[]; vendor uuid := nullif(p_payload->>'vendor_business_id','')::uuid;
+begin
+ if actor is null or not public.is_mfa_compliant() then raise exception 'Authentication required'; end if;
+ if not exists(select 1 from public.accounts where id=actor and is_personal_account) then raise exception 'Personal account required'; end if;
+ if length(trim(coalesce(p_payload->>'name',''))) not between 2 and 200 or coalesce(p_payload->>'website','') !~ '^https?://' then raise exception 'Name and website required'; end if;
+ if vendor is not null and not exists(select 1 from public.businesses where id=vendor and account_id=actor and offering_kind='service' and coalesce(nullif(p_payload->>'offering_kind',''),'service')='software') then raise exception 'Vendor must belong to your account'; end if;
+ select coalesce(array_agg(value::uuid),array[]::uuid[]) into categories from jsonb_array_elements_text(coalesce(p_payload->'category_ids','[]'::jsonb));
+ if cardinality(categories)>10 or exists(select 1 from unnest(categories) c left join public.categories x on x.id=c where x.id is null or not x.is_active) then raise exception 'Invalid categories'; end if;
+ insert into public.businesses(account_id,name,slug,website,description,offering_kind,vendor_business_id,tier)
+ values(actor,p_payload->>'name',p_payload->>'slug',p_payload->>'website',p_payload->>'description',coalesce(nullif(p_payload->>'offering_kind',''),'service'),vendor,'claimed') returning id into new_id;
+ foreach category in array categories loop insert into public.business_categories(business_id,category_id) values(new_id,category) on conflict do nothing; end loop;
+ return new_id;
+end; $$;
+revoke all on function public.create_marketplace_offering(jsonb) from public,anon;
+grant execute on function public.create_marketplace_offering(jsonb) to authenticated;

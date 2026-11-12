@@ -3,7 +3,7 @@ select no_plan();
 select ok(not has_table_privilege('anon','public.lead_briefs','select'), 'anonymous cannot read lead briefs');
 select ok(not has_table_privilege('authenticated','public.lead_recipients','insert'), 'buyers cannot forge recipients');
 select ok(not has_function_privilege('authenticated','public.dispatch_lead(uuid,uuid)','execute'), 'dispatch is service-only');
-select ok(not has_function_privilege('authenticated','public.attest_business_badge(uuid,boolean)','execute'), 'badge attestation is service-only');
+select ok(not has_function_privilege('authenticated','public.attest_business_badge(uuid,boolean,text)','execute'), 'badge attestation is service-only');
 select ok(not has_function_privilege('authenticated','public.apply_marketplace_subscription(jsonb)','execute'), 'billing updates are service-only');
 select ok(not has_column_privilege('authenticated','public.business_cases','business_id','update'), 'case cannot be reparented');
 select ok(not has_column_privilege('authenticated','public.business_gallery','business_id','update'), 'gallery image cannot be reparented');
