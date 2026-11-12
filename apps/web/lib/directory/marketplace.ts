@@ -7,7 +7,7 @@ export type DirectoryParams = Record<string, string | string[] | undefined>;
 export function filtersFromParams(params: DirectoryParams) {
   const filters: Record<string, string | number | boolean | string[]> = {};
   for (const key of ['q', 'category', 'location', 'kind', 'sort', 'pricing_model']) { const value = params[key]; if (typeof value === 'string' && value) filters[key] = value.slice(0, 120); }
-  for (const key of ['min_budget', 'max_budget', 'min_team', 'max_team', 'founded_before']) { const value = params[key]; if (typeof value === 'string' && /^\d{1,9}$/.test(value)) filters[key] = Number(value); }
+  for (const key of ['min_budget', 'max_budget', 'min_team', 'max_team', 'founded_before', 'min_rating']) { const value = params[key]; if (typeof value === 'string' && /^\d{1,9}$/.test(value)) filters[key] = Number(value); }
   for (const key of ['remote', 'has_works', 'has_awards', 'free_trial', 'free_plan', 'portuguese']) if (params[key] === 'true') filters[key] = true;
   for (const key of ['languages', 'features', 'integrations', 'buyer_sizes', 'support_languages', 'deployment']) { const value = params[key]; if (typeof value === 'string' && value.trim()) filters[key] = value.split(',').map((v) => v.trim()).filter(Boolean).slice(0, 10); }
   return filters;
@@ -15,7 +15,7 @@ export function filtersFromParams(params: DirectoryParams) {
 export function directoryPage(params: DirectoryParams) { const page = params.page; return typeof page === 'string' && /^[1-9]\d{0,4}$/.test(page) ? Number(page) : 1; }
 export async function searchMarketplace(filters: ReturnType<typeof filtersFromParams>, page = 1) {
   const client = getDirectoryClient();
-  const { data, error } = await client.rpc('search_marketplace' as never, { p_filters: filters, p_limit: 24, p_offset: (page - 1) * 24 } as never);
+  const { data, error } = await client.rpc('search_marketplace', { p_filters: filters, p_limit: 24, p_offset: (page - 1) * 24 });
   if (error) throw error;
   return data as unknown as { items: DirectoryItem[]; total: number };
 }

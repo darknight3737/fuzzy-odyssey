@@ -29,16 +29,22 @@ export function createBusinessAnalyticsService(
       const now = new Date();
       const to = now.toISOString().slice(0, 10);
       const start = new Date(now);
-      start.setUTCDate(start.getUTCDate() - 29);
+      start.setUTCDate(start.getUTCDate() - (fullHistory ? 364 : 29));
       const from = start.toISOString().slice(0, 10);
       let query = client
         .from('business_analytics_daily')
         .select('day,event,count')
         .eq('business_id', businessId)
         .lte('day', to);
-      if (!fullHistory) query = query.gte('day', from);
-      const { data, error } = await query.order('day', { ascending: false });
-      if (error) throw error;
+      query = query.gte('day', from);
+      const first = await query.order('day', { ascending: false }).order('event').range(0, 999);
+      if (first.error) throw first.error;
+      const data = first.data;
+      if (data.length === 1000) {
+        const rest = await query.range(1000, 1499);
+        if (rest.error) throw rest.error;
+        data.push(...rest.data);
+      }
       const totals = { view: 0, website: 0, phone: 0, email: 0 };
       const daily = new Map<string, typeof totals>();
       for (let i = 29; i >= 0 && !fullHistory; i--) {

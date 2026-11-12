@@ -1,3 +1,4 @@
+import {isPremium} from '~/lib/plans';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
@@ -84,6 +85,7 @@ export async function BusinessAnalytics({
           <Trans i18nKey="business.analyticsEmpty" />
         </p>
       )}
+      {isPremium(tier) && <a className="text-sm underline" href={`/api/business-analytics/export?business=${businessId}`}>Exportar desempenho CSV</a>}
       <details>
         <summary className="cursor-pointer text-sm underline">
           <Trans i18nKey="business.analyticsDaily" />

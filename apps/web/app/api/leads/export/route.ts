@@ -7,4 +7,4 @@ export const GET=enhanceRouteHandler(async({client,user})=>{
  const cell=(value:unknown)=>{const s=String(value??'');return '"'+(/^[=+@\-\t\r]/.test(s)?"'":'')+s.replaceAll('"','""')+'"';};
  const rows=[['Empresa ID','Status','Pedido','Nome','Email','Telefone','Empresa compradora','Orçamento','Prazo','Data'],...(data??[]).map(r=>[r.business_id,r.status,r.lead_briefs?.title,r.lead_briefs?.buyer_name,r.lead_briefs?.buyer_email,r.lead_briefs?.buyer_phone,r.lead_briefs?.company_name,r.lead_briefs?.budget,r.lead_briefs?.timeline,r.lead_briefs?.created_at])];
  return new Response('\ufeff'+rows.map(row=>row.map(cell).join(';')).join('\r\n'),{headers:{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="selletive-contatos.csv"','Cache-Control':'private, no-store'}});
-});
+},{auth:true});

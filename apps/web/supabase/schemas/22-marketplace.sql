@@ -30,8 +30,12 @@ create index idx_businesses_integrations on public.businesses using gin(integrat
 -- The outer aggregate returns an exact total even when the requested page is empty.
 create function public.search_marketplace(p_filters jsonb default '{}', p_limit integer default 24, p_offset integer default 0)
 returns jsonb language sql stable security invoker set search_path = '' as $$
-with filtered as (
- select b.*, coalesce(r.review_count, 0) as marketplace_review_count,
+with recursive matching_categories as (
+ select id from public.categories where slug=p_filters->>'category' and is_active
+ union
+ select c.id from public.categories c join matching_categories mc on c.parent_id=mc.id where c.is_active
+), filtered as (
+ select b.id,b.name,b.slug,b.description,b.logo_url,b.tier,b.employee_count,b.works_remotely,b.offering_kind,b.min_budget,b.created_at, coalesce(r.review_count, 0) as marketplace_review_count,
         coalesce(r.average_rating, 0) as marketplace_average_rating,
         (select count(*) from public.business_cases cs where cs.business_id=b.id) as marketplace_works_count,
         (select l.name from public.business_locations bl join public.locations l on l.id=bl.location_id where bl.business_id=b.id order by bl.is_primary desc,l.name limit 1) as marketplace_location_name
@@ -43,9 +47,9 @@ with filtered as (
  where (nullif(p_filters->>'q','') is null or b.name ilike '%' || left(p_filters->>'q',120) || '%'
         or b.description ilike '%' || left(p_filters->>'q',120) || '%')
    and (nullif(p_filters->>'kind','') is null or b.offering_kind = p_filters->>'kind')
-   and (nullif(p_filters->>'category','') is null or exists (select 1 from public.business_categories bc join public.categories c on c.id=bc.category_id where bc.business_id=b.id and c.slug=p_filters->>'category' and c.is_active))
+   and (nullif(p_filters->>'category','') is null or exists (select 1 from public.business_categories bc join matching_categories c on c.id=bc.category_id where bc.business_id=b.id))
    and (nullif(p_filters->>'location','') is null or exists (select 1 from public.business_locations bl join public.locations l on l.id=bl.location_id where bl.business_id=b.id and l.slug=p_filters->>'location'))
-   and (nullif(p_filters->>'min_budget','') is null or b.max_budget >= (p_filters->>'min_budget')::numeric)
+   and (nullif(p_filters->>'min_budget','') is null or coalesce(b.max_budget,b.min_budget) >= (p_filters->>'min_budget')::numeric)
    and (nullif(p_filters->>'max_budget','') is null or b.min_budget <= (p_filters->>'max_budget')::numeric)
    and (not (p_filters ? 'languages') or b.business_languages @> array(select jsonb_array_elements_text(p_filters->'languages')))
    and (nullif(p_filters->>'min_team','') is null or b.employee_count >= (p_filters->>'min_team')::integer)
@@ -74,7 +78,8 @@ with filtered as (
    case when p_filters->>'sort' = 'works' then f.marketplace_works_count end desc,
    case when p_filters->>'sort' = 'newest' then f.created_at end desc nulls last,
    case when coalesce(p_filters->>'sort','relevance') = 'relevance' then round(f.marketplace_average_rating,0) end desc,
-   case when coalesce(p_filters->>'sort','relevance') = 'relevance' then f.tier end desc,
+   f.tier desc,
+   f.marketplace_review_count desc,
    f.name, f.id) as ordinal
  from filtered f
  order by ordinal limit greatest(1, least(coalesce(p_limit,24),100)) offset greatest(coalesce(p_offset,0),0)
@@ -197,7 +202,7 @@ grant select on public.business_gallery to anon,authenticated;
 grant insert,delete on public.business_gallery to authenticated;
 grant update(image_url,caption,display_order) on public.business_gallery to authenticated;
 grant select,insert,update,delete on public.business_gallery to service_role;
-create policy business_gallery_public_read on public.business_gallery for select to anon,authenticated using(true);
+create policy business_gallery_public_read on public.business_gallery for select to anon,authenticated using(exists(select 1 from public.businesses b where b.id=business_id and b.tier in ('highlight','spotlight')));
 create policy business_gallery_owner_insert on public.business_gallery for insert to authenticated with check(exists(select 1 from public.businesses b where b.id=business_id and b.tier in ('highlight','spotlight') and (public.is_account_owner(b.account_id) or public.has_permission((select auth.uid()),b.account_id,'settings.manage'::public.app_permissions))));
 create policy business_gallery_owner_update on public.business_gallery for update to authenticated using(exists(select 1 from public.businesses b where b.id=business_id and b.tier in ('highlight','spotlight') and (public.is_account_owner(b.account_id) or public.has_permission((select auth.uid()),b.account_id,'settings.manage'::public.app_permissions)))) with check(exists(select 1 from public.businesses b where b.id=business_id and b.tier in ('highlight','spotlight') and (public.is_account_owner(b.account_id) or public.has_permission((select auth.uid()),b.account_id,'settings.manage'::public.app_permissions))));
 create policy business_gallery_owner_delete on public.business_gallery for delete to authenticated using(exists(select 1 from public.businesses b where b.id=business_id and (public.is_account_owner(b.account_id) or public.has_permission((select auth.uid()),b.account_id,'settings.manage'::public.app_permissions))));
@@ -356,6 +361,7 @@ alter table public.businesses
  add column sectors text[] not null default '{}';
 
 alter table public.reviews add column dimensions jsonb not null default '{}'::jsonb check(jsonb_typeof(dimensions)='object');
+grant select(dimensions) on public.reviews to anon,authenticated;
 
 -- The definer lookup avoids recursive brief/recipient RLS while checking caller identity.
 create function public.owns_lead_brief(p_id uuid) returns boolean language sql stable security definer set search_path='' as $$
@@ -370,10 +376,11 @@ declare actor uuid:=auth.uid(); new_id uuid; category uuid; categories uuid[]; v
 begin
  if actor is null or not public.is_mfa_compliant() then raise exception 'Authentication required'; end if;
  if not exists(select 1 from public.accounts where id=actor and is_personal_account) then raise exception 'Personal account required'; end if;
- if length(trim(coalesce(p_payload->>'name',''))) not between 2 and 200 or coalesce(p_payload->>'website','') !~ '^https?://' then raise exception 'Name and website required'; end if;
+ if coalesce(p_payload->>'slug','') !~ '^[a-z0-9][a-z0-9-]{1,160}$' or length(trim(coalesce(p_payload->>'description',''))) not between 30 and 10000 then raise exception 'Invalid profile details'; end if;
+ if length(trim(coalesce(p_payload->>'name',''))) not between 2 and 160 or coalesce(p_payload->>'website','') !~ '^https?://' then raise exception 'Name and website required'; end if;
  if vendor is not null and not exists(select 1 from public.businesses where id=vendor and account_id=actor and offering_kind='service' and coalesce(nullif(p_payload->>'offering_kind',''),'service')='software') then raise exception 'Vendor must belong to your account'; end if;
  select coalesce(array_agg(value::uuid),array[]::uuid[]) into categories from jsonb_array_elements_text(coalesce(p_payload->'category_ids','[]'::jsonb));
- if cardinality(categories)>10 or exists(select 1 from unnest(categories) c left join public.categories x on x.id=c where x.id is null or not x.is_active) then raise exception 'Invalid categories'; end if;
+ if cardinality(categories) not between 1 and 10 or exists(select 1 from unnest(categories) c left join public.categories x on x.id=c where x.id is null or not x.is_active) then raise exception 'Invalid categories'; end if;
  insert into public.businesses(account_id,name,slug,website,description,offering_kind,vendor_business_id,tier)
  values(actor,p_payload->>'name',p_payload->>'slug',p_payload->>'website',p_payload->>'description',coalesce(nullif(p_payload->>'offering_kind',''),'service'),vendor,'claimed') returning id into new_id;
  foreach category in array categories loop insert into public.business_categories(business_id,category_id) values(new_id,category) on conflict do nothing; end loop;
