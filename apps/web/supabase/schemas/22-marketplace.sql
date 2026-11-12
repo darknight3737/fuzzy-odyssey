@@ -11,6 +11,12 @@ alter table public.businesses
   add column portuguese boolean not null default false,
   add column video_url text,
   add column calendar_url text,
+  add column crm_url text,
+  add column pricing_model text,
+  add column deployment text[] not null default '{}',
+  add column buyer_sizes text[] not null default '{}',
+  add column support_languages text[] not null default '{}',
+  add column profile_details jsonb not null default '{}'::jsonb check(jsonb_typeof(profile_details)='object'),
   add constraint businesses_vendor_not_self check (vendor_business_id is null or vendor_business_id <> id);
 
 create index idx_businesses_offering_kind on public.businesses(offering_kind);
@@ -25,7 +31,9 @@ create function public.search_marketplace(p_filters jsonb default '{}', p_limit 
 returns jsonb language sql stable security invoker set search_path = '' as $$
 with filtered as (
  select b.*, coalesce(r.review_count, 0) as marketplace_review_count,
-        coalesce(r.average_rating, 0) as marketplace_average_rating
+        coalesce(r.average_rating, 0) as marketplace_average_rating,
+        (select count(*) from public.business_cases cs where cs.business_id=b.id) as marketplace_works_count,
+        (select l.name from public.business_locations bl join public.locations l on l.id=bl.location_id where bl.business_id=b.id order by bl.is_primary desc,l.name limit 1) as marketplace_location_name
  from public.businesses b
  left join lateral (
    select count(*) as review_count, avg(rating) as average_rating
@@ -50,11 +58,19 @@ with filtered as (
    and (coalesce((p_filters->>'free_trial')::boolean,false) = false or b.free_trial)
    and (coalesce((p_filters->>'free_plan')::boolean,false) = false or b.free_plan)
    and (coalesce((p_filters->>'portuguese')::boolean,false) = false or b.portuguese)
+   and (nullif(p_filters->>'pricing_model','') is null or b.pricing_model=p_filters->>'pricing_model')
+   and (not (p_filters ? 'deployment') or b.deployment @> array(select jsonb_array_elements_text(p_filters->'deployment')))
+   and (not (p_filters ? 'buyer_sizes') or b.buyer_sizes @> array(select jsonb_array_elements_text(p_filters->'buyer_sizes')))
+   and (not (p_filters ? 'support_languages') or b.support_languages @> array(select jsonb_array_elements_text(p_filters->'support_languages')))
+   and (nullif(p_filters->>'min_rating','') is null or coalesce(r.average_rating,0) >= (p_filters->>'min_rating')::numeric)
 ), paged as (
  select f.*, row_number() over (order by
    case when p_filters->>'sort' = 'name' then f.name end asc,
    case when p_filters->>'sort' = 'rating' then f.marketplace_average_rating end desc,
    case when p_filters->>'sort' = 'reviews' then f.marketplace_review_count end desc,
+   case when p_filters->>'sort' = 'price' then f.min_budget end asc nulls last,
+   case when p_filters->>'sort' = 'team' then f.employee_count end desc nulls last,
+   case when p_filters->>'sort' = 'works' then f.marketplace_works_count end desc,
    case when p_filters->>'sort' = 'newest' then f.created_at end desc nulls last,
    case when coalesce(p_filters->>'sort','relevance') = 'relevance' then round(f.marketplace_average_rating,0) end desc,
    case when coalesce(p_filters->>'sort','relevance') = 'relevance' then f.tier end desc,
@@ -63,8 +79,8 @@ with filtered as (
  order by ordinal limit greatest(1, least(coalesce(p_limit,24),100)) offset greatest(coalesce(p_offset,0),0)
 )
 select jsonb_build_object('total', (select count(*) from filtered), 'items',
- coalesce((select jsonb_agg(jsonb_build_object('business', to_jsonb(p) - 'ordinal' - 'marketplace_review_count' - 'marketplace_average_rating',
- 'average_rating', p.marketplace_average_rating, 'review_count', p.marketplace_review_count) order by p.ordinal) from paged p), '[]'::jsonb));
+ coalesce((select jsonb_agg(jsonb_build_object('business', to_jsonb(p) - 'ordinal' - 'marketplace_review_count' - 'marketplace_average_rating' - 'marketplace_works_count' - 'marketplace_location_name',
+ 'location_name',p.marketplace_location_name,'works_count',p.marketplace_works_count,'average_rating', p.marketplace_average_rating, 'review_count', p.marketplace_review_count) order by p.ordinal) from paged p), '[]'::jsonb));
 $$;
 revoke all on function public.search_marketplace(jsonb,integer,integer) from public;
 grant execute on function public.search_marketplace(jsonb,integer,integer) to anon, authenticated;
@@ -333,19 +349,8 @@ alter table public.businesses
  add column team_photo_url text,
  add column social_links jsonb not null default '{}'::jsonb check(jsonb_typeof(social_links)='object'),
  add column clients text[] not null default '{}',
- add column sectors text[] not null default '{}',
- add column software_pricing text,
- add column software_deployment text[] not null default '{}',
- add column software_support text[] not null default '{}',
- add column software_buyer_size text[] not null default '{}';
+ add column sectors text[] not null default '{}';
 
-alter table public.businesses
- add column pricing_model text,
- add column deployment text[] not null default '{}',
- add column buyer_sizes text[] not null default '{}',
- add column support_languages text[] not null default '{}',
- add column profile_details jsonb not null default '{}'::jsonb check(jsonb_typeof(profile_details)='object'),
- add column crm_url text;
 alter table public.reviews add column dimensions jsonb not null default '{}'::jsonb check(jsonb_typeof(dimensions)='object');
 
 -- The definer lookup avoids recursive brief/recipient RLS while checking caller identity.
@@ -372,3 +377,18 @@ begin
 end; $$;
 revoke all on function public.create_marketplace_offering(jsonb) from public,anon;
 grant execute on function public.create_marketplace_offering(jsonb) to authenticated;
+create table public.review_reports (
+ id uuid primary key default gen_random_uuid(),
+ review_id uuid not null references public.reviews(id) on delete cascade,
+ reporter_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+ reason text not null check(length(trim(reason)) between 3 and 2000),
+ created_at timestamptz not null default now(),
+ unique(review_id,reporter_id)
+);
+create index idx_review_reports_review on public.review_reports(review_id);
+alter table public.review_reports enable row level security;
+revoke all on public.review_reports from anon,authenticated,service_role;
+grant insert on public.review_reports to authenticated;
+grant select,insert,update,delete on public.review_reports to service_role;
+create policy review_reports_submit on public.review_reports for insert to authenticated with check(reporter_id=(select auth.uid()) and exists(select 1 from public.reviews r where r.id=review_id and r.status='approved'));
+create policy review_reports_mfa on public.review_reports as restrictive to authenticated with check(public.is_mfa_compliant());
