@@ -226,7 +226,8 @@
   .headerInner {
     gap: 16px;
   }
-  .desktopNav, .companyLink {
+  .desktopNav,
+  .companyLink {
     display: none;
   }
   .mobileMenu {

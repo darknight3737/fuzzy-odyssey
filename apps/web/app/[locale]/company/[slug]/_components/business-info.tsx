@@ -33,7 +33,9 @@ type BusinessInfoProps = {
 };
 
 export function BusinessInfo({ business }: BusinessInfoProps) {
-  const canContact = ['verified', 'highlight', 'spotlight'].includes(business.tier);
+  const canContact = ['verified', 'highlight', 'spotlight'].includes(
+    business.tier,
+  );
   const activeCategories = business.business_categories?.filter(
     (entry) => entry.categories?.is_active,
   );

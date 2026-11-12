@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useAction } from 'next-safe-action/hooks';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
 
 import {
@@ -26,7 +26,15 @@ export function BusinessEditor({ values }: { values: BusinessProfileInput }) {
     defaultValues: values,
   });
   const [message, setMessage] = useState('');
-  const action = useAction(updateBusinessAction, { onSuccess: ({ data }) => setMessage(data?.success ? 'Informações salvas com sucesso.' : data?.error || 'Não foi possível salvar.'), onError: () => setMessage('Não foi possível salvar. Tente novamente.') });
+  const action = useAction(updateBusinessAction, {
+    onSuccess: ({ data }) =>
+      setMessage(
+        data?.success
+          ? 'Informações salvas com sucesso.'
+          : data?.error || 'Não foi possível salvar.',
+      ),
+    onError: () => setMessage('Não foi possível salvar. Tente novamente.'),
+  });
   const fields = [
     ['name', 'Nome da empresa', 'text'],
     ['website', 'Site', 'url'],
@@ -56,7 +64,15 @@ export function BusinessEditor({ values }: { values: BusinessProfileInput }) {
             aria-describedby={errors[name] ? `${name}-error` : undefined}
             className="w-full rounded-lg border p-3"
           />
-          {name === 'logo_url' && <MediaUpload businessId={values.id} kind="logo" onUploaded={(url) => setValue('logo_url', url, { shouldValidate: true })} />}
+          {name === 'logo_url' && (
+            <MediaUpload
+              businessId={values.id}
+              kind="logo"
+              onUploaded={(url) =>
+                setValue('logo_url', url, { shouldValidate: true })
+              }
+            />
+          )}
           {errors[name] && (
             <p id={`${name}-error`} className="text-destructive mt-2 text-sm">
               {errors[name].message}

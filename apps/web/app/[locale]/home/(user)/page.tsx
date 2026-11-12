@@ -1,10 +1,11 @@
 import { Suspense } from 'react';
-import {TIER_LABELS} from '~/lib/plans';
 
 import Link from 'next/link';
 import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
+
+import { TIER_LABELS } from '~/lib/plans';
 
 export const metadata = {
   title: 'Minhas empresas | Selletive',
@@ -37,7 +38,17 @@ async function UserHomePage() {
           Reivindicar uma empresa
         </Link>
       </div>
-      <nav className="mb-8 flex flex-wrap gap-4"><Link className="rounded-full border px-5 py-3" href="/home/leads">Pedidos e oportunidades</Link><Link className="rounded-full border px-5 py-3" href="/home/offerings/new">Cadastrar serviço ou software</Link></nav>
+      <nav className="mb-8 flex flex-wrap gap-4">
+        <Link className="rounded-full border px-5 py-3" href="/home/leads">
+          Pedidos e oportunidades
+        </Link>
+        <Link
+          className="rounded-full border px-5 py-3"
+          href="/home/offerings/new"
+        >
+          Cadastrar serviço ou software
+        </Link>
+      </nav>
       {businesses?.length ? (
         <div className="grid gap-5 md:grid-cols-2">
           {businesses.map((b) => (

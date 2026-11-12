@@ -107,10 +107,6 @@ export default createBillingSchema({
         'Priority customer support',
         'Featured placement on category pages',
         'Enhanced profile customization',
-        
-        
-        
-        
       ],
     },
   ],

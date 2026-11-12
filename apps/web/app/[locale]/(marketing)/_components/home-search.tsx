@@ -27,52 +27,62 @@ export function HomeSearch() {
   // Keep the action usable before hydration and leave URL encoding to the browser.
   return (
     <>
-    <Form {...form}>
-      <form
-        action="/search"
-        method="get"
-        role="search"
-        aria-label={t('searchLabel')}
-        className={styles.searchForm}
-      >
-        <FormField
-          control={form.control}
-          name="q"
-          render={({ field }) => (
-            <FormItem className={styles.searchField}>
-              <FormLabel className="sr-only">{t('searchLabel')}</FormLabel>
-              <Search size={20} aria-hidden="true" />
-              <FormControl
-                render={
-                  <Input
-                    {...field}
-                    data-test="homepage-search-input"
-                    aria-label={t('searchLabel')}
-                    maxLength={120}
-                    placeholder={t('searchPlaceholder')}
-                    className={styles.searchInput}
-                  />
-                }
-              />
-              <FormDescription className="sr-only">
-                {t('freeSearch')}
-              </FormDescription>
-            </FormItem>
-          )}
-        />
-        <Button
-          type="submit"
-          data-test="homepage-search"
-          className={styles.searchButton}
+      <Form {...form}>
+        <form
+          action="/search"
+          method="get"
+          role="search"
+          aria-label={t('searchLabel')}
+          className={styles.searchForm}
         >
-          {t('searchButton')} <ArrowRight size={18} aria-hidden="true" />
-        </Button>
-      </form>
-    </Form>
-    <div className="mt-4 flex flex-wrap gap-3 text-sm">
-      <Link className="rounded-full border px-4 py-2" href="/search?kind=service">Explorar serviços</Link>
-      <Link className="rounded-full border px-4 py-2" href="/search?kind=software">Explorar softwares</Link>
-    </div>
+          <FormField
+            control={form.control}
+            name="q"
+            render={({ field }) => (
+              <FormItem className={styles.searchField}>
+                <FormLabel className="sr-only">{t('searchLabel')}</FormLabel>
+                <Search size={20} aria-hidden="true" />
+                <FormControl
+                  render={
+                    <Input
+                      {...field}
+                      data-test="homepage-search-input"
+                      aria-label={t('searchLabel')}
+                      maxLength={120}
+                      placeholder={t('searchPlaceholder')}
+                      className={styles.searchInput}
+                    />
+                  }
+                />
+                <FormDescription className="sr-only">
+                  {t('freeSearch')}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+          <Button
+            type="submit"
+            data-test="homepage-search"
+            className={styles.searchButton}
+          >
+            {t('searchButton')} <ArrowRight size={18} aria-hidden="true" />
+          </Button>
+        </form>
+      </Form>
+      <div className="mt-4 flex flex-wrap gap-3 text-sm">
+        <Link
+          className="rounded-full border px-4 py-2"
+          href="/search?kind=service"
+        >
+          Explorar serviços
+        </Link>
+        <Link
+          className="rounded-full border px-4 py-2"
+          href="/search?kind=software"
+        >
+          Explorar softwares
+        </Link>
+      </div>
     </>
   );
 }

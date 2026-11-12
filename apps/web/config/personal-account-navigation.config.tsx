@@ -12,8 +12,16 @@ const routes = [
   {
     label: 'common.routes.application',
     children: [
-      {label:'common.routes.leads',path:'/home/leads',Icon:<MessageSquare className={iconClasses}/>},
-      {label:'common.routes.newOffering',path:'/home/offerings/new',Icon:<Plus className={iconClasses}/>},
+      {
+        label: 'common.routes.leads',
+        path: '/home/leads',
+        Icon: <MessageSquare className={iconClasses} />,
+      },
+      {
+        label: 'common.routes.newOffering',
+        path: '/home/offerings/new',
+        Icon: <Plus className={iconClasses} />,
+      },
       {
         label: 'common.routes.home',
         path: pathsConfig.app.home,

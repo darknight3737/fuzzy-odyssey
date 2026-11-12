@@ -37,7 +37,10 @@ export function createBusinessAnalyticsService(
         .eq('business_id', businessId)
         .lte('day', to);
       query = query.gte('day', from);
-      const first = await query.order('day', { ascending: false }).order('event').range(0, 999);
+      const first = await query
+        .order('day', { ascending: false })
+        .order('event')
+        .range(0, 999);
       if (first.error) throw first.error;
       const data = first.data;
       if (data.length === 1000) {
@@ -56,11 +59,17 @@ export function createBusinessAnalyticsService(
         if (!(row.event in totals)) continue;
         const event = row.event as InterestEvent;
         totals[event] += row.count;
-        if (!daily.has(row.day)) daily.set(row.day, { view: 0, website: 0, phone: 0, email: 0 });
+        if (!daily.has(row.day))
+          daily.set(row.day, { view: 0, website: 0, phone: 0, email: 0 });
         const day = daily.get(row.day);
         if (day) day[event] += row.count;
       }
-      return { totals, days: [...daily].sort(([a], [b]) => b.localeCompare(a)), from: fullHistory && data.length ? data[data.length - 1]!.day : from, to };
+      return {
+        totals,
+        days: [...daily].sort(([a], [b]) => b.localeCompare(a)),
+        from: fullHistory && data.length ? data[data.length - 1]!.day : from,
+        to,
+      };
     },
   };
 }

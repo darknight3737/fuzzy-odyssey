@@ -1,4 +1,3 @@
-import {isPremium} from '~/lib/plans';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
@@ -6,6 +5,7 @@ import { Trans } from '@kit/ui/trans';
 
 import { createBusinessAnalyticsService } from '~/lib/business-analytics/service';
 import type { Database } from '~/lib/database.types';
+import { isPremium } from '~/lib/plans';
 
 const labels = {
   view: 'business.analyticsViews',
@@ -41,7 +41,10 @@ export async function BusinessAnalytics({
   let summary;
   try {
     // Request-scoped standard client: RLS independently enforces owner, tier and MFA.
-    summary = await createBusinessAnalyticsService(client).summary(businessId, tier === 'highlight' || tier === 'spotlight');
+    summary = await createBusinessAnalyticsService(client).summary(
+      businessId,
+      tier === 'highlight' || tier === 'spotlight',
+    );
   } catch {
     return (
       <section className="my-8 rounded-xl border p-6" role="status">
@@ -85,7 +88,14 @@ export async function BusinessAnalytics({
           <Trans i18nKey="business.analyticsEmpty" />
         </p>
       )}
-      {isPremium(tier) && <a className="text-sm underline" href={`/api/business-analytics/export?business=${businessId}`}>Exportar desempenho CSV</a>}
+      {isPremium(tier) && (
+        <a
+          className="text-sm underline"
+          href={`/api/business-analytics/export?business=${businessId}`}
+        >
+          Exportar desempenho CSV
+        </a>
+      )}
       <details>
         <summary className="cursor-pointer text-sm underline">
           <Trans i18nKey="business.analyticsDaily" />

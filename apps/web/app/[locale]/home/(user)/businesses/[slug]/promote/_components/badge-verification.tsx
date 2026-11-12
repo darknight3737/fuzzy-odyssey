@@ -1,4 +1,31 @@
 import Link from 'next/link';
-export function BadgeVerification({business}:{business:{slug:string;verification_status:string}}){
- return <section className="my-8 rounded-2xl border p-6"><p className="text-sm">Verificado gratuito</p><h2 className="my-3 text-2xl font-semibold">Conecte seu site ao perfil.</h2><p>{business.verification_status==='verified'?'Vínculo com o site confirmado.':'A instalação e conferência do selo serão habilitadas quando os arquivos definitivos estiverem disponíveis.'}</p><ol className="my-4 list-inside list-decimal space-y-2"><li>Copie o selo com o link do seu perfil.</li><li>Publique-o em uma página pública do site da sua empresa.</li><li>Solicite a conferência para ativar o plano Verificado.</li></ol><Link href={'/company/'+business.slug} className="underline">Ver perfil público</Link><p className="mt-4 text-sm text-muted-foreground">Destaque e Spotlight não exigem selo externo.</p></section>;
+export function BadgeVerification({
+  business,
+}: {
+  business: { slug: string; verification_status: string };
+}) {
+  return (
+    <section className="my-8 rounded-2xl border p-6">
+      <p className="text-sm">Verificado gratuito</p>
+      <h2 className="my-3 text-2xl font-semibold">
+        Conecte seu site ao perfil.
+      </h2>
+      <p>
+        {business.verification_status === 'verified'
+          ? 'Vínculo com o site confirmado.'
+          : 'A instalação e conferência do selo serão habilitadas quando os arquivos definitivos estiverem disponíveis.'}
+      </p>
+      <ol className="my-4 list-inside list-decimal space-y-2">
+        <li>Copie o selo com o link do seu perfil.</li>
+        <li>Publique-o em uma página pública do site da sua empresa.</li>
+        <li>Solicite a conferência para ativar o plano Verificado.</li>
+      </ol>
+      <Link href={'/company/' + business.slug} className="underline">
+        Ver perfil público
+      </Link>
+      <p className="text-muted-foreground mt-4 text-sm">
+        Destaque e Spotlight não exigem selo externo.
+      </p>
+    </section>
+  );
 }

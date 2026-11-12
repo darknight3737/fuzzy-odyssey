@@ -179,15 +179,25 @@ try {
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
     'Selletive preview',
   );
-  await page.goto(site+'/pricing');
-  await expect(page.getByRole('heading',{name:'Verificado',exact:true})).toBeVisible();
-  await expect(page.getByRole('heading',{name:'Destaque',exact:true})).toBeVisible();
-  await expect(page.getByRole('heading',{name:'Spotlight',exact:true})).toBeVisible();
-  await page.goto(site+'/search?kind=software');
-  await expect(page.getByRole('heading',{level:1})).toContainText('Encontre seu próximo parceiro');
+  await page.goto(site + '/pricing');
+  await expect(
+    page.getByRole('heading', { name: 'Verificado', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Destaque', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Spotlight', exact: true }),
+  ).toBeVisible();
+  await page.goto(site + '/search?kind=software');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(
+    'Encontre seu próximo parceiro',
+  );
   await expect(page.getByText(/resultados encontrados/)).toBeVisible();
-  await page.goto(site+'/projects/new');
-  await expect(page.getByRole('heading',{name:'Entre para enviar seu pedido'})).toBeVisible();
+  await page.goto(site + '/projects/new');
+  await expect(
+    page.getByRole('heading', { name: 'Entre para enviar seu pedido' }),
+  ).toBeVisible();
   const screenshots = `${process.env.RUNNER_TEMP}/selletive-homepage`;
   await mkdir(screenshots, { recursive: true });
   for (const width of [320, 390, 768, 1024, 1440]) {

@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
 import { Trans } from '@kit/ui/trans';
 
-import { ReviewForm } from './review-form';
 import { ReportReview } from './report-review';
+import { ReviewForm } from './review-form';
 
 type Review = {
   id: string;
@@ -13,7 +13,10 @@ type Review = {
   status: 'pending' | 'approved' | 'rejected';
   created_at: string | null;
   dimensions: import('~/lib/database.types').Json;
-  review_responses: Array<{ response_text: string; status: 'active' | 'hidden' }>;
+  review_responses: Array<{
+    response_text: string;
+    status: 'active' | 'hidden';
+  }>;
 };
 
 type ReviewsSectionProps = {
@@ -23,7 +26,12 @@ type ReviewsSectionProps = {
   kind: string;
 };
 
-export function ReviewsSection({ reviews, businessId, canReview, kind }: ReviewsSectionProps) {
+export function ReviewsSection({
+  reviews,
+  businessId,
+  canReview,
+  kind,
+}: ReviewsSectionProps) {
   const approvedReviews = reviews.filter(
     (review) => review.status === 'approved',
   );
@@ -82,8 +90,31 @@ export function ReviewsSection({ reviews, businessId, canReview, kind }: Reviews
 
               <CardContent>
                 <p className={'text-sm'}>{review.content}</p>
-                {review.dimensions && typeof review.dimensions === 'object' && !Array.isArray(review.dimensions) && <dl className="mt-3 flex flex-wrap gap-3 text-sm">{Object.entries(review.dimensions).filter(([, value]) => typeof value === 'number').map(([label, value]) => <div key={label}><dt className="inline">{label}: </dt><dd className="inline">{String(value)}/5</dd></div>)}</dl>}
-                {review.review_responses?.filter((response) => response.status === 'active').map((response, index) => <blockquote key={index} className="bg-muted mt-4 rounded-lg p-4 text-sm"><strong>Resposta da empresa</strong><p>{response.response_text}</p></blockquote>)}
+                {review.dimensions &&
+                  typeof review.dimensions === 'object' &&
+                  !Array.isArray(review.dimensions) && (
+                    <dl className="mt-3 flex flex-wrap gap-3 text-sm">
+                      {Object.entries(review.dimensions)
+                        .filter(([, value]) => typeof value === 'number')
+                        .map(([label, value]) => (
+                          <div key={label}>
+                            <dt className="inline">{label}: </dt>
+                            <dd className="inline">{String(value)}/5</dd>
+                          </div>
+                        ))}
+                    </dl>
+                  )}
+                {review.review_responses
+                  ?.filter((response) => response.status === 'active')
+                  .map((response, index) => (
+                    <blockquote
+                      key={index}
+                      className="bg-muted mt-4 rounded-lg p-4 text-sm"
+                    >
+                      <strong>Resposta da empresa</strong>
+                      <p>{response.response_text}</p>
+                    </blockquote>
+                  ))}
                 <ReportReview reviewId={review.id} />
               </CardContent>
             </Card>

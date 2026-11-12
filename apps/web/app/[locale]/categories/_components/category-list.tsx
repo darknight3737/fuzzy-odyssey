@@ -1,7 +1,11 @@
 import Link from 'next/link';
-import { categoryLabel, isTranslatedCategory } from '~/lib/directory/category-label';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
+
+import {
+  categoryLabel,
+  isTranslatedCategory,
+} from '~/lib/directory/category-label';
 
 type Category = {
   id: string;

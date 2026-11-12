@@ -3,7 +3,11 @@ name: Selletive Import Checks
 on:
   push:
     branches: ['codex/apollo-import-*']
-    paths: ['scripts/selletive-import/**', '.github/workflows/selletive-import-checks.yml']
+    paths:
+      [
+        'scripts/selletive-import/**',
+        '.github/workflows/selletive-import-checks.yml',
+      ]
   workflow_dispatch:
 
 permissions:

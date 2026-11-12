@@ -1,7 +1,8 @@
 name: Selletive Database Verification
 on:
   push:
-    branches: [deploy/selletive-cloudflare, codex/selletive-marketplace-complete]
+    branches:
+      [deploy/selletive-cloudflare, codex/selletive-marketplace-complete]
     paths: ['.github/workflows/selletive-database.yml', 'apps/web/supabase/**']
   workflow_dispatch:
     inputs:

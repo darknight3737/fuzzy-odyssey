@@ -50,7 +50,10 @@ export function LocationStructuredData({
       '@type': 'ListItem',
       position: index + 1,
       item: {
-        '@type': business.offering_kind === 'software' ? 'SoftwareApplication' : 'LocalBusiness',
+        '@type':
+          business.offering_kind === 'software'
+            ? 'SoftwareApplication'
+            : 'LocalBusiness',
         '@id': `${appConfig.url}/company/${business.slug}`,
         name: business.name,
         description: business.description || undefined,

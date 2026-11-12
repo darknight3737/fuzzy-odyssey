@@ -40,10 +40,16 @@ export function SiteHeader() {
             </Link>
           ))}
           <DropdownMenu>
-            <DropdownMenuTrigger className="min-h-11 text-sm font-medium">Para empresas</DropdownMenuTrigger>
+            <DropdownMenuTrigger className="min-h-11 text-sm font-medium">
+              Para empresas
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem render={<Link href="/home/offerings/new" />}>Cadastrar empresa ou software</DropdownMenuItem>
-              <DropdownMenuItem render={<Link href="/claim" />}>Reivindicar perfil</DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/home/offerings/new" />}>
+                Cadastrar empresa ou software
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/claim" />}>
+                Reivindicar perfil
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </nav>
@@ -62,17 +68,23 @@ export function SiteHeader() {
                 <Menu size={24} aria-hidden="true" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                {[...links, { href: '/projects/new', label: 'Publicar projeto' }, { href: '/home/offerings/new', label: 'Cadastrar empresa ou software' }, { href: '/claim', label: 'Reivindicar perfil' }].map(
-                  (link) => (
-                    <DropdownMenuItem
-                      key={link.href}
-                      className="min-h-11"
-                      render={<Link href={link.href} />}
-                    >
-                      {link.label}
-                    </DropdownMenuItem>
-                  ),
-                )}
+                {[
+                  ...links,
+                  { href: '/projects/new', label: 'Publicar projeto' },
+                  {
+                    href: '/home/offerings/new',
+                    label: 'Cadastrar empresa ou software',
+                  },
+                  { href: '/claim', label: 'Reivindicar perfil' },
+                ].map((link) => (
+                  <DropdownMenuItem
+                    key={link.href}
+                    className="min-h-11"
+                    render={<Link href={link.href} />}
+                  >
+                    {link.label}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

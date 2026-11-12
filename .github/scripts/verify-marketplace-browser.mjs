@@ -4,16 +4,32 @@ import { mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
-const webRequire = createRequire(new URL('../../apps/web/package.json', import.meta.url));
-const e2eRequire = createRequire(new URL('../../apps/e2e/package.json', import.meta.url));
+const webRequire = createRequire(
+  new URL('../../apps/web/package.json', import.meta.url),
+);
+const e2eRequire = createRequire(
+  new URL('../../apps/e2e/package.json', import.meta.url),
+);
 const { createClient } = webRequire('@supabase/supabase-js');
 const { chromium, expect } = e2eRequire('@playwright/test');
 const site = process.env.SELLETIVE_TEST_SITE;
-assert.equal(site, 'http://localhost:3000', 'Only a disposable CI application is supported');
+assert.equal(
+  site,
+  'http://localhost:3000',
+  'Only a disposable CI application is supported',
+);
 assert.equal(process.env.SELLETIVE_DISPOSABLE_DB, 'true');
-assert.equal(process.env.NEXT_PUBLIC_SUPABASE_URL, 'http://127.0.0.1:54321', 'Only the disposable CI database is supported');
+assert.equal(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  'http://127.0.0.1:54321',
+  'Only the disposable CI database is supported',
+);
 assert(process.env.SUPABASE_SECRET_KEY, 'A preview service key is required');
-const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+const admin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SECRET_KEY,
+  { auth: { persistSession: false, autoRefreshToken: false } },
+);
 const token = `ci${randomUUID().replaceAll('-', '')}`;
 const password = `${randomUUID()}Aa1!`;
 const output = join(process.env.RUNNER_TEMP || '/tmp', 'selletive-marketplace');
@@ -23,26 +39,113 @@ let buyerId;
 let categoryId;
 let locationId;
 let browser;
-const check = (result) => { assert.ifError(result.error); return result.data; };
+const check = (result) => {
+  assert.ifError(result.error);
+  return result.data;
+};
 try {
-  const user = check(await admin.auth.admin.createUser({ email: `${token}@example.test`, password, email_confirm: true }));
+  const user = check(
+    await admin.auth.admin.createUser({
+      email: `${token}@example.test`,
+      password,
+      email_confirm: true,
+    }),
+  );
   userId = user.user.id;
-  const buyer = check(await admin.auth.admin.createUser({ email: `${token}-buyer@example.test`, password, email_confirm: true }));
+  const buyer = check(
+    await admin.auth.admin.createUser({
+      email: `${token}-buyer@example.test`,
+      password,
+      email_confirm: true,
+    }),
+  );
   buyerId = buyer.user.id;
-  const category = check(await admin.from('categories').insert({ name: `Teste ${token}`, slug: token, level: 1, is_active: true }).select('id').single());
+  const category = check(
+    await admin
+      .from('categories')
+      .insert({
+        name: `Teste ${token}`,
+        slug: token,
+        level: 1,
+        is_active: true,
+      })
+      .select('id')
+      .single(),
+  );
   categoryId = category.id;
-  const location = check(await admin.from('locations').insert({ name: `Teste ${token}`, slug: `${token}-sp-br`, type: 'city', country_code: 'br', state_code: 'sp' }).select('id').single());
+  const location = check(
+    await admin
+      .from('locations')
+      .insert({
+        name: `Teste ${token}`,
+        slug: `${token}-sp-br`,
+        type: 'city',
+        country_code: 'br',
+        state_code: 'sp',
+      })
+      .select('id')
+      .single(),
+  );
   locationId = location.id;
-  const entries = Array.from({ length: 55 }, (_, index) => ({ account_id: userId, name: `${token} ${String(index).padStart(2, '0')}`, slug: `${token}-${index}`, tier: index === 0 ? 'spotlight' : 'verified', offering_kind: index < 2 ? 'software' : 'service', works_remotely: index === 2, min_budget: 100 + index, max_budget: 500 + index, employee_count: index + 1, features: index === 0 ? ['ci-feature'] : [], integrations: index === 0 ? ['ci-integration'] : [], free_trial: index === 0, portuguese: index === 0 }));
-  const businesses = check(await admin.from('businesses').insert(entries).select('id,slug,name'));
-  check(await admin.from('business_categories').insert(businesses.map((b) => ({ business_id: b.id, category_id: categoryId }))));
-  check(await admin.from('business_locations').insert(businesses.map((b) => ({ business_id: b.id, location_id: locationId }))));
+  const entries = Array.from({ length: 55 }, (_, index) => ({
+    account_id: userId,
+    name: `${token} ${String(index).padStart(2, '0')}`,
+    slug: `${token}-${index}`,
+    tier: index === 0 ? 'spotlight' : 'verified',
+    offering_kind: index < 2 ? 'software' : 'service',
+    works_remotely: index === 2,
+    min_budget: 100 + index,
+    max_budget: 500 + index,
+    employee_count: index + 1,
+    features: index === 0 ? ['ci-feature'] : [],
+    integrations: index === 0 ? ['ci-integration'] : [],
+    free_trial: index === 0,
+    portuguese: index === 0,
+  }));
+  const businesses = check(
+    await admin.from('businesses').insert(entries).select('id,slug,name'),
+  );
+  check(
+    await admin
+      .from('business_categories')
+      .insert(
+        businesses.map((b) => ({ business_id: b.id, category_id: categoryId })),
+      ),
+  );
+  check(
+    await admin
+      .from('business_locations')
+      .insert(
+        businesses.map((b) => ({ business_id: b.id, location_id: locationId })),
+      ),
+  );
   const first = businesses.find((b) => b.slug === `${token}-0`);
   const second = businesses.find((b) => b.slug === `${token}-1`);
   assert(first && second);
-  check(await admin.from('reviews').insert([{ business_id: first.id, reviewer_name: 'Teste CI', reviewer_email: `${token}@example.test`, rating: 3, status: 'approved' }, { business_id: second.id, reviewer_name: 'Teste CI', reviewer_email: `${token}@example.test`, rating: 5, status: 'approved' }]));
-  browser = await chromium.launch({ channel: process.env.SELLETIVE_BROWSER_CHANNEL || undefined });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  check(
+    await admin.from('reviews').insert([
+      {
+        business_id: first.id,
+        reviewer_name: 'Teste CI',
+        reviewer_email: `${token}@example.test`,
+        rating: 3,
+        status: 'approved',
+      },
+      {
+        business_id: second.id,
+        reviewer_name: 'Teste CI',
+        reviewer_email: `${token}@example.test`,
+        rating: 5,
+        status: 'approved',
+      },
+    ]),
+  );
+  browser = await chromium.launch({
+    channel: process.env.SELLETIVE_BROWSER_CHANNEL || undefined,
+  });
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+  });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -56,18 +159,30 @@ try {
   await page.goto(`${site}/search?q=${token}&kind=software&sort=rating`);
   await expect(page.getByText('2 resultados encontrados')).toBeVisible();
   await expect(page.locator('article').first()).toContainText(second.name);
-  await page.goto(`${site}/search?q=${token}&kind=software&features=ci-feature&integrations=ci-integration&free_trial=true&portuguese=true`);
+  await page.goto(
+    `${site}/search?q=${token}&kind=software&features=ci-feature&integrations=ci-integration&free_trial=true&portuguese=true`,
+  );
   await expect(page.getByText('1 resultados encontrados')).toBeVisible();
   await expect(page.locator('article')).toContainText(first.name);
   await page.goto(`${site}/${token}/${token}-sp-br?kind=service&remote=true`);
   await expect(page.getByText('1 resultados encontrados')).toBeVisible();
   await page.goto(`${site}/search?q=${token}&kind=software&sort=name`);
-  await page.locator('article').nth(0).getByRole('button', { name: 'Salvar ♡' }).click();
-  await page.locator('article').nth(1).getByRole('button', { name: 'Salvar ♡' }).click();
+  await page
+    .locator('article')
+    .nth(0)
+    .getByRole('button', { name: 'Salvar ♡' })
+    .click();
+  await page
+    .locator('article')
+    .nth(1)
+    .getByRole('button', { name: 'Salvar ♡' })
+    .click();
   await page.reload();
   await expect(page.getByLabel('Empresas salvas')).toContainText('2/5');
   await page.getByRole('link', { name: 'Comparar softwares' }).click();
-  await expect(page.getByRole('heading', { name: 'Comparar softwares' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Comparar softwares' }),
+  ).toBeVisible();
   await expect(page.locator('table')).toContainText(first.name);
   await expect(page.locator('table')).toContainText(second.name);
   await page.screenshot({ path: join(output, 'compare.png'), fullPage: true });
@@ -77,7 +192,9 @@ try {
   await page.goto(`${site}/search?q=${token}&kind=software`);
   await page.getByRole('link', { name: 'Enviar briefing' }).click();
   await expect(page).toHaveURL(/\/projects\/new\?providers=/);
-  await expect(page.getByRole('heading', { name: 'Entre para enviar seu pedido' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Entre para enviar seu pedido' }),
+  ).toBeVisible();
   await page.getByRole('link', { name: 'Entrar ou criar conta' }).click();
   await page.locator('input[name="email"]').fill(`${token}-buyer@example.test`);
   await page.locator('input[name="password"]').fill(password);
@@ -87,29 +204,50 @@ try {
   await expect(page.locator('body')).toContainText(second.name);
   await page.screenshot({ path: join(output, 'briefing.png'), fullPage: true });
   await page.getByLabel('Título do projeto').fill('Pedido de demonstração CI');
-  await page.getByLabel('Descreva sua necessidade, objetivos e contexto').fill('Quero comparar os dois produtos para a operação comercial da minha empresa.');
+  await page
+    .getByLabel('Descreva sua necessidade, objetivos e contexto')
+    .fill(
+      'Quero comparar os dois produtos para a operação comercial da minha empresa.',
+    );
   await page.getByLabel('Seu nome').fill('Comprador CI');
   await page.getByLabel('Autorizo compartilhar').check();
-  await page.getByRole('button', {name:'Enviar pedido gratuitamente'}).click();
+  await page
+    .getByRole('button', { name: 'Enviar pedido gratuitamente' })
+    .click();
   await page.waitForURL('**/home/leads?sent=1');
-  await page.getByRole('link', {name:/Pedido de demonstração CI/}).click();
+  await page.getByRole('link', { name: /Pedido de demonstração CI/ }).click();
   const conversation = page.url();
-  await expect(page.getByRole('heading', {name:'Pedido de demonstração CI'})).toBeVisible();
-  await expect(page.getByRole('heading', {name:first.name})).toBeVisible();
-  await expect(page.getByRole('heading', {name:second.name})).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Pedido de demonstração CI' }),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: first.name })).toBeVisible();
+  await expect(page.getByRole('heading', { name: second.name })).toBeVisible();
   const seller = await browser.newPage();
-  await seller.goto(site+'/auth/sign-in?next='+encodeURIComponent(new URL(conversation).pathname));
+  await seller.goto(
+    site +
+      '/auth/sign-in?next=' +
+      encodeURIComponent(new URL(conversation).pathname),
+  );
   await seller.locator('input[name="email"]').fill(`${token}@example.test`);
   await seller.locator('input[name="password"]').fill(password);
   await seller.locator('button[type="submit"]').click();
   await seller.waitForURL(conversation);
-  await seller.getByLabel('Sua mensagem').first().fill('Posso apresentar o produto amanhã.');
-  await seller.getByRole('button',{name:'Enviar mensagem'}).first().click();
-  await expect(seller.getByText('Posso apresentar o produto amanhã.')).toBeVisible();
+  await seller
+    .getByLabel('Sua mensagem')
+    .first()
+    .fill('Posso apresentar o produto amanhã.');
+  await seller.getByRole('button', { name: 'Enviar mensagem' }).first().click();
+  await expect(
+    seller.getByText('Posso apresentar o produto amanhã.'),
+  ).toBeVisible();
   await page.reload();
-  await expect(page.getByText('Posso apresentar o produto amanhã.')).toBeVisible();
-  await page.getByRole('button',{name:'Encerrar pedido'}).click();
-  await expect(page.getByText('Este pedido foi encerrado.').first()).toBeVisible();
+  await expect(
+    page.getByText('Posso apresentar o produto amanhã.'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Encerrar pedido' }).click();
+  await expect(
+    page.getByText('Este pedido foi encerrado.').first(),
+  ).toBeVisible();
   await seller.close();
 
   assert.deepEqual(errors, [], 'No browser errors');
@@ -117,11 +255,30 @@ try {
   if (browser) await browser.close();
   // Delete the owner first: cascading foreign keys remove businesses and their reviews.
   const cleanup = await Promise.allSettled([
-    userId ? admin.auth.admin.deleteUser(userId).then(check) : Promise.resolve(),
-    buyerId ? admin.auth.admin.deleteUser(buyerId).then(check) : Promise.resolve(),
+    userId
+      ? admin.auth.admin.deleteUser(userId).then(check)
+      : Promise.resolve(),
+    buyerId
+      ? admin.auth.admin.deleteUser(buyerId).then(check)
+      : Promise.resolve(),
   ]);
-  if (categoryId) cleanup.push(...await Promise.allSettled([admin.from('categories').delete().eq('id', categoryId).then(check)]));
-  if (locationId) cleanup.push(...await Promise.allSettled([admin.from('locations').delete().eq('id', locationId).then(check)]));
-  for (const result of cleanup) if (result.status === 'rejected') console.error('Fixture cleanup failed:', result.reason);
-  assert(cleanup.every((result) => result.status === 'fulfilled'), 'Fixture cleanup must succeed');
+  if (categoryId)
+    cleanup.push(
+      ...(await Promise.allSettled([
+        admin.from('categories').delete().eq('id', categoryId).then(check),
+      ])),
+    );
+  if (locationId)
+    cleanup.push(
+      ...(await Promise.allSettled([
+        admin.from('locations').delete().eq('id', locationId).then(check),
+      ])),
+    );
+  for (const result of cleanup)
+    if (result.status === 'rejected')
+      console.error('Fixture cleanup failed:', result.reason);
+  assert(
+    cleanup.every((result) => result.status === 'fulfilled'),
+    'Fixture cleanup must succeed',
+  );
 }
