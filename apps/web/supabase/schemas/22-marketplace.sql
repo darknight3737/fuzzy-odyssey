@@ -11,7 +11,8 @@ alter table public.businesses
   add column portuguese boolean not null default false,
   add column video_url text,
   add column calendar_url text,
-  add column crm_url text,
+  add column custom_cta_label text check(length(custom_cta_label)<=120),
+  add column custom_cta_url text check(custom_cta_url ~ '^https://' and length(custom_cta_url)<=2048),
   add column pricing_model text,
   add column deployment text[] not null default '{}',
   add column buyer_sizes text[] not null default '{}',
@@ -92,9 +93,10 @@ begin
  if current_user not in ('anon','authenticated') then return new; end if;
  select tier into current_tier from public.businesses where id = new.business_id for update;
  allowed := case current_tier when 'claimed' then 1 when 'verified' then 3 when 'highlight' then 15 when 'spotlight' then 15 else 0 end;
- if current_tier in ('claimed','verified') and cardinality(new.images) > 0 then
+ if current_tier in ('claimed','verified') and cardinality(new.images) > 0 and (tg_op='INSERT' or new.images is distinct from old.images) then
    raise exception 'Images require a paid plan';
  end if;
+ if (select count(*) from public.business_gallery where business_id=new.business_id) + coalesce((select sum(cardinality(images)) from public.business_cases where business_id=new.business_id and id is distinct from new.id),0) + cardinality(new.images) > 20 then raise exception 'Image limit reached'; end if;
  if tg_op = 'INSERT' and (select count(*) from public.business_cases where business_id = new.business_id) >= allowed then
    raise exception 'Case limit reached for this plan';
  end if;
@@ -174,7 +176,7 @@ begin
  where badge.id=p_badge_id and b.website=p_expected_website for update of b, badge;
  if target is null then raise exception 'Badge or website changed during verification'; end if;
  update public.verification_badges set is_verified=p_verified, last_checked=now(), verified_at=case when p_verified then now() else null end where id=p_badge_id;
- if p_verified then update public.businesses set verification_status='verified',tier=case when tier='claimed' then 'verified'::public.business_tier else tier end where id=target; end if;
+ update public.businesses set verification_status=case when p_verified then 'verified'::public.verification_status else 'pending'::public.verification_status end, tier=case when p_verified and tier='claimed' then 'verified'::public.business_tier when not p_verified and tier='verified' then 'claimed'::public.business_tier else tier end where id=target;
 end; $$;
 revoke all on function public.attest_business_badge(uuid,boolean,text) from public,anon,authenticated;
 grant execute on function public.attest_business_badge(uuid,boolean,text) to service_role;
@@ -183,7 +185,7 @@ grant execute on function public.attest_business_badge(uuid,boolean,text) to ser
 create table public.business_gallery (
  id uuid primary key default gen_random_uuid(),
  business_id uuid not null references public.businesses(id) on delete cascade,
- image_url text not null check (length(image_url) between 1 and 2048),
+ image_url text not null check (length(image_url) between 1 and 2048 and image_url ~ '^https://'),
  caption text check (length(caption) <= 500),
  display_order integer not null default 0,
  created_at timestamptz not null default now()
@@ -204,7 +206,7 @@ create function public.enforce_gallery_limit() returns trigger language plpgsql 
 begin
  if current_user in ('anon','authenticated') then
   perform 1 from public.businesses where id=new.business_id for update;
-  if (select count(*) from public.business_gallery where business_id=new.business_id) >= 20 then raise exception 'Gallery limit reached'; end if;
+  if (select count(*) from public.business_gallery where business_id=new.business_id) + coalesce((select sum(cardinality(images)) from public.business_cases where business_id=new.business_id),0) >= 20 then raise exception 'Gallery limit reached'; end if;
  end if;
  return new;
 end; $$;
@@ -335,8 +337,10 @@ create function public.enforce_business_features() returns trigger language plpg
 begin
  if current_user in ('anon','authenticated') then
   if tg_op='INSERT' then
-   if new.cover_image_url is not null or new.video_url is not null or new.calendar_url is not null or new.crm_url is not null then raise exception 'Paid plan required'; end if;
-  elsif new.tier not in ('highlight','spotlight') and (new.cover_image_url is distinct from old.cover_image_url or new.video_url is distinct from old.video_url or new.calendar_url is distinct from old.calendar_url or new.crm_url is distinct from old.crm_url) then
+   if new.cover_image_url is not null or new.video_url is not null or new.calendar_url is not null or new.custom_cta_label is not null or new.custom_cta_url is not null then raise exception 'Paid plan required'; end if;
+  elsif new.verification_status='verified' and new.website is distinct from old.website then
+   raise exception 'Verified website can only be changed by the platform';
+  elsif new.tier not in ('highlight','spotlight') and (new.cover_image_url is distinct from old.cover_image_url or new.video_url is distinct from old.video_url or new.calendar_url is distinct from old.calendar_url or new.custom_cta_label is distinct from old.custom_cta_label or new.custom_cta_url is distinct from old.custom_cta_url) then
    raise exception 'Paid plan required';
   end if;
   if new.vendor_business_id is not null and not exists(select 1 from public.businesses v where v.id=new.vendor_business_id and v.account_id=new.account_id and new.account_id is not null and v.offering_kind='service' and new.offering_kind='software') then raise exception 'Vendor must belong to the same account'; end if;
@@ -392,3 +396,28 @@ grant insert on public.review_reports to authenticated;
 grant select,insert,update,delete on public.review_reports to service_role;
 create policy review_reports_submit on public.review_reports for insert to authenticated with check(reporter_id=(select auth.uid()) and exists(select 1 from public.reviews r where r.id=review_id and r.status='approved'));
 create policy review_reports_mfa on public.review_reports as restrictive to authenticated with check(public.is_mfa_compliant());
+
+-- Integration credentials never enter the publicly readable business row.
+create table public.business_integrations (
+ business_id uuid primary key references public.businesses(id) on delete cascade,
+ webhook_url text not null check(webhook_url ~ '^https://' and length(webhook_url)<=2048),
+ secret text check(length(secret)<=512),
+ enabled boolean not null default true
+);
+alter table public.business_integrations enable row level security;
+revoke all on public.business_integrations from anon,authenticated,service_role;
+grant select,insert,delete on public.business_integrations to authenticated;
+grant update(webhook_url,secret,enabled) on public.business_integrations to authenticated;
+grant select,insert,update,delete on public.business_integrations to service_role;
+create policy business_integrations_owner on public.business_integrations to authenticated using(exists(select 1 from public.businesses b where b.id=business_id and b.tier in ('highlight','spotlight') and (public.is_account_owner(b.account_id) or public.has_permission((select auth.uid()),b.account_id,'settings.manage'::public.app_permissions)))) with check(exists(select 1 from public.businesses b where b.id=business_id and b.tier in ('highlight','spotlight') and (public.is_account_owner(b.account_id) or public.has_permission((select auth.uid()),b.account_id,'settings.manage'::public.app_permissions))));
+create policy business_integrations_mfa on public.business_integrations as restrictive to authenticated using(public.is_mfa_compliant()) with check(public.is_mfa_compliant());
+
+-- Public delivery, tightly scoped writes. Logo is basic; gallery requires paid tier.
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+ values('business-media','business-media',true,2097152,array['image/jpeg','image/png','image/webp'])
+ on conflict(id) do update set public=excluded.public,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
+create policy business_media_read on storage.objects for select to anon,authenticated using(bucket_id='business-media');
+create policy business_media_insert on storage.objects for insert to authenticated with check (
+ bucket_id='business-media' and exists(select 1 from public.businesses b where b.id::text=(storage.foldername(name))[1] and (public.is_account_owner(b.account_id) or public.has_permission((select auth.uid()),b.account_id,'settings.manage'::public.app_permissions)) and (((storage.foldername(name))[2]='logo' and b.tier in ('claimed','verified','highlight','spotlight')) or ((storage.foldername(name))[2]='gallery' and b.tier in ('highlight','spotlight')))) and public.is_mfa_compliant());
+create policy business_media_delete on storage.objects for delete to authenticated using (
+ bucket_id='business-media' and exists(select 1 from public.businesses b where b.id::text=(storage.foldername(name))[1] and (public.is_account_owner(b.account_id) or public.has_permission((select auth.uid()),b.account_id,'settings.manage'::public.app_permissions))) and public.is_mfa_compliant());
