@@ -112,7 +112,7 @@ jobs:
             sleep 1
           done
           node .github/scripts/verify-business-analytics-browser.mjs
-          SELLETIVE_TEST_SITE=http://localhost:3000 SELLETIVE_DISPOSABLE_DB=true node .github/scripts/verify-marketplace-browser.mjs
+          SELLETIVE_BROWSER_CHANNEL=chrome SELLETIVE_TEST_SITE=http://localhost:3000 SELLETIVE_DISPOSABLE_DB=true node .github/scripts/verify-marketplace-browser.mjs
       - name: Validate Cloudflare build without deployment
         if: inputs.application
         run: |

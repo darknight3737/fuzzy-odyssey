@@ -234,6 +234,7 @@ alter table public.lead_briefs
  add column status text not null default 'open' check(status in ('open','closed')),
  add constraint lead_briefs_request_unique unique(buyer_user_id,request_id);
 create index idx_lead_briefs_category on public.lead_briefs(category_id);
+create index idx_lead_briefs_buyer_recent on public.lead_briefs(buyer_user_id,created_at desc);
 -- All creation goes through the atomic dispatch routine.
 revoke insert on public.lead_briefs from authenticated;
 create function public.create_lead_brief(p_payload jsonb) returns uuid language plpgsql security definer set search_path='' as $$
@@ -249,6 +250,7 @@ begin
  if not exists(select 1 from auth.users where id=actor and email_confirmed_at is not null and lower(email)=lower(p_payload->>'buyer_email')) then raise exception 'Use your confirmed email'; end if;
  select coalesce(array_agg(value::uuid),array[]::uuid[]) into targets from jsonb_array_elements_text(coalesce(p_payload->'business_ids','[]'::jsonb));
  if cardinality(targets)>5 or cardinality(targets)<>(select count(distinct x) from unnest(targets) x) then raise exception 'Select at most five distinct businesses'; end if;
+ if cardinality(targets)=0 and not exists(select 1 from public.categories where id=nullif(p_payload->>'category_id','')::uuid and is_active) then raise exception 'Active category required'; end if;
  if cardinality(targets)>0 and exists(select 1 from unnest(targets) x left join public.businesses b on b.id=x where b.id is null or b.tier not in ('verified','highlight','spotlight') or b.account_id=actor) then raise exception 'Ineligible recipient'; end if;
  if length(trim(coalesce(p_payload->>'buyer_name','')))<2 or coalesce(p_payload->>'buyer_email','') !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then raise exception 'Valid buyer contact required'; end if;
  insert into public.lead_briefs(buyer_user_id,request_id,title,description,budget,buyer_name,buyer_email,buyer_phone,company_name,category_id,offering_kind,timeline)
@@ -287,7 +289,8 @@ create table public.lead_messages (
 create index idx_lead_messages_thread on public.lead_messages(brief_id,business_id,created_at);
 alter table public.lead_messages enable row level security;
 revoke all on public.lead_messages from anon,authenticated,service_role;
-grant select,insert on public.lead_messages to authenticated;
+grant select on public.lead_messages to authenticated;
+grant insert(brief_id,business_id,sender_id,content) on public.lead_messages to authenticated;
 grant select,insert,update,delete on public.lead_messages to service_role;
 create policy lead_messages_read on public.lead_messages for select to authenticated using (
  exists(select 1 from public.lead_briefs l where l.id=brief_id and l.buyer_user_id=(select auth.uid())) or

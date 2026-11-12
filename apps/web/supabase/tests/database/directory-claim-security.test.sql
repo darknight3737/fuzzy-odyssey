@@ -83,6 +83,11 @@ select pass('Atomic claim transfers ownership; duplicates, trust changes and sel
 reset role;
 set local request.jwt.claims = '{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated","aal":"aal1"}';
 set local role authenticated;
+select throws_ok($$insert into public.reviews(business_id,user_id,reviewer_name,reviewer_email,rating)
+values ('20000000-0000-0000-0000-000000000001',auth.uid(),'Reviewer','private@different.example',4)$$, '42501', null, 'Claimed profile cannot receive new reviews');
+reset role;
+update public.businesses set tier='verified' where slug='claim-qa';
+set local role authenticated;
 insert into public.reviews(id,business_id,user_id,reviewer_name,reviewer_email,rating,title,content,status)
 values ('30000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001',auth.uid(),'Reviewer','private@different.example',4,'Useful experience','An independent customer experience for testing.','pending');
 do $$declare changed integer;begin
