@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { categoryLabel, isTranslatedCategory } from '~/lib/directory/category-label';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
 
@@ -25,11 +26,11 @@ export function CategoryList({ categories }: CategoryListProps) {
                 {category.icon && (
                   <span className={'text-2xl'}>{category.icon}</span>
                 )}
-                {category.name}
+                {categoryLabel(category.slug, category.name)}
               </CardTitle>
             </CardHeader>
 
-            {category.description && (
+            {category.description && !isTranslatedCategory(category.slug) && (
               <CardContent>
                 <p className={'text-muted-foreground text-sm'}>
                   {category.description}

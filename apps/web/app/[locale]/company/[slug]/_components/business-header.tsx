@@ -16,7 +16,7 @@ type BusinessHeaderProps = {
 export function BusinessHeader({ business }: BusinessHeaderProps) {
   return (
     <div className={'mb-8'}>
-      {business.cover_image_url && (
+      {business.cover_image_url && ['highlight', 'spotlight'].includes(business.tier) && (
         <div className={'mb-6 h-64 w-full overflow-hidden rounded-lg'}>
           <DirectoryImage
             src={business.cover_image_url}
@@ -48,7 +48,7 @@ export function BusinessHeader({ business }: BusinessHeaderProps) {
 
             {business.tier !== 'unclaimed' && business.tier !== 'claimed' && (
               <Badge variant={'secondary'} className={'text-sm'}>
-                {business.tier}
+                {business.tier === 'verified' ? 'Verificada' : business.tier === 'highlight' ? 'Destaque' : 'Spotlight'}
               </Badge>
             )}
           </div>

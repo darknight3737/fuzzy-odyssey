@@ -1,4 +1,4 @@
-import { CreditCard, Home, User } from 'lucide-react';
+import { CreditCard, Home, User, MessageSquare, Plus } from 'lucide-react';
 import * as z from 'zod';
 
 import { NavigationConfigSchema } from '@kit/ui/navigation-schema';
@@ -12,6 +12,8 @@ const routes = [
   {
     label: 'common.routes.application',
     children: [
+      {label:'common.routes.leads',path:'/home/leads',Icon:<MessageSquare className={iconClasses}/>},
+      {label:'common.routes.newOffering',path:'/home/offerings/new',Icon:<Plus className={iconClasses}/>},
       {
         label: 'common.routes.home',
         path: pathsConfig.app.home,

@@ -22,7 +22,7 @@ export async function BusinessAnalytics({
   businessId: string;
   tier: string;
 }) {
-  if (tier !== 'highlight' && tier !== 'spotlight') {
+  if (!['verified', 'highlight', 'spotlight'].includes(tier)) {
     return (
       <section
         className="my-8 rounded-xl border p-6"
@@ -40,7 +40,7 @@ export async function BusinessAnalytics({
   let summary;
   try {
     // Request-scoped standard client: RLS independently enforces owner, tier and MFA.
-    summary = await createBusinessAnalyticsService(client).summary(businessId);
+    summary = await createBusinessAnalyticsService(client).summary(businessId, tier === 'highlight' || tier === 'spotlight');
   } catch {
     return (
       <section className="my-8 rounded-xl border p-6" role="status">

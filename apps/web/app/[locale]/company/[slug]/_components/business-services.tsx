@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
 import { Trans } from '@kit/ui/trans';
 
 type Service = {
@@ -22,43 +21,13 @@ export function BusinessServices({ services }: BusinessServicesProps) {
 
       <div className={'grid gap-4 md:grid-cols-2'}>
         {services.map((service) => (
-          <Card key={service.id}>
-            <CardHeader>
-              <CardTitle>{service.title}</CardTitle>
-            </CardHeader>
-
-            <CardContent>
-              <p className={'text-muted-foreground mb-3 text-sm'}>
-                {service.description}
-              </p>
-
-              <div className={'flex gap-4 text-sm'}>
-                {service.price_range && (
-                  <div>
-                    <strong>
-                      <Trans
-                        i18nKey={'business.priceRange'}
-                        defaults={'Price:'}
-                      />
-                    </strong>{' '}
-                    {service.price_range}
-                  </div>
-                )}
-
-                {service.delivery_time && (
-                  <div>
-                    <strong>
-                      <Trans
-                        i18nKey={'business.deliveryTime'}
-                        defaults={'Delivery:'}
-                      />
-                    </strong>{' '}
-                    {service.delivery_time}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <details key={service.id} className="rounded-xl border p-6">
+            <summary className="cursor-pointer font-semibold">{service.title}</summary>
+            <p className="text-muted-foreground mt-3 text-sm">{service.description}</p>
+            {service.price_range && <p className="mt-3 text-sm"><strong>Preço:</strong> {service.price_range}</p>}
+            {service.delivery_time && <p className="mt-2 text-sm"><strong>Prazo:</strong> {service.delivery_time}</p>}
+            <div className="mt-4 flex gap-4 text-sm"><a href="#cases" className="underline">Ver cases</a><a href="#avaliacoes" className="underline">Ver avaliações</a></div>
+          </details>
         ))}
       </div>
     </div>

@@ -12,6 +12,8 @@ import {
   DropdownMenuTrigger,
 } from '@kit/ui/dropdown-menu';
 
+import { DirectoryShortlistMenu } from '~/components/directory-shortlist';
+
 import { SiteHeaderAccountSection } from './site-header-account-section';
 
 import styles from '../marketing.module.css';
@@ -19,9 +21,10 @@ import styles from '../marketing.module.css';
 export function SiteHeader() {
   const t = useTranslations('marketing.home');
   const links = [
-    { href: '/categories', label: t('navExplore') },
-    { href: '/#como-funciona', label: t('navHow') },
-    { href: '/faq', label: t('navResources') },
+    { href: '/search?kind=service', label: 'Serviços' },
+    { href: '/search?kind=software', label: 'Software' },
+    { href: '/categories', label: 'Categorias' },
+    { href: '/pricing', label: 'Preços' },
   ];
 
   return (
@@ -36,10 +39,18 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="min-h-11 text-sm font-medium">Para empresas</DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem render={<Link href="/home/offerings/new" />}>Cadastrar empresa ou software</DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/claim" />}>Reivindicar perfil</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
         <div className={styles.actions}>
-          <Link href="/claim" className={styles.companyLink}>
-            {t('navBusiness')} <ArrowUpRight size={16} aria-hidden="true" />
+          <DirectoryShortlistMenu />
+          <Link href="/projects/new" className={styles.companyLink}>
+            Publicar projeto <ArrowUpRight size={16} aria-hidden="true" />
           </Link>
           <SiteHeaderAccountSection />
           <div className={styles.mobileMenu}>
@@ -51,7 +62,7 @@ export function SiteHeader() {
                 <Menu size={24} aria-hidden="true" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                {[...links, { href: '/claim', label: t('navBusiness') }].map(
+                {[...links, { href: '/projects/new', label: 'Publicar projeto' }, { href: '/home/offerings/new', label: 'Cadastrar empresa ou software' }, { href: '/claim', label: 'Reivindicar perfil' }].map(
                   (link) => (
                     <DropdownMenuItem
                       key={link.href}

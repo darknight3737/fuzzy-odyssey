@@ -102,7 +102,7 @@
 .desktopNav {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 16px;
   margin-inline: auto;
 }
 .desktopNav a {
@@ -226,18 +226,11 @@
   .headerInner {
     gap: 16px;
   }
-  .desktopNav {
-    gap: 20px;
-  }
-  .desktopNav a {
-    font-size: 13px;
-  }
-  .desktopNav a:nth-child(3) {
+  .desktopNav, .companyLink {
     display: none;
   }
-  .companyLink {
-    font-size: 13px;
-    padding-inline: 12px;
+  .mobileMenu {
+    display: block;
   }
   .footerTop {
     gap: 28px;

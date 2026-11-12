@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import {TIER_LABELS} from '~/lib/plans';
 
 import Link from 'next/link';
 import { connection } from 'next/server';
@@ -36,12 +37,13 @@ async function UserHomePage() {
           Reivindicar uma empresa
         </Link>
       </div>
+      <nav className="mb-8 flex flex-wrap gap-4"><Link className="rounded-full border px-5 py-3" href="/home/leads">Pedidos e oportunidades</Link><Link className="rounded-full border px-5 py-3" href="/home/offerings/new">Cadastrar serviço ou software</Link></nav>
       {businesses?.length ? (
         <div className="grid gap-5 md:grid-cols-2">
           {businesses.map((b) => (
             <article key={b.id} className="rounded-2xl border p-7">
               <span className="text-muted-foreground text-xs tracking-widest uppercase">
-                {b.tier}
+                {TIER_LABELS[b.tier]}
               </span>
               <h2 className="mt-3 text-xl font-semibold">{b.name}</h2>
               <p className="text-muted-foreground mt-3 line-clamp-3 text-sm">

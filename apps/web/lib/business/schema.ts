@@ -12,6 +12,7 @@ const optionalUrl = z
     }
   }, 'Informe uma URL com https://');
 export const BusinessProfileSchema = z.object({
+  id: z.string().uuid(),
   slug: z.string().min(1).max(200),
   name: z.string().trim().min(2).max(160),
   description: z.string().trim().max(10000),

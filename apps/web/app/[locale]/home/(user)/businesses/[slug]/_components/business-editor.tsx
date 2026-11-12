@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
+import { useAction } from 'next-safe-action/hooks';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -12,18 +13,20 @@ import {
 } from '~/lib/business/schema';
 
 import { updateBusinessAction } from '../_lib/actions';
+import { MediaUpload } from './media-upload';
 
 export function BusinessEditor({ values }: { values: BusinessProfileInput }) {
   const {
     register,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<BusinessProfileFormValues, undefined, BusinessProfileInput>({
     resolver: zodResolver(BusinessProfileSchema),
     defaultValues: values,
   });
-  const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState('');
+  const action = useAction(updateBusinessAction, { onSuccess: ({ data }) => setMessage(data?.success ? 'Informações salvas com sucesso.' : data?.error || 'Não foi possível salvar.'), onError: () => setMessage('Não foi possível salvar. Tente novamente.') });
   const fields = [
     ['name', 'Nome da empresa', 'text'],
     ['website', 'Site', 'url'],
@@ -35,25 +38,11 @@ export function BusinessEditor({ values }: { values: BusinessProfileInput }) {
   ] as const;
   return (
     <form
-      onSubmit={handleSubmit((data) =>
-        startTransition(async () => {
-          setMessage('');
-          try {
-            const result = await updateBusinessAction(data);
-            setMessage(
-              result?.data?.success
-                ? 'Informações salvas com sucesso.'
-                : result?.data?.error ||
-                    'Não foi possível concluir. Confira os dados e tente novamente.',
-            );
-          } catch {
-            setMessage('Não foi possível salvar. Tente novamente.');
-          }
-        }),
-      )}
+      onSubmit={handleSubmit(action.execute)}
       className="space-y-6 rounded-2xl border p-6"
     >
       <input type="hidden" {...register('slug')} />
+      <input type="hidden" {...register('id')} />
       {fields.map(([name, label, type]) => (
         <div key={name}>
           <label htmlFor={name} className="mb-2 block text-sm font-medium">
@@ -67,6 +56,7 @@ export function BusinessEditor({ values }: { values: BusinessProfileInput }) {
             aria-describedby={errors[name] ? `${name}-error` : undefined}
             className="w-full rounded-lg border p-3"
           />
+          {name === 'logo_url' && <MediaUpload businessId={values.id} kind="logo" onUploaded={(url) => setValue('logo_url', url, { shouldValidate: true })} />}
           {errors[name] && (
             <p id={`${name}-error`} className="text-destructive mt-2 text-sm">
               {errors[name].message}
@@ -95,11 +85,11 @@ export function BusinessEditor({ values }: { values: BusinessProfileInput }) {
         Atendemos remotamente
       </label>
       <button
-        disabled={pending}
+        disabled={action.isPending}
         data-test="save-business"
         className="bg-primary text-primary-foreground rounded-full px-6 py-3 disabled:opacity-50"
       >
-        {pending ? 'Salvando…' : 'Salvar alterações'}
+        {action.isPending ? 'Salvando…' : 'Salvar alterações'}
       </button>
       <p role="status" aria-live="polite" className="text-sm">
         {message}

@@ -25,23 +25,23 @@ export function createBusinessAnalyticsService(
       });
       if (error) throw error;
     },
-    async summary(businessId: string) {
+    async summary(businessId: string, fullHistory = false) {
       const now = new Date();
       const to = now.toISOString().slice(0, 10);
       const start = new Date(now);
       start.setUTCDate(start.getUTCDate() - 29);
       const from = start.toISOString().slice(0, 10);
-      const { data, error } = await client
+      let query = client
         .from('business_analytics_daily')
         .select('day,event,count')
         .eq('business_id', businessId)
-        .gte('day', from)
-        .lte('day', to)
-        .order('day', { ascending: false });
+        .lte('day', to);
+      if (!fullHistory) query = query.gte('day', from);
+      const { data, error } = await query.order('day', { ascending: false });
       if (error) throw error;
       const totals = { view: 0, website: 0, phone: 0, email: 0 };
       const daily = new Map<string, typeof totals>();
-      for (let i = 29; i >= 0; i--) {
+      for (let i = 29; i >= 0 && !fullHistory; i--) {
         const date = new Date(`${to}T00:00:00Z`);
         date.setUTCDate(date.getUTCDate() - i);
         daily.set(date.toISOString().slice(0, 10), { ...totals });
@@ -50,10 +50,11 @@ export function createBusinessAnalyticsService(
         if (!(row.event in totals)) continue;
         const event = row.event as InterestEvent;
         totals[event] += row.count;
+        if (!daily.has(row.day)) daily.set(row.day, { view: 0, website: 0, phone: 0, email: 0 });
         const day = daily.get(row.day);
         if (day) day[event] += row.count;
       }
-      return { totals, days: [...daily].reverse(), from, to };
+      return { totals, days: [...daily].sort(([a], [b]) => b.localeCompare(a)), from: fullHistory && data.length ? data[data.length - 1]!.day : from, to };
     },
   };
 }

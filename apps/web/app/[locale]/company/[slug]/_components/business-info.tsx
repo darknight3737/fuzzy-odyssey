@@ -10,6 +10,7 @@ import { BusinessContactLink } from './business-interest';
 
 type Business = {
   id: string;
+  tier: string;
   description: string | null;
   website: string | null;
   phone: string | null;
@@ -32,6 +33,7 @@ type BusinessInfoProps = {
 };
 
 export function BusinessInfo({ business }: BusinessInfoProps) {
+  const canContact = ['verified', 'highlight', 'spotlight'].includes(business.tier);
   const activeCategories = business.business_categories?.filter(
     (entry) => entry.categories?.is_active,
   );
@@ -55,7 +57,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
           )}
 
           <div className={'space-y-2'}>
-            {business.website && (
+            {canContact && business.website && (
               <div>
                 <strong className={'text-sm'}>
                   <Trans i18nKey={'business.website'} defaults={'Website:'} />
@@ -73,7 +75,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
               </div>
             )}
 
-            {business.phone && (
+            {canContact && business.phone && (
               <div>
                 <strong className={'text-sm'}>
                   <Trans i18nKey={'business.phone'} defaults={'Phone:'} />
@@ -89,7 +91,7 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
               </div>
             )}
 
-            {business.email && (
+            {canContact && business.email && (
               <div>
                 <strong className={'text-sm'}>
                   <Trans i18nKey={'business.email'} defaults={'Email:'} />

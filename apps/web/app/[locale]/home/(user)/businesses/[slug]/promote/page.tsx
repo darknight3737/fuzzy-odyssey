@@ -1,0 +1,11 @@
+import {Suspense} from 'react';
+import Link from 'next/link';
+import {connection} from 'next/server';
+import {redirect,notFound} from 'next/navigation';
+import {getSupabaseServerClient} from '@kit/supabase/server-client';
+import {MARKETPLACE_PLANS,TIER_LABELS} from '~/lib/plans';
+import {LeadPotential} from '~/components/lead-potential';
+import {BadgeVerification} from './_components/badge-verification';
+export const metadata={title:'Planos e verificação | Selletive',robots:{index:false,follow:false}};
+async function Promotion({params}:{params:Promise<{slug:string}>}){await connection();const {slug}=await params;const client=getSupabaseServerClient();const {data:{user}}=await client.auth.getUser();if(!user)redirect('/auth/sign-in');const {data:b,error}=await client.from('businesses').select('id,name,slug,tier,website,verification_status').eq('slug',slug).eq('account_id',user.id).maybeSingle();if(error)throw error;if(!b)notFound();return <><Link href={'/home/businesses/'+slug} className="underline">← Gerenciar perfil</Link><h1 className="my-5 text-3xl font-semibold">Mais possibilidades para {b.name}</h1><p>Seu plano: <strong>{TIER_LABELS[b.tier]}</strong></p><BadgeVerification business={b}/><LeadPotential/><div className="grid gap-4 md:grid-cols-2">{MARKETPLACE_PLANS.filter(p=>p.price>0).map(p=><section key={p.id} className="rounded-2xl border p-6"><h2 className="text-2xl font-semibold">{p.name}</h2><p className="my-4 text-2xl">{p.id==='spotlight'?'A partir de ':''}R$ {p.price}/mês</p><p className="mb-4">{p.description}</p><ul className="space-y-2 text-sm">{p.features.map(f=><li key={f}>✓ {f}</li>)}</ul><p className="my-4 text-sm text-muted-foreground">A cobrança será disponibilizada após a configuração da plataforma de pagamentos. Nenhuma assinatura será ativada ou cobrada agora.</p><Link className="inline-block rounded-full border px-5 py-3" href={'/contact?subject='+encodeURIComponent('Interesse '+p.name+' — '+b.name)}>Registrar interesse</Link></section>)}</div></>;}
+export default function Page(props:{params:Promise<{slug:string}>}){return <main className="mx-auto w-full max-w-5xl p-6"><Suspense fallback={<p>Carregando planos…</p>}><Promotion {...props}/></Suspense></main>;}

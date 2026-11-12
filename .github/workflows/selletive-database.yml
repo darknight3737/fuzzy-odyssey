@@ -37,6 +37,11 @@ jobs:
         working-directory: apps/web
         run: |
           supabase db diff -f marketplace
+          migration=$(find supabase/migrations -name '*marketplace.sql' -print -quit)
+          # Migra reports pre-existing ACL drift; retain only intentional legacy revocations.
+          sed -i -E '/^revoke (delete|insert|select|update) on table "public"\."(business_awards|business_cases|business_categories|business_locations|business_services|businesses|categories|category_aliases|locations|reviews|review_responses|verification_badges)" from "(anon|authenticated|service_role)";$/d' "$migration"
+          grep -E '^(revoke|grant) ' supabase/schemas/22-marketplace.sql >> "$migration"
+          sed -n "/^insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)/,/^ on conflict(id).*;$/p" supabase/schemas/22-marketplace.sql >> "$migration"
           supabase db reset
           supabase test db
           supabase db diff > /tmp/schema-diff.sql
@@ -107,6 +112,7 @@ jobs:
             sleep 1
           done
           node .github/scripts/verify-business-analytics-browser.mjs
+          SELLETIVE_TEST_SITE=http://localhost:3000 SELLETIVE_DISPOSABLE_DB=true node .github/scripts/verify-marketplace-browser.mjs
       - name: Validate Cloudflare build without deployment
         if: inputs.application
         run: |
@@ -123,3 +129,4 @@ jobs:
             /tmp/schema-diff.sql
             /tmp/analytics-formatting.patch
             /tmp/analytics-next.log
+            ${{ runner.temp }}/selletive-marketplace/

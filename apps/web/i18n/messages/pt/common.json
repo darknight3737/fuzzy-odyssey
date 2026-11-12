@@ -1,0 +1,13 @@
+{
+  "emailAddress": "E-mail",
+  "password": "Senha",
+  "cancel": "Cancelar",
+  "back": "Voltar",
+  "continueKey": "Continuar",
+  "loading": "Carregando...",
+  "tryAgain": "Tentar novamente",
+  "routes": {
+    "leads": "Pedidos e oportunidades",
+    "newOffering": "Cadastrar solução"
+  }
+}

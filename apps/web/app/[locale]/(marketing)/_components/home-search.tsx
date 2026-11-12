@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { ArrowRight, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
@@ -24,6 +26,7 @@ export function HomeSearch() {
   // Search is a native GET navigation, not a mutation or Server Action.
   // Keep the action usable before hydration and leave URL encoding to the browser.
   return (
+    <>
     <Form {...form}>
       <form
         action="/search"
@@ -66,5 +69,10 @@ export function HomeSearch() {
         </Button>
       </form>
     </Form>
+    <div className="mt-4 flex flex-wrap gap-3 text-sm">
+      <Link className="rounded-full border px-4 py-2" href="/search?kind=service">Explorar serviços</Link>
+      <Link className="rounded-full border px-4 py-2" href="/search?kind=software">Explorar softwares</Link>
+    </div>
+    </>
   );
 }
