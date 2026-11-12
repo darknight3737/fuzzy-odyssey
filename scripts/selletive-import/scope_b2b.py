@@ -90,7 +90,7 @@ _SERVICE_ACTIVITY = re.compile(
     r"desenvolvimento de software|software personalizado|fabrica[cç][aã]o por contrato|"
     r"produ[cç][aã]o terceirizada|catering corporativo)\b", re.I)
 _SERVICE_OFFER_VERB = re.compile(
-    r"\b(?:offers?|provides?|delivers?|sells?|develops?|services? include|"
+    r"\b(?:offers?|provides?|delivers?|sells?|develops?|receives?|services? include|"
     r"serves? as|oferece(?:m)?|presta(?:m)?|fornece(?:m)?|vende(?:m)?|"
     r"desenvolve(?:m)?|servi[cç]os? incluem)\b", re.I)
 _SERVICE_PROVIDER_IDENTITY = re.compile(
