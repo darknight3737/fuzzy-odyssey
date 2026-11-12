@@ -398,6 +398,70 @@ export type Database = {
           },
         ]
       }
+      business_gallery: {
+        Row: {
+          business_id: string
+          caption: string | null
+          created_at: string
+          display_order: number
+          id: string
+          image_url: string
+        }
+        Insert: {
+          business_id: string
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_url: string
+        }
+        Update: {
+          business_id?: string
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_gallery_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_integrations: {
+        Row: {
+          business_id: string
+          enabled: boolean
+          secret: string | null
+          webhook_url: string
+        }
+        Insert: {
+          business_id: string
+          enabled?: boolean
+          secret?: string | null
+          webhook_url: string
+        }
+        Update: {
+          business_id?: string
+          enabled?: boolean
+          secret?: string | null
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_integrations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_locations: {
         Row: {
           business_id: string
@@ -504,24 +568,47 @@ export type Database = {
           account_id: string | null
           address: Json | null
           business_languages: string[]
+          buyer_sizes: string[]
+          calendar_url: string | null
+          clients: string[]
           contact_enabled: boolean
           cover_image_url: string | null
           created_at: string | null
           created_by: string | null
+          custom_cta_label: string | null
+          custom_cta_url: string | null
+          deployment: string[]
           description: string | null
           domain_rating: number
           email: string | null
           employee_count: number | null
+          features: string[]
           founded_year: number | null
+          free_plan: boolean
+          free_trial: boolean
           id: string
+          integrations: string[]
           logo_url: string | null
+          max_budget: number | null
+          min_budget: number | null
           name: string
+          offering_kind: string
           phone: string | null
+          portuguese: boolean
+          pricing_model: string | null
+          profile_details: Json
+          sectors: string[]
           slug: string
+          social_links: Json
+          support_languages: string[]
+          team_photo_url: string | null
+          team_story: string | null
           tier: Database["public"]["Enums"]["business_tier"]
           updated_at: string | null
           updated_by: string | null
+          vendor_business_id: string | null
           verification_status: Database["public"]["Enums"]["verification_status"]
+          video_url: string | null
           website: string | null
           works_remotely: boolean
         }
@@ -529,24 +616,47 @@ export type Database = {
           account_id?: string | null
           address?: Json | null
           business_languages?: string[]
+          buyer_sizes?: string[]
+          calendar_url?: string | null
+          clients?: string[]
           contact_enabled?: boolean
           cover_image_url?: string | null
           created_at?: string | null
           created_by?: string | null
+          custom_cta_label?: string | null
+          custom_cta_url?: string | null
+          deployment?: string[]
           description?: string | null
           domain_rating?: number
           email?: string | null
           employee_count?: number | null
+          features?: string[]
           founded_year?: number | null
+          free_plan?: boolean
+          free_trial?: boolean
           id?: string
+          integrations?: string[]
           logo_url?: string | null
+          max_budget?: number | null
+          min_budget?: number | null
           name: string
+          offering_kind?: string
           phone?: string | null
+          portuguese?: boolean
+          pricing_model?: string | null
+          profile_details?: Json
+          sectors?: string[]
           slug: string
+          social_links?: Json
+          support_languages?: string[]
+          team_photo_url?: string | null
+          team_story?: string | null
           tier?: Database["public"]["Enums"]["business_tier"]
           updated_at?: string | null
           updated_by?: string | null
+          vendor_business_id?: string | null
           verification_status?: Database["public"]["Enums"]["verification_status"]
+          video_url?: string | null
           website?: string | null
           works_remotely?: boolean
         }
@@ -554,24 +664,47 @@ export type Database = {
           account_id?: string | null
           address?: Json | null
           business_languages?: string[]
+          buyer_sizes?: string[]
+          calendar_url?: string | null
+          clients?: string[]
           contact_enabled?: boolean
           cover_image_url?: string | null
           created_at?: string | null
           created_by?: string | null
+          custom_cta_label?: string | null
+          custom_cta_url?: string | null
+          deployment?: string[]
           description?: string | null
           domain_rating?: number
           email?: string | null
           employee_count?: number | null
+          features?: string[]
           founded_year?: number | null
+          free_plan?: boolean
+          free_trial?: boolean
           id?: string
+          integrations?: string[]
           logo_url?: string | null
+          max_budget?: number | null
+          min_budget?: number | null
           name?: string
+          offering_kind?: string
           phone?: string | null
+          portuguese?: boolean
+          pricing_model?: string | null
+          profile_details?: Json
+          sectors?: string[]
           slug?: string
+          social_links?: Json
+          support_languages?: string[]
+          team_photo_url?: string | null
+          team_story?: string | null
           tier?: Database["public"]["Enums"]["business_tier"]
           updated_at?: string | null
           updated_by?: string | null
+          vendor_business_id?: string | null
           verification_status?: Database["public"]["Enums"]["verification_status"]
+          video_url?: string | null
           website?: string | null
           works_remotely?: boolean
         }
@@ -595,6 +728,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "user_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "businesses_vendor_business_id_fkey"
+            columns: ["vendor_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
         ]
@@ -806,6 +946,139 @@ export type Database = {
           },
         ]
       }
+      lead_briefs: {
+        Row: {
+          budget: number | null
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string | null
+          buyer_user_id: string
+          category_id: string | null
+          company_name: string | null
+          created_at: string
+          description: string
+          id: string
+          offering_kind: string
+          request_id: string
+          status: string
+          timeline: string | null
+          title: string
+        }
+        Insert: {
+          budget?: number | null
+          buyer_email?: string
+          buyer_name?: string
+          buyer_phone?: string | null
+          buyer_user_id?: string
+          category_id?: string | null
+          company_name?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          offering_kind?: string
+          request_id?: string
+          status?: string
+          timeline?: string | null
+          title: string
+        }
+        Update: {
+          budget?: number | null
+          buyer_email?: string
+          buyer_name?: string
+          buyer_phone?: string | null
+          buyer_user_id?: string
+          category_id?: string | null
+          company_name?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          offering_kind?: string
+          request_id?: string
+          status?: string
+          timeline?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_briefs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_messages: {
+        Row: {
+          brief_id: string
+          business_id: string
+          content: string
+          created_at: string
+          id: string
+          sender_id: string | null
+        }
+        Insert: {
+          brief_id: string
+          business_id: string
+          content: string
+          created_at?: string
+          id?: string
+          sender_id?: string | null
+        }
+        Update: {
+          brief_id?: string
+          business_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_messages_brief_id_business_id_fkey"
+            columns: ["brief_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "lead_recipients"
+            referencedColumns: ["brief_id", "business_id"]
+          },
+        ]
+      }
+      lead_recipients: {
+        Row: {
+          brief_id: string
+          business_id: string
+          created_at: string
+          status: string
+        }
+        Insert: {
+          brief_id: string
+          business_id: string
+          created_at?: string
+          status?: string
+        }
+        Update: {
+          brief_id?: string
+          business_id?: string
+          created_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_recipients_brief_id_fkey"
+            columns: ["brief_id"]
+            isOneToOne: false
+            referencedRelation: "lead_briefs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_recipients_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           coordinates: unknown
@@ -855,6 +1128,44 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_subscriptions: {
+        Row: {
+          business_id: string
+          current_period_end: string | null
+          event_created: string
+          plan: string
+          provider_customer_id: string
+          provider_subscription_id: string
+          status: string
+        }
+        Insert: {
+          business_id: string
+          current_period_end?: string | null
+          event_created: string
+          plan: string
+          provider_customer_id: string
+          provider_subscription_id: string
+          status: string
+        }
+        Update: {
+          business_id?: string
+          current_period_end?: string | null
+          event_created?: string
+          plan?: string
+          provider_customer_id?: string
+          provider_subscription_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_subscriptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
         ]
@@ -1080,6 +1391,38 @@ export type Database = {
           },
         ]
       }
+      review_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          review_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id?: string
+          review_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_reports_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       review_responses: {
         Row: {
           created_at: string | null
@@ -1151,6 +1494,7 @@ export type Database = {
           content: string | null
           created_at: string | null
           created_by: string | null
+          dimensions: Json
           id: string
           is_verified: boolean
           rating: number
@@ -1167,6 +1511,7 @@ export type Database = {
           content?: string | null
           created_at?: string | null
           created_by?: string | null
+          dimensions?: Json
           id?: string
           is_verified?: boolean
           rating: number
@@ -1183,6 +1528,7 @@ export type Database = {
           content?: string | null
           created_at?: string | null
           created_by?: string | null
+          dimensions?: Json
           id?: string
           is_verified?: boolean
           rating?: number
@@ -1502,11 +1848,24 @@ export type Database = {
         }
         Returns: Database["public"]["Tables"]["invitations"]["Row"][]
       }
+      apply_marketplace_subscription: {
+        Args: { p_payload: Json }
+        Returns: boolean
+      }
+      attest_business_badge: {
+        Args: {
+          p_badge_id: string
+          p_expected_website: string
+          p_verified: boolean
+        }
+        Returns: undefined
+      }
       can_action_account_member: {
         Args: { target_team_account_id: string; target_user_id: string }
         Returns: boolean
       }
       claim_business: { Args: { business_slug: string }; Returns: string }
+      close_lead_brief: { Args: { p_brief_id: string }; Returns: undefined }
       create_invitation: {
         Args: { account_id: string; email: string; role: string }
         Returns: {
@@ -1526,6 +1885,11 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      create_lead_brief: { Args: { p_payload: Json }; Returns: string }
+      create_marketplace_offering: {
+        Args: { p_payload: Json }
+        Returns: string
       }
       create_nonce: {
         Args: {
@@ -1560,6 +1924,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      dispatch_lead: {
+        Args: { p_brief_id: string; p_business_id: string }
+        Returns: undefined
       }
       get_account_invitations: {
         Args: { account_slug: string }
@@ -1640,6 +2008,7 @@ export type Database = {
         Args: { account_id: string; user_id: string }
         Returns: boolean
       }
+      owns_lead_brief: { Args: { p_id: string }; Returns: boolean }
       record_business_interest: {
         Args: {
           p_actor_id?: string
@@ -1664,24 +2033,47 @@ export type Database = {
           account_id: string | null
           address: Json | null
           business_languages: string[]
+          buyer_sizes: string[]
+          calendar_url: string | null
+          clients: string[]
           contact_enabled: boolean
           cover_image_url: string | null
           created_at: string | null
           created_by: string | null
+          custom_cta_label: string | null
+          custom_cta_url: string | null
+          deployment: string[]
           description: string | null
           domain_rating: number
           email: string | null
           employee_count: number | null
+          features: string[]
           founded_year: number | null
+          free_plan: boolean
+          free_trial: boolean
           id: string
+          integrations: string[]
           logo_url: string | null
+          max_budget: number | null
+          min_budget: number | null
           name: string
+          offering_kind: string
           phone: string | null
+          portuguese: boolean
+          pricing_model: string | null
+          profile_details: Json
+          sectors: string[]
           slug: string
+          social_links: Json
+          support_languages: string[]
+          team_photo_url: string | null
+          team_story: string | null
           tier: Database["public"]["Enums"]["business_tier"]
           updated_at: string | null
           updated_by: string | null
+          vendor_business_id: string | null
           verification_status: Database["public"]["Enums"]["verification_status"]
+          video_url: string | null
           website: string | null
           works_remotely: boolean
         }[]
@@ -1691,6 +2083,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      search_marketplace: {
+        Args: { p_filters?: Json; p_limit?: number; p_offset?: number }
+        Returns: Json
       }
       team_account_workspace: {
         Args: { account_slug: string }
