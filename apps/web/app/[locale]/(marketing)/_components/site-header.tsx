@@ -55,12 +55,18 @@ export function SiteHeader() {
                 <Menu size={24} aria-hidden="true" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuItem className="min-h-11" render={<Link href="/search" />}>
+                <DropdownMenuItem
+                  className="min-h-11"
+                  render={<Link href="/search" />}
+                >
                   Buscar serviços e software
                 </DropdownMenuItem>
                 {siteMenus.map((item) => (
                   <DropdownMenuSub key={item.label}>
-                    <DropdownMenuSubTrigger className="min-h-11">
+                    <DropdownMenuSubTrigger
+                      openOnHover={false}
+                      className="min-h-11"
+                    >
                       {item.label}
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent
@@ -79,7 +85,10 @@ export function SiteHeader() {
                       ))}
                       {item.groups?.map((group) => (
                         <DropdownMenuSub key={group.slug}>
-                          <DropdownMenuSubTrigger className="min-h-11">
+                          <DropdownMenuSubTrigger
+                            openOnHover={false}
+                            className="min-h-11"
+                          >
                             {group.label}
                           </DropdownMenuSubTrigger>
                           <DropdownMenuSubContent
