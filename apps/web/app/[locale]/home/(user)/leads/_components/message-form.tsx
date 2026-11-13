@@ -46,14 +46,12 @@ export function MessageForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Sua mensagem</FormLabel>
-              <FormControl>
-                <textarea
+              <FormControl render={<textarea
                   {...field}
                   rows={3}
                   className="w-full rounded-xl border p-3"
                   maxLength={5000}
-                />
-              </FormControl>
+                />} />
               <FormMessage />
             </FormItem>
           )}

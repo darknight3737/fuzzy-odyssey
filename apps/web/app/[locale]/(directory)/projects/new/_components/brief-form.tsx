@@ -148,8 +148,7 @@ export function BriefForm({
                     }[name]
                   }
                 </FormLabel>
-                <FormControl>
-                  {name === 'description' ? (
+                <FormControl render={name === 'description' ? (
                     <textarea {...field} rows={6} className={input} />
                   ) : (
                     <input
@@ -158,8 +157,7 @@ export function BriefForm({
                       inputMode={name === 'budget' ? 'decimal' : undefined}
                       className={input}
                     />
-                  )}
-                </FormControl>
+                  )} />
                 <FormMessage />
               </FormItem>
             )}
