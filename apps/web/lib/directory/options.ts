@@ -4,8 +4,13 @@ import { cache } from 'react';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { categoryLabel } from './category-label';
+import { genericSoftware, taxonomyKind, type OfferingKind } from './taxonomy';
 
-export type DirectoryOption = { value: string; label: string };
+export type DirectoryOption = {
+  value: string;
+  label: string;
+  kind?: OfferingKind;
+};
 export type DirectoryOptions = {
   categories: DirectoryOption[];
   locations: DirectoryOption[];
@@ -27,7 +32,7 @@ export const getDirectoryOptions = cache(
               .select('slug,name')
               .eq('is_active', true)
               .order('name')
-              .limit(200)
+              .limit(1000)
           : null,
         includeLocations
           ? client
@@ -62,12 +67,16 @@ export const getDirectoryOptions = cache(
         ? [...items, selected]
         : items;
     return {
-      categories: unique(categories?.data ?? [], selectedCategory?.data).map(
-        (item) => ({
-          value: item.slug,
-          label: categoryLabel(item.slug, item.name),
-        }),
-      ),
+      categories: unique(
+        (categories?.data ?? []).filter(
+          (item) => item.slug !== genericSoftware || item.slug === category,
+        ),
+        selectedCategory?.data,
+      ).map((item) => ({
+        value: item.slug,
+        label: categoryLabel(item.slug, item.name),
+        kind: taxonomyKind(item.slug),
+      })),
       locations: unique(locations?.data ?? [], selectedLocation?.data).map(
         (item) => ({
           value: item.slug,

@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAction } from 'next-safe-action/hooks';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 
 import { Button } from '@kit/ui/button';
 import {
@@ -15,6 +15,8 @@ import {
   FormMessage,
 } from '@kit/ui/form';
 
+import { categoryLabel } from '~/lib/directory/category-label';
+import { taxonomyKind } from '~/lib/directory/taxonomy';
 import { LeadSchema } from '~/lib/leads/schema';
 
 import { submitLeadAction } from '../_lib/actions';
@@ -25,7 +27,7 @@ export function BriefForm({
   kind,
 }: {
   providers: { id: string; name: string }[];
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; slug: string }[];
   email: string;
   kind: 'service' | 'software';
 }) {
@@ -47,6 +49,10 @@ export function BriefForm({
       business_ids: providers.map((p) => p.id),
       consent: false as true,
     },
+  });
+  const selectedKind = useWatch({
+    control: form.control,
+    name: 'offering_kind',
   });
   const action = useAction(submitLeadAction);
   const input = 'w-full rounded-xl border bg-background px-4 py-3';
@@ -80,7 +86,14 @@ export function BriefForm({
             <FormItem>
               <FormLabel>O que você procura?</FormLabel>
               <FormControl>
-                <select {...field} className={input}>
+                <select
+                  {...field}
+                  className={input}
+                  onChange={(event) => {
+                    field.onChange(event);
+                    form.setValue('category_id', '');
+                  }}
+                >
                   <option value="service">
                     Serviço / agência / consultoria
                   </option>
@@ -104,11 +117,16 @@ export function BriefForm({
                   required={!providers.length}
                 >
                   <option value="">Selecione uma categoria</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
+                  {categories
+                    .filter(
+                      (category) =>
+                        taxonomyKind(category.slug) === selectedKind,
+                    )
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {categoryLabel(c.slug, c.name)}
+                      </option>
+                    ))}
                 </select>
               </FormControl>
               <FormMessage />
@@ -148,16 +166,20 @@ export function BriefForm({
                     }[name]
                   }
                 </FormLabel>
-                <FormControl render={name === 'description' ? (
-                    <textarea {...field} rows={6} className={input} />
-                  ) : (
-                    <input
-                      {...field}
-                      type={name === 'buyer_email' ? 'email' : 'text'}
-                      inputMode={name === 'budget' ? 'decimal' : undefined}
-                      className={input}
-                    />
-                  )} />
+                <FormControl
+                  render={
+                    name === 'description' ? (
+                      <textarea {...field} rows={6} className={input} />
+                    ) : (
+                      <input
+                        {...field}
+                        type={name === 'buyer_email' ? 'email' : 'text'}
+                        inputMode={name === 'budget' ? 'decimal' : undefined}
+                        className={input}
+                      />
+                    )
+                  }
+                />
                 <FormMessage />
               </FormItem>
             )}
@@ -180,8 +202,9 @@ export function BriefForm({
                   }
                 />
                 <FormLabel>
-                  Autorizo compartilhar este pedido e meus dados de contato com os
-                  fornecedores destinatários para conversar sobre esta necessidade.
+                  Autorizo compartilhar este pedido e meus dados de contato com
+                  os fornecedores destinatários para conversar sobre esta
+                  necessidade.
                 </FormLabel>
               </div>
               <FormMessage />

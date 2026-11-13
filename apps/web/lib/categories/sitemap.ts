@@ -1,4 +1,5 @@
 import 'server-only';
+import { taxonomyKind } from '~/lib/directory/taxonomy';
 import type { Database } from '~/lib/database.types';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
@@ -33,11 +34,20 @@ async function getAssignedCategoryIds() {
   for (let start = 0; ; start += batchSize) {
     const { data, error } = await client
       .from('business_categories')
-      .select('category_id,businesses!inner(id)')
+      .select(
+        'category_id,businesses!inner(offering_kind),categories!inner(slug)',
+      )
       .order('id')
       .range(start, start + batchSize - 1);
     if (error) throw error;
-    ids.push(...data.map((row) => row.category_id));
+    ids.push(
+      ...data
+        .filter(
+          (row) =>
+            taxonomyKind(row.categories.slug) === row.businesses.offering_kind,
+        )
+        .map((row) => row.category_id),
+    );
     if (data.length < batchSize) return ids;
   }
 }

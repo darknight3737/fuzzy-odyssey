@@ -17,6 +17,7 @@ import {
   filtersFromParams,
   searchMarketplace,
 } from '~/lib/directory/marketplace';
+import { taxonomyKind } from '~/lib/directory/taxonomy';
 import { pageMetadata } from '~/lib/seo';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
@@ -56,6 +57,7 @@ export async function generateMetadata({ params, searchParams }: Props) {
     (
       await searchMarketplace({
         category: category.slug,
+        kind: taxonomyKind(category.slug),
         location: locationSlug,
       })
     ).total > 0;
@@ -86,6 +88,7 @@ async function Content({ params, searchParams }: Props) {
   const filters = {
     ...filtersFromParams(query),
     category: category.slug,
+    kind: taxonomyKind(category.slug),
     location: locationSlug,
   };
   const [result, { data: nearby }] = await Promise.all([
@@ -115,7 +118,7 @@ async function Content({ params, searchParams }: Props) {
       />
       <div className="mx-auto w-[min(100%-32px,1200px)] pb-20">
         <DirectoryFilters
-          params={query}
+          params={{ ...query, kind: taxonomyKind(category.slug) }}
           category={category.slug}
           location={locationSlug}
           options={{ categories: [], locations: [] }}

@@ -53,7 +53,7 @@ async function ProjectForm({
   const [{ data: categories, error }, { data: providers }] = await Promise.all([
     publicClient
       .from('categories')
-      .select('id,name')
+      .select('id,name,slug')
       .eq('is_active', true)
       .order('name')
       .limit(500),

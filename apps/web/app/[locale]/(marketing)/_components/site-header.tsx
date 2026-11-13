@@ -14,19 +14,13 @@ import {
 
 import { DirectoryShortlistMenu } from '~/components/directory-shortlist';
 
+import { SiteMegamenu, siteMenus } from './site-megamenu';
 import { SiteHeaderAccountSection } from './site-header-account-section';
 
 import styles from '../marketing.module.css';
 
 export function SiteHeader() {
   const t = useTranslations('marketing.home');
-  const links = [
-    { href: '/search?kind=service', label: 'Serviços' },
-    { href: '/search?kind=software', label: 'Software' },
-    { href: '/categories', label: 'Categorias' },
-    { href: '/pricing', label: 'Preços' },
-  ];
-
   return (
     <header className={styles.header}>
       <div className={styles.headerInner}>
@@ -34,24 +28,7 @@ export function SiteHeader() {
           <Compass aria-hidden="true" /> selletive
         </Link>
         <nav aria-label={t('navExplore')} className={styles.desktopNav}>
-          {links.map((link) => (
-            <Link key={link.href} href={link.href}>
-              {link.label}
-            </Link>
-          ))}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="min-h-11 text-sm font-medium">
-              Para empresas
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem render={<Link href="/home/offerings/new" />}>
-                Cadastrar empresa ou software
-              </DropdownMenuItem>
-              <DropdownMenuItem render={<Link href="/claim" />}>
-                Reivindicar perfil
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <SiteMegamenu />
         </nav>
         <div className={styles.actions}>
           <DirectoryShortlistMenu />
@@ -69,7 +46,7 @@ export function SiteHeader() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
                 {[
-                  ...links,
+                  ...siteMenus.slice(0, 4),
                   { href: '/projects/new', label: 'Publicar projeto' },
                   {
                     href: '/home/offerings/new',

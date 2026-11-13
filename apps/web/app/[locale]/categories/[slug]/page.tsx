@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
 
@@ -19,6 +20,7 @@ import {
   filtersFromParams,
   searchMarketplace,
 } from '~/lib/directory/marketplace';
+import { taxonomyKind } from '~/lib/directory/taxonomy';
 import { getDirectoryOptions } from '~/lib/directory/options';
 import { pageMetadata } from '~/lib/seo';
 import { socialImageUrl } from '~/lib/social-images';
@@ -45,7 +47,8 @@ export async function generateMetadata({ params, searchParams }: Props) {
   const filters = await searchParams;
   const index =
     !Object.values(filters).some(Boolean) &&
-    (await searchMarketplace({ category: slug })).total > 0;
+    (await searchMarketplace({ category: slug, kind: taxonomyKind(slug) }))
+      .total > 0;
   return pageMetadata(
     `${categoryLabel(category.slug, category.name)} — Compare empresas | Selletive`,
     (!isTranslatedCategory(category.slug) &&
@@ -61,10 +64,11 @@ async function Content({ params, searchParams }: Props) {
   await connection();
   const { slug } = await params;
   const query = await searchParams;
+  const kind = taxonomyKind(slug);
   const category = await getCategoryBySlug(slug);
   if (!category) notFound();
   const page = directoryPage(query);
-  const filters = { ...filtersFromParams(query), category: slug };
+  const filters = { ...filtersFromParams(query), category: slug, kind };
   const [result, options, { data: locations }, { data: specialties }] =
     await Promise.all([
       searchMarketplace(filters, page),
@@ -99,6 +103,19 @@ async function Content({ params, searchParams }: Props) {
         .limit(60)
     : { data: [] };
   const label = categoryLabel(category.slug, category.name);
+  const complements: Record<string, { slug: string; label: string }> = {
+    'crm-software': {
+      slug: 'crm-consulting',
+      label: 'Consultoria e implantação de CRM',
+    },
+    'erp-software': {
+      slug: 'erp-consulting',
+      label: 'Consultoria e implantação de ERP',
+    },
+    'crm-consulting': { slug: 'crm-software', label: 'Software CRM' },
+    'erp-consulting': { slug: 'erp-software', label: 'Software ERP' },
+  };
+  const complement = complements[slug];
   const names = new Map(
     result.items.map((item) => [item.business.id, item.business]),
   );
@@ -126,7 +143,7 @@ async function Content({ params, searchParams }: Props) {
       />
       <div className="mx-auto w-[min(100%-32px,1200px)] pb-20">
         <DirectoryFilters
-          params={query}
+          params={{ ...query, kind }}
           category={slug}
           options={options}
           total={result.total}
@@ -136,6 +153,16 @@ async function Content({ params, searchParams }: Props) {
           ]}
           key={String(query.kind ?? '')}
         />
+        {complement && (
+          <p className="mt-4 text-sm">
+            <Link
+              className="text-primary underline"
+              href={`/categories/${complement.slug}`}
+            >
+              Explore também · {complement.label}
+            </Link>
+          </p>
+        )}
         <DirectoryIntro
           text={
             (category.description && !isTranslatedCategory(category.slug)

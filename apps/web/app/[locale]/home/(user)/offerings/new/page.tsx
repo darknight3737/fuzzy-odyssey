@@ -22,7 +22,7 @@ async function FormContent() {
   const [categories, vendors] = await Promise.all([
     client
       .from('categories')
-      .select('id,name')
+      .select('id,name,slug')
       .eq('is_active', true)
       .order('name')
       .limit(500),

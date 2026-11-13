@@ -1,7 +1,7 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAction } from 'next-safe-action/hooks';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 
 import { Button } from '@kit/ui/button';
 import {
@@ -13,6 +13,8 @@ import {
   FormMessage,
 } from '@kit/ui/form';
 
+import { categoryLabel } from '~/lib/directory/category-label';
+import { taxonomyKind } from '~/lib/directory/taxonomy';
 import { OfferingSchema } from '~/lib/offerings/schema';
 
 import { createOfferingAction } from '../_lib/actions';
@@ -20,7 +22,7 @@ export function OfferingForm({
   categories,
   vendors,
 }: {
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; slug: string }[];
   vendors: { id: string; name: string }[];
 }) {
   const form = useForm({
@@ -34,6 +36,7 @@ export function OfferingForm({
       category_ids: [] as string[],
     },
   });
+  const kind = useWatch({ control: form.control, name: 'offering_kind' });
   const action = useAction(createOfferingAction);
   const input = 'w-full rounded-xl border p-3';
   return (
@@ -46,7 +49,15 @@ export function OfferingForm({
             <FormItem>
               <FormLabel>Tipo de perfil</FormLabel>
               <FormControl>
-                <select {...field} className={input}>
+                <select
+                  {...field}
+                  className={input}
+                  onChange={(event) => {
+                    field.onChange(event);
+                    form.setValue('category_ids', []);
+                    form.setValue('vendor_business_id', '');
+                  }}
+                >
                   <option value="service">
                     Prestador de serviços / agência / consultoria
                   </option>
@@ -130,11 +141,13 @@ export function OfferingForm({
                   }
                   size={7}
                 >
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
+                  {categories
+                    .filter((category) => taxonomyKind(category.slug) === kind)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {categoryLabel(c.slug, c.name)}
+                      </option>
+                    ))}
                 </select>
               </FormControl>
               <FormMessage />

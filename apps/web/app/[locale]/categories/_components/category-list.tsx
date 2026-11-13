@@ -1,48 +1,82 @@
 import Link from 'next/link';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
-
+import { categoryLabel } from '~/lib/directory/category-label';
 import {
-  categoryLabel,
-  isTranslatedCategory,
-} from '~/lib/directory/category-label';
+  serviceGroups,
+  softwareGroups,
+  taxonomyKind,
+} from '~/lib/directory/taxonomy';
 
 type Category = {
   id: string;
   name: string;
   slug: string;
-  description: string | null;
-  icon: string | null;
+  parent_id: string | null;
 };
 
-type CategoryListProps = {
-  categories: Category[];
-};
+export function CategoryList({ categories }: { categories: Category[] }) {
+  const bySlug = new Map(
+    categories.map((category) => [category.slug, category]),
+  );
+  const renderLink = (category: Category) => (
+    <Link
+      key={category.slug}
+      href={`/categories/${category.slug}`}
+      prefetch={false}
+      className="text-primary hover:underline"
+    >
+      {categoryLabel(category.slug, category.name)}
+    </Link>
+  );
 
-export function CategoryList({ categories }: CategoryListProps) {
   return (
-    <div className={'grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'}>
-      {categories.map((category) => (
-        <Link key={category.id} href={`/categories/${category.slug}`}>
-          <Card className={'transition-shadow hover:shadow-lg'}>
-            <CardHeader>
-              <CardTitle className={'flex items-center gap-3'}>
-                {category.icon && (
-                  <span className={'text-2xl'}>{category.icon}</span>
-                )}
-                {categoryLabel(category.slug, category.name)}
-              </CardTitle>
-            </CardHeader>
-
-            {category.description && !isTranslatedCategory(category.slug) && (
-              <CardContent>
-                <p className={'text-muted-foreground text-sm'}>
-                  {category.description}
-                </p>
-              </CardContent>
-            )}
-          </Card>
-        </Link>
+    <div className="space-y-12">
+      {(
+        [
+          ['Serviços', 'service', serviceGroups],
+          ['Software', 'software', softwareGroups],
+        ] as const
+      ).map(([title, kind, groups]) => (
+        <section key={kind} id={kind} className="scroll-mt-24">
+          <h2 className="mb-5 text-2xl font-semibold">{title}</h2>
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {groups.map((group) => {
+              const parent = bySlug.get(group.slug);
+              if (!parent) return null;
+              return (
+                <section key={group.slug} className="rounded-xl border p-5">
+                  <h3 className="mb-3 text-lg font-semibold">
+                    {renderLink(parent)}
+                  </h3>
+                  <ul className="space-y-3 text-sm">
+                    {categories
+                      .filter(
+                        (category) =>
+                          category.parent_id === parent.id &&
+                          taxonomyKind(category.slug) === kind,
+                      )
+                      .map((category) => (
+                        <li key={category.slug}>
+                          {renderLink(category)}
+                          {kind === 'service' && (
+                            <ul className="mt-1 space-y-1 border-l pl-3">
+                              {categories
+                                .filter(
+                                  (child) => child.parent_id === category.id,
+                                )
+                                .map((child) => (
+                                  <li key={child.slug}>{renderLink(child)}</li>
+                                ))}
+                            </ul>
+                          )}
+                        </li>
+                      ))}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
+        </section>
       ))}
     </div>
   );

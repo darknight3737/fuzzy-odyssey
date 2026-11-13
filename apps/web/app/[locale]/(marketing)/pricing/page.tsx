@@ -46,6 +46,8 @@ export default function PricingPage() {
         {MARKETPLACE_PLANS.map((p) => (
           <section
             key={p.id}
+            id={p.id}
+            style={{ scrollMarginTop: 88 }}
             className={
               'flex flex-col rounded-2xl border p-6 ' +
               (p.id === 'highlight' ? 'border-primary bg-muted/30' : '')

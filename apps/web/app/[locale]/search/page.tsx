@@ -14,6 +14,7 @@ import {
   type DirectoryParams,
 } from '~/lib/directory/marketplace';
 import { getDirectoryOptions } from '~/lib/directory/options';
+import { taxonomyKind } from '~/lib/directory/taxonomy';
 import { pageMetadata } from '~/lib/seo';
 export const metadata = pageMetadata(
   'Buscar empresas e softwares | Selletive',
@@ -24,9 +25,22 @@ export const metadata = pageMetadata(
 type Props = { searchParams: Promise<DirectoryParams> };
 async function Content({ searchParams }: Props) {
   await connection();
-  const params = await searchParams;
+  const query = await searchParams;
+  const kind =
+    query.kind === 'service' || query.kind === 'software'
+      ? query.kind
+      : undefined;
+  const category =
+    typeof query.category === 'string' &&
+    (!kind || taxonomyKind(query.category) === kind)
+      ? query.category
+      : undefined;
+  const params = { ...query, kind, category };
   const page = directoryPage(params);
-  const filters = filtersFromParams(params);
+  const filters = filtersFromParams({
+    ...params,
+    kind: kind ?? (category ? taxonomyKind(category) : undefined),
+  });
   const [result, options] = await Promise.all([
     searchMarketplace(filters, page),
     getDirectoryOptions(
@@ -49,7 +63,7 @@ async function Content({ searchParams }: Props) {
         options={options}
         total={result.total}
         breadcrumbs={[{ label: 'Busca' }]}
-        key={String(params.kind ?? '')}
+        key={JSON.stringify(params)}
       />
       <div className="mt-10">
         <DirectoryResults

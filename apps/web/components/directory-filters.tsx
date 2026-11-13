@@ -60,6 +60,7 @@ function IconSelect({
   value,
   form,
   children,
+  onChange,
   className = '',
 }: {
   icon: typeof MapPin;
@@ -68,6 +69,7 @@ function IconSelect({
   value: string;
   form: string;
   children: React.ReactNode;
+  onChange?: (value: string) => void;
   className?: string;
 }) {
   return (
@@ -80,7 +82,11 @@ function IconSelect({
       <select
         name={name}
         form={form}
-        defaultValue={value}
+        value={onChange ? value : undefined}
+        defaultValue={onChange ? undefined : value}
+        onChange={
+          onChange ? (event) => onChange(event.target.value) : undefined
+        }
         className={`${field} appearance-none pr-10 pl-12`}
       >
         {children}
@@ -135,6 +141,7 @@ export function DirectoryFilters({
   const activeMore = moreKeys.filter((key) => value(key)).length;
   const [state, setState] = useState({
     kind: value('kind'),
+    category: value('category'),
     open: activeMore > 0,
   });
   const check = (name: string, label: string) => (
@@ -261,11 +268,28 @@ export function DirectoryFilters({
             icon={Layers}
             label="Categoria"
             name="category"
-            value={value('category')}
+            value={state.category}
+            onChange={(category) => setState({ ...state, category })}
             form={formId}
             className="flex-[1_1_200px]"
           >
-            <Options empty="Todas as categorias" options={options.categories} />
+            <option value="">Todas as categorias</option>
+            {(['service', 'software'] as const)
+              .filter((kind) => !state.kind || state.kind === kind)
+              .map((kind) => (
+                <optgroup
+                  key={kind}
+                  label={kind === 'software' ? 'Software' : 'Serviços'}
+                >
+                  {options.categories
+                    .filter((option) => option.kind === kind)
+                    .map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
           </IconSelect>
         )}
         <IconSelect
@@ -302,26 +326,37 @@ export function DirectoryFilters({
               </option>
             )}
         </IconSelect>
-        <label className="relative block flex-[1_1_160px]">
-          <span className="sr-only">Tipo de empresa</span>
-          <select
-            name="kind"
-            form={formId}
-            value={state.kind}
-            onChange={(event) =>
-              setState({ ...state, kind: event.target.value })
-            }
-            className={`${field} appearance-none pr-10`}
-          >
-            <option value="">Serviços e software</option>
-            <option value="service">Somente serviços</option>
-            <option value="software">Somente software</option>
-          </select>
-          <ChevronDown
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-[#6f7073]"
-          />
-        </label>
+        {!category && (
+          <label className="relative block flex-[1_1_160px]">
+            <span className="sr-only">Tipo de empresa</span>
+            <select
+              name="kind"
+              form={formId}
+              value={state.kind}
+              onChange={(event) => {
+                const kind = event.target.value;
+                const selected = options.categories.find(
+                  (option) => option.value === state.category,
+                );
+                setState({
+                  ...state,
+                  kind,
+                  category:
+                    kind && selected?.kind !== kind ? '' : state.category,
+                });
+              }}
+              className={`${field} appearance-none pr-10`}
+            >
+              <option value="">Serviços e software</option>
+              <option value="service">Somente serviços</option>
+              <option value="software">Somente software</option>
+            </select>
+            <ChevronDown
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-[#6f7073]"
+            />
+          </label>
+        )}
         <button
           type="button"
           aria-expanded={state.open}

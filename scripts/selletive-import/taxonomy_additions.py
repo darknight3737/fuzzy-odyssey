@@ -5,6 +5,7 @@ These are category data, not database schema. Existing categories remain intact.
 """
 import argparse
 import json
+import re
 from pathlib import Path
 from uuid import UUID, uuid5
 
@@ -16,19 +17,10 @@ BRANCHES = {
     'financial-advisory-services': ('Assessoria financeira e seguros', 'financial-professional'),
     'managed-it-integration': ('Gestão e integração de TI', 'it-services'),
     'data-ai-services': ('Dados e inteligência artificial', 'development-product'),
-    'business-software': ('Software para empresas', 'development-product'),
     'business-operations-services': ('Operações empresariais', 'financial-professional'),
     'business-financial-services': ('Serviços financeiros empresariais', 'financial-professional'),
 }
 LEAVES = {
-    'financial-software': ('Software financeiro', 'business-software'),
-    'payments-software': ('Software para pagamentos', 'business-software'),
-    'retail-software': ('Software para varejo e ponto de venda', 'business-software'),
-    'real-estate-software': ('Software para gestão imobiliária', 'business-software'),
-    'laboratory-software': ('Software para laboratórios', 'business-software'),
-    'industrial-software': ('Software para operações industriais', 'business-software'),
-    'document-management-software': ('Software para gestão de documentos', 'business-software'),
-    'construction-software': ('Software para construção', 'business-software'),
     'logistics-services': ('Logística e transporte empresarial', 'business-operations-services'),
     'corporate-travel-services': ('Gestão de viagens corporativas', 'business-operations-services'),
     'corporate-event-services': ('Produção de eventos corporativos', 'business-operations-services'),
@@ -51,21 +43,6 @@ LEAVES = {
     'capital-markets-services': ('Serviços para o mercado de capitais', 'business-financial-services'),
     'asset-management-services': ('Gestão de ativos para organizações', 'business-financial-services'),
     'fundraising-advisory-services': ('Assessoria para captação de recursos', 'business-financial-services'),
-    'enterprise-software': ('Software empresarial', 'business-software'),
-    'ecommerce-software': ('Software de comércio eletrônico', 'business-software'),
-    'workflow-automation-software': ('Software de automação de processos', 'business-software'),
-    'erp-software': ('Software ERP', 'business-software'),
-    'crm-software': ('Software CRM', 'business-software'),
-    'hr-software': ('Software de recursos humanos', 'business-software'),
-    'accounting-software': ('Software contábil', 'business-software'),
-    'marketing-software': ('Software de marketing', 'business-software'),
-    'customer-service-software': ('Software de atendimento ao cliente', 'business-software'),
-    'cybersecurity-software': ('Software de cibersegurança', 'business-software'),
-    'analytics-software': ('Software de análise de dados', 'business-software'),
-    'logistics-software': ('Software de logística', 'business-software'),
-    'education-software': ('Software para educação', 'business-software'),
-    'healthcare-software': ('Software para gestão de saúde', 'business-software'),
-    'business-management-software': ('Software de gestão empresarial', 'business-software'),
     'accounting-services': ('Serviços contábeis', 'accounting-tax-services'),
     'bookkeeping-services': ('Escrituração contábil', 'accounting-tax-services'),
     'tax-consulting': ('Consultoria tributária', 'accounting-tax-services'),
@@ -98,13 +75,45 @@ LEAVES = {
 
 def augmented_categories(existing):
     categories = {r['slug']: r for r in existing}
-    for mapping, level in [(BRANCHES, 2), (LEAVES, 3)]:
+    sql = Path(__file__).with_name('software-taxonomy.sql').read_text()
+    software_groups = dict(re.findall(r"^  \('([^']+)', '([^']+)'\)[,]?$", sql, re.M))
+    software_leaves = {
+        slug: (name, parent) for slug, name, parent in
+        re.findall(r"^  \('([^']+)', '([^']+)', '([^']+)'\)[,]?$", sql, re.M)
+        if parent in software_groups
+    }
+    root = 'business-software'
+    if root not in categories:
+        categories[root] = dict(
+            id=str(uuid5(UUID('d2181ad8-7618-4fe3-8c55-1e08eaefc718'), 'category:' + root)),
+            name='Software para empresas', slug=root, parent_id=None, level=1, is_active=True,
+        )
+    for slug, parent_slug, level in [
+        (root, None, 1),
+        ('enterprise-software', root, 2),
+        *((slug, parent, 3) for slug, (_, parent) in software_leaves.items()
+          if parent in categories),
+    ]:
+        if slug in categories:
+            categories[slug] = {
+                **categories[slug],
+                'parent_id': categories[parent_slug]['id'] if parent_slug else None,
+                'level': level,
+            }
+    branches = {**BRANCHES, **{slug: (name, root) for slug, name in software_groups.items()},
+                'enterprise-software': ('Software empresarial', root)}
+    leaves = {**LEAVES, **software_leaves}
+    for mapping, level in [(branches, 2), (leaves, 3)]:
         for key, (name, parent) in mapping.items():
             ancestor = categories[parent]
             if not ancestor['is_active'] or ancestor['level'] != level - 1:
                 raise ValueError('Invalid category parent: ' + parent)
             if key in categories:
                 current = categories[key]
+                if key in software_leaves:
+                    current = categories[key] = {
+                        **current, 'parent_id': ancestor['id'], 'level': level,
+                    }
                 if current['level'] != level or current['parent_id'] != ancestor['id'] or not current['is_active']:
                     raise ValueError('Existing category conflict: ' + key)
             else:

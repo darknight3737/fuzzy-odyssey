@@ -33,6 +33,7 @@ import {
 } from '~/components/directory-ui';
 import appConfig from '~/config/app.config';
 import { categoryLabel } from '~/lib/directory/category-label';
+import { taxonomyKind } from '~/lib/directory/taxonomy';
 import { pageMetadata, safeWebsite, serializeJsonLd } from '~/lib/seo';
 import { socialImageUrl } from '~/lib/social-images';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
@@ -175,7 +176,9 @@ async function BusinessProfilePage({ params }: Props) {
       })
     : [];
   const activeCategories = (business.business_categories ?? []).filter(
-    (entry) => entry.categories?.is_active,
+    (entry) =>
+      entry.categories?.is_active &&
+      taxonomyKind(entry.categories.slug) === business.offering_kind,
   );
   const primaryCategory = (
     activeCategories.find((entry) => entry.is_primary) ?? activeCategories[0]
