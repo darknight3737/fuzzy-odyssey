@@ -309,7 +309,8 @@ export function ProfileChecklist({ items }: { items: ChecklistItem[] }) {
             Perfil {percent}% completo
           </h2>
           <p className="mt-1 text-sm text-[#3d3e45]">
-            Perfis completos passam mais confiança e aparecem melhor nas buscas.
+            Perfis completos passam mais confiança a quem está escolhendo um
+            fornecedor.
           </p>
         </div>
         <p className="text-sm text-[#6f7073]">

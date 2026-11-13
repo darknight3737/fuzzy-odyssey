@@ -198,17 +198,16 @@ async function ManageBusinessPage({
           </ul>
         </nav>
         <div className="min-w-0 space-y-6">
-          <AdminSection
+          <div
             id="desempenho"
-            title="Desempenho do perfil"
-            description="Quantas pessoas viram seu perfil e clicaram nos seus contatos. São contagens indicativas, não vendas."
+            className="scroll-mt-24 rounded-2xl border border-[#dce5e1] bg-white px-6 md:px-8 [&>section]:my-6 [&>section]:border-0 [&>section]:p-0"
           >
             <BusinessAnalytics
               client={client}
               businessId={b.id}
               tier={b.tier}
             />
-          </AdminSection>
+          </div>
           <AdminSection
             id="informacoes"
             step={1}

@@ -12,14 +12,33 @@ export function BadgeVerification({
   business,
   siteUrl,
   verified,
+  premium,
 }: {
   business: { name: string; slug: string; website: string | null };
   siteUrl: string;
   verified: boolean;
+  premium: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const profile = `${siteUrl}/company/${business.slug}`;
-  const snippet = `<a href="${profile}" title="${business.name} na Selletive"><img src="${siteUrl}/badges/selletive-verificado.svg" alt="Verificado na Selletive" width="180" height="56"></a>`;
+  const title = business.name.replace(/[&"<>]/g, (char) =>
+    char === '&'
+      ? '&amp;'
+      : char === '"'
+        ? '&quot;'
+        : char === '<'
+          ? '&lt;'
+          : '&gt;',
+  );
+  const snippet = `<a href="${profile}" title="${title} na Selletive"><img src="${siteUrl}/badges/selletive-selo.svg" alt="Perfil na Selletive" width="180" height="56"></a>`;
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(snippet);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  };
   if (verified)
     return (
       <div className="flex items-start gap-4 rounded-xl bg-[#eaf8f1] p-6">
@@ -27,9 +46,8 @@ export function BadgeVerification({
         <div>
           <p className="font-semibold text-[#0f161e]">Perfil verificado</p>
           <p className="mt-1 text-sm text-[#3d3e45]">
-            O vínculo entre o site da empresa e o perfil foi confirmado.
-            Mantenha o selo publicado para conservar os benefícios do
-            Verificado.
+            Mantenha o selo publicado no site da empresa para conservar os
+            benefícios do Verificado.
           </p>
         </div>
       </div>
@@ -46,8 +64,8 @@ export function BadgeVerification({
           <div className="flex shrink-0 items-center justify-center rounded-lg border border-[#dce5e1] bg-[#f7f9f8] p-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/badges/selletive-verificado.svg"
-              alt="Prévia do selo Verificado na Selletive"
+              src="/badges/selletive-selo.svg"
+              alt="Prévia do selo da Selletive"
               width={180}
               height={56}
             />
@@ -70,12 +88,7 @@ export function BadgeVerification({
             <button
               type="button"
               className={`${buttonSecondary} mt-3`}
-              onClick={() =>
-                navigator.clipboard
-                  .writeText(snippet)
-                  .then(() => setCopied(true))
-                  .catch(() => setCopied(false))
-              }
+              onClick={() => void copy()}
             >
               {copied ? (
                 <Check aria-hidden="true" className="size-4" />
@@ -106,8 +119,9 @@ export function BadgeVerification({
         <p className="text-[13px] font-medium text-[#6f7073]">Passo 3 de 3</p>
         <p className="mt-1 font-semibold text-[#0f161e]">Peça a conferência</p>
         <p className="mt-1 text-sm text-[#3d3e45]">
-          Nossa equipe confere se o selo está publicado e ativa o plano
-          Verificado. Você recebe a confirmação por e-mail.
+          {premium
+            ? 'Nossa equipe confere se o selo está publicado e responde ao seu contato. Seu plano atual continua o mesmo.'
+            : 'Nossa equipe confere se o selo está publicado e responde ao seu contato para ativar o plano Verificado.'}
         </p>
         <Link
           className={`${buttonPrimary} mt-4`}

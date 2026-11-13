@@ -33,8 +33,8 @@ const faq = [
     'Não. O selo é obrigatório apenas para o Verificado gratuito. Nos planos pagos ele é opcional.',
   ],
   [
-    'Existe fidelidade?',
-    'Não. Os planos pagos são mensais e podem ser cancelados quando você quiser.',
+    'Como funciona a contratação?',
+    'O pagamento online ainda está sendo configurado. Por enquanto, nossa equipe responde ao seu pedido e combina a ativação com você antes de qualquer cobrança.',
   ],
   [
     'Pagar melhora minhas avaliações?',
@@ -102,6 +102,7 @@ async function Promotion({ params }: { params: Promise<{ slug: string }> }) {
             business={b}
             siteUrl={appConfig.url}
             verified={verified}
+            premium={premium}
           />
         </AdminSection>
 
