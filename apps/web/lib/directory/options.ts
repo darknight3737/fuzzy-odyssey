@@ -69,7 +69,7 @@ export const getDirectoryOptions = cache(
     return {
       categories: unique(
         (categories?.data ?? []).filter(
-          (item) => item.slug !== genericSoftware || item.slug === category,
+          (item) => showCategoryInNavigation(item.slug) || item.slug === category,
         ),
         selectedCategory?.data,
       ).map((item) => ({

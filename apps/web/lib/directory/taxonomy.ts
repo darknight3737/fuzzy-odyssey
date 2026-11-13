@@ -683,6 +683,11 @@ const emptyAtLaunch = new Set([
   'workplace-management-software',
 ]);
 
+export function showCategoryInNavigation(slug: string) {
+  return slug !== genericSoftware && !emptyAtLaunch.has(slug);
+}
+
+
 export const softwareMenuGroups = softwareGroups
   .filter((group) => !emptyAtLaunch.has(group.slug))
   .map((group) => ({

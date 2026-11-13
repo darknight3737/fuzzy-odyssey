@@ -35,7 +35,7 @@ async function Content({ searchParams }: Props) {
     (!kind || taxonomyKind(query.category) === kind)
       ? query.category
       : undefined;
-  const params = { ...query, kind, category };
+  const params: DirectoryParams = { ...query, kind, category };
   const page = directoryPage(params);
   const filters = filtersFromParams({
     ...params,
