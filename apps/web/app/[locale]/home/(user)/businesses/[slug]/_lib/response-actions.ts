@@ -38,6 +38,6 @@ export const saveResponseAction = authActionClient
         });
     if (result.error) throw new Error('Não foi possível salvar a resposta.');
     revalidatePath(`/company/${input.slug}`);
-    revalidatePath(`/home/businesses/${input.slug}`, 'layout');
+    revalidatePath('/[locale]/home/businesses/[slug]', 'layout');
     return { success: true };
   });

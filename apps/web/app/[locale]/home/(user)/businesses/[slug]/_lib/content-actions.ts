@@ -85,7 +85,7 @@ export const saveContentAction = authActionClient
         'Não foi possível salvar este conteúdo. Confira os limites do seu plano.',
       );
     revalidatePath(`/company/${input.slug}`);
-    revalidatePath(`/home/businesses/${input.slug}`, 'layout');
+    revalidatePath('/[locale]/home/businesses/[slug]', 'layout');
     return { success: true };
   });
 
@@ -107,6 +107,6 @@ export const deleteContentAction = authActionClient
       .eq('business_id', input.businessId);
     if (error) throw new Error('Não foi possível excluir.');
     revalidatePath(`/company/${input.slug}`);
-    revalidatePath(`/home/businesses/${input.slug}`, 'layout');
+    revalidatePath('/[locale]/home/businesses/[slug]', 'layout');
     return { success: true };
   });

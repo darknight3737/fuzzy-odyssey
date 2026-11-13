@@ -56,6 +56,7 @@ export const MARKETPLACE_PLANS = [
       'Link/selo conferido no site da empresa',
       'Receba contatos e avaliações de clientes',
       'Responda avaliações e publique até 3 cases',
+      'Resumo de desempenho de 30 dias',
       'Maior visibilidade por relevância',
     ],
   },

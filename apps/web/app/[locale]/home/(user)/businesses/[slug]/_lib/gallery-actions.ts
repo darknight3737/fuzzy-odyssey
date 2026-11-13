@@ -32,7 +32,7 @@ export const saveGalleryAction = authActionClient
           .insert({ ...values, business_id: input.businessId });
     if (result.error) throw new Error('Não foi possível salvar a imagem.');
     revalidatePath(`/company/${input.slug}`);
-    revalidatePath(`/home/businesses/${input.slug}`, 'layout');
+    revalidatePath('/[locale]/home/businesses/[slug]', 'layout');
     return { success: true };
   });
 export const deleteGalleryAction = authActionClient
@@ -53,6 +53,6 @@ export const deleteGalleryAction = authActionClient
       .eq('business_id', input.businessId);
     if (error) throw new Error('Não foi possível excluir a imagem.');
     revalidatePath(`/company/${input.slug}`);
-    revalidatePath(`/home/businesses/${input.slug}`, 'layout');
+    revalidatePath('/[locale]/home/businesses/[slug]', 'layout');
     return { success: true };
   });

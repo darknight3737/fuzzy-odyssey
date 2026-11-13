@@ -123,14 +123,20 @@ export function NextSteps({
             : 'Publicar selo no site (opcional)'}
         </Link>
       )}
-      {b.tier !== 'spotlight' && (
+      <div className="mt-4 space-y-1 border-t border-[#dce5e1] pt-3 text-sm">
+        <p className="font-medium">Promoção opcional</p>
+        {premium && (
+          <p className="text-[#00665b]">
+            {b.tier === 'spotlight' ? 'Spotlight ativo' : 'Destaque ativo'}
+          </p>
+        )}
         <Link
-          className="mt-3 inline-block text-sm font-medium text-[#004038] underline"
+          className="inline-block font-medium text-[#004038] underline"
           href={`${base}/${upgrade.href}`}
         >
-          {upgrade.title} ↗
+          {b.tier === 'spotlight' ? 'Ver plano atual' : upgrade.title} ↗
         </Link>
-      )}
+      </div>
     </>
   );
   return compact ? (

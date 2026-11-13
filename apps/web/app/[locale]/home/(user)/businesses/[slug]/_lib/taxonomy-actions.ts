@@ -60,6 +60,6 @@ export const toggleTaxonomyAction = authActionClient
     }
     if (error) throw new Error('Não foi possível atualizar.');
     revalidatePath(`/company/${input.slug}`);
-    revalidatePath(`/home/businesses/${input.slug}`, 'layout');
+    revalidatePath('/[locale]/home/businesses/[slug]', 'layout');
     return { success: true };
   });

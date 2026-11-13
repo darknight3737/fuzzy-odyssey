@@ -52,11 +52,27 @@ async function Conversation({ params }: { params: Promise<{ id: string }> }) {
   ]);
   if (recipientError || messageError) throw recipientError ?? messageError;
   const buyer = brief.buyer_user_id === user.id;
+  const ownOffers = recipients.filter(
+    ({ businesses }) => businesses?.account_id === user.id,
+  );
   return (
     <>
       <Link className="underline" href="/home/leads">
         ← Todos os pedidos
       </Link>
+      {!buyer &&
+        ownOffers.map(
+          ({ business_id, businesses }) =>
+            businesses && (
+              <Link
+                key={business_id}
+                className="ml-4 underline"
+                href={`/home/businesses/${businesses.slug}/oportunidades`}
+              >
+                Voltar para oportunidades de {businesses.name}
+              </Link>
+            ),
+        )}
       <h1 className="my-5 text-3xl font-semibold">{brief.title}</h1>
       <p className="whitespace-pre-wrap">{brief.description}</p>
       <dl className="my-6 grid gap-2 rounded-xl bg-[#f7f9f8] p-5 text-sm text-[#3d3e45]">
