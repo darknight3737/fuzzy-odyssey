@@ -32,12 +32,17 @@ function HeaderSearch({ className }: { className?: string }) {
       aria-label="Busca do site"
       className={className}
     >
+      <select name="kind" aria-label="Buscar por tipo de oferta">
+        <option value="">Todos</option>
+        <option value="software">Software</option>
+        <option value="service">Serviços</option>
+      </select>
       <input
         type="search"
         name="q"
         maxLength={120}
         aria-label="Empresa, serviço ou software"
-        placeholder="Buscar na Selletive"
+        placeholder="Buscar…"
       />
       <button type="submit" aria-label="Buscar">
         <Search size={18} aria-hidden="true" />

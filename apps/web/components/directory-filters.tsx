@@ -140,7 +140,6 @@ export function DirectoryFilters({
   };
   const activeMore = moreKeys.filter((key) => value(key)).length;
   const [state, setState] = useState({
-    kind: value('kind'),
     category: value('category'),
     open: activeMore > 0,
   });
@@ -190,6 +189,9 @@ export function DirectoryFilters({
   return (
     <div className="border-b border-[#dce5e1] pb-6">
       <form id={formId} />
+      {!category && value('kind') && (
+        <input type="hidden" name="kind" value={value('kind')} form={formId} />
+      )}
       {category && (
         <input type="hidden" name="category" value={category} form={formId} />
       )}
@@ -251,7 +253,7 @@ export function DirectoryFilters({
             className={`${field} pl-12`}
           />
         </label>
-        {!location && (
+        {!location && value('kind') === 'service' && (
           <IconSelect
             icon={MapPin}
             label="Localização"
@@ -275,7 +277,7 @@ export function DirectoryFilters({
           >
             <option value="">Todas as categorias</option>
             {(['service', 'software'] as const)
-              .filter((kind) => !state.kind || state.kind === kind)
+              .filter((kind) => !value('kind') || value('kind') === kind)
               .map((kind) => (
                 <optgroup
                   key={kind}
@@ -305,73 +307,48 @@ export function DirectoryFilters({
           <option value="4">4 estrelas ou mais</option>
           <option value="5">5 estrelas</option>
         </IconSelect>
-        <IconSelect
-          icon={Wallet}
-          label="Seu orçamento"
-          name="max_budget"
-          value={value('max_budget')}
-          form={formId}
-          className="flex-[1_1_180px]"
-        >
-          <option value="">Qualquer orçamento</option>
-          {budgets.map((budget) => (
-            <option key={budget.value} value={budget.value}>
-              {budget.label}
-            </option>
-          ))}
-          {value('max_budget') &&
-            !budgets.some((budget) => budget.value === value('max_budget')) && (
-              <option value={value('max_budget')}>
-                Até R$ {Number(value('max_budget')).toLocaleString('pt-BR')}
+        {value('kind') === 'service' && (
+          <IconSelect
+            icon={Wallet}
+            label="Seu orçamento"
+            name="max_budget"
+            value={value('max_budget')}
+            form={formId}
+            className="flex-[1_1_180px]"
+          >
+            <option value="">Qualquer orçamento</option>
+            {budgets.map((budget) => (
+              <option key={budget.value} value={budget.value}>
+                {budget.label}
               </option>
-            )}
-        </IconSelect>
-        {!category && (
-          <label className="relative block flex-[1_1_160px]">
-            <span className="sr-only">Tipo de empresa</span>
-            <select
-              name="kind"
-              form={formId}
-              value={state.kind}
-              onChange={(event) => {
-                const kind = event.target.value;
-                const selected = options.categories.find(
-                  (option) => option.value === state.category,
-                );
-                setState({
-                  ...state,
-                  kind,
-                  category:
-                    kind && selected?.kind !== kind ? '' : state.category,
-                });
-              }}
-              className={`${field} appearance-none pr-10`}
-            >
-              <option value="">Serviços e software</option>
-              <option value="service">Somente serviços</option>
-              <option value="software">Somente software</option>
-            </select>
-            <ChevronDown
-              aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-[#6f7073]"
-            />
-          </label>
+            ))}
+            {value('max_budget') &&
+              !budgets.some(
+                (budget) => budget.value === value('max_budget'),
+              ) && (
+                <option value={value('max_budget')}>
+                  Até R$ {Number(value('max_budget')).toLocaleString('pt-BR')}
+                </option>
+              )}
+          </IconSelect>
         )}
-        <button
-          type="button"
-          aria-expanded={state.open}
-          aria-controls={`${formId}-more`}
-          onClick={() => setState({ ...state, open: !state.open })}
-          className={`inline-flex min-h-12 items-center gap-2 rounded-lg border px-5 text-[15px] font-semibold transition-colors ${state.open || activeMore ? 'border-[#00756a] bg-[#f6fefb] text-[#004038]' : 'border-[#7b8983] bg-white text-[#004038] hover:bg-[#f6fefb]'}`}
-        >
-          <SlidersHorizontal aria-hidden="true" className="size-4" />
-          Mais filtros
-          {activeMore > 0 && (
-            <span className="rounded-full bg-[#004038] px-2 text-xs text-white">
-              {activeMore}
-            </span>
-          )}
-        </button>
+        {value('kind') && (
+          <button
+            type="button"
+            aria-expanded={state.open}
+            aria-controls={`${formId}-more`}
+            onClick={() => setState({ ...state, open: !state.open })}
+            className={`inline-flex min-h-12 items-center gap-2 rounded-lg border px-5 text-[15px] font-semibold transition-colors ${state.open || activeMore ? 'border-[#00756a] bg-[#f6fefb] text-[#004038]' : 'border-[#7b8983] bg-white text-[#004038] hover:bg-[#f6fefb]'}`}
+          >
+            <SlidersHorizontal aria-hidden="true" className="size-4" />
+            Mais filtros
+            {activeMore > 0 && (
+              <span className="rounded-full bg-[#004038] px-2 text-xs text-white">
+                {activeMore}
+              </span>
+            )}
+          </button>
+        )}
         <button
           type="submit"
           form={formId}
@@ -385,15 +362,13 @@ export function DirectoryFilters({
         hidden={!state.open}
         className="mt-4 rounded-xl border border-[#dce5e1] bg-[#f7f9f8] p-6"
       >
-        <div className="grid gap-6 md:grid-cols-3">
-          {number('min_budget', 'Orçamento mínimo da empresa (R$)')}
-        </div>
-        {state.kind !== 'software' && (
+        {value('kind') === 'service' && (
           <fieldset className="mt-6 border-t border-[#dce5e1] pt-6">
             <legend className="text-sm font-semibold text-[#0f161e]">
               Prestadores de serviço
             </legend>
             <div className="mt-4 grid gap-6 md:grid-cols-3">
+              {number('min_budget', 'Orçamento mínimo da empresa (R$)')}
               {number('min_team', 'Equipe mínima')}
               {number('max_team', 'Equipe máxima')}
               {number('founded_before', 'Fundada até o ano')}
@@ -406,7 +381,7 @@ export function DirectoryFilters({
             </div>
           </fieldset>
         )}
-        {state.kind !== 'service' && (
+        {value('kind') === 'software' && (
           <fieldset className="mt-6 border-t border-[#dce5e1] pt-6">
             <legend className="text-sm font-semibold text-[#0f161e]">
               Software
@@ -428,7 +403,10 @@ export function DirectoryFilters({
         )}
         <div className="mt-6 flex flex-wrap justify-end gap-3">
           <Link
-            href="?"
+            href={`?${new URLSearchParams({
+              ...(!category && value('kind') ? { kind: value('kind') } : {}),
+              ...(value('q') ? { q: value('q') } : {}),
+            })}`}
             className="inline-flex min-h-11 items-center rounded-lg px-4 text-sm font-semibold text-[#004038] hover:bg-white"
           >
             Limpar filtros

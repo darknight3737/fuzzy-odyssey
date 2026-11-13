@@ -201,7 +201,18 @@ try {
   await expect(
     categorySelect.locator('option[value="aws-consulting"]'),
   ).toHaveCount(0);
-  await page.locator('select[name=kind]:visible').selectOption('service');
+  const resultScope = page.getByRole('navigation', {
+    name: 'Tipo de resultado',
+  });
+  await expect(
+    resultScope.getByRole('link', { name: /^Software/ }),
+  ).toHaveAttribute('aria-current', 'page');
+  await resultScope
+    .getByRole('link', { name: 'Serviços', exact: true })
+    .click();
+  await expect(
+    resultScope.getByRole('link', { name: /^Serviços/ }),
+  ).toHaveAttribute('aria-current', 'page');
   await expect(
     categorySelect.locator('option[value="aws-consulting"]'),
   ).toHaveCount(1);
@@ -355,6 +366,9 @@ try {
         await expect(headerSearch).toBeVisible();
       }
       if (width === 1280) {
+        await home
+          .getByRole('combobox', { name: 'Buscar por tipo de oferta' })
+          .selectOption('software');
         await headerSearch.fill('Design & Tecnologia');
         await headerSearch.press('Enter');
         await expect(home).toHaveURL(/q=Design/);
@@ -362,6 +376,7 @@ try {
           new URL(home.url()).searchParams.get('q'),
           'Design & Tecnologia',
         );
+        assert.equal(new URL(home.url()).searchParams.get('kind'), 'software');
       }
       if (width === 1440) {
         await home.keyboard.press('Tab');

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 import Link from 'next/link';
 
@@ -206,6 +206,8 @@ function DirectoryCard({
   layout: Layout;
 }) {
   const { business: b, average_rating, review_count } = item;
+  const profileAction =
+    b.offering_kind === 'software' ? 'Ver software' : 'Ver empresa';
   const wellRated = review_count >= 3 && Number(average_rating) >= 4.5;
   const list = layout === 'list';
   return (
@@ -226,7 +228,7 @@ function DirectoryCard({
       </div>
       <Link
         href={`/company/${b.slug}`}
-        aria-label={`Ver perfil de ${b.name}`}
+        aria-label={`${profileAction} · ${b.name}`}
         className={`group flex w-full flex-col rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#004038] ${list ? 'md:flex-row' : ''}`}
       >
         <div
@@ -291,7 +293,7 @@ function DirectoryCard({
             ))}
           </ul>
           <span className="mt-auto inline-flex min-h-11 items-center justify-center rounded-lg bg-[#004038] px-5 text-[15px] font-semibold text-white transition-colors group-hover:bg-[#00544c] group-active:bg-[#00332d]">
-            Ver perfil
+            {profileAction}
           </span>
         </div>
       </Link>
@@ -334,12 +336,15 @@ export function DirectoryResults({
   spotlight = false,
   title = 'Todas as empresas',
   featuredTitle = 'Empresas em destaque',
+  showShortlist = true,
 }: {
   items: DirectoryItem[];
   spotlight?: boolean;
   title?: string;
   featuredTitle?: string;
+  showShortlist?: boolean;
 }) {
+  const sectionId = useId();
   const [layout, setLayout] = useState<Layout>('grid');
   const grid =
     layout === 'grid'
@@ -355,11 +360,11 @@ export function DirectoryResults({
   return (
     <>
       {promoted.length > 0 && (
-        <section aria-labelledby="directory-featured" className="mb-12">
+        <section aria-labelledby={`${sectionId}-featured`} className="mb-12">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div>
               <h2
-                id="directory-featured"
+                id={`${sectionId}-featured`}
                 className="text-lg font-semibold text-[#0f161e]"
               >
                 {featuredTitle}
@@ -382,10 +387,10 @@ export function DirectoryResults({
           </div>
         </section>
       )}
-      <section aria-labelledby="directory-all">
+      <section aria-labelledby={`${sectionId}-all`}>
         <div className="mb-4 flex items-center justify-between gap-4">
           <h2
-            id="directory-all"
+            id={`${sectionId}-all`}
             className="text-lg font-semibold text-[#0f161e]"
           >
             {title}
@@ -416,7 +421,7 @@ export function DirectoryResults({
           </div>
         )}
       </section>
-      <DirectoryShortlist />
+      {showShortlist && <DirectoryShortlist />}
     </>
   );
 }
