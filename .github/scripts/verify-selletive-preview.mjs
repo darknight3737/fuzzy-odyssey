@@ -46,10 +46,10 @@ try {
     );
     const response = await imageResponse;
     assert.equal(response.status(), 200, 'Optimized image response');
-    await expect(imagePage.locator('img')).toBeVisible();
+    await expect(imagePage.getByRole('img', { name: 'Optimized image' })).toBeVisible();
     await expect
       .poll(() =>
-        imagePage.locator('img').evaluate((image) => image.naturalWidth),
+        imagePage.getByRole('img', { name: 'Optimized image' }).evaluate((image) => image.naturalWidth),
       )
       .toBe(64);
   } finally {
