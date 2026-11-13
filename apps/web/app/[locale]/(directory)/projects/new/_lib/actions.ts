@@ -10,5 +10,5 @@ export const submitLeadAction = authActionClient
   .inputSchema(LeadSchema)
   .action(async ({ parsedInput }) => {
     await createLeadService(getSupabaseServerClient()).create(parsedInput);
-    redirect('/home/leads?sent=1');
+    redirect('/home/leads');
   });

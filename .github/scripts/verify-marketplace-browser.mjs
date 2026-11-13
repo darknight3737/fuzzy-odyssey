@@ -220,7 +220,7 @@ try {
   await page
     .getByRole('button', { name: 'Enviar pedido gratuitamente' })
     .click();
-  await page.waitForURL('**/home/leads?sent=1');
+  await page.waitForURL('**/home/leads');
   await page.getByRole('link', { name: /Pedido de demonstração CI/ }).click();
   const conversation = page.url();
   await expect(
