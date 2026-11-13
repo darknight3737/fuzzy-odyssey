@@ -20,7 +20,7 @@ export function AppLogo({
   let src = '/images/selletive-logo.svg';
 
   if (symbolOnly) {
-    src = '/images/selletive-symbol.svg';
+    src = '/images/selletive-icon.svg';
   } else if (color === 'white') {
     src = '/images/selletive-logo-white.svg';
   }
@@ -29,11 +29,11 @@ export function AppLogo({
     <Image
       src={src}
       alt={href === null ? name : ''}
-      width={symbolOnly ? 210 : 1000}
-      height={210}
+      width={symbolOnly ? 300 : 1000}
+      height={symbolOnly ? 300 : 210}
       className={cn(
         'block h-auto w-full',
-        color === 'auto' && 'dark:brightness-0 dark:invert',
+        color === 'auto' && !symbolOnly && 'dark:brightness-0 dark:invert',
       )}
       unoptimized
     />

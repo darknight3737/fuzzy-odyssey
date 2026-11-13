@@ -29,11 +29,19 @@ export const generateRootMetadata = (): Metadata => {
       images: [socialImageUrl('site', 'default')],
     },
     icons: {
-      icon: {
-        url: '/images/favicon/selletive-symbol.svg',
-        type: 'image/svg+xml',
-      },
-      apple: '/images/favicon/selletive-apple-touch-icon.png',
+      icon: [
+        {
+          url: '/images/favicon/selletive-icon-32.png',
+          sizes: '32x32',
+          type: 'image/png',
+        },
+        {
+          url: '/images/selletive-icon.svg',
+          sizes: 'any',
+          type: 'image/svg+xml',
+        },
+      ],
+      apple: '/images/favicon/selletive-icon-180.png',
     },
   };
 };
