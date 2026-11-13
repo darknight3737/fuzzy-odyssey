@@ -4,6 +4,7 @@ import { connection } from 'next/server';
 
 import { Trans } from '@kit/ui/trans';
 
+import { CompassPageLoader } from '~/components/compass-loader';
 import { pageMetadata } from '~/lib/seo';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
@@ -40,13 +41,7 @@ async function CategoriesPage() {
 
 export default function Page() {
   return (
-    <Suspense
-      fallback={
-        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
-          Carregando…
-        </div>
-      }
-    >
+    <Suspense fallback={<CompassPageLoader />}>
       <CategoriesPage />
     </Suspense>
   );

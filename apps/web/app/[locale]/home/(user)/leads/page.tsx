@@ -11,6 +11,7 @@ import {
   buttonPrimary,
   buttonSecondary,
 } from '~/components/admin-ui';
+import { CompassPageLoader } from '~/components/compass-loader';
 export const metadata = {
   title: 'Pedidos e oportunidades | Selletive',
   robots: { index: false, follow: false },
@@ -108,7 +109,7 @@ export default function Page() {
         title="Pedidos e oportunidades"
         description="Acompanhe seus pedidos e converse com empresas em um só lugar."
       />
-      <Suspense fallback={<p>Carregando pedidos…</p>}>
+      <Suspense fallback={<CompassPageLoader />}>
         <Inbox />
       </Suspense>
     </main>

@@ -16,6 +16,7 @@ import {
   buttonPrimary,
   buttonSecondary,
 } from '~/components/admin-ui';
+import { CompassPageLoader } from '~/components/compass-loader';
 import { LeadPotential } from '~/components/lead-potential';
 import appConfig from '~/config/app.config';
 import { MARKETPLACE_PLANS, tierRank } from '~/lib/plans';
@@ -249,7 +250,7 @@ async function Promotion({ params }: { params: Promise<{ slug: string }> }) {
 export default function Page(props: { params: Promise<{ slug: string }> }) {
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 lg:py-10">
-      <Suspense fallback={<p>Carregando planos…</p>}>
+      <Suspense fallback={<CompassPageLoader />}>
         <Promotion {...props} />
       </Suspense>
     </main>

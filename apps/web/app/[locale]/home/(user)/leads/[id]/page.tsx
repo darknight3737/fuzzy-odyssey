@@ -6,6 +6,7 @@ import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
+import { CompassPageLoader } from '~/components/compass-loader';
 import { isPremium } from '~/lib/plans';
 
 import { CrmForm } from '../_components/crm-form';
@@ -140,7 +141,7 @@ async function Conversation({ params }: { params: Promise<{ id: string }> }) {
 export default function Page(props: { params: Promise<{ id: string }> }) {
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-6 md:px-8 lg:py-10">
-      <Suspense fallback={<p>Carregando conversa…</p>}>
+      <Suspense fallback={<CompassPageLoader />}>
         <Conversation {...props} />
       </Suspense>
     </main>

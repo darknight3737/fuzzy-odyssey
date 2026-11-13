@@ -12,6 +12,7 @@ import {
   buttonSecondary,
   nextStep,
 } from '~/components/admin-ui';
+import { CompassPageLoader } from '~/components/compass-loader';
 import { CompanyLogo } from '~/components/directory-results';
 
 export const metadata = {
@@ -164,13 +165,7 @@ async function UserHomePage() {
 }
 export default function Page() {
   return (
-    <Suspense
-      fallback={
-        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
-          Carregando…
-        </div>
-      }
-    >
+    <Suspense fallback={<CompassPageLoader />}>
       <UserHomePage />
     </Suspense>
   );

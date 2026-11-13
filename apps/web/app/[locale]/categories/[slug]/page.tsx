@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
 
+import { CompassPageLoader } from '~/components/compass-loader';
 import {
   DirectoryFilters,
   DirectoryPagination,
@@ -20,8 +21,8 @@ import {
   filtersFromParams,
   searchMarketplace,
 } from '~/lib/directory/marketplace';
-import { taxonomyKind } from '~/lib/directory/taxonomy';
 import { getDirectoryOptions } from '~/lib/directory/options';
+import { taxonomyKind } from '~/lib/directory/taxonomy';
 import { pageMetadata } from '~/lib/seo';
 import { socialImageUrl } from '~/lib/social-images';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
@@ -215,13 +216,7 @@ async function Content({ params, searchParams }: Props) {
 
 export default function Page(props: Props) {
   return (
-    <Suspense
-      fallback={
-        <div role="status" className="container min-h-96 p-12">
-          Carregando…
-        </div>
-      }
-    >
+    <Suspense fallback={<CompassPageLoader />}>
       <Content {...props} />
     </Suspense>
   );

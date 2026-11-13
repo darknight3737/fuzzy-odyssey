@@ -5,6 +5,7 @@ import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
+import { CompassPageLoader } from '~/components/compass-loader';
 import { pageMetadata } from '~/lib/seo';
 
 export const metadata = pageMetadata(
@@ -92,13 +93,7 @@ async function ClaimPage({
 }
 export default function Page(props: Parameters<typeof ClaimPage>[0]) {
   return (
-    <Suspense
-      fallback={
-        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
-          Carregando…
-        </div>
-      }
-    >
+    <Suspense fallback={<CompassPageLoader />}>
       <ClaimPage {...props} />
     </Suspense>
   );

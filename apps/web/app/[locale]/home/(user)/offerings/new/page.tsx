@@ -6,6 +6,7 @@ import { connection } from 'next/server';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import { AdminHeader } from '~/components/admin-ui';
+import { CompassPageLoader } from '~/components/compass-loader';
 
 import { OfferingForm } from './_components/offering-form';
 export const metadata = {
@@ -52,7 +53,7 @@ export default function Page() {
         description="Escolha se é um serviço (agência, consultoria) ou um software. Cada software tem seu próprio perfil; uma empresa pode apresentar produtos e serviços separados."
       />
       <div className="rounded-2xl border border-[#dce5e1] bg-white p-6 md:p-8">
-        <Suspense fallback={<p>Carregando cadastro…</p>}>
+        <Suspense fallback={<CompassPageLoader />}>
           <FormContent />
         </Suspense>
       </div>

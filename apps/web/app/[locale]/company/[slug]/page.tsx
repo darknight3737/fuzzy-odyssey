@@ -21,6 +21,7 @@ import {
   Wallet,
 } from 'lucide-react';
 
+import { CompassPageLoader } from '~/components/compass-loader';
 import { DirectoryImage } from '~/components/directory-image';
 import { CompanyLogo, TrustMarks } from '~/components/directory-results';
 import { DirectorySaveButton } from '~/components/directory-shortlist';
@@ -961,13 +962,7 @@ async function BusinessProfilePage({ params }: Props) {
 
 export default function Page(props: Props) {
   return (
-    <Suspense
-      fallback={
-        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
-          Carregando…
-        </div>
-      }
-    >
+    <Suspense fallback={<CompassPageLoader />}>
       <BusinessProfilePage {...props} />
     </Suspense>
   );

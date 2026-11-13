@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 
 import { connection } from 'next/server';
 
+import { CompassPageLoader } from '~/components/compass-loader';
 import {
   DirectoryFilters,
   DirectoryPagination,
@@ -79,9 +80,7 @@ async function Content({ searchParams }: Props) {
 }
 export default function Page(props: Props) {
   return (
-    <Suspense
-      fallback={<div className="container min-h-96 p-12">Carregando…</div>}
-    >
+    <Suspense fallback={<CompassPageLoader />}>
       <Content {...props} />
     </Suspense>
   );

@@ -6,7 +6,6 @@ import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
-import { taxonomyKind } from '~/lib/directory/taxonomy';
 import {
   AdminHeader,
   AdminSection,
@@ -18,6 +17,8 @@ import {
   buttonPrimary,
   buttonSecondary,
 } from '~/components/admin-ui';
+import { CompassPageLoader } from '~/components/compass-loader';
+import { taxonomyKind } from '~/lib/directory/taxonomy';
 import { canReceiveContacts, getPlanLimits, isPremium } from '~/lib/plans';
 
 import { BusinessAnalytics } from './_components/business-analytics';
@@ -471,13 +472,7 @@ async function ManageBusinessPage({
 }
 export default function Page(props: Parameters<typeof ManageBusinessPage>[0]) {
   return (
-    <Suspense
-      fallback={
-        <div role="status" className="container mx-auto min-h-96 px-6 py-12">
-          Carregando…
-        </div>
-      }
-    >
+    <Suspense fallback={<CompassPageLoader />}>
       <ManageBusinessPage {...props} />
     </Suspense>
   );

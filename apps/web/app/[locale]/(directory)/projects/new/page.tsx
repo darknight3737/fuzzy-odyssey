@@ -5,6 +5,7 @@ import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
+import { CompassPageLoader } from '~/components/compass-loader';
 import { pageMetadata } from '~/lib/seo';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
@@ -104,7 +105,7 @@ export default function Page(props: {
         Conte o que precisa, revise seu pedido e converse com fornecedores
         adequados.
       </p>
-      <Suspense fallback={<p>Carregando formulário…</p>}>
+      <Suspense fallback={<CompassPageLoader />}>
         <ProjectForm {...props} />
       </Suspense>
     </main>

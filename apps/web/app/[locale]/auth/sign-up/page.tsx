@@ -10,6 +10,7 @@ import { Button } from '@kit/ui/button';
 import { Heading } from '@kit/ui/heading';
 import { Trans } from '@kit/ui/trans';
 
+import { CompassLoader } from '~/components/compass-loader';
 import authConfig from '~/config/auth.config';
 import pathsConfig from '~/config/paths.config';
 
@@ -69,7 +70,13 @@ async function SignUpPage({
 
 export default function Page(props: Parameters<typeof SignUpPage>[0]) {
   return (
-    <Suspense fallback={<div role="status">Carregando…</div>}>
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-8">
+          <CompassLoader size={'sm'} />
+        </div>
+      }
+    >
       <SignUpPage {...props} />
     </Suspense>
   );

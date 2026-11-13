@@ -3,6 +3,7 @@ import { Suspense, cache } from 'react';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { connection } from 'next/server';
 
+import { CompassPageLoader } from '~/components/compass-loader';
 import {
   DirectoryFilters,
   DirectoryPagination,
@@ -170,13 +171,7 @@ async function Content({ params, searchParams }: Props) {
 
 export default function Page(props: Props) {
   return (
-    <Suspense
-      fallback={
-        <div role="status" className="container min-h-96 p-12">
-          Carregando…
-        </div>
-      }
-    >
+    <Suspense fallback={<CompassPageLoader />}>
       <Content {...props} />
     </Suspense>
   );
