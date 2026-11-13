@@ -202,7 +202,7 @@ try {
   await page.getByRole('link', { name: 'Entrar ou criar conta' }).click();
   await page.locator('input[name="email"]').fill(`${token}-buyer@example.test`);
   await page.locator('input[name="password"]').fill(password);
-  await page.locator('button[type="submit"]').click();
+  await page.locator('form').filter({ has: page.locator('input[name="password"]') }).locator('button[type="submit"]').click();
   await page.waitForURL((url) => url.pathname.includes('/projects/new'));
   const briefForm = page.locator('[data-test=project-brief-form]');
   await expect(briefForm).toBeVisible({ timeout: 15000 });
@@ -237,7 +237,7 @@ try {
   );
   await seller.locator('input[name="email"]').fill(`${token}@example.test`);
   await seller.locator('input[name="password"]').fill(password);
-  await seller.locator('button[type="submit"]').click();
+  await seller.locator('form').filter({ has: seller.locator('input[name="password"]') }).locator('button[type="submit"]').click();
   await seller.waitForURL(conversation);
   await expect(
     seller.getByRole('heading', { name: 'Pedido de demonstração CI' }),
