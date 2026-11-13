@@ -222,6 +222,7 @@ try {
     .click();
   await page.waitForURL('**/home/leads');
   await page.getByRole('link', { name: /Pedido de demonstração CI/ }).click();
+  await page.waitForURL(/\/home\/leads\/[0-9a-f-]+$/);
   const conversation = page.url();
   await expect(
     page.getByRole('heading', { name: 'Pedido de demonstração CI' }),
@@ -238,8 +239,11 @@ try {
   await seller.locator('input[name="password"]').fill(password);
   await seller.locator('button[type="submit"]').click();
   await seller.waitForURL(conversation);
+  await expect(
+    seller.getByRole('heading', { name: 'Pedido de demonstração CI' }),
+  ).toBeVisible({ timeout: 15000 });
   await seller
-    .getByLabel('Sua mensagem')
+    .locator('textarea[name=content]')
     .first()
     .fill('Posso apresentar o produto amanhã.');
   await seller.getByRole('button', { name: 'Enviar mensagem' }).first().click();
