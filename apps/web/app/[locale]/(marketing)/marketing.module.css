@@ -171,6 +171,26 @@
   background: white;
   box-shadow: 0 8px 24px #01262020;
 }
+@media (1100px <= width < 1280px) {
+  .headerInner {
+    width: calc(100% - 32px);
+    gap: 12px;
+  }
+  .desktopNav {
+    margin-inline: 0;
+  }
+  .actions {
+    min-width: 0;
+    gap: 8px;
+  }
+  .headerSearch {
+    width: clamp(160px, 18vw, 224px);
+    min-width: 150px;
+  }
+  .companyLink {
+    padding-inline: 8px;
+  }
+}
 @media (max-width: 1099px) {
   .headerSearch {
     display: none;
