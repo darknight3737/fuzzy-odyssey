@@ -170,6 +170,7 @@ async function prepare() {
     NEXT_PUBLIC_SUPABASE_PUBLIC_KEY: publicKey,
     ...(!applicationOnly && { SUPABASE_SECRET_KEY: secretKey }),
     NEXT_PUBLIC_SITE_URL: site,
+    NEXT_PUBLIC_GOOGLE_SIGN_IN_CLIENT_ID: '690890497708-652nj8a4a9aes3cjuuq5209n38h8eo6b.apps.googleusercontent.com',
     NEXT_PUBLIC_DEFAULT_LOCALE: 'pt',
     NEXT_PUBLIC_BILLING_PROVIDER: 'stripe',
     NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_BILLING: 'false',

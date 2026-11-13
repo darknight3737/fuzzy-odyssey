@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import type {
   Provider,
@@ -15,6 +15,7 @@ import { Trans } from '@kit/ui/trans';
 import { useLastAuthMethod } from '../hooks/use-last-auth-method';
 import { AuthErrorAlert } from './auth-error-alert';
 import { AuthProviderButton } from './auth-provider-button';
+import { GoogleIdTokenButton } from './google-id-token-button';
 import { LastAuthMethodHint } from './last-auth-method-hint';
 
 /**
@@ -44,6 +45,7 @@ export const OauthProviders: React.FC<{
 }> = (props) => {
   const signInWithProviderMutation = useSignInWithProvider();
   const { recordAuthMethod } = useLastAuthMethod();
+  const [idTokenError, setIdTokenError] = useState<string | null>(null);
 
   // we make the UI "busy" until the next page is fully loaded
   const loading = signInWithProviderMutation.isPending;
@@ -74,7 +76,7 @@ export const OauthProviders: React.FC<{
       <div className={'flex w-full flex-1 flex-col space-y-3'}>
         <div className={'flex-col space-y-2'}>
           {enabledProviders.map((provider) => {
-            return (
+            const redirectButton = (
               <AuthProviderButton
                 key={provider}
                 providerId={provider}
@@ -127,10 +129,27 @@ export const OauthProviders: React.FC<{
                 />
               </AuthProviderButton>
             );
+
+            if (provider !== 'google') return redirectButton;
+
+            return (
+              <GoogleIdTokenButton
+                key={provider}
+                fallback={redirectButton}
+                text={props.shouldCreateUser ? 'continue_with' : 'signin_with'}
+                onSignedIn={() => {
+                  recordAuthMethod('oauth', { provider });
+                  const params = new URLSearchParams();
+                  if (props.paths.returnPath) params.set('next', props.paths.returnPath);
+                  window.location.assign(`${props.paths.callback}?${params}`);
+                }}
+                onError={(error) => setIdTokenError(error instanceof Error ? error.message : String(error))}
+              />
+            );
           })}
         </div>
 
-        <AuthErrorAlert error={signInWithProviderMutation.error} />
+        <AuthErrorAlert error={idTokenError ?? signInWithProviderMutation.error} />
       </div>
     </>
   );
