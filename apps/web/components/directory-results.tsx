@@ -211,9 +211,9 @@ function DirectoryCard({
   return (
     <article
       data-test="directory-card"
-      className={`relative flex rounded-xl border border-[#dce5e1] bg-white transition-colors hover:border-[#7b8983] ${list ? 'flex-col md:flex-row' : 'flex-col'}`}
+      className="relative flex rounded-xl border border-[#dce5e1] bg-white transition-colors hover:border-[#7b8983]"
     >
-      <div className="absolute top-2 right-2">
+      <div className="absolute top-2 right-2 z-10">
         <DirectorySaveButton
           variant="icon"
           business={{
@@ -224,80 +224,77 @@ function DirectoryCard({
           }}
         />
       </div>
-      <div
-        className={`flex flex-1 flex-col p-6 pt-14 ${list ? 'md:flex-row md:items-start md:gap-6' : 'items-center text-center'}`}
+      <Link
+        href={`/company/${b.slug}`}
+        aria-label={`Ver perfil de ${b.name}`}
+        className={`group flex w-full flex-col rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#004038] ${list ? 'md:flex-row' : ''}`}
       >
-        <div className="absolute top-4 left-4">
-          <TrustMarks tier={b.tier} />
-        </div>
-        <CompanyLogo name={b.name} src={b.logo_url} />
         <div
-          className={`flex min-w-0 flex-1 flex-col ${list ? 'mt-4 md:mt-6 md:pr-8' : 'mt-4 items-center'}`}
+          className={`flex flex-1 flex-col p-6 pt-14 ${list ? 'md:flex-row md:items-start md:gap-6' : 'items-center text-center'}`}
         >
-          <h3 className="text-lg leading-snug font-semibold [overflow-wrap:anywhere] text-[#0f161e]">
-            <Link
-              href={`/company/${b.slug}`}
-              className="hover:underline focus-visible:underline"
-            >
-              {b.name}
-            </Link>
-          </h3>
-          <div className="mt-1">
-            <RatingInline
-              rating={average_rating}
-              count={review_count}
-              compact
-            />
+          <div className="absolute top-4 left-4">
+            <TrustMarks tier={b.tier} />
           </div>
-          {b.description && (
-            <p className="mt-3 line-clamp-2 text-sm text-[#3d3e45]">
-              {b.description}
-            </p>
-          )}
+          <CompanyLogo name={b.name} src={b.logo_url} />
           <div
-            className={`mt-4 flex flex-wrap gap-2 ${list ? '' : 'justify-center'}`}
+            className={`flex min-w-0 flex-1 flex-col ${list ? 'mt-4 md:mt-6 md:pr-8' : 'mt-4 items-center'}`}
           >
-            {sponsored && (
-              <span
-                title="Esta empresa paga por posição de destaque. Patrocínio não é avaliação de qualidade."
-                className="inline-flex h-7 items-center rounded-full border border-[#dce5e1] px-3 text-[13px] font-medium text-[#333e49]"
-              >
-                Patrocinado
-              </span>
+            <h3 className="text-lg leading-snug font-semibold [overflow-wrap:anywhere] text-[#0f161e]">
+              {b.name}
+            </h3>
+            <div className="mt-1">
+              <RatingInline
+                rating={average_rating}
+                count={review_count}
+                compact
+              />
+            </div>
+            {b.description && (
+              <p className="mt-3 line-clamp-2 text-sm text-[#3d3e45]">
+                {b.description}
+              </p>
             )}
-            <span className="inline-flex h-7 items-center rounded-full bg-[#f7f9f8] px-3 text-[13px] font-medium text-[#333e49]">
-              {b.offering_kind === 'software' ? 'Software' : 'Serviços'}
-            </span>
-            {wellRated && (
-              <span
-                title="Nota média de 4,5 ou mais em pelo menos 3 avaliações"
-                className="inline-flex h-7 items-center gap-1.5 rounded-full bg-[#f6fefb] px-3 text-[13px] font-medium text-[#004038]"
-              >
-                <ThumbsUp aria-hidden="true" className="size-3.5" />
-                Bem avaliada
+            <div
+              className={`mt-4 flex flex-wrap gap-2 ${list ? '' : 'justify-center'}`}
+            >
+              {sponsored && (
+                <span
+                  title="Esta empresa paga por posição de destaque. Patrocínio não é avaliação de qualidade."
+                  className="inline-flex h-7 items-center rounded-full border border-[#dce5e1] px-3 text-[13px] font-medium text-[#333e49]"
+                >
+                  Patrocinado
+                </span>
+              )}
+              <span className="inline-flex h-7 items-center rounded-full bg-[#f7f9f8] px-3 text-[13px] font-medium text-[#333e49]">
+                {b.offering_kind === 'software' ? 'Software' : 'Serviços'}
               </span>
-            )}
+              {wellRated && (
+                <span
+                  title="Nota média de 4,5 ou mais em pelo menos 3 avaliações"
+                  className="inline-flex h-7 items-center gap-1.5 rounded-full bg-[#f6fefb] px-3 text-[13px] font-medium text-[#004038]"
+                >
+                  <ThumbsUp aria-hidden="true" className="size-3.5" />
+                  Bem avaliada
+                </span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-      <div
-        className={`flex flex-col gap-4 border-[#dce5e1] bg-[#f7f9f8] p-6 ${list ? 'rounded-b-xl border-t md:w-[320px] md:rounded-r-xl md:rounded-bl-none md:border-t-0 md:border-l' : 'mt-auto rounded-b-xl border-t'}`}
-      >
-        <ul className="space-y-3">
-          {attributes(item).map((row, index) => (
-            <Attribute key={index} icon={row.icon}>
-              {row.content}
-            </Attribute>
-          ))}
-        </ul>
-        <Link
-          href={`/company/${b.slug}`}
-          className="mt-auto inline-flex min-h-11 items-center justify-center rounded-lg bg-[#004038] px-5 text-[15px] font-semibold text-white transition-colors hover:bg-[#00544c] active:bg-[#00332d]"
+        <div
+          className={`flex flex-col gap-4 border-[#dce5e1] bg-[#f7f9f8] p-6 ${list ? 'rounded-b-xl border-t md:w-[320px] md:rounded-r-xl md:rounded-bl-none md:border-t-0 md:border-l' : 'mt-auto rounded-b-xl border-t'}`}
         >
-          Ver perfil
-          <span className="sr-only"> de {b.name}</span>
-        </Link>
-      </div>
+          <ul className="space-y-3">
+            {attributes(item).map((row, index) => (
+              <Attribute key={index} icon={row.icon}>
+                {row.content}
+              </Attribute>
+            ))}
+          </ul>
+          <span className="mt-auto inline-flex min-h-11 items-center justify-center rounded-lg bg-[#004038] px-5 text-[15px] font-semibold text-white transition-colors group-hover:bg-[#00544c] group-active:bg-[#00332d]">
+            Ver perfil
+          </span>
+        </div>
+      </Link>
     </article>
   );
 }
