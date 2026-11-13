@@ -31,15 +31,13 @@ export const saveResponseAction = authActionClient
           .update({ response_text: input.response })
           .eq('id', input.responseId)
           .eq('review_id', input.reviewId)
-      : await client
-          .from('review_responses')
-          .insert({
-            review_id: input.reviewId,
-            user_id: user.id,
-            response_text: input.response,
-          });
+      : await client.from('review_responses').insert({
+          review_id: input.reviewId,
+          user_id: user.id,
+          response_text: input.response,
+        });
     if (result.error) throw new Error('Não foi possível salvar a resposta.');
     revalidatePath(`/company/${input.slug}`);
-    revalidatePath(`/home/businesses/${input.slug}`);
+    revalidatePath(`/home/businesses/${input.slug}`, 'layout');
     return { success: true };
   });

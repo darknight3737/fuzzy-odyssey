@@ -24,7 +24,7 @@ export const updateBusinessAction = authActionClient
       };
     updateTag('directory');
     revalidatePath(`/company/${slug}`);
-    revalidatePath(`/home/businesses/${slug}`);
+    revalidatePath(`/home/businesses/${slug}`, 'layout');
     revalidatePath('/');
     return { success: true, error: '' };
   });

@@ -9,22 +9,19 @@ import { Check } from 'lucide-react';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import {
-  AdminHeader,
   AdminSection,
-  TierBadge,
   buttonAccent,
   buttonPrimary,
   buttonSecondary,
 } from '~/components/admin-ui';
 import { CompassPageLoader } from '~/components/compass-loader';
 import { LeadPotential } from '~/components/lead-potential';
-import appConfig from '~/config/app.config';
 import { MARKETPLACE_PLANS, tierRank } from '~/lib/plans';
 
-import { BadgeVerification } from './_components/badge-verification';
+import { BusinessDashboard } from '../_components/business-dashboard';
 
 export const metadata = {
-  title: 'Planos e verificação | Selletive',
+  title: 'Planos e visibilidade | Selletive',
   robots: { index: false, follow: false },
 };
 
@@ -57,68 +54,47 @@ async function Promotion({ params }: { params: Promise<{ slug: string }> }) {
   if (!user) redirect('/auth/sign-in');
   const { data: b, error } = await client
     .from('businesses')
-    .select('id,name,slug,tier,website,verification_status')
+    .select(
+      'id,name,slug,tier,website,verification_status,offering_kind,logo_url,description,features,business_categories(category_id),business_services(id),business_cases(id)',
+    )
     .eq('slug', slug)
     .eq('account_id', user.id)
     .maybeSingle();
   if (error) throw error;
   if (!b) notFound();
   const rank = tierRank(b.tier);
-  const verified =
-    b.verification_status === 'verified' || b.tier === 'verified';
-  const premium = rank >= 3;
   return (
-    <>
-      <AdminHeader
-        back={{ href: `/home/businesses/${slug}`, label: 'Gerenciar perfil' }}
-        eyebrow={b.name}
-        title="Planos e verificação"
-        description={
-          <div className="flex flex-wrap items-center gap-3">
-            <span>Seu plano atual:</span>
-            <TierBadge tier={b.tier} />
-          </div>
-        }
-      />
+    <BusinessDashboard business={b} section="promote">
+      <p id="verificacao" className="text-sm">
+        Você pode escolher Destaque ou Spotlight sem verificar o perfil antes.{' '}
+        <Link href={`/home/businesses/${slug}/selos`} className="underline">
+          Ver selos
+        </Link>
+      </p>
       <div className="space-y-6">
-        <AdminSection
-          id="verificacao"
-          step={1}
-          title={
-            premium && !verified
-              ? 'Selo da Selletive (opcional no seu plano)'
-              : 'Verifique seu perfil gratuitamente'
-          }
-          description={
-            premium && !verified
-              ? 'Seu plano já inclui contatos e avaliações. Publicar o selo é opcional e ajuda visitantes do seu site a encontrar seu perfil.'
-              : 'Com o Verificado, sua empresa passa a receber contatos e avaliações de clientes e ganha mais visibilidade nas buscas.'
-          }
-          status={{
-            done: verified || premium,
-            label: verified ? 'Concluído' : premium ? 'Opcional' : 'Pendente',
-          }}
-        >
-          <BadgeVerification
-            business={b}
-            siteUrl={appConfig.url}
-            verified={verified}
-            premium={premium}
-          />
-        </AdminSection>
-
-        <AdminSection
-          id="simulacao"
-          step={2}
-          title="Simule o potencial do seu perfil"
-          description="Cenário ilustrativo: ajuste as hipóteses e veja como exposição pode virar pedidos de orçamento."
-        >
-          <LeadPotential />
-        </AdminSection>
-
+        <div className="grid gap-3 sm:grid-cols-2">
+          <section className="rounded-xl border border-[#dce5e1] bg-white p-4">
+            <h3 className="font-semibold">Prévia do Destaque</h3>
+            <p className="mt-2 font-medium">{b.name}</p>
+            <p className="text-sm">
+              {b.offering_kind === 'software'
+                ? 'Vídeo de demonstração e botão de agendamento no perfil.'
+                : 'Cases com imagens e botão de pedido de proposta no perfil.'}
+            </p>
+          </section>
+          <section className="rounded-xl border border-[#dce5e1] bg-white p-4">
+            <h3 className="font-semibold">Prévia do Spotlight</h3>
+            <p className="mt-2 font-medium">
+              {b.name} <span className="ml-1 text-xs">· Patrocinado</span>
+            </p>
+            <p className="text-sm">
+              Exemplo de identificação nas buscas de segmentos compatíveis.
+              Disponibilidade sob consulta.
+            </p>
+          </section>
+        </div>
         <AdminSection
           id="planos"
-          step={3}
           title="Escolha seu plano"
           description="Destaque e Spotlight transformam seu perfil em um canal de novas oportunidades."
         >
@@ -188,7 +164,7 @@ async function Promotion({ params }: { params: Promise<{ slug: string }> }) {
                     ) : plan.id === 'claimed' ? null : plan.id ===
                       'verified' ? (
                       <a
-                        href="#verificacao"
+                        href={`/home/businesses/${slug}/selos`}
                         className={`${buttonSecondary} w-full`}
                       >
                         Verificar grátis
@@ -218,6 +194,13 @@ async function Promotion({ params }: { params: Promise<{ slug: string }> }) {
           </p>
         </AdminSection>
 
+        <AdminSection
+          id="simulacao"
+          title="Simule o potencial do seu perfil"
+          description="Cenário ilustrativo, baseado nas suas hipóteses."
+        >
+          <LeadPotential />
+        </AdminSection>
         <section
           aria-labelledby="faq-title"
           className="rounded-2xl border border-[#dce5e1] bg-white p-6 md:p-8"
@@ -243,16 +226,14 @@ async function Promotion({ params }: { params: Promise<{ slug: string }> }) {
           </div>
         </section>
       </div>
-    </>
+    </BusinessDashboard>
   );
 }
 
 export default function Page(props: { params: Promise<{ slug: string }> }) {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 lg:py-10">
-      <Suspense fallback={<CompassPageLoader />}>
-        <Promotion {...props} />
-      </Suspense>
-    </main>
+    <Suspense fallback={<CompassPageLoader />}>
+      <Promotion {...props} />
+    </Suspense>
   );
 }

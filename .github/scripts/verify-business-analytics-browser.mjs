@@ -105,6 +105,16 @@ try {
     timeout: 30000,
   });
   await dashboard.goto(`${site}/home/businesses/${slug}`);
+  const progress = dashboard.getByRole('progressbar', {
+    name: 'Configuração do perfil',
+  });
+  await expect(progress).toBeVisible();
+  const completed = await progress.getAttribute('aria-valuenow');
+  await dashboard
+    .getByRole('link', { name: 'Desempenho', exact: true })
+    .click();
+  await dashboard.getByText('Próximos passos', { exact: true }).click();
+  await expect(progress).toHaveAttribute('aria-valuenow', completed ?? '');
   await expect(
     dashboard.locator('[data-test="business-analytics"]'),
   ).toBeVisible();
@@ -134,7 +144,7 @@ try {
     .update({ tier: 'claimed' })
     .eq('id', businessId);
   assert.ifError(downgrade.error);
-  await dashboard.goto(`${site}/home/businesses/${slug}`);
+  await dashboard.goto(`${site}/home/businesses/${slug}/desempenho`);
   await expect(
     dashboard.locator('[data-test="business-analytics-locked"]'),
   ).toBeVisible();

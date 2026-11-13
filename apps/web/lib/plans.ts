@@ -1,9 +1,5 @@
 export type BusinessTier =
-  | 'unclaimed'
-  | 'claimed'
-  | 'verified'
-  | 'highlight'
-  | 'spotlight';
+  'unclaimed' | 'claimed' | 'verified' | 'highlight' | 'spotlight';
 
 export const TIER_LABELS: Record<BusinessTier, string> = {
   unclaimed: 'Não reivindicado',
@@ -60,7 +56,6 @@ export const MARKETPLACE_PLANS = [
       'Link/selo conferido no site da empresa',
       'Receba contatos e avaliações de clientes',
       'Responda avaliações e publique até 3 cases',
-      'Resumo de desempenho de 30 dias',
       'Maior visibilidade por relevância',
     ],
   },
