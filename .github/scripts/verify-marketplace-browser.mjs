@@ -242,17 +242,18 @@ try {
   await expect(
     seller.getByRole('heading', { name: 'Pedido de demonstração CI' }),
   ).toBeVisible({ timeout: 15000 });
-  await seller
-    .locator('textarea[name=content]')
-    .first()
-    .fill('Posso apresentar o produto amanhã.');
-  await seller.getByRole('button', { name: 'Enviar mensagem' }).first().click();
-  await expect(
-    seller.getByText('Posso apresentar o produto amanhã.'),
-  ).toBeVisible();
+  const sellerThread = seller.locator('section').filter({
+    has: seller.getByRole('heading', { name: first.name, exact: true }),
+  });
+  const response = 'Posso apresentar o produto amanhã.';
+  await sellerThread.locator('textarea[name=content]').pressSequentially(response);
+  await expect(sellerThread.locator('textarea[name=content]')).toHaveValue(response);
+  await sellerThread.getByRole('button', { name: 'Enviar mensagem' }).click();
+  await expect(sellerThread.locator('article').filter({ hasText: response }))
+    .toBeVisible({ timeout: 15000 });
   await page.reload();
   await expect(
-    page.getByText('Posso apresentar o produto amanhã.'),
+    page.locator('article').filter({ hasText: response }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Encerrar pedido' }).click();
   await expect(
