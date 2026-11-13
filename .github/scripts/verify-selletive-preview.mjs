@@ -297,7 +297,7 @@ try {
           .locator('#suisse-glyph-probe')
           .evaluate((node) => node.remove());
         await home.getByRole('button', { name: 'Abrir menu' }).click();
-        await home.getByRole('menuitem', { name: 'Explorar empresas' }).click();
+        await home.getByRole('menuitem', { name: 'Categorias', exact: true }).click();
         await expect(home).toHaveURL(/\/categories$/);
         await expect(home.getByRole('heading', { level: 1 })).toBeVisible();
       }
