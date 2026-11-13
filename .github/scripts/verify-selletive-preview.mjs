@@ -194,14 +194,14 @@ try {
     'Encontre seu próximo parceiro',
   );
   await expect(page.getByText(/resultados encontrados/)).toBeVisible();
-  const categorySelect = page.getByLabel('Categoria', { exact: true });
+  const categorySelect = page.locator('select[name=category]:visible');
   await expect(
     categorySelect.locator('option[value="crm-software"]'),
   ).toHaveCount(1);
   await expect(
     categorySelect.locator('option[value="aws-consulting"]'),
   ).toHaveCount(0);
-  await page.getByLabel('Tipo de empresa').selectOption('service');
+  await page.locator('select[name=kind]:visible').selectOption('service');
   await expect(
     categorySelect.locator('option[value="aws-consulting"]'),
   ).toHaveCount(1);
