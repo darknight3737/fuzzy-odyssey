@@ -4,7 +4,7 @@ import { cache } from 'react';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
 
 import { categoryLabel } from './category-label';
-import { genericSoftware, taxonomyKind, type OfferingKind } from './taxonomy';
+import { showCategoryInNavigation, taxonomyKind, type OfferingKind } from './taxonomy';
 
 export type DirectoryOption = {
   value: string;
