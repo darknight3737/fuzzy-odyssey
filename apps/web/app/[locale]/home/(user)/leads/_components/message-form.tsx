@@ -59,7 +59,11 @@ export function MessageForm({
         {action.result.serverError && (
           <p role="alert">{action.result.serverError}</p>
         )}
-        <Button disabled={action.isExecuting} data-test="send-lead-message">
+        <Button
+          type="submit"
+          disabled={action.isExecuting}
+          data-test="send-lead-message"
+        >
           Enviar mensagem
         </Button>
       </form>
