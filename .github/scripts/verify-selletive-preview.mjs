@@ -236,7 +236,7 @@ try {
   ).toBeVisible();
   const screenshots = `${process.env.RUNNER_TEMP}/selletive-homepage`;
   await mkdir(screenshots, { recursive: true });
-  for (const width of [320, 390, 768, 1024, 1280, 1440]) {
+  for (const width of [320, 390, 768, 1024, 1100, 1280, 1440]) {
     const context = await browser.newContext({
       viewport: { width, height: 960 },
     });
@@ -351,8 +351,10 @@ try {
       if (width < 1100) {
         await expect(headerSearch).toBeHidden();
       }
-      if (width === 1280) {
+      if (width === 1100 || width === 1280) {
         await expect(headerSearch).toBeVisible();
+      }
+      if (width === 1280) {
         await headerSearch.fill('Design & Tecnologia');
         await headerSearch.press('Enter');
         await expect(home).toHaveURL(/q=Design/);

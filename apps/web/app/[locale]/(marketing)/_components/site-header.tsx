@@ -24,6 +24,28 @@ import { SiteHeaderAccountSection } from './site-header-account-section';
 
 import styles from '../marketing.module.css';
 
+function HeaderSearch({ className }: { className: string }) {
+  return (
+    <Form
+      action="/search"
+      role="search"
+      aria-label="Busca do site"
+      className={className}
+    >
+      <input
+        type="search"
+        name="q"
+        maxLength={120}
+        aria-label="Empresa, serviço ou software"
+        placeholder="Buscar na Selletive"
+      />
+      <button type="submit" aria-label="Buscar">
+        <Search size={18} aria-hidden="true" />
+      </button>
+    </Form>
+  );
+}
+
 export function SiteHeader() {
   const t = useTranslations('marketing.home');
   return (
@@ -34,30 +56,15 @@ export function SiteHeader() {
           <SiteMegamenu />
         </nav>
         <div className={styles.actions}>
-          <Form
-            action="/search"
-            role="search"
-            aria-label="Busca do site"
-            className={styles.headerSearch}
-          >
-            <input
-              type="search"
-              name="q"
-              maxLength={120}
-              aria-label="Empresa, serviço ou software"
-              placeholder="Empresa, serviço ou software"
+          <HeaderSearch className={styles.headerSearch} />
+          <details className={styles.collapsedSearch}>
+            <summary aria-label="Abrir busca">
+              <Search size={20} aria-hidden="true" />
+            </summary>
+            <HeaderSearch
+              className={`${styles.headerSearch} ${styles.searchPopover}`}
             />
-            <button type="submit" aria-label="Buscar">
-              <Search size={18} aria-hidden="true" />
-            </button>
-          </Form>
-          <Link
-            href="/search"
-            aria-label="Buscar serviços e software"
-            className={styles.collapsedSearch}
-          >
-            <Search size={20} aria-hidden="true" />
-          </Link>
+          </details>
           <DirectoryShortlistMenu />
           <Link href="/projects/new" className={styles.companyLink}>
             Publicar projeto <ArrowUpRight size={16} aria-hidden="true" />

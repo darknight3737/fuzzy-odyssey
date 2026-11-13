@@ -150,6 +150,26 @@
 }
 .collapsedSearch {
   display: none;
+  position: relative;
+}
+.collapsedSearch summary {
+  display: grid;
+  min-width: 44px;
+  min-height: 44px;
+  place-items: center;
+  cursor: pointer;
+}
+.collapsedSearch summary::-webkit-details-marker {
+  display: none;
+}
+.collapsedSearch .searchPopover {
+  display: flex;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(280px, 55vw);
+  background: white;
+  box-shadow: 0 8px 24px #01262020;
 }
 @media (max-width: 1099px) {
   .headerSearch {

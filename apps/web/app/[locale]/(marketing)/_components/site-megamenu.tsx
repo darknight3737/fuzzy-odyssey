@@ -261,12 +261,10 @@ export function SiteMegamenu() {
                           className={`flex min-h-11 items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left text-sm leading-snug hover:bg-[#edf7fc] focus-visible:outline-[#00756a] aria-pressed:font-semibold aria-pressed:text-[#012620] ${menu.label === 'Software' ? 'aria-pressed:bg-[#dfe6f1]' : 'aria-pressed:bg-[#eaf8f1]'}`}
                         >
                           {item.label}
-                          {group?.slug === item.slug && (
-                            <ArrowRight
-                              className="size-3.5 shrink-0 text-[#00756a]"
-                              aria-hidden="true"
-                            />
-                          )}
+                          <ArrowRight
+                            className={`size-3.5 shrink-0 text-[#00756a] ${group?.slug === item.slug ? '' : 'invisible'}`}
+                            aria-hidden="true"
+                          />
                         </button>
                       ))}
                     </div>
