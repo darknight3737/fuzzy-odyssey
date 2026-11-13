@@ -29,3 +29,26 @@ Validação: gerar a migração pelo workflow Selletive Database Verification,
 executar pgTAP e testes de navegador em banco descartável e somente depois
 aplicar a migração no projeto Selletive. O workflow de preview verifica o
 Worker publicado com dados reais, sem inserir empresas fictícias.
+
+## Handoff para unificação
+
+- Funcional: `codex/selletive-marketplace-complete`; design: `codex/sortlist-ui`.
+  O design partiu de `cd6e165d` da branch funcional. A simulação de merge
+  com as correções de formulário até `bf419404` não encontrou conflitos.
+- Manter a branch de design intacta até a integração. Preservar seus ajustes
+  de navegação, cards, dashboard, selo visual e seletores de teste.
+- Rodar `Selletive Database Verification` com `application=true` no
+  resultado unificado. O teste usa apenas uma base descartável da CI.
+- A migração `20261112234117_marketplace.sql` ainda não foi aplicada no
+  projeto conectado. A primeira tentativa foi rejeitada pela revisão
+  automática enquanto o navegador ainda não havia validado a entrega.
+  Não contornar a revisão. Após CI verde, confirmar a autorização para a
+  migração se a revisão continuar bloqueando.
+- Conferir versão registrada, classificação do catálogo e acesso público
+  ao RPC após aplicar a migração. Criar a tag
+  `selletive-marketplace-schema-verified-20261112` no commit cujo diretório
+  `apps/web/supabase` corresponde ao schema aplicado. Só então publicar no
+  branch de deploy e verificar o Worker. O modo application-only mantém os
+  segredos existentes e exige igualdade com a tag.
+- Checkout real, domínio definitivo e conferência externa do selo não
+  fazem parte desta publicação. Não incluir fontes locais não rastreadas.
