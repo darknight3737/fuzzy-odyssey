@@ -4,6 +4,7 @@ import { useId, useState } from 'react';
 
 import Form from 'next/form';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { ArrowUpRight, Menu, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -37,6 +38,7 @@ const searchScopes = [
 ] as const;
 
 function HeaderSearch({ className }: { className?: string }) {
+  const router = useRouter();
   const listId = useId();
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -118,11 +120,11 @@ function HeaderSearch({ className }: { className?: string }) {
               role="option"
               aria-selected={kind === active}
               onPointerDown={(event) => event.preventDefault()}
-              onClick={(event) => {
-                const form = event.currentTarget.closest('form');
-                const scope = form?.elements.namedItem('kind');
-                if (scope instanceof HTMLInputElement) scope.value = kind;
-                form?.requestSubmit();
+              onClick={() => {
+                setOpen(false);
+                router.push(
+                  '/search?' + new URLSearchParams({ q: term, kind }),
+                );
               }}
             >
               <span>

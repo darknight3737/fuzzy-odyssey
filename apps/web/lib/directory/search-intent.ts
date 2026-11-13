@@ -33,6 +33,7 @@ const softwareNames = new Set(
 
 export function recommendSearchScope(query: string): SearchScope {
   const term = normalize(query);
+  if (/^desenvolvimento (?:de|sob)\b/.test(term)) return 'service';
   const service =
     /\b(consultoria|implantacao|implementacao|terceirizacao|agencia|prestador(?:es)?|servicos?|sob encomenda)\b/.test(
       term,
