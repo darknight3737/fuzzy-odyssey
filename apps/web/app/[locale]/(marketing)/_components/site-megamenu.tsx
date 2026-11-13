@@ -31,7 +31,7 @@ const serviceHighlights: Record<string, [string, string][]> = {
     ['social-media-marketing', 'Redes sociais'],
   ],
   'creative-visual': [
-    ['design-services', 'Design gráfico'],
+    ['design-services-specific', 'Design gráfico'],
     ['user-experience-ux-ui-services', 'UX/UI'],
     ['photography-services', 'Fotografia'],
     ['video-production', 'Produção de vídeo'],

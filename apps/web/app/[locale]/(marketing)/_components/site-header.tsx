@@ -37,7 +37,7 @@ export function SiteHeader() {
           <Link
             href="/search"
             aria-label="Buscar serviços e software"
-            className="grid size-11 place-items-center rounded-lg hover:bg-muted"
+            className="hidden size-11 place-items-center rounded-lg hover:bg-muted sm:grid"
           >
             <Search size={20} aria-hidden="true" />
           </Link>
@@ -55,6 +55,9 @@ export function SiteHeader() {
                 <Menu size={24} aria-hidden="true" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuItem className="min-h-11" render={<Link href="/search" />}>
+                  Buscar serviços e software
+                </DropdownMenuItem>
                 {siteMenus.map((item) => (
                   <DropdownMenuSub key={item.label}>
                     <DropdownMenuSubTrigger className="min-h-11">
