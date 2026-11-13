@@ -66,6 +66,12 @@ function scopeParams(query: DirectoryParams, kind: string) {
   ];
   for (const key of incompatible) delete params[key];
   if (
+    kind !== 'service' &&
+    ['price', 'team', 'works'].includes(String(params.sort))
+  ) {
+    delete params.sort;
+  }
+  if (
     typeof params.category !== 'string' ||
     taxonomyKind(params.category) !== kind
   ) {
@@ -95,19 +101,27 @@ async function Content({ searchParams }: Props) {
         : '';
   const params = scopeParams({ ...query, q: term }, kind);
   const page = kind ? directoryPage(params) : 1;
-  const shared = { q: term, min_rating: params.min_rating, sort: params.sort };
-  const softwareParams =
-    kind === 'software' ? params : { ...shared, kind: 'software' };
-  const serviceParams =
-    kind === 'service' ? params : { ...shared, kind: 'service' };
-  const [software, service, options] = await Promise.all([
-    searchMarketplace(
-      filtersFromParams(softwareParams),
-      kind === 'software' ? page : 1,
-    ),
-    searchMarketplace(
-      filtersFromParams(serviceParams),
-      kind === 'service' ? page : 1,
+  const shared = {
+    q: term,
+    min_rating: params.min_rating,
+    sort: ['rating', 'name', 'relevance'].includes(String(params.sort))
+      ? params.sort
+      : undefined,
+  };
+  const sections = [
+    { kind: 'software', title: 'Software', action: 'Ver todos os softwares' },
+    { kind: 'service', title: 'Serviços', action: 'Ver todos os serviços' },
+  ].filter((section) => !kind || section.kind === kind);
+
+  const [results, options] = await Promise.all([
+    Promise.all(
+      sections.map(async (section) => ({
+        ...section,
+        result: await searchMarketplace(
+          filtersFromParams(kind ? params : { ...shared, kind: section.kind }),
+          page,
+        ),
+      })),
     ),
     getDirectoryOptions(
       typeof params.category === 'string' ? params.category : undefined,
@@ -116,8 +130,7 @@ async function Content({ searchParams }: Props) {
       kind === 'service',
     ),
   ]);
-  const result = kind === 'software' ? software : service;
-  const allCount = software.total + service.total;
+  const total = results.reduce((sum, section) => sum + section.result.total, 0);
   return (
     <main className="mx-auto w-[min(100%-32px,1200px)] flex-1 pt-12 pb-20">
       <h1 className="text-[30px] leading-[1.15] font-semibold tracking-[-0.5px] [overflow-wrap:anywhere] text-[#0f161e] md:text-[40px]">
@@ -126,12 +139,12 @@ async function Content({ searchParams }: Props) {
       <nav aria-label="Tipo de resultado" className="mt-6 flex flex-wrap gap-2">
         {scopes.map((scope) => {
           const active = scope.kind === kind;
-          const total =
-            scope.kind === 'software'
-              ? software.total
-              : scope.kind === 'service'
-                ? service.total
-                : allCount;
+          const scopeTotal = scope.kind
+            ? results.find((section) => section.kind === scope.kind)?.result
+                .total
+            : kind
+              ? undefined
+              : total;
           return (
             <Link
               key={scope.label}
@@ -142,9 +155,9 @@ async function Content({ searchParams }: Props) {
               className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00756a] ${active ? 'border-[#004038] bg-[#004038] text-white' : 'border-[#dce5e1] text-[#004038] hover:bg-[#edf7fc]'}`}
             >
               {scope.label}
-              {(!kind || active) && (
+              {scopeTotal !== undefined && (
                 <span className="tabular-nums">
-                  {total.toLocaleString('pt-BR')}
+                  {scopeTotal.toLocaleString('pt-BR')}
                 </span>
               )}
             </Link>
@@ -154,67 +167,44 @@ async function Content({ searchParams }: Props) {
       <DirectoryFilters
         params={params}
         options={options}
-        total={kind ? result.total : allCount}
+        total={total}
         breadcrumbs={[{ label: 'Busca' }]}
         key={JSON.stringify(params)}
       />
-      {kind ? (
-        <>
-          <div className="mt-10">
+      <div className="mt-10 space-y-12">
+        {results.map(({ kind: sectionKind, title, action, result }) => (
+          <div key={sectionKind}>
             <DirectoryResults
-              items={result.items}
+              items={kind ? result.items : result.items.slice(0, 3)}
               title={
                 kind === 'software'
                   ? 'Softwares encontrados'
-                  : 'Prestadores de serviço'
+                  : kind === 'service'
+                    ? 'Prestadores de serviço'
+                    : title
               }
               spotlight={
+                !!kind &&
                 !term &&
                 page === 1 &&
                 (!params.sort || params.sort === 'relevance')
               }
+              showShortlist={false}
             />
+            {!kind && result.total > 0 && (
+              <Link
+                className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-[#dce5e1] px-4 font-semibold text-[#004038] hover:bg-[#edf7fc]"
+                href={searchHref({ ...shared, kind: sectionKind })}
+              >
+                {action}
+              </Link>
+            )}
           </div>
-          <DirectoryPagination
-            params={params}
-            page={page}
-            total={result.total}
-          />
-        </>
-      ) : (
-        <div className="mt-10 space-y-12">
-          {[
-            {
-              kind: 'software',
-              title: 'Software',
-              result: software,
-              action: 'Ver todos os softwares',
-            },
-            {
-              kind: 'service',
-              title: 'Serviços',
-              result: service,
-              action: 'Ver todos os serviços',
-            },
-          ].map((section) => (
-            <div key={section.kind}>
-              <DirectoryResults
-                items={section.result.items.slice(0, 3)}
-                title={section.title}
-                showShortlist={false}
-              />
-              {section.result.total > 0 && (
-                <Link
-                  className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-[#dce5e1] px-4 font-semibold text-[#004038] hover:bg-[#edf7fc]"
-                  href={searchHref({ ...shared, kind: section.kind })}
-                >
-                  {section.action}
-                </Link>
-              )}
-            </div>
-          ))}
-          <DirectoryShortlist />
-        </div>
+        ))}
+        <DirectoryShortlist />
+      </div>
+      {kind && (
+        <DirectoryPagination params={params} page={page} total={total} />
       )}
     </main>
   );

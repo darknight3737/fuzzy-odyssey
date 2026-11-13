@@ -220,10 +220,15 @@ export function DirectoryFilters({
               >
                 <option value="relevance">Relevância</option>
                 <option value="rating">Avaliação</option>
-                <option value="price">Menor preço</option>
+
                 <option value="name">Nome</option>
-                <option value="team">Equipe</option>
-                <option value="works">Projetos</option>
+                {value('kind') === 'service' && (
+                  <>
+                    <option value="price">Menor orçamento</option>
+                    <option value="team">Equipe</option>
+                    <option value="works">Projetos</option>
+                  </>
+                )}
               </select>
               <ChevronDown
                 aria-hidden="true"
@@ -275,7 +280,11 @@ export function DirectoryFilters({
             form={formId}
             className="flex-[1_1_200px]"
           >
-            <option value="">Todas as categorias</option>
+            <option value="">
+              {value('kind') === 'service'
+                ? 'Todas as especialidades'
+                : 'Todas as categorias'}
+            </option>
             {(['service', 'software'] as const)
               .filter((kind) => !value('kind') || value('kind') === kind)
               .map((kind) => (

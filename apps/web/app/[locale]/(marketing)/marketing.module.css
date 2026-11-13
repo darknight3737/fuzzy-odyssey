@@ -221,11 +221,6 @@
     z-index: 1;
   }
 }
-@media (max-width: 359px) {
-  .collapsedSearch {
-    display: none;
-  }
-}
 .companyLink {
   display: inline-flex;
   align-items: center;
@@ -381,6 +376,15 @@
   }
 }
 @media (max-width: 359px) {
+  .headerInner {
+    gap: 8px;
+  }
+  .headerInner .logo {
+    width: 96px;
+  }
+  .actions {
+    gap: 4px;
+  }
   .footerTop {
     grid-template-columns: 1fr;
   }
