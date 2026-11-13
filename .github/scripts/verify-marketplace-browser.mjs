@@ -362,17 +362,33 @@ try {
   await seller.close();
 
   assert.deepEqual(errors, [], 'No browser errors');
+  console.log(
+    'Browser: offering registration, category alias search and publication passed',
+  );
 } finally {
   if (browser) await browser.close();
-  // Delete the owner first: cascading foreign keys remove businesses and their reviews.
-  const cleanup = await Promise.allSettled([
-    userId
-      ? admin.auth.admin.deleteUser(userId).then(check)
-      : Promise.resolve(),
-    buyerId
-      ? admin.auth.admin.deleteUser(buyerId).then(check)
-      : Promise.resolve(),
-  ]);
+  // Remove the conversations before deleting their participants. Running
+  // both user cascades concurrently can contend on the same lead threads.
+  const cleanup = [];
+  if (buyerId) {
+    cleanup.push(
+      ...(await Promise.allSettled([
+        admin
+          .from('lead_briefs')
+          .delete()
+          .eq('buyer_user_id', buyerId)
+          .then(check),
+      ])),
+    );
+  }
+  for (const id of [userId, buyerId]) {
+    if (id)
+      cleanup.push(
+        ...(await Promise.allSettled([
+          admin.auth.admin.deleteUser(id).then(check),
+        ])),
+      );
+  }
   if (childCategoryId) {
     cleanup.push(
       ...(await Promise.allSettled([
