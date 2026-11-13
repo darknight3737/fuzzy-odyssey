@@ -43,6 +43,20 @@ const check = (result) => {
   assert.ifError(result.error);
   return result.data;
 };
+async function signIn(page, email) {
+  const emailField = page.locator('input[name="email"]');
+  const passwordField = page.locator('input[name="password"]');
+  await emailField.pressSequentially(email);
+  await passwordField.pressSequentially(password);
+  const [login] = await Promise.all([
+    page.waitForResponse((response) =>
+      new URL(response.url()).pathname.endsWith('/auth/v1/token'),
+    ),
+    page.locator('[data-test="auth-submit-button"]').click(),
+  ]);
+  assert.equal(login.status(), 200, 'Password sign-in must succeed');
+}
+
 try {
   const user = check(
     await admin.auth.admin.createUser({
@@ -200,9 +214,7 @@ try {
     page.getByRole('heading', { name: 'Entre para enviar seu pedido' }),
   ).toBeVisible();
   await page.getByRole('link', { name: 'Entrar ou criar conta' }).click();
-  await page.locator('input[name="email"]').fill(`${token}-buyer@example.test`);
-  await page.locator('input[name="password"]').fill(password);
-  await page.locator('form').filter({ has: page.locator('input[name="password"]') }).locator('button[type="submit"]').click();
+  await signIn(page, `${token}-buyer@example.test`);
   await page.waitForURL((url) => url.pathname.includes('/projects/new'));
   const briefForm = page.locator('[data-test=project-brief-form]');
   await expect(briefForm).toBeVisible({ timeout: 15000 });
@@ -235,9 +247,7 @@ try {
       '/auth/sign-in?next=' +
       encodeURIComponent(new URL(conversation).pathname),
   );
-  await seller.locator('input[name="email"]').fill(`${token}@example.test`);
-  await seller.locator('input[name="password"]').fill(password);
-  await seller.locator('form').filter({ has: seller.locator('input[name="password"]') }).locator('button[type="submit"]').click();
+  await signIn(seller, `${token}@example.test`);
   await seller.waitForURL(conversation);
   await expect(
     seller.getByRole('heading', { name: 'Pedido de demonstração CI' }),
