@@ -30,5 +30,5 @@ export const claimBusinessAction = authActionClient
     updateTag('directory');
     revalidatePath(`/company/${slug}`);
     revalidatePath('/home');
-    redirect(`/home/businesses/${slug}`);
+    redirect(`/home/businesses/${slug}?onboarding=claimed`);
   });

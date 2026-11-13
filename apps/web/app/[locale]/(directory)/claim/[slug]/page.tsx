@@ -35,22 +35,37 @@ async function ClaimBusinessPage({
   ]);
   if (error) throw error;
   if (!business) notFound();
+  const support =
+    '/contact?' +
+    new URLSearchParams({
+      subject: `Solicitação de acesso ao perfil ${business.name} (/${slug})`,
+    });
   return (
     <main className="container mx-auto max-w-2xl flex-1 px-6 py-20">
       <Link href={`/company/${slug}`} className="text-muted-foreground text-sm">
         ← Voltar ao perfil
       </Link>
-      <h1 className="mt-8 font-serif text-4xl">Reivindicar {business.name}</h1>
-      <p className="text-muted-foreground my-6 leading-relaxed">
-        Para proteger a empresa, verificamos o e-mail confirmado da sua conta. O
-        domínio precisa ser o mesmo do site cadastrado:{' '}
-        <strong>{business.website || 'Site ainda não cadastrado'}</strong>.
-      </p>
+      <h1 className="mt-8 font-serif text-4xl">
+        {business.tier === 'unclaimed' ? 'Reivindicar' : 'Acesso ao perfil de'}{' '}
+        {business.name}
+      </h1>
+      {business.tier === 'unclaimed' && (
+        <p className="text-muted-foreground my-6 leading-relaxed">
+          Para proteger a empresa, verificamos o e-mail confirmado da sua conta.
+          O domínio precisa ser o mesmo do site cadastrado:{' '}
+          <strong>{business.website || 'Site ainda não cadastrado'}</strong>.
+        </p>
+      )}
       {business.tier !== 'unclaimed' ? (
         <p className="rounded-xl border p-6">
-          Este perfil já foi reivindicado.{' '}
-          <Link href="/contact" className="underline">
-            Precisa de ajuda?
+          Este perfil já tem um responsável. Se ele já está na sua conta, abra
+          Minhas empresas.{' '}
+          <Link href="/home" className="underline">
+            Minhas empresas
+          </Link>
+          {' · '}
+          <Link href={support} className="underline">
+            Solicitar acesso
           </Link>
         </p>
       ) : user ? (
@@ -79,12 +94,14 @@ async function ClaimBusinessPage({
           </Link>
         </div>
       )}
-      <p className="text-muted-foreground mt-8 text-sm">
-        Não tem acesso ao domínio?{' '}
-        <Link href="/contact" className="underline">
-          Fale com nossa equipe para solicitar uma análise.
-        </Link>
-      </p>
+      {business.tier === 'unclaimed' && (
+        <p className="text-muted-foreground mt-8 text-sm">
+          Não tem acesso ao domínio?{' '}
+          <Link href={support} className="underline">
+            Fale com nossa equipe para solicitar uma análise.
+          </Link>
+        </p>
+      )}
     </main>
   );
 }

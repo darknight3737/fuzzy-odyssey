@@ -20,11 +20,13 @@ export const metadata = {
 };
 async function ManageBusinessPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ onboarding?: string }>;
 }) {
   await connection();
-  const { slug } = await params;
+  const [{ slug }, { onboarding }] = await Promise.all([params, searchParams]);
   const client = getSupabaseServerClient();
   const {
     data: { user },
@@ -84,6 +86,44 @@ async function ManageBusinessPage({
           Solicitações recebidas
         </Link>
       </div>
+      {(onboarding === 'published' || onboarding === 'claimed') &&
+        b.tier === 'claimed' && (
+          <section
+            aria-label="Próximo passo"
+            className="bg-muted/50 mb-8 space-y-3 rounded-xl border p-5"
+          >
+            <h2 className="text-lg font-semibold">
+              {onboarding === 'published'
+                ? 'Seu perfil está no ar'
+                : 'Agora você gerencia este perfil'}
+            </h2>
+            <p>
+              {onboarding === 'published'
+                ? 'Confira a página que os compradores veem e compartilhe o link.'
+                : 'Revise a categoria e os dados de contato abaixo. A página já está visível no diretório.'}
+            </p>
+            <p className="text-muted-foreground text-sm">
+              Para receber pedidos pela Selletive, o perfil precisa ser
+              verificado.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href={`/company/${slug}`}
+                className="text-primary font-medium underline"
+              >
+                {onboarding === 'published'
+                  ? 'Abrir página publicada'
+                  : 'Conferir página pública'}
+              </Link>
+              <Link
+                href={`/home/businesses/${slug}/promote`}
+                className="text-sm underline"
+              >
+                Como verificar a empresa
+              </Link>
+            </div>
+          </section>
+        )}
       <BusinessAnalytics client={client} businessId={b.id} tier={b.tier} />
       <BusinessEditor
         values={{
