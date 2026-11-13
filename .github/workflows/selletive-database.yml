@@ -11,6 +11,8 @@ on:
       - '.github/workflows/selletive-database.yml'
       - '.github/scripts/verify-marketplace-browser.mjs'
       - 'apps/web/supabase/**'
+      - 'apps/web/app/**/offerings/**'
+      - 'apps/web/lib/offerings/**'
   workflow_dispatch:
     inputs:
       application:

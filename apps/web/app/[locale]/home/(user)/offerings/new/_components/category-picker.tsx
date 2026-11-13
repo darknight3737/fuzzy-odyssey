@@ -6,8 +6,9 @@ import { ChevronRight, Search, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@kit/ui/button';
-import { FormControl } from '@kit/ui/form';
 import { Input } from '@kit/ui/input';
+
+import { OfferingFieldControl } from './offering-field-control';
 
 export type OfferingCategory = {
   id: string;
@@ -144,7 +145,7 @@ export function CategoryPicker({
           aria-hidden
           className="text-muted-foreground pointer-events-none absolute start-3 top-3 size-4"
         />
-        <FormControl
+        <OfferingFieldControl
           render={
             <Input
               ref={searchRef}

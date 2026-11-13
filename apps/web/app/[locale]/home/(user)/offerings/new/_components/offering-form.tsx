@@ -18,7 +18,6 @@ import { useForm, useWatch } from 'react-hook-form';
 import { Button } from '@kit/ui/button';
 import {
   Form,
-  FormControl,
   FormDescription,
   FormField,
   FormItem,
@@ -38,6 +37,7 @@ import {
 
 import { createOfferingAction } from '../_lib/actions';
 import { type OfferingCategory, CategoryPicker } from './category-picker';
+import { OfferingFieldControl } from './offering-field-control';
 import { useWebsiteImport } from './use-website-import';
 
 const steps = [
@@ -325,7 +325,7 @@ export function OfferingForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t('website')}</FormLabel>
-                        <FormControl
+                        <OfferingFieldControl
                           render={
                             <Input
                               {...field}
@@ -385,7 +385,7 @@ export function OfferingForm({
                               : 'serviceName',
                           )}
                         </FormLabel>
-                        <FormControl
+                        <OfferingFieldControl
                           render={
                             <Input
                               {...field}
@@ -409,7 +409,7 @@ export function OfferingForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t('description')}</FormLabel>
-                        <FormControl
+                        <OfferingFieldControl
                           render={
                             <Textarea
                               {...field}
@@ -439,7 +439,7 @@ export function OfferingForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>{t('vendor')}</FormLabel>
-                          <FormControl
+                          <OfferingFieldControl
                             render={
                               <select
                                 {...field}
