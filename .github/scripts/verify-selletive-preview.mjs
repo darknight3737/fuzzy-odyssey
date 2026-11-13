@@ -356,7 +356,7 @@ try {
         await expect(home).toHaveURL(/\/help$/);
         await expect(home.getByRole('heading', { level: 1 })).toBeVisible();
       }
-      const headerSearch = home.getByRole('searchbox', {
+      const headerSearch = home.getByRole('combobox', {
         name: 'Empresa, serviço ou software',
       });
       if (width < 1100) {
@@ -366,17 +366,27 @@ try {
         await expect(headerSearch).toBeVisible();
       }
       if (width === 1280) {
-        await home
-          .getByRole('combobox', { name: 'Buscar por tipo de oferta' })
-          .selectOption('software');
-        await headerSearch.fill('Design & Tecnologia');
+        await headerSearch.fill('CRM');
+        await expect(
+          home.getByRole('option', { name: /Buscar “CRM” em Software/ }),
+        ).toHaveAttribute('aria-selected', 'true');
+        await headerSearch.press('ArrowDown');
+        await expect(
+          home.getByRole('option', { name: /Buscar “CRM” em Todos/ }),
+        ).toHaveAttribute('aria-selected', 'true');
+        await headerSearch.press('ArrowUp');
+        await headerSearch.press('Escape');
+        await expect(
+          home.getByRole('listbox', { name: 'Onde buscar' }),
+        ).toBeHidden();
         await headerSearch.press('Enter');
-        await expect(home).toHaveURL(/q=Design/);
-        assert.equal(
-          new URL(home.url()).searchParams.get('q'),
-          'Design & Tecnologia',
-        );
+        await expect(home).toHaveURL(/q=CRM/);
         assert.equal(new URL(home.url()).searchParams.get('kind'), 'software');
+        await headerSearch.fill('CRM');
+        await home
+          .getByRole('option', { name: /Buscar “CRM” em Serviços/ })
+          .click();
+        await expect(home).toHaveURL(/kind=service/);
       }
       if (width === 1440) {
         await home.keyboard.press('Tab');
