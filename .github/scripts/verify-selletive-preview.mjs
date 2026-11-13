@@ -236,7 +236,7 @@ try {
   ).toBeVisible();
   const screenshots = `${process.env.RUNNER_TEMP}/selletive-homepage`;
   await mkdir(screenshots, { recursive: true });
-  for (const width of [320, 390, 768, 1024, 1440]) {
+  for (const width of [320, 390, 768, 1024, 1280, 1440]) {
     const context = await browser.newContext({
       viewport: { width, height: 960 },
     });
@@ -344,6 +344,22 @@ try {
           .click();
         await expect(home).toHaveURL(/\/help$/);
         await expect(home.getByRole('heading', { level: 1 })).toBeVisible();
+      }
+      const headerSearch = home.getByRole('searchbox', {
+        name: 'Empresa, serviço ou software',
+      });
+      if (width < 1100) {
+        await expect(headerSearch).toBeHidden();
+      }
+      if (width === 1280) {
+        await expect(headerSearch).toBeVisible();
+        await headerSearch.fill('Design & Tecnologia');
+        await headerSearch.press('Enter');
+        await expect(home).toHaveURL(/q=Design/);
+        assert.equal(
+          new URL(home.url()).searchParams.get('q'),
+          'Design & Tecnologia',
+        );
       }
       if (width === 1440) {
         await home.keyboard.press('Tab');

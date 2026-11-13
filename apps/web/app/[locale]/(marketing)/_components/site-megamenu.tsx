@@ -116,15 +116,25 @@ export const siteMenus: Menu[] = [
 
 export function SiteMegamenu() {
   const panelId = useId();
+  const pendingGroup = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const navigation = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<{ menu: number; group: number }>();
 
+  const cancelGroup = () => clearTimeout(pendingGroup.current);
+  useEffect(() => () => clearTimeout(pendingGroup.current), []);
+
   const openMenu = (menu: number) => {
+    cancelGroup();
     setSelection((current) =>
       current?.menu === menu ? current : { menu, group: 0 },
     );
   };
-  const closeMenu = () => setSelection(undefined);
+  const closeMenu = () => {
+    cancelGroup();
+    setSelection(undefined);
+  };
 
   const isOpen = selection !== undefined;
   // Escape must also dismiss a menu opened by the pointer while focus is elsewhere.
@@ -136,6 +146,7 @@ export function SiteMegamenu() {
       if (nav?.contains(document.activeElement)) {
         nav.querySelector<HTMLButtonElement>('[aria-expanded="true"]')?.focus();
       }
+      clearTimeout(pendingGroup.current);
       setSelection(undefined);
     };
     document.addEventListener('keydown', dismiss);
@@ -203,15 +214,15 @@ export function SiteMegamenu() {
                 <div
                   className={
                     menu.groups
-                      ? 'mx-auto grid max-w-[1200px] grid-cols-[1fr_1.15fr_2fr] items-start gap-5 px-6 py-5'
+                      ? 'mx-auto grid max-w-[1200px] grid-cols-[1fr_1.15fr_2fr] items-start gap-7 px-6 py-7'
                       : undefined
                   }
                 >
-                  <ul className="space-y-1">
+                  <ul className="space-y-2">
                     {menu.links.map((link, linkIndex) => (
                       <li key={link.href}>
                         <Link
-                          className={`w-full justify-between gap-2 rounded-xl px-3 focus-visible:outline-[#00756a] ${menu.groups && linkIndex === 0 ? 'bg-[#004038] !text-white hover:bg-[#00544c]' : 'hover:bg-[#f6fefb]'}`}
+                          className={`w-full justify-between gap-3 rounded-xl px-4 py-3 focus-visible:outline-[#00756a] ${menu.groups && linkIndex === 0 ? 'bg-[#004038] !text-white hover:bg-[#00544c]' : 'hover:bg-[#f6fefb]'}`}
                           href={link.href}
                           onClick={closeMenu}
                         >
@@ -225,20 +236,29 @@ export function SiteMegamenu() {
                     ))}
                   </ul>
                   {menu.groups && (
-                    <div className="grid gap-0.5 border-l border-[#dce5e1] pl-4">
+                    <div className="grid gap-1.5 border-l border-[#dce5e1] pl-5">
                       {menu.groups.map((item, groupIndex) => (
                         <button
                           type="button"
                           key={item.slug}
                           aria-pressed={group?.slug === item.slug}
                           onPointerEnter={(event) => {
-                            if (event.pointerType === 'mouse')
-                              setSelection({ menu: index, group: groupIndex });
+                            if (event.pointerType !== 'mouse') return;
+                            cancelGroup();
+                            pendingGroup.current = setTimeout(() => {
+                              setSelection((current) =>
+                                current?.menu === index
+                                  ? { menu: index, group: groupIndex }
+                                  : current,
+                              );
+                            }, 140);
                           }}
-                          onClick={() =>
-                            setSelection({ menu: index, group: groupIndex })
-                          }
-                          className="flex min-h-8 items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-left text-sm leading-tight hover:bg-[#f6fefb] focus-visible:outline-[#00756a] aria-pressed:bg-[#eaf8f1] aria-pressed:font-semibold aria-pressed:text-[#004038]"
+                          onPointerLeave={cancelGroup}
+                          onClick={() => {
+                            cancelGroup();
+                            setSelection({ menu: index, group: groupIndex });
+                          }}
+                          className={`flex min-h-11 items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left text-sm leading-snug hover:bg-[#edf7fc] focus-visible:outline-[#00756a] aria-pressed:font-semibold aria-pressed:text-[#012620] ${menu.label === 'Software' ? 'aria-pressed:bg-[#dfe6f1]' : 'aria-pressed:bg-[#eaf8f1]'}`}
                         >
                           {item.label}
                           {group?.slug === item.slug && (
@@ -252,15 +272,17 @@ export function SiteMegamenu() {
                     </div>
                   )}
                   {group && (
-                    <div className="rounded-2xl border border-[#dce5e1] bg-[#f6fefb] p-4">
+                    <div
+                      className={`rounded-2xl border p-5 ${menu.label === 'Software' ? 'border-[#c4cfde] bg-[#dfe6f1]' : 'border-[#dce5e1] bg-[#f6fefb]'}`}
+                    >
                       <h2 className="px-2 text-lg font-semibold text-[#004038]">
                         {group.label}
                       </h2>
-                      <ul className="mt-2 grid grid-cols-2 gap-x-3">
+                      <ul className="mt-3 grid grid-cols-2 gap-2">
                         {group.children.map((child) => (
                           <li key={child.slug}>
                             <Link
-                              className="w-full rounded-lg px-2 hover:bg-[#eaf8f1] focus-visible:outline-[#00756a]"
+                              className="w-full rounded-lg border border-transparent px-3 py-2.5 hover:border-[#c4cfde] hover:bg-white focus-visible:outline-[#00756a]"
                               href={`/categories/${child.slug}`}
                               prefetch={false}
                               onClick={closeMenu}
@@ -271,7 +293,7 @@ export function SiteMegamenu() {
                         ))}
                       </ul>
                       <Link
-                        className="mt-2 gap-2 rounded-lg px-2 !text-[#00665b] focus-visible:outline-[#00756a]"
+                        className="mt-3 gap-2 rounded-lg px-3 !text-[#00665b] focus-visible:outline-[#00756a]"
                         href={`/categories/${group.slug}`}
                         onClick={closeMenu}
                       >

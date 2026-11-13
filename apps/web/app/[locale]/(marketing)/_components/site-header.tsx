@@ -1,5 +1,6 @@
 'use client';
 
+import Form from 'next/form';
 import Link from 'next/link';
 
 import { ArrowUpRight, Menu, Search } from 'lucide-react';
@@ -33,10 +34,27 @@ export function SiteHeader() {
           <SiteMegamenu />
         </nav>
         <div className={styles.actions}>
+          <Form
+            action="/search"
+            role="search"
+            aria-label="Busca do site"
+            className={styles.headerSearch}
+          >
+            <input
+              type="search"
+              name="q"
+              maxLength={120}
+              aria-label="Empresa, serviço ou software"
+              placeholder="Empresa, serviço ou software"
+            />
+            <button type="submit" aria-label="Buscar">
+              <Search size={18} aria-hidden="true" />
+            </button>
+          </Form>
           <Link
             href="/search"
             aria-label="Buscar serviços e software"
-            className="hidden size-11 place-items-center rounded-lg hover:bg-muted sm:grid"
+            className={styles.collapsedSearch}
           >
             <Search size={20} aria-hidden="true" />
           </Link>
