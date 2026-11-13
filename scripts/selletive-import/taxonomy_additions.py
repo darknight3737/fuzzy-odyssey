@@ -91,8 +91,6 @@ def augmented_categories(existing):
     for slug, parent_slug, level in [
         (root, None, 1),
         ('enterprise-software', root, 2),
-        *((slug, parent, 3) for slug, (_, parent) in software_leaves.items()
-          if parent in categories),
     ]:
         if slug in categories:
             categories[slug] = {
@@ -110,7 +108,7 @@ def augmented_categories(existing):
                 raise ValueError('Invalid category parent: ' + parent)
             if key in categories:
                 current = categories[key]
-                if key in software_leaves:
+                if key in software_leaves and current['parent_id'] == categories[root]['id']:
                     current = categories[key] = {
                         **current, 'parent_id': ancestor['id'], 'level': level,
                     }
