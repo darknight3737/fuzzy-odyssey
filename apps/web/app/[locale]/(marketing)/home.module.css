@@ -195,12 +195,7 @@
   gap: 12px;
 }
 .miniBrand {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 18px;
-  letter-spacing: -0.6px;
-  font-weight: 600;
+  width: 100px;
 }
 .discoveryPill {
   padding: 5px 10px;

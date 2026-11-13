@@ -1,8 +1,9 @@
 import { cacheLife } from 'next/cache';
 import Link from 'next/link';
 
-import { Compass } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+
+import { AppLogo } from '~/components/app-logo';
 
 import styles from '../marketing.module.css';
 
@@ -49,9 +50,7 @@ export async function SiteFooter() {
       <div className={styles.footerInner}>
         <div className={styles.footerTop}>
           <div className={styles.footerBrand}>
-            <Link href="/" aria-label="Selletive" className={styles.logo}>
-              <Compass aria-hidden="true" /> selletive
-            </Link>
+            <AppLogo label="Selletive" color="white" className={styles.logo} />
             <p className={styles.footerTagline}>{t('footerTagline')}</p>
             <p className={styles.footerDescription}>{t('footerDescription')}</p>
           </div>

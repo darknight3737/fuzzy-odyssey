@@ -25,8 +25,13 @@ export function AdminSidebar() {
 
   return (
     <Sidebar variant="floating" collapsible="icon">
-      <SidebarHeader className={'m-2'}>
-        <AppLogo href={'/admin'} className="max-w-full" />
+      <SidebarHeader className="m-2 group-data-[collapsible=icon]:m-0">
+        <AppLogo href="/admin" className="group-data-[collapsible=icon]:hidden" />
+        <AppLogo
+          href="/admin"
+          symbolOnly
+          className="hidden group-data-[collapsible=icon]:block"
+        />
       </SidebarHeader>
 
       <SidebarContent>

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
+import { AppLogo } from '~/components/app-logo';
 import appConfig from '~/config/app.config';
 import { pageMetadata, serializeJsonLd } from '~/lib/seo';
 import { getDirectoryClient } from '~/lib/supabase/directory-client';
@@ -113,9 +114,7 @@ async function Home() {
 
           <div className={styles.discovery}>
             <div className={styles.discoveryHeading}>
-              <span className={styles.miniBrand}>
-                <Compass size={19} aria-hidden="true" /> selletive
-              </span>
+              <AppLogo href={null} color="white" className={styles.miniBrand} />
               <span className={styles.discoveryPill}>
                 {t('discoveryLabel')}
               </span>

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { cn } from '@kit/ui/utils';
@@ -6,26 +7,52 @@ export function AppLogo({
   href,
   label,
   className,
+  color = 'auto',
+  symbolOnly = false,
 }: {
   href?: string | null;
   label?: string;
   className?: string;
+  color?: 'auto' | 'green' | 'white';
+  symbolOnly?: boolean;
 }) {
-  const mark = (
-    <span
+  const name = label ?? 'Selletive';
+  let src = '/images/selletive-logo.svg';
+
+  if (symbolOnly) {
+    src = '/images/selletive-symbol.svg';
+  } else if (color === 'white') {
+    src = '/images/selletive-logo-white.svg';
+  }
+
+  const logo = (
+    <Image
+      src={src}
+      alt={href === null ? name : ''}
+      width={symbolOnly ? 210 : 1000}
+      height={210}
       className={cn(
-        'inline-block font-heading text-2xl font-semibold tracking-tight lowercase',
-        className,
+        'block h-auto w-full',
+        color === 'auto' && 'dark:brightness-0 dark:invert',
       )}
-    >
-      selletive<span className="text-[#597665]">.</span>
-    </span>
+      unoptimized
+    />
   );
+  const sizing = cn(
+    'inline-block max-w-full shrink-0',
+    symbolOnly ? 'w-8' : 'w-36',
+    className,
+  );
+
   return href === null ? (
-    mark
+    <span className={sizing}>{logo}</span>
   ) : (
-    <Link aria-label={label ?? 'Selletive — início'} href={href ?? '/'}>
-      {mark}
+    <Link
+      aria-label={label ?? 'Selletive — início'}
+      className={sizing}
+      href={href ?? '/'}
+    >
+      {logo}
     </Link>
   );
 }

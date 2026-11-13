@@ -84,20 +84,12 @@
   gap: 32px;
 }
 .logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--primary);
-  font-size: 27px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -1.3px;
-  flex-shrink: 0;
+  width: 148px;
 }
-.logo svg {
-  width: 26px;
-  height: 26px;
-  stroke-width: 1.8;
+.header .logo {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
 }
 .desktopNav {
   display: flex;
@@ -165,9 +157,6 @@
   grid-template-columns: 1.65fr repeat(3, 1fr);
   gap: 48px;
   padding-bottom: 56px;
-}
-.footer .logo {
-  color: var(--primary-foreground);
 }
 .footerTagline {
   max-width: 270px;
@@ -247,11 +236,7 @@
     width: calc(100% - 32px);
   }
   .logo {
-    font-size: 25px;
-  }
-  .logo svg {
-    width: 24px;
-    height: 24px;
+    width: 128px;
   }
   .desktopNav,
   .companyLink {

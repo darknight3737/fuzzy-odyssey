@@ -29,8 +29,11 @@ export const generateRootMetadata = (): Metadata => {
       images: [socialImageUrl('site', 'default')],
     },
     icons: {
-      icon: '/images/favicon/favicon.ico',
-      apple: '/images/favicon/apple-touch-icon.png',
+      icon: {
+        url: '/images/favicon/selletive-symbol.svg',
+        type: 'image/svg+xml',
+      },
+      apple: '/images/favicon/selletive-apple-touch-icon.png',
     },
   };
 };

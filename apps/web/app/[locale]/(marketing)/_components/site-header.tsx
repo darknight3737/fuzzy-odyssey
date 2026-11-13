@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 
-import { ArrowUpRight, Compass, Menu, Search } from 'lucide-react';
+import { ArrowUpRight, Menu, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@kit/ui/dropdown-menu';
 
+import { AppLogo } from '~/components/app-logo';
 import { DirectoryShortlistMenu } from '~/components/directory-shortlist';
 
 import { SiteMegamenu, siteMenus } from './site-megamenu';
@@ -27,9 +28,7 @@ export function SiteHeader() {
   return (
     <header className={styles.header}>
       <div className={styles.headerInner}>
-        <Link href="/" aria-label="Selletive" className={styles.logo}>
-          <Compass aria-hidden="true" /> selletive
-        </Link>
+        <AppLogo label="Selletive" color="green" className={styles.logo} />
         <nav aria-label={t('navExplore')} className={styles.desktopNav}>
           <SiteMegamenu />
         </nav>
