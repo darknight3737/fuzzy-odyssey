@@ -9,6 +9,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@kit/ui/dropdown-menu';
 
@@ -45,23 +48,56 @@ export function SiteHeader() {
                 <Menu size={24} aria-hidden="true" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                {[
-                  ...siteMenus.slice(0, 4),
-                  { href: '/projects/new', label: 'Publicar projeto' },
-                  {
-                    href: '/home/offerings/new',
-                    label: 'Cadastrar empresa ou software',
-                  },
-                  { href: '/claim', label: 'Reivindicar perfil' },
-                ].map((link) => (
-                  <DropdownMenuItem
-                    key={link.href}
-                    className="min-h-11"
-                    render={<Link href={link.href} />}
-                  >
-                    {link.label}
-                  </DropdownMenuItem>
+                {siteMenus.map((item) => (
+                  <DropdownMenuSub key={item.label}>
+                    <DropdownMenuSubTrigger className="min-h-11">
+                      {item.label}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent
+                      side="bottom"
+                      align="end"
+                      className="w-64"
+                    >
+                      <DropdownMenuItem
+                        className="min-h-11"
+                        render={<Link href={item.href} />}
+                      >
+                        {item.label === 'Para empresas'
+                          ? 'Cadastrar empresa ou software'
+                          : `Ver todos · ${item.label}`}
+                      </DropdownMenuItem>
+                      {item.shortcuts?.map((link) => (
+                        <DropdownMenuItem
+                          key={link.href}
+                          className="min-h-11"
+                          render={<Link href={link.href} />}
+                        >
+                          {link.label}
+                        </DropdownMenuItem>
+                      ))}
+                      {item.groups?.map((group) => (
+                        <DropdownMenuItem
+                          key={group.slug}
+                          className="min-h-11"
+                          render={
+                            <Link
+                              href={`/categories/${group.slug}`}
+                              prefetch={false}
+                            />
+                          }
+                        >
+                          {group.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
                 ))}
+                <DropdownMenuItem
+                  className="min-h-11"
+                  render={<Link href="/projects/new" />}
+                >
+                  Publicar projeto
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

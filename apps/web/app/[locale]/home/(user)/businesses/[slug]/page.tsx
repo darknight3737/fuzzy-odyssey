@@ -6,6 +6,7 @@ import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
+import { taxonomyKind } from '~/lib/directory/taxonomy';
 import {
   AdminHeader,
   AdminSection,
@@ -56,7 +57,7 @@ async function ManageBusinessPage({
   const [{ data: categories }, { data: locations }] = await Promise.all([
     client
       .from('categories')
-      .select('id,name')
+      .select('id,name,slug')
       .eq('is_active', true)
       .order('name'),
     client.from('locations').select('id,name').order('name'),
@@ -300,7 +301,13 @@ async function ManageBusinessPage({
               businessId={b.id}
               slug={b.slug}
               kind="category"
-              options={categories ?? []}
+              options={(categories ?? []).filter(
+                (category) =>
+                  taxonomyKind(category.slug) === b.offering_kind ||
+                  b.business_categories.some(
+                    (link) => link.category_id === category.id,
+                  ),
+              )}
               selected={b.business_categories.map((item) => item.category_id)}
             />
             <TaxonomyEditor

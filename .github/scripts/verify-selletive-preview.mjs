@@ -194,6 +194,30 @@ try {
     'Encontre seu próximo parceiro',
   );
   await expect(page.getByText(/resultados encontrados/)).toBeVisible();
+  const categorySelect = page.getByLabel('Categoria', { exact: true });
+  await expect(
+    categorySelect.locator('option[value="crm-software"]'),
+  ).toHaveCount(1);
+  await expect(
+    categorySelect.locator('option[value="aws-consulting"]'),
+  ).toHaveCount(0);
+  await page.getByLabel('Tipo de empresa').selectOption('service');
+  await expect(
+    categorySelect.locator('option[value="aws-consulting"]'),
+  ).toHaveCount(1);
+  await expect(
+    categorySelect.locator('option[value="crm-software"]'),
+  ).toHaveCount(0);
+
+  await page.goto(site);
+  await page.getByRole('button', { name: 'Software', exact: true }).click();
+  await page
+    .getByRole('link', { name: 'Automação de marketing', exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/categories\/marketing-automation-software$/);
+  await expect(
+    page.getByRole('heading', { name: 'Enviou', exact: true }),
+  ).toBeVisible();
   await page.goto(site + '/projects/new');
   await expect(
     page.getByRole('heading', { name: 'Entre para enviar seu pedido' }),
@@ -297,7 +321,15 @@ try {
           .locator('#suisse-glyph-probe')
           .evaluate((node) => node.remove());
         await home.getByRole('button', { name: 'Abrir menu' }).click();
-        await home.getByRole('menuitem', { name: 'Categorias', exact: true }).click();
+        await home
+          .getByRole('menuitem', { name: 'Categorias', exact: true })
+          .click();
+        await home
+          .getByRole('menuitem', {
+            name: 'Ver todos · Categorias',
+            exact: true,
+          })
+          .click();
         await expect(home).toHaveURL(/\/categories$/);
         await expect(home.getByRole('heading', { level: 1 })).toBeVisible();
       }

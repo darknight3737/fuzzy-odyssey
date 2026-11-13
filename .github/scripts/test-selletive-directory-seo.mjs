@@ -67,6 +67,8 @@ const categories = [...tree].map((row) => ({
 }));
 const assignments = Array.from({ length: 1001 }, (_, index) => ({
   category_id: index === 1000 ? 'leaf' : 'orphan',
+  businesses: { offering_kind: 'service' },
+  categories: { slug: index === 1000 ? 'leaf' : 'orphan' },
 }));
 const calls = [];
 let fail = false;
@@ -102,6 +104,7 @@ const sitemap = load('lib/categories/sitemap.ts', {
   'server-only': {},
   '~/lib/supabase/directory-client': { getDirectoryClient: () => client },
   './visibility': visibility,
+  '~/lib/directory/taxonomy': load('lib/directory/taxonomy.ts'),
 });
 assert.deepEqual(
   (await sitemap.getIndexableCategories()).map((row) => row.slug),
