@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader } from '@kit/ui/card';
 import { PageBody } from '@kit/ui/page';
 import { Skeleton } from '@kit/ui/skeleton';
-import { Spinner } from '@kit/ui/spinner';
 import { cn } from '@kit/ui/utils';
+
+import { CompassLoader } from '~/components/compass-loader';
 
 /**
  * Loading state building blocks. Three rules:
@@ -99,7 +100,7 @@ export function TableSkeleton({ rows = 8 }: { rows?: number }) {
 /**
  * Holds a content area's height so the page doesn't collapse, without drawing
  * fake content. For regions whose shape can't be predicted — long-form or
- * CMS-driven content. The spinner only appears if the wait is real.
+ * CMS-driven content. The compass only appears if the wait is real.
  */
 export function ContentFallback({ className }: { className?: string }) {
   return (
@@ -109,9 +110,7 @@ export function ContentFallback({ className }: { className?: string }) {
         className,
       )}
     >
-      <Delayed delayMs={400}>
-        <Spinner />
-      </Delayed>
+      <CompassLoader size={'sm'} />
     </div>
   );
 }

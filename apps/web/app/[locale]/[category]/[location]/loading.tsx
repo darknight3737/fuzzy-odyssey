@@ -1,3 +1,3 @@
-import { GlobalLoader } from '@kit/ui/global-loader';
+import { CompassPageLoader } from '~/components/compass-loader';
 
-export default GlobalLoader;
+export default CompassPageLoader;
