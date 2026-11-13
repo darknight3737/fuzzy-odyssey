@@ -204,17 +204,19 @@ try {
   await page.locator('input[name="password"]').fill(password);
   await page.locator('button[type="submit"]').click();
   await page.waitForURL((url) => url.pathname.includes('/projects/new'));
-  await expect(page.locator('body')).toContainText(first.name);
-  await expect(page.locator('body')).toContainText(second.name);
+  const briefForm = page.locator('[data-test=project-brief-form]');
+  await expect(briefForm).toBeVisible({ timeout: 15000 });
+  await expect(briefForm).toContainText(first.name);
+  await expect(briefForm).toContainText(second.name);
   await page.screenshot({ path: join(output, 'briefing.png'), fullPage: true });
-  await page.getByLabel('Título do projeto').fill('Pedido de demonstração CI');
+  await briefForm.locator('[name=title]').fill('Pedido de demonstração CI');
   await page
-    .getByLabel('Descreva sua necessidade, objetivos e contexto')
+    .locator('[data-test=project-brief-form] [name=description]')
     .fill(
       'Quero comparar os dois produtos para a operação comercial da minha empresa.',
     );
-  await page.getByLabel('Seu nome').fill('Comprador CI');
-  await page.getByLabel('Autorizo compartilhar').check();
+  await briefForm.locator('[name=buyer_name]').fill('Comprador CI');
+  await briefForm.getByRole('checkbox').check();
   await page
     .getByRole('button', { name: 'Enviar pedido gratuitamente' })
     .click();
