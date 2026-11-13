@@ -36,25 +36,47 @@ async function ClaimBusinessPage({
   if (error) throw error;
   if (!business) notFound();
   return (
-    <main className="container mx-auto max-w-2xl flex-1 px-6 py-20">
-      <Link href={`/company/${slug}`} className="text-muted-foreground text-sm">
+    <main className="mx-auto w-[min(100%-32px,680px)] flex-1 py-12 md:py-20">
+      <Link
+        href={`/company/${slug}`}
+        className="text-sm font-medium text-[#00756a] hover:underline"
+      >
         ← Voltar ao perfil
       </Link>
-      <h1 className="mt-8 font-serif text-4xl">Reivindicar {business.name}</h1>
-      <p className="text-muted-foreground my-6 leading-relaxed">
+      <h1 className="mt-8 text-[30px] leading-[1.15] font-semibold tracking-[-0.5px] [overflow-wrap:anywhere] text-[#0f161e] md:text-[40px]">
+        Reivindicar {business.name}
+      </h1>
+      <ol className="my-8 grid gap-3 sm:grid-cols-3">
+        {[
+          'Entre com seu e-mail corporativo',
+          'Confirmamos o domínio do site',
+          'Você passa a gerenciar o perfil',
+        ].map((step, index) => (
+          <li
+            key={step}
+            className="rounded-xl border border-[#dce5e1] bg-white p-4 text-sm text-[#3d3e45]"
+          >
+            <span className="mb-2 flex size-7 items-center justify-center rounded-full bg-[#f6fefb] text-[13px] font-semibold text-[#004038]">
+              {index + 1}
+            </span>
+            {step}
+          </li>
+        ))}
+      </ol>
+      <p className="my-6 leading-relaxed text-[#3d3e45]">
         Para proteger a empresa, verificamos o e-mail confirmado da sua conta. O
         domínio precisa ser o mesmo do site cadastrado:{' '}
         <strong>{business.website || 'Site ainda não cadastrado'}</strong>.
       </p>
       {business.tier !== 'unclaimed' ? (
-        <p className="rounded-xl border p-6">
+        <p className="rounded-xl border border-[#dce5e1] bg-[#f7f9f8] p-6">
           Este perfil já foi reivindicado.{' '}
           <Link href="/contact" className="underline">
             Precisa de ajuda?
           </Link>
         </p>
       ) : user ? (
-        <div className="rounded-2xl border p-8">
+        <div className="rounded-2xl border border-[#dce5e1] bg-white p-6 md:p-8">
           <p className="mb-5 text-sm">Conta atual: {user.email}</p>
           <ClaimButton slug={slug} />
           <p className="text-muted-foreground mt-5 text-xs leading-relaxed">
@@ -67,13 +89,13 @@ async function ClaimBusinessPage({
         <div className="flex flex-wrap gap-4">
           <Link
             href={`/auth/sign-in?next=${encodeURIComponent(`/claim/${slug}`)}`}
-            className="bg-primary text-primary-foreground rounded-full px-6 py-3"
+            className="inline-flex min-h-12 items-center rounded-lg bg-[#004038] px-6 text-[15px] font-semibold text-white hover:bg-[#00544c]"
           >
             Entrar com e-mail corporativo
           </Link>
           <Link
             href={`/auth/sign-up?next=${encodeURIComponent(`/claim/${slug}`)}`}
-            className="rounded-full border px-6 py-3"
+            className="inline-flex min-h-12 items-center rounded-lg border border-[#7b8983] bg-white px-6 text-[15px] font-semibold text-[#004038] hover:bg-[#f6fefb]"
           >
             Criar conta
           </Link>

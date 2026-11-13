@@ -21,7 +21,7 @@ export function TaxonomyEditor({
     onError: () => toast.error('Não foi possível atualizar.'),
   });
   return (
-    <details className="my-4 rounded-xl border p-5">
+    <details className="my-3 rounded-xl border p-5">
       <summary className="cursor-pointer font-semibold">
         {kind === 'category' ? 'Categorias' : 'Localidades'}
       </summary>

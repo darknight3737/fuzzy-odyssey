@@ -45,10 +45,7 @@ export function BusinessEditor({ values }: { values: BusinessProfileInput }) {
     ['founded_year', 'Ano de fundação', 'number'],
   ] as const;
   return (
-    <form
-      onSubmit={handleSubmit(action.execute)}
-      className="space-y-6 rounded-2xl border p-6"
-    >
+    <form onSubmit={handleSubmit(action.execute)} className="space-y-6">
       <input type="hidden" {...register('slug')} />
       <input type="hidden" {...register('id')} />
       {fields.map(([name, label, type]) => (

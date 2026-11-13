@@ -5,6 +5,8 @@ import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
+import { AdminHeader } from '~/components/admin-ui';
+
 import { OfferingForm } from './_components/offering-form';
 export const metadata = {
   title: 'Cadastrar serviço ou software B2B | Selletive',
@@ -42,15 +44,18 @@ async function FormContent() {
 }
 export default function Page() {
   return (
-    <main className="mx-auto w-full max-w-3xl p-6">
-      <h1 className="mb-3 text-3xl font-semibold">Cadastre sua solução B2B.</h1>
-      <p className="mb-8">
-        Cada software tem seu próprio perfil. Uma empresa pode apresentar
-        produtos e serviços separados.
-      </p>
-      <Suspense fallback={<p>Carregando cadastro…</p>}>
-        <FormContent />
-      </Suspense>
+    <main className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8 lg:py-10">
+      <AdminHeader
+        back={{ href: '/home', label: 'Minhas empresas' }}
+        eyebrow="Novo perfil"
+        title="Cadastre sua solução B2B"
+        description="Escolha se é um serviço (agência, consultoria) ou um software. Cada software tem seu próprio perfil; uma empresa pode apresentar produtos e serviços separados."
+      />
+      <div className="rounded-2xl border border-[#dce5e1] bg-white p-6 md:p-8">
+        <Suspense fallback={<p>Carregando cadastro…</p>}>
+          <FormContent />
+        </Suspense>
+      </div>
     </main>
   );
 }

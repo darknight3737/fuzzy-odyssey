@@ -58,7 +58,7 @@ async function Conversation({ params }: { params: Promise<{ id: string }> }) {
       </Link>
       <h1 className="my-5 text-3xl font-semibold">{brief.title}</h1>
       <p className="whitespace-pre-wrap">{brief.description}</p>
-      <dl className="my-6 grid gap-2 text-sm">
+      <dl className="my-6 grid gap-2 rounded-xl bg-[#f7f9f8] p-5 text-sm text-[#3d3e45]">
         <div>
           Solicitante: {brief.buyer_name} · {brief.company_name}
         </div>
@@ -81,14 +81,17 @@ async function Conversation({ params }: { params: Promise<{ id: string }> }) {
       </dl>
       {buyer && brief.status === 'open' && <CloseLead id={id} />}
       {!recipients?.length && (
-        <p className="my-6 rounded-xl border p-6">
+        <p className="my-6 rounded-xl border border-[#dce5e1] bg-white p-6 text-[#3d3e45]">
           Pedido registrado. Ainda não há fornecedores disponíveis para esta
           combinação. Você pode explorar o diretório e iniciar outro pedido com
           empresas disponíveis.
         </p>
       )}
       {recipients?.map((r) => (
-        <section key={r.business_id} className="my-6 rounded-2xl border p-6">
+        <section
+          key={r.business_id}
+          className="my-6 rounded-2xl border border-[#dce5e1] bg-white p-6"
+        >
           <h2 className="text-xl font-semibold">
             {r.businesses?.name ?? 'Fornecedor'}
           </h2>
@@ -108,7 +111,10 @@ async function Conversation({ params }: { params: Promise<{ id: string }> }) {
             {messages
               ?.filter((m) => m.business_id === r.business_id)
               .map((m) => (
-                <article key={m.id} className="bg-muted rounded-xl p-4">
+                <article
+                  key={m.id}
+                  className={`rounded-xl p-4 ${m.sender_id === user.id ? 'ml-8 bg-[#f6fefb]' : 'mr-8 bg-[#f7f9f8]'}`}
+                >
                   <p className="text-muted-foreground text-xs">
                     {m.sender_id === user.id
                       ? 'Você'
@@ -133,7 +139,7 @@ async function Conversation({ params }: { params: Promise<{ id: string }> }) {
 }
 export default function Page(props: { params: Promise<{ id: string }> }) {
   return (
-    <main className="mx-auto w-full max-w-4xl p-6">
+    <main className="mx-auto w-full max-w-4xl px-4 py-6 md:px-8 lg:py-10">
       <Suspense fallback={<p>Carregando conversa…</p>}>
         <Conversation {...props} />
       </Suspense>

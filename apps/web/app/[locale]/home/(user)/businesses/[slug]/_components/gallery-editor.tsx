@@ -32,8 +32,8 @@ export function GalleryEditor({
   items: Item[];
 }) {
   return (
-    <section className="my-8 space-y-4">
-      <h2 className="text-xl font-semibold">Galeria ({items.length}/20)</h2>
+    <section className="space-y-4">
+      <p className="text-sm text-[#6f7073]">{items.length} de 20 imagens</p>
       {items.map((item) => (
         <GalleryForm
           key={item.id}
