@@ -24,7 +24,7 @@ import { SiteHeaderAccountSection } from './site-header-account-section';
 
 import styles from '../marketing.module.css';
 
-function HeaderSearch({ className }: { className: string }) {
+function HeaderSearch({ className }: { className?: string }) {
   return (
     <Form
       action="/search"
