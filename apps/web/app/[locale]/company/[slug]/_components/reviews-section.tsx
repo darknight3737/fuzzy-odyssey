@@ -1,5 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
-import { Trans } from '@kit/ui/trans';
+import { MessageSquareQuote } from 'lucide-react';
+
+import {
+  SectionHeading,
+  Stars,
+  formatRating,
+  reviewCountLabel,
+} from '~/components/directory-ui';
 
 import { ReportReview } from './report-review';
 import { ReviewForm } from './review-form';
@@ -21,105 +27,199 @@ type Review = {
 
 type ReviewsSectionProps = {
   businessId: string;
+  businessName: string;
   reviews: Review[];
   canReview: boolean;
   kind: string;
+  summary: { average: number; count: number };
 };
+
+const dateFormat = new Intl.DateTimeFormat('pt-BR', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+
+function initials(name: string) {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase() || '·'
+  );
+}
+
+function dimensionsOf(value: Review['dimensions']) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+  return Object.entries(value).filter(
+    (entry): entry is [string, number] => typeof entry[1] === 'number',
+  );
+}
 
 export function ReviewsSection({
   reviews,
   businessId,
+  businessName,
   canReview,
   kind,
+  summary,
 }: ReviewsSectionProps) {
   const approvedReviews = reviews.filter(
     (review) => review.status === 'approved',
   );
 
   return (
-    <div className={'mb-8'}>
-      <h2 className={'mb-4 text-2xl font-bold'}>
-        <Trans
-          i18nKey={'business.reviewsTitle'}
-          defaults={'Reviews'}
-          values={{ count: approvedReviews.length }}
+    <div>
+      <div className="flex flex-wrap items-start justify-between gap-6">
+        <SectionHeading
+          title="Avaliações"
+          subtitle={
+            <>
+              <strong className="text-[#0f161e]">
+                {reviewCountLabel(summary.count)}
+              </strong>{' '}
+              sobre {businessName}
+            </>
+          }
         />
-      </h2>
+        {summary.count > 0 && (
+          <div className="text-right">
+            <p className="sr-only">
+              Nota média {formatRating(summary.average)} de 5
+            </p>
+            <p
+              aria-hidden="true"
+              className="text-[32px] leading-none font-semibold text-[#0f161e]"
+            >
+              {formatRating(summary.average)}
+              <span className="text-lg font-normal text-[#6f7073]">/5</span>
+            </p>
+            <Stars value={summary.average} size={18} className="mt-2" />
+          </div>
+        )}
+      </div>
 
       {approvedReviews.length === 0 ? (
-        <Card>
-          <CardContent className={'py-8 text-center'}>
-            <p className={'text-muted-foreground'}>
-              <Trans
-                i18nKey={'business.noReviews'}
-                defaults={'No reviews yet. Be the first to review!'}
-              />
+        <div className="flex flex-col items-center rounded-xl border border-[#dce5e1] bg-[#f7f9f8] px-6 py-12 text-center">
+          <MessageSquareQuote
+            aria-hidden="true"
+            className="size-6 text-[#6f7073]"
+          />
+          <p className="mt-3 font-semibold text-[#0f161e]">
+            Esta empresa ainda não recebeu avaliações
+          </p>
+          {canReview && (
+            <p className="mt-1 text-sm text-[#3d3e45]">
+              Já trabalhou com {businessName}? Compartilhe sua experiência
+              abaixo.
             </p>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       ) : (
-        <div className={'space-y-4'}>
-          {approvedReviews.map((review) => (
-            <Card key={review.id}>
-              <CardHeader>
-                <div className={'flex items-start justify-between'}>
+        <ul className="divide-y divide-[#dce5e1] rounded-xl border border-[#dce5e1]">
+          {approvedReviews.map((review) => {
+            const dimensions = dimensionsOf(review.dimensions);
+            const responses = review.review_responses?.filter(
+              (response) => response.status === 'active',
+            );
+            return (
+              <li
+                key={review.id}
+                className="grid gap-6 p-6 md:grid-cols-[200px_1fr_180px]"
+              >
+                <div className="flex items-center gap-3 md:flex-col md:items-start">
+                  <span
+                    aria-hidden="true"
+                    className="flex size-12 shrink-0 items-center justify-center rounded-full border border-[#dce5e1] bg-[#f7f9f8] font-semibold text-[#333e49]"
+                  >
+                    {initials(review.reviewer_name)}
+                  </span>
                   <div>
-                    <CardTitle className={'text-lg'}>{review.title}</CardTitle>
-
-                    <p className={'text-muted-foreground text-sm'}>
+                    <p className="font-semibold [overflow-wrap:anywhere] text-[#0f161e]">
                       {review.reviewer_name}
                     </p>
-                  </div>
-
-                  <div className={'flex items-center gap-1'}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <span
-                        key={i}
-                        className={
-                          i < review.rating
-                            ? 'text-yellow-500'
-                            : 'text-muted-foreground'
-                        }
-                      >
-                        ★
-                      </span>
-                    ))}
+                    {review.created_at && (
+                      <p className="text-sm text-[#6f7073]">
+                        <time dateTime={review.created_at}>
+                          {dateFormat.format(new Date(review.created_at))}
+                        </time>
+                      </p>
+                    )}
                   </div>
                 </div>
-              </CardHeader>
-
-              <CardContent>
-                <p className={'text-sm'}>{review.content}</p>
-                {review.dimensions &&
-                  typeof review.dimensions === 'object' &&
-                  !Array.isArray(review.dimensions) && (
-                    <dl className="mt-3 flex flex-wrap gap-3 text-sm">
-                      {Object.entries(review.dimensions)
-                        .filter(([, value]) => typeof value === 'number')
-                        .map(([label, value]) => (
-                          <div key={label}>
-                            <dt className="inline">{label}: </dt>
-                            <dd className="inline">{String(value)}/5</dd>
-                          </div>
-                        ))}
-                    </dl>
+                <div className="min-w-0">
+                  {review.title && (
+                    <h3 className="font-semibold text-[#0f161e]">
+                      {review.title}
+                    </h3>
                   )}
-                {review.review_responses
-                  ?.filter((response) => response.status === 'active')
-                  .map((response, index) => (
+                  {review.content && (
+                    <p className="mt-2 text-sm whitespace-pre-line text-[#3d3e45]">
+                      {review.content}
+                    </p>
+                  )}
+                  {responses?.map((response, index) => (
                     <blockquote
                       key={index}
-                      className="bg-muted mt-4 rounded-lg p-4 text-sm"
+                      className="mt-4 rounded-lg border-l-2 border-[#00756a] bg-[#f6fefb] p-4 text-sm text-[#3d3e45]"
                     >
-                      <strong>Resposta da empresa</strong>
-                      <p>{response.response_text}</p>
+                      <strong className="block text-[#004038]">
+                        Resposta da empresa
+                      </strong>
+                      <p className="mt-1 whitespace-pre-line">
+                        {response.response_text}
+                      </p>
                     </blockquote>
                   ))}
-                <ReportReview reviewId={review.id} />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <ReportReview reviewId={review.id} />
+                </div>
+                <div className="rounded-lg bg-[#f7f9f8] p-4">
+                  <div className="text-center">
+                    <span className="sr-only">
+                      Nota geral {review.rating} de 5
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="text-2xl font-semibold text-[#0f161e]"
+                    >
+                      {review.rating}
+                    </span>
+                    <span aria-hidden="true" className="text-sm text-[#6f7073]">
+                      /5
+                    </span>
+                    <Stars
+                      value={review.rating}
+                      size={14}
+                      className="mt-1 flex justify-center"
+                    />
+                  </div>
+                  {dimensions.length > 0 && (
+                    <dl className="mt-4 space-y-3 border-t border-[#dce5e1] pt-4">
+                      {dimensions.map(([label, value]) => (
+                        <div key={label} className="text-center">
+                          <dt className="text-[13px] font-medium text-[#333e49]">
+                            {label}
+                          </dt>
+                          <dd>
+                            <span className="sr-only">{value} de 5</span>
+                            <Stars
+                              value={value}
+                              size={12}
+                              className="flex justify-center"
+                            />
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
       {canReview && <ReviewForm businessId={businessId} kind={kind} />}
     </div>

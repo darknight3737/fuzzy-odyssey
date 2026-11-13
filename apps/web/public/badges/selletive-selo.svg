@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="56" viewBox="0 0 180 56" role="img" aria-label="Perfil na Selletive">
+  <rect x="0.5" y="0.5" width="179" height="55" rx="11.5" fill="#ffffff" stroke="#dce5e1"/>
+  <circle cx="28" cy="28" r="14" fill="#004038"/>
+  <path d="M21.5 28.5l4.5 4.5 8.5-9" fill="none" stroke="#7edcaf" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="52" y="24" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#6f7073">Encontre-nos na</text>
+  <text x="52" y="40" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#004038">selletive</text>
+</svg>

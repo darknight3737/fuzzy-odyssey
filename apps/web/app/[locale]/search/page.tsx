@@ -37,8 +37,8 @@ async function Content({ searchParams }: Props) {
     ),
   ]);
   return (
-    <main className="container mx-auto px-6 py-12">
-      <h1 className="font-serif text-4xl">
+    <main className="mx-auto w-[min(100%-32px,1200px)] flex-1 pt-12 pb-20">
+      <h1 className="text-[30px] leading-[1.15] font-semibold tracking-[-0.5px] [overflow-wrap:anywhere] text-[#0f161e] md:text-[40px]">
         Encontre seu próximo parceiro
         {typeof params.q === 'string' && params.q.trim()
           ? ': ' + params.q.trim().slice(0, 120)
@@ -47,17 +47,18 @@ async function Content({ searchParams }: Props) {
       <DirectoryFilters
         params={params}
         options={options}
+        total={result.total}
+        breadcrumbs={[{ label: 'Busca' }]}
         key={String(params.kind ?? '')}
       />
-      <p className="text-muted-foreground text-sm">
-        {result.total} resultados encontrados
-      </p>
-      <DirectoryResults
-        items={result.items}
-        spotlight={
-          page === 1 && (!filters.sort || filters.sort === 'relevance')
-        }
-      />
+      <div className="mt-10">
+        <DirectoryResults
+          items={result.items}
+          spotlight={
+            page === 1 && (!filters.sort || filters.sort === 'relevance')
+          }
+        />
+      </div>
       <DirectoryPagination params={params} page={page} total={result.total} />
     </main>
   );

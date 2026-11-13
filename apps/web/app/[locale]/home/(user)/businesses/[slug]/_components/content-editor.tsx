@@ -56,8 +56,7 @@ export function ContentEditor({
   paid?: boolean;
 }) {
   return (
-    <section className="my-8 space-y-4">
-      <h2 className="text-xl font-semibold">{labels[kind][0]}s</h2>
+    <section className="space-y-4">
       {items.map((item) => (
         <ContentForm
           key={item.id}

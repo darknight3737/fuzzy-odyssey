@@ -53,8 +53,8 @@ export function BusinessContactLink({
 } & Omit<ComponentProps<'a'>, 'onClick' | 'onAuxClick'>) {
   return (
     <a
-      {...props}
       data-test={`business-contact-${event}`}
+      {...props}
       onClick={() => record(businessId, event)}
       onAuxClick={(e) => {
         if (e.button === 1) record(businessId, event);

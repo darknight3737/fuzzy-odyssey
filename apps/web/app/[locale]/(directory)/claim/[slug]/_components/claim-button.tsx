@@ -15,7 +15,7 @@ export function ClaimButton({ slug }: { slug: string }) {
       <button
         data-test="claim-business"
         disabled={isPending}
-        className="bg-primary text-primary-foreground rounded-full px-6 py-3 disabled:opacity-50"
+        className="inline-flex min-h-12 items-center rounded-lg bg-[#004038] px-6 text-[15px] font-semibold text-white hover:bg-[#00544c] disabled:opacity-50"
         onClick={() => execute({ slug })}
       >
         {isPending ? 'Verificando…' : 'Reivindicar perfil gratuitamente'}

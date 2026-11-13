@@ -60,8 +60,7 @@ export function DetailsEditor({
     onError: () => toast.error('Não foi possível salvar os detalhes.'),
   });
   return (
-    <section className="my-8 rounded-xl border p-6">
-      <h2 className="mb-4 text-xl font-semibold">Detalhes do perfil</h2>
+    <section>
       <p className="text-muted-foreground mb-4 text-sm">
         Separe listas com vírgulas. Para imagens e links, use uma URL HTTPS
         pública.
