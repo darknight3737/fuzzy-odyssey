@@ -168,19 +168,22 @@ export function BriefForm({
           name="consent"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-start gap-3">
-                <FormControl>
-                  <input
-                    type="checkbox"
-                    checked={field.value}
-                    onChange={(e) => field.onChange(e.target.checked)}
-                    className="mt-1"
-                  />
-                </FormControl>
-                Autorizo compartilhar este pedido e meus dados de contato com os
-                fornecedores destinatários para conversar sobre esta
-                necessidade.
-              </FormLabel>
+              <div className="flex items-start gap-3">
+                <FormControl
+                  render={
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      className="mt-1"
+                    />
+                  }
+                />
+                <FormLabel>
+                  Autorizo compartilhar este pedido e meus dados de contato com os
+                  fornecedores destinatários para conversar sobre esta necessidade.
+                </FormLabel>
+              </div>
               <FormMessage />
             </FormItem>
           )}
