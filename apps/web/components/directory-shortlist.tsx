@@ -4,6 +4,8 @@ import { useSyncExternalStore } from 'react';
 
 import Link from 'next/link';
 
+import { Heart } from 'lucide-react';
+
 type SavedBusiness = {
   id: string;
   name: string;
@@ -53,14 +55,32 @@ function save(items: SavedBusiness[]) {
   localStorage.setItem(key, JSON.stringify(items));
   window.dispatchEvent(new Event(event));
 }
-export function DirectorySaveButton({ business }: { business: SavedBusiness }) {
+export function DirectorySaveButton({
+  business,
+  variant = 'button',
+}: {
+  business: SavedBusiness;
+  variant?: 'button' | 'icon' | 'block';
+}) {
   const items = useSaved();
   const selected = items.some((item) => item.id === business.id);
+  const full = !selected && items.length >= 5;
+  const label = selected
+    ? `Remover ${business.name} da lista`
+    : `Salvar ${business.name} na lista`;
+  const styles = {
+    icon: 'inline-flex size-11 items-center justify-center rounded-full text-[#004038] hover:bg-[#f6fefb]',
+    button:
+      'inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#7b8983] bg-white px-4 text-sm font-semibold text-[#004038] hover:bg-[#f6fefb]',
+    block:
+      'inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-[#7b8983] bg-white px-5 text-[15px] font-semibold text-[#004038] hover:bg-[#f6fefb]',
+  }[variant];
   return (
     <button
       type="button"
       aria-pressed={selected}
-      disabled={!selected && items.length >= 5}
+      aria-label={variant === 'icon' ? label : undefined}
+      disabled={full}
       onClick={() =>
         save(
           selected
@@ -68,14 +88,15 @@ export function DirectorySaveButton({ business }: { business: SavedBusiness }) {
             : [...items, business],
         )
       }
-      className="rounded-full border px-4 py-2 text-sm disabled:opacity-50"
-      title={
-        !selected && items.length >= 5
-          ? 'Sua lista já tem 5 empresas'
-          : undefined
-      }
+      className={`${styles} transition-colors disabled:cursor-not-allowed disabled:opacity-50`}
+      title={full ? 'Sua lista já tem 5 empresas' : label}
     >
-      {selected ? 'Salvo ♥' : 'Salvar ♡'}
+      <Heart
+        aria-hidden="true"
+        className="size-5"
+        fill={selected ? 'currentColor' : 'none'}
+      />
+      {variant !== 'icon' && (selected ? 'Salva na lista' : 'Salvar na lista')}
     </button>
   );
 }
@@ -84,43 +105,74 @@ export function DirectoryShortlist() {
   if (!items.length) return null;
   const software = items.filter((item) => item.kind === 'software').slice(0, 3);
   return (
-    <aside className="my-6 rounded-xl border p-4" aria-label="Empresas salvas">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <strong>Lista de favoritos ({items.length}/5)</strong>
-        <div className="flex gap-3 text-sm">
-          <Link
-            className="underline"
-            href={`/projects/new?providers=${items.map((item) => item.id).join(',')}`}
-          >
-            Enviar briefing
-          </Link>
-          {software.length > 1 && (
-            <Link
-              className="underline"
-              href={`/compare?ids=${software.map((item) => item.id).join(',')}`}
-            >
-              Comparar softwares
-            </Link>
-          )}
-        </div>
-      </div>
-      <ul className="mt-3 flex flex-wrap gap-2">
-        {items.map((item) => (
-          <li key={item.id} className="bg-muted rounded-full px-3 py-1 text-sm">
-            <Link href={`/company/${item.slug}`}>{item.name}</Link>{' '}
+    <>
+      <div aria-hidden="true" className="h-40 md:h-24" />
+      <aside
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-[#dce5e1] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_8px_24px_rgb(1_38_32/0.10)]"
+        aria-label="Empresas salvas"
+      >
+        <div className="mx-auto flex w-[min(100%-32px,1200px)] flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[#0f161e]">
+              Sua lista ({items.length}/5)
+              <span className="ml-2 font-normal text-[#6f7073]">
+                {items.length >= 5
+                  ? 'Remova uma empresa para adicionar outra.'
+                  : 'Salve até 5 empresas para enviar um único briefing.'}
+              </span>
+            </p>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {items.map((item) => (
+                <li
+                  key={item.id}
+                  className="inline-flex h-8 items-center gap-1 rounded-full border border-[#dce5e1] bg-[#f6fefb] pr-1 pl-3 text-sm text-[#004038]"
+                >
+                  <Link
+                    className="max-w-[180px] truncate hover:underline"
+                    href={`/company/${item.slug}`}
+                  >
+                    {item.name}
+                  </Link>
+                  <button
+                    type="button"
+                    className="flex size-7 items-center justify-center rounded-full hover:bg-white"
+                    aria-label={`Remover ${item.name}`}
+                    onClick={() =>
+                      save(items.filter((saved) => saved.id !== item.id))
+                    }
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
             <button
               type="button"
-              aria-label={`Remover ${item.name}`}
-              onClick={() =>
-                save(items.filter((saved) => saved.id !== item.id))
-              }
+              className="min-h-11 rounded-lg px-4 text-sm font-semibold text-[#004038] hover:bg-[#f6fefb]"
+              onClick={() => save([])}
             >
-              ×
+              Limpar
             </button>
-          </li>
-        ))}
-      </ul>
-    </aside>
+            {software.length > 1 && (
+              <Link
+                className="inline-flex min-h-11 items-center rounded-lg border border-[#7b8983] px-4 text-sm font-semibold text-[#004038] hover:bg-[#f6fefb]"
+                href={`/compare?ids=${software.map((item) => item.id).join(',')}`}
+              >
+                Comparar softwares
+              </Link>
+            )}
+            <Link
+              className="inline-flex min-h-11 items-center rounded-lg bg-[#004038] px-5 text-sm font-semibold text-white hover:bg-[#00544c]"
+              href={`/projects/new?providers=${items.map((item) => item.id).join(',')}`}
+            >
+              Enviar briefing
+            </Link>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }
 

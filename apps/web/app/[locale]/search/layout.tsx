@@ -1,11 +1,17 @@
 import { SiteFooter } from '~/(marketing)/_components/site-footer';
 import { SiteHeader } from '~/(marketing)/_components/site-header';
+import styles from '~/(marketing)/marketing.module.css';
 
 export default function DirectoryLayout({ children }: React.PropsWithChildren) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className={styles.shell}>
+      <a href="#main-content" className={styles.skipLink}>
+        Pular para o conteúdo
+      </a>
       <SiteHeader />
-      {children}
+      <div id="main-content" className="flex flex-1 flex-col" tabIndex={-1}>
+        {children}
+      </div>
       <SiteFooter />
     </div>
   );

@@ -1,8 +1,6 @@
 import Link from 'next/link';
 
-import { Badge } from '@kit/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@kit/ui/card';
-import { Trans } from '@kit/ui/trans';
+import { Globe, Lock, Mail, MapPin, Phone } from 'lucide-react';
 
 import { safeWebsite } from '~/lib/seo';
 
@@ -10,15 +8,13 @@ import { BusinessContactLink } from './business-interest';
 
 type Business = {
   id: string;
+  name?: string;
   tier: string;
-  description: string | null;
   website: string | null;
   phone: string | null;
   email: string | null;
-  employee_count: number | null;
-  founded_year: number | null;
-  business_languages: string[] | null;
-  works_remotely: boolean;
+  address_description?: string | null;
+  social_links?: Array<{ label: string; href: string }>;
   business_categories?: Array<{
     is_primary: boolean;
     categories: { name: string; slug: string; is_active: boolean } | null;
@@ -32,6 +28,35 @@ type BusinessInfoProps = {
   business: Business;
 };
 
+const chip =
+  'inline-flex min-h-8 items-center rounded-full border border-[#dce5e1] px-3 text-[13px] font-medium text-[#333e49]';
+const chipLink = `${chip} hover:border-[#00756a] hover:text-[#004038]`;
+
+function Row({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: typeof Globe;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <li className="flex items-start gap-3 border-b border-[#dce5e1] py-4 last:border-b-0">
+      <Icon
+        aria-hidden="true"
+        className="mt-0.5 size-5 shrink-0 text-[#6f7073]"
+      />
+      <div className="min-w-0 text-sm">
+        <p className="font-semibold text-[#0f161e]">{label}</p>
+        <div className="mt-0.5 [overflow-wrap:anywhere] text-[#3d3e45]">
+          {children}
+        </div>
+      </div>
+    </li>
+  );
+}
+
 export function BusinessInfo({ business }: BusinessInfoProps) {
   const canContact = ['verified', 'highlight', 'spotlight'].includes(
     business.tier,
@@ -42,200 +67,139 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
   const primaryCategory = (
     activeCategories?.find((entry) => entry.is_primary) ?? activeCategories?.[0]
   )?.categories;
+  const link = 'text-[#00756a] underline hover:text-[#004038]';
+  const hasContact =
+    canContact && (business.website || business.phone || business.email);
   return (
-    <div className={'mb-8 grid gap-6 md:grid-cols-3'}>
-      <Card className={'md:col-span-2'}>
-        <CardHeader>
-          <CardTitle>
-            <Trans i18nKey={'business.aboutTitle'} defaults={'About'} />
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          {business.description && (
-            <p className={'text-muted-foreground mb-4'}>
-              {business.description}
-            </p>
+    <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+      <div className="rounded-xl border border-[#dce5e1] bg-white px-6 py-2">
+        <ul>
+          {canContact && business.website && (
+            <Row icon={Globe} label="Site">
+              <BusinessContactLink
+                businessId={business.id}
+                event="website"
+                href={safeWebsite(business.website)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={link}
+              >
+                {business.website}
+              </BusinessContactLink>
+            </Row>
           )}
-
-          <div className={'space-y-2'}>
-            {canContact && business.website && (
-              <div>
-                <strong className={'text-sm'}>
-                  <Trans i18nKey={'business.website'} defaults={'Website:'} />
-                </strong>{' '}
-                <BusinessContactLink
-                  businessId={business.id}
-                  event="website"
-                  href={safeWebsite(business.website)}
-                  target={'_blank'}
-                  rel={'noopener noreferrer'}
-                  className={'text-primary hover:underline'}
-                >
-                  {business.website}
-                </BusinessContactLink>
-              </div>
-            )}
-
-            {canContact && business.phone && (
-              <div>
-                <strong className={'text-sm'}>
-                  <Trans i18nKey={'business.phone'} defaults={'Phone:'} />
-                </strong>{' '}
-                <BusinessContactLink
-                  businessId={business.id}
-                  event="phone"
-                  href={`tel:${business.phone}`}
-                  className={'text-primary'}
-                >
-                  {business.phone}
-                </BusinessContactLink>
-              </div>
-            )}
-
-            {canContact && business.email && (
-              <div>
-                <strong className={'text-sm'}>
-                  <Trans i18nKey={'business.email'} defaults={'Email:'} />
-                </strong>{' '}
-                <BusinessContactLink
-                  businessId={business.id}
-                  event="email"
-                  href={`mailto:${business.email}`}
-                  className={'text-primary'}
-                >
-                  {business.email}
-                </BusinessContactLink>
-              </div>
-            )}
+          {canContact && business.phone && (
+            <Row icon={Phone} label="Telefone">
+              <BusinessContactLink
+                businessId={business.id}
+                event="phone"
+                href={`tel:${business.phone}`}
+                className={link}
+              >
+                {business.phone}
+              </BusinessContactLink>
+            </Row>
+          )}
+          {canContact && business.email && (
+            <Row icon={Mail} label="E-mail">
+              <BusinessContactLink
+                businessId={business.id}
+                event="email"
+                href={`mailto:${business.email}`}
+                className={link}
+              >
+                {business.email}
+              </BusinessContactLink>
+            </Row>
+          )}
+          {business.address_description && (
+            <Row icon={MapPin} label="Endereço">
+              {business.address_description}
+            </Row>
+          )}
+          {!hasContact && (
+            <Row icon={Lock} label="Contato direto indisponível">
+              Esta empresa ainda não verificou o perfil na Selletive. Salve-a na
+              sua lista ou explore empresas parecidas.
+            </Row>
+          )}
+        </ul>
+        {!!business.social_links?.length && (
+          <div className="flex gap-4 border-t border-[#dce5e1] py-4 text-sm">
+            {business.social_links.map((social) => (
+              <a
+                key={social.href}
+                className={link}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {social.label}
+              </a>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <Trans i18nKey={'business.detailsTitle'} defaults={'Details'} />
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent className={'space-y-4'}>
-          {business.business_categories &&
-            business.business_categories.length > 0 && (
-              <div>
-                <strong className={'mb-2 block text-sm'}>
-                  <Trans
-                    i18nKey={'business.categories'}
-                    defaults={'Categories:'}
-                  />
-                </strong>
-
-                <div className={'flex flex-wrap gap-2'}>
-                  {business.business_categories.map(
-                    (bc, idx) =>
-                      bc.categories &&
-                      (bc.categories.is_active ? (
-                        <Link
-                          key={idx}
-                          href={`/categories/${bc.categories.slug}`}
-                          data-test="business-category-link"
-                        >
-                          <Badge variant={'outline'}>
-                            {bc.categories.name}
-                          </Badge>
-                        </Link>
-                      ) : (
-                        <Badge key={idx} variant={'outline'}>
-                          {bc.categories.name}
-                        </Badge>
-                      )),
-                  )}
-                </div>
-              </div>
-            )}
-
-          {business.business_locations &&
-            business.business_locations.length > 0 && (
-              <div>
-                <strong className={'mb-2 block text-sm'}>
-                  <Trans
-                    i18nKey={'business.locations'}
-                    defaults={'Locations:'}
-                  />
-                </strong>
-
-                <div className={'flex flex-wrap gap-2'}>
-                  {business.business_locations.map(
-                    (bl, idx) =>
-                      bl.locations &&
-                      (primaryCategory ? (
-                        <Link
-                          key={idx}
-                          href={`/${primaryCategory.slug}/${bl.locations.slug}`}
-                          data-test="business-location-link"
-                        >
-                          <Badge variant={'outline'}>{bl.locations.name}</Badge>
-                        </Link>
-                      ) : (
-                        <Badge key={idx} variant={'outline'}>
-                          {bl.locations.name}
-                        </Badge>
-                      )),
-                  )}
-                </div>
-              </div>
-            )}
-
-          {business.employee_count && (
+      <div className="space-y-8">
+        {business.business_categories &&
+          business.business_categories.length > 0 && (
             <div>
-              <strong className={'text-sm'}>
-                <Trans i18nKey={'business.employees'} defaults={'Employees:'} />
-              </strong>{' '}
-              {business.employee_count}
+              <h3 className="text-sm font-semibold text-[#0f161e]">
+                Categorias
+              </h3>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {business.business_categories.map(
+                  (bc, idx) =>
+                    bc.categories &&
+                    (bc.categories.is_active ? (
+                      <Link
+                        key={idx}
+                        href={`/categories/${bc.categories.slug}`}
+                        data-test="business-category-link"
+                        className={chipLink}
+                      >
+                        {bc.categories.name}
+                      </Link>
+                    ) : (
+                      <span key={idx} className={chip}>
+                        {bc.categories.name}
+                      </span>
+                    )),
+                )}
+              </div>
             </div>
           )}
 
-          {business.founded_year && (
+        {business.business_locations &&
+          business.business_locations.length > 0 && (
             <div>
-              <strong className={'text-sm'}>
-                <Trans i18nKey={'business.founded'} defaults={'Founded:'} />
-              </strong>{' '}
-              {business.founded_year}
-            </div>
-          )}
-
-          {business.works_remotely && (
-            <div>
-              <Badge variant={'secondary'}>
-                <Trans
-                  i18nKey={'business.worksRemotely'}
-                  defaults={'Works Remotely'}
-                />
-              </Badge>
-            </div>
-          )}
-
-          {business.business_languages &&
-            business.business_languages.length > 0 && (
-              <div>
-                <strong className={'mb-2 block text-sm'}>
-                  <Trans
-                    i18nKey={'business.languages'}
-                    defaults={'Languages:'}
-                  />
-                </strong>
-
-                <div className={'flex flex-wrap gap-2'}>
-                  {business.business_languages.map((lang, idx) => (
-                    <Badge key={idx} variant={'outline'}>
-                      {lang}
-                    </Badge>
-                  ))}
-                </div>
+              <h3 className="text-sm font-semibold text-[#0f161e]">
+                Localizações
+              </h3>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {business.business_locations.map(
+                  (bl, idx) =>
+                    bl.locations &&
+                    (primaryCategory ? (
+                      <Link
+                        key={idx}
+                        href={`/${primaryCategory.slug}/${bl.locations.slug}`}
+                        data-test="business-location-link"
+                        className={chipLink}
+                      >
+                        {bl.locations.name}
+                      </Link>
+                    ) : (
+                      <span key={idx} className={chip}>
+                        {bl.locations.name}
+                      </span>
+                    )),
+                )}
               </div>
-            )}
-        </CardContent>
-      </Card>
+            </div>
+          )}
+      </div>
     </div>
   );
 }
