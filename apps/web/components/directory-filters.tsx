@@ -53,10 +53,6 @@ const moreKeys = [
   'portuguese',
 ];
 
-function submitOnChange(event: React.ChangeEvent<HTMLSelectElement>) {
-  event.currentTarget.form?.requestSubmit();
-}
-
 function IconSelect({
   icon: Icon,
   label,
@@ -85,7 +81,6 @@ function IconSelect({
         name={name}
         form={form}
         defaultValue={value}
-        onChange={submitOnChange}
         className={`${field} appearance-none pr-10 pl-12`}
       >
         {children}
@@ -186,11 +181,7 @@ export function DirectoryFilters({
     </label>
   );
   return (
-    <div
-      role="search"
-      aria-label="Filtrar empresas"
-      className="border-b border-[#dce5e1] pb-6"
-    >
+    <div className="border-b border-[#dce5e1] pb-6">
       <form id={formId} />
       {category && (
         <input type="hidden" name="category" value={category} form={formId} />
@@ -216,7 +207,6 @@ export function DirectoryFilters({
                 name="sort"
                 form={formId}
                 defaultValue={value('sort') || 'relevance'}
-                onChange={submitOnChange}
                 className="min-h-11 appearance-none rounded-lg bg-transparent pr-7 pl-2 font-semibold text-[#0f161e] hover:bg-[#f7f9f8] focus-visible:outline-2 focus-visible:outline-[#00756a]"
               >
                 <option value="relevance">Relevância</option>
@@ -234,7 +224,11 @@ export function DirectoryFilters({
           </label>
         </div>
       </div>
-      <div className="flex flex-wrap gap-3">
+      <div
+        role="search"
+        aria-label="Filtrar empresas"
+        className="flex flex-wrap gap-3"
+      >
         <label className="relative block min-w-[240px] flex-[2_1_240px]">
           <span className="sr-only">Buscar empresa, serviço ou software</span>
           <Search
@@ -314,10 +308,9 @@ export function DirectoryFilters({
             name="kind"
             form={formId}
             value={state.kind}
-            onChange={(event) => {
-              setState({ ...state, kind: event.target.value });
-              event.currentTarget.form?.requestSubmit();
-            }}
+            onChange={(event) =>
+              setState({ ...state, kind: event.target.value })
+            }
             className={`${field} appearance-none pr-10`}
           >
             <option value="">Serviços e software</option>

@@ -106,12 +106,11 @@ export function DirectoryShortlist() {
   const software = items.filter((item) => item.kind === 'software').slice(0, 3);
   return (
     <>
-      <div aria-hidden="true" className="h-40 md:h-24" />
       <aside
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-[#dce5e1] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_8px_24px_rgb(1_38_32/0.10)]"
+        className="sticky bottom-0 z-20 mt-8 rounded-t-xl border border-[#dce5e1] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_8px_24px_rgb(1_38_32/0.10)]"
         aria-label="Empresas salvas"
       >
-        <div className="mx-auto flex w-[min(100%-32px,1200px)] flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-[#0f161e]">
               Sua lista ({items.length}/5)

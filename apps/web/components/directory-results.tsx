@@ -357,7 +357,6 @@ export function DirectoryResults({
   );
   return (
     <>
-      <DirectoryShortlist />
       {promoted.length > 0 && (
         <section aria-labelledby="directory-featured" className="mb-12">
           <div className="mb-4 flex items-center justify-between gap-4">
@@ -420,6 +419,7 @@ export function DirectoryResults({
           </div>
         )}
       </section>
+      <DirectoryShortlist />
     </>
   );
 }

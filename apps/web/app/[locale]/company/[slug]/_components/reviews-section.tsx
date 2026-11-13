@@ -86,11 +86,14 @@ export function ReviewsSection({
           }
         />
         {summary.count > 0 && (
-          <div
-            className="text-right"
-            aria-label={`Nota ${formatRating(summary.average)} de 5, ${reviewCountLabel(summary.count)}`}
-          >
-            <p className="text-[32px] leading-none font-semibold text-[#0f161e]">
+          <div className="text-right">
+            <p className="sr-only">
+              Nota média {formatRating(summary.average)} de 5
+            </p>
+            <p
+              aria-hidden="true"
+              className="text-[32px] leading-none font-semibold text-[#0f161e]"
+            >
               {formatRating(summary.average)}
               <span className="text-lg font-normal text-[#6f7073]">/5</span>
             </p>
@@ -174,14 +177,19 @@ export function ReviewsSection({
                   <ReportReview reviewId={review.id} />
                 </div>
                 <div className="rounded-lg bg-[#f7f9f8] p-4">
-                  <div
-                    className="text-center"
-                    aria-label={`Nota geral ${review.rating} de 5`}
-                  >
-                    <span className="text-2xl font-semibold text-[#0f161e]">
+                  <div className="text-center">
+                    <span className="sr-only">
+                      Nota geral {review.rating} de 5
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="text-2xl font-semibold text-[#0f161e]"
+                    >
                       {review.rating}
                     </span>
-                    <span className="text-sm text-[#6f7073]">/5</span>
+                    <span aria-hidden="true" className="text-sm text-[#6f7073]">
+                      /5
+                    </span>
                     <Stars
                       value={review.rating}
                       size={14}
@@ -195,7 +203,8 @@ export function ReviewsSection({
                           <dt className="text-[13px] font-medium text-[#333e49]">
                             {label}
                           </dt>
-                          <dd aria-label={`${value} de 5`}>
+                          <dd>
+                            <span className="sr-only">{value} de 5</span>
                             <Stars
                               value={value}
                               size={12}

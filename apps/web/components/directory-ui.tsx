@@ -81,15 +81,17 @@ export function RatingInline({
     );
   const value = Number(rating ?? 0);
   return (
-    <p
-      className="flex items-center gap-2 text-sm"
-      aria-label={`Nota ${formatRating(value)} de 5, ${reviewCountLabel(count)}`}
-    >
-      <strong className={compact ? 'text-base' : 'text-lg'}>
+    <p className="flex items-center gap-2 text-sm">
+      <span className="sr-only">
+        Nota {formatRating(value)} de 5, {reviewCountLabel(count)}
+      </span>
+      <strong aria-hidden="true" className={compact ? 'text-base' : 'text-lg'}>
         {formatRating(value)}
       </strong>
       <Stars value={value} size={compact ? 14 : 16} />
-      <span className="text-muted-foreground">({reviewCountLabel(count)})</span>
+      <span aria-hidden="true" className="text-muted-foreground">
+        ({reviewCountLabel(count)})
+      </span>
     </p>
   );
 }
@@ -144,7 +146,7 @@ export function DirectoryHero({
   return (
     <section className="bg-[#004038] text-white">
       <div className="mx-auto flex w-[min(100%-32px,1200px)] flex-col items-center px-0 py-12 text-center md:py-20">
-        <h1 className="max-w-[820px] text-[36px] leading-[1.1] font-semibold tracking-[-0.5px] text-balance md:text-[56px] md:tracking-[-1px]">
+        <h1 className="max-w-[820px] text-[36px] leading-[1.1] font-semibold tracking-[-0.5px] text-balance [overflow-wrap:anywhere] md:text-[56px] md:tracking-[-1px]">
           {title}
         </h1>
         <p className="mt-4 max-w-[640px] text-base text-[#c4ded4] md:text-lg">

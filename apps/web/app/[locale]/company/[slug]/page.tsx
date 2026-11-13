@@ -133,26 +133,29 @@ async function BusinessProfilePage({ params }: Props) {
     !Array.isArray(business.address)
       ? business.address
       : {};
-  const { data: products } = await client
-    .from('businesses')
-    .select('name,slug')
-    .eq('vendor_business_id', business.id)
-    .eq('offering_kind', 'software')
-    .limit(24);
-  const { data: vendor } = business.vendor_business_id
-    ? await client
+  const [{ data: products }, { data: vendor }, { data: ratings }] =
+    await Promise.all([
+      client
         .from('businesses')
         .select('name,slug')
-        .eq('id', business.vendor_business_id)
-        .maybeSingle()
-    : { data: null };
+        .eq('vendor_business_id', business.id)
+        .eq('offering_kind', 'software')
+        .limit(24),
+      business.vendor_business_id
+        ? client
+            .from('businesses')
+            .select('name,slug')
+            .eq('id', business.vendor_business_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      client
+        .from('reviews')
+        .select('rating')
+        .eq('business_id', business.id)
+        .eq('status', 'approved')
+        .limit(5000),
+    ]);
   const cases = (business.business_cases ?? []).slice(0, caseLimit);
-  const { data: ratings } = await client
-    .from('reviews')
-    .select('rating')
-    .eq('business_id', business.id)
-    .eq('status', 'approved')
-    .limit(5000);
   const ratingCount = ratings?.length ?? 0;
   const ratingAverage = ratingCount
     ? (ratings ?? []).reduce((sum, item) => sum + item.rating, 0) / ratingCount
@@ -296,10 +299,8 @@ async function BusinessProfilePage({ params }: Props) {
           </div>
         </div>
       </div>
-      <div className="mx-auto w-[min(100%-32px,1200px)]">
+      <div className="mx-auto w-[min(100%-32px,1200px)] pb-24">
         <ProfileTabs tabs={tabs} />
-      </div>
-      <div className="mx-auto w-[min(100%-32px,1200px)] pb-12">
         <section
           id="sobre"
           aria-labelledby="profile-name"
@@ -628,6 +629,7 @@ async function BusinessProfilePage({ params }: Props) {
           </ProfileSection>
         )}
 
+        <div id="cases" aria-hidden="true" className="scroll-mt-[136px]" />
         <ProfileSection
           id="portfolio"
           title="Portfólio"

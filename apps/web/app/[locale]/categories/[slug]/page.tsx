@@ -95,12 +95,29 @@ async function Content({ params, searchParams }: Props) {
           'business_id',
           result.items.map((item) => item.business.id),
         )
-        .limit(6)
+        .order('display_order')
+        .limit(60)
     : { data: [] };
   const label = categoryLabel(category.slug, category.name);
   const names = new Map(
     result.items.map((item) => [item.business.id, item.business]),
   );
+  const caseLimits: Record<string, number> = {
+    claimed: 1,
+    verified: 3,
+    highlight: 15,
+    spotlight: 15,
+  };
+  const shown = new Map<string, number>();
+  const visibleCases = (cases ?? [])
+    .filter((item) => {
+      const tier = names.get(item.business_id)?.tier ?? 'unclaimed';
+      const count = shown.get(item.business_id) ?? 0;
+      if (count >= (caseLimits[tier] ?? 0)) return false;
+      shown.set(item.business_id, count + 1);
+      return true;
+    })
+    .slice(0, 6);
   return (
     <main className="flex-1">
       <DirectoryHero
@@ -135,9 +152,9 @@ async function Content({ params, searchParams }: Props) {
         />
         <DirectoryPagination params={query} page={page} total={result.total} />
         <DirectoryHelpBand />
-        {!!cases?.length && (
+        {visibleCases.length > 0 && (
           <DirectoryProjects
-            items={cases.map((item) => ({
+            items={visibleCases.map((item) => ({
               id: item.id,
               title: item.title,
               description: item.description,

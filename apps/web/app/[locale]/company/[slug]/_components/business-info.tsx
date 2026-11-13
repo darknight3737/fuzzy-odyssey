@@ -119,8 +119,9 @@ export function BusinessInfo({ business }: BusinessInfoProps) {
           )}
           {!hasContact && (
             <Row icon={Lock} label="Contato direto indisponível">
-              Esta empresa ainda não verificou o perfil na Selletive. Salve-a na
-              sua lista ou explore empresas parecidas.
+              {canContact
+                ? 'A empresa não informou dados de contato. Use o botão Solicitar proposta para falar com ela.'
+                : 'Esta empresa ainda não verificou o perfil na Selletive. Salve-a na sua lista ou explore empresas parecidas.'}
             </Row>
           )}
         </ul>
