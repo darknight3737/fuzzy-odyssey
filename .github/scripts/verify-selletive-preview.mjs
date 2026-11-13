@@ -322,15 +322,15 @@ try {
           .evaluate((node) => node.remove());
         await home.getByRole('button', { name: 'Abrir menu' }).click();
         await home
-          .getByRole('menuitem', { name: 'Categorias', exact: true })
+          .getByRole('menuitem', { name: 'Recursos', exact: true })
           .click();
         await home
           .getByRole('menuitem', {
-            name: 'Ver todos · Categorias',
+            name: 'Central de ajuda',
             exact: true,
           })
           .click();
-        await expect(home).toHaveURL(/\/categories$/);
+        await expect(home).toHaveURL(/\/help$/);
         await expect(home.getByRole('heading', { level: 1 })).toBeVisible();
       }
       if (width === 1440) {

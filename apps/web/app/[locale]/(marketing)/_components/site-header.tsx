@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 
-import { ArrowUpRight, Compass, Menu } from 'lucide-react';
+import { ArrowUpRight, Compass, Menu, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -34,6 +34,13 @@ export function SiteHeader() {
           <SiteMegamenu />
         </nav>
         <div className={styles.actions}>
+          <Link
+            href="/search"
+            aria-label="Buscar serviços e software"
+            className="grid size-11 place-items-center rounded-lg hover:bg-muted"
+          >
+            <Search size={20} aria-hidden="true" />
+          </Link>
           <DirectoryShortlistMenu />
           <Link href="/projects/new" className={styles.companyLink}>
             Publicar projeto <ArrowUpRight size={16} aria-hidden="true" />
@@ -58,15 +65,7 @@ export function SiteHeader() {
                       align="end"
                       className="w-64"
                     >
-                      <DropdownMenuItem
-                        className="min-h-11"
-                        render={<Link href={item.href} />}
-                      >
-                        {item.label === 'Para empresas'
-                          ? 'Cadastrar empresa ou software'
-                          : `Ver todos · ${item.label}`}
-                      </DropdownMenuItem>
-                      {item.shortcuts?.map((link) => (
+                      {item.links.map((link) => (
                         <DropdownMenuItem
                           key={link.href}
                           className="min-h-11"
@@ -76,18 +75,42 @@ export function SiteHeader() {
                         </DropdownMenuItem>
                       ))}
                       {item.groups?.map((group) => (
-                        <DropdownMenuItem
-                          key={group.slug}
-                          className="min-h-11"
-                          render={
-                            <Link
-                              href={`/categories/${group.slug}`}
-                              prefetch={false}
-                            />
-                          }
-                        >
-                          {group.label}
-                        </DropdownMenuItem>
+                        <DropdownMenuSub key={group.slug}>
+                          <DropdownMenuSubTrigger className="min-h-11">
+                            {group.label}
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent
+                            side="bottom"
+                            align="end"
+                            className="w-64"
+                          >
+                            <DropdownMenuItem
+                              className="min-h-11"
+                              render={
+                                <Link
+                                  href={`/categories/${group.slug}`}
+                                  prefetch={false}
+                                />
+                              }
+                            >
+                              Ver todas as especialidades
+                            </DropdownMenuItem>
+                            {group.children.map((child) => (
+                              <DropdownMenuItem
+                                key={child.slug}
+                                className="min-h-11"
+                                render={
+                                  <Link
+                                    href={`/categories/${child.slug}`}
+                                    prefetch={false}
+                                  />
+                                }
+                              >
+                                {child.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
                       ))}
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useId, useState } from 'react';
+import { useId, useState } from 'react';
 
 import Link from 'next/link';
 
@@ -13,38 +13,103 @@ import {
 } from '~/lib/directory/taxonomy';
 
 type MenuLink = { href: string; label: string };
-type Menu = MenuLink & { groups?: TaxonomyGroup[]; shortcuts?: MenuLink[] };
+type Menu = { label: string; links: MenuLink[]; groups?: TaxonomyGroup[] };
+
+const categoryLink = (slug: string, label: string) => ({
+  href: `/categories/${slug}`,
+  label,
+});
+
+const serviceHighlights: Record<string, [string, string][]> = {
+  'advertising-marketing': [
+    ['advertising-services', 'Publicidade'],
+    ['advertising-campaign', 'Campanhas publicitárias'],
+    ['branding-services', 'Branding'],
+    ['seo-services', 'SEO'],
+    ['ppc-sem', 'Mídia paga'],
+    ['content-marketing', 'Marketing de conteúdo'],
+    ['social-media-marketing', 'Redes sociais'],
+  ],
+  'creative-visual': [
+    ['design-services', 'Design gráfico'],
+    ['user-experience-ux-ui-services', 'UX/UI'],
+    ['photography-services', 'Fotografia'],
+    ['video-production', 'Produção de vídeo'],
+  ],
+  'development-product': [
+    ['software-development', 'Desenvolvimento de software sob encomenda'],
+    ['mobile-app-development', 'Desenvolvimento de aplicativos'],
+    ['web-development-services', 'Desenvolvimento web'],
+    ['web-design-services', 'Web design'],
+    ['ecommerce-services', 'Serviços para e-commerce'],
+    ['ai-consulting', 'Consultoria de IA'],
+    ['data-engineering', 'Engenharia de dados'],
+  ],
+  'it-services': [
+    ['it-consulting-services', 'Consultoria de TI'],
+    ['managed-it-services', 'Serviços gerenciados'],
+    ['it-support-services', 'Suporte de TI'],
+    ['it-outsourcing', 'Terceirização de TI'],
+    ['cloud-consulting-services', 'Consultoria em nuvem'],
+    ['cyber-security-services', 'Cibersegurança'],
+    ['systems-integration', 'Integração de sistemas'],
+    ['crm-consulting', 'Implantação de CRM'],
+    ['erp-consulting', 'Implantação de ERP'],
+  ],
+  'financial-professional': [
+    ['business-consulting-services', 'Consultoria empresarial'],
+    ['accounting-tax-services', 'Contabilidade e tributos'],
+    ['business-financial-services', 'Serviços financeiros'],
+    ['recruitment-services', 'Recrutamento e seleção'],
+    ['training-services', 'Treinamento corporativo'],
+    ['legal-services', 'Serviços jurídicos'],
+    ['business-operations-services', 'Operações e logística'],
+  ],
+};
 
 export const siteMenus: Menu[] = [
-  { href: '/search?kind=service', label: 'Serviços', groups: serviceGroups },
   {
-    href: '/search?kind=software',
+    label: 'Serviços',
+    links: [
+      { href: '/search?kind=service', label: 'Explorar serviços' },
+      { href: '/projects/new', label: 'Publicar projeto' },
+      { href: '/categories#service', label: 'Todas as categorias de Serviços' },
+    ],
+    groups: serviceGroups.map((group) => ({
+      ...group,
+      children: (serviceHighlights[group.slug] ?? []).map(([slug, label]) => ({
+        slug,
+        label,
+      })),
+    })),
+  },
+  {
     label: 'Software',
+    links: [
+      { href: '/search?kind=software', label: 'Explorar softwares' },
+      categoryLink('crm-software', 'CRM'),
+      categoryLink('erp-software', 'ERP'),
+      categoryLink('marketing-automation-software', 'Automação de marketing'),
+      {
+        href: '/categories#software',
+        label: 'Todas as categorias de Software',
+      },
+    ],
     groups: softwareMenuGroups,
   },
   {
-    href: '/categories',
-    label: 'Categorias',
-    shortcuts: [
-      { href: '/categories#service', label: 'Categorias de Serviços' },
-      { href: '/categories#software', label: 'Categorias de Software' },
-    ],
-  },
-  {
-    href: '/pricing',
-    label: 'Preços',
-    shortcuts: [
-      { href: '/pricing#verified', label: 'Verificado' },
-      { href: '/pricing#highlight', label: 'Destaque' },
-      { href: '/pricing#spotlight', label: 'Spotlight' },
-    ],
-  },
-  {
-    href: '/home/offerings/new',
     label: 'Para empresas',
-    shortcuts: [
+    links: [
+      { href: '/home/offerings/new', label: 'Cadastrar empresa ou software' },
       { href: '/claim', label: 'Reivindicar perfil' },
-      { href: '/pricing', label: 'Ver planos para empresas' },
+      { href: '/pricing', label: 'Planos e preços' },
+    ],
+  },
+  {
+    label: 'Recursos',
+    links: [
+      { href: '/blog', label: 'Blog' },
+      { href: '/help', label: 'Central de ajuda' },
     ],
   },
 ];
@@ -71,7 +136,7 @@ export function SiteMegamenu() {
       }}
     >
       {siteMenus.map((item, index) => (
-        <Fragment key={item.href}>
+        <div key={item.label} className={item.groups ? undefined : 'relative'}>
           <button
             type="button"
             aria-expanded={selection?.menu === index}
@@ -91,40 +156,32 @@ export function SiteMegamenu() {
           {menu && selection?.menu === index && (
             <div
               id={panelId}
-              className="absolute inset-x-0 top-full max-h-[75dvh] overflow-y-auto border-b bg-background shadow-lg"
+              className={
+                menu.groups
+                  ? 'absolute inset-x-0 top-full max-h-[75dvh] overflow-y-auto border-b bg-background shadow-lg'
+                  : 'absolute top-full left-0 min-w-60 rounded-xl border bg-background p-2 shadow-lg'
+              }
             >
-              <div className="mx-auto grid max-w-6xl grid-cols-[1fr_1fr_2fr] gap-6 px-6 py-5">
-                <div>
-                  <Link
-                    href={menu.href}
-                    onClick={() => setSelection(undefined)}
-                  >
-                    {menu.label === 'Para empresas'
-                      ? 'Cadastrar empresa ou software'
-                      : `Ver todos · ${menu.label}`}
-                  </Link>
-                  {menu.label === 'Software' && (
-                    <ul>
-                      {[
-                        ['crm-software', 'CRM'],
-                        ['erp-software', 'ERP'],
-                        [
-                          'marketing-automation-software',
-                          'Automação de marketing',
-                        ],
-                      ].map(([slug, label]) => (
-                        <li key={slug}>
-                          <Link
-                            href={`/categories/${slug}`}
-                            onClick={() => setSelection(undefined)}
-                          >
-                            {label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+              <div
+                className={
+                  menu.groups
+                    ? 'mx-auto grid max-w-6xl grid-cols-[1fr_1fr_2fr] gap-6 px-6 py-5'
+                    : undefined
+                }
+              >
+                <ul className="divide-y">
+                  {menu.links.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        className="w-full px-2"
+                        href={link.href}
+                        onClick={() => setSelection(undefined)}
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
                 {menu.groups && (
                   <div className="grid content-start gap-1">
                     {menu.groups.map((item, index) => (
@@ -143,43 +200,40 @@ export function SiteMegamenu() {
                     ))}
                   </div>
                 )}
-                <div
-                  className={
-                    group ? 'rounded-xl bg-muted/50 px-4 py-2' : 'col-span-2'
-                  }
-                >
-                  {group && (
-                    <Link
-                      href={`/categories/${group.slug}`}
-                      onClick={() => setSelection(undefined)}
-                    >
-                      Ver categoria · {group.label}
-                    </Link>
-                  )}
-                  <ul className="grid grid-cols-2 gap-x-3">
-                    {(group
-                      ? group.children.map((child) => ({
-                          href: `/categories/${child.slug}`,
-                          label: child.label,
-                        }))
-                      : (menu.shortcuts ?? [])
-                    ).map((link) => (
-                      <li key={link.href}>
-                        <Link
-                          href={link.href}
-                          prefetch={false}
-                          onClick={() => setSelection(undefined)}
-                        >
-                          {link.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {group && (
+                  <div className="rounded-xl bg-muted/50 px-4 py-2">
+                    <h2 className="px-1 text-lg font-semibold">
+                      {group.label}
+                    </h2>
+                    {
+                      <Link
+                        href={`/categories/${group.slug}`}
+                        onClick={() => setSelection(undefined)}
+                      >
+                        Ver todas as especialidades
+                      </Link>
+                    }
+                    <ul className="grid grid-cols-2 gap-x-3">
+                      {group.children
+                        .map((child) => categoryLink(child.slug, child.label))
+                        .map((link) => (
+                          <li key={link.href}>
+                            <Link
+                              href={link.href}
+                              prefetch={false}
+                              onClick={() => setSelection(undefined)}
+                            >
+                              {link.label}
+                            </Link>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
           )}
-        </Fragment>
+        </div>
       ))}
     </div>
   );
