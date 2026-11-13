@@ -210,7 +210,19 @@ try {
   ).toHaveCount(0);
 
   await page.goto(site);
-  await page.getByRole('button', { name: 'Software', exact: true }).click();
+  const softwareMenu = page.getByRole('button', {
+    name: 'Software',
+    exact: true,
+  });
+  await softwareMenu.hover();
+  await expect(softwareMenu).toHaveAttribute('aria-expanded', 'true');
+  await page.getByRole('button', { name: 'Marketing', exact: true }).hover();
+  await expect(
+    page.getByRole('button', { name: 'Marketing', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
+  await expect(softwareMenu).toHaveAttribute('aria-expanded', 'false');
+  await softwareMenu.press('Enter');
   await page
     .getByRole('link', { name: 'Automação de marketing', exact: true })
     .click();

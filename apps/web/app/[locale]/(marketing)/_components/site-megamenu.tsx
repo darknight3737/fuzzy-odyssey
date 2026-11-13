@@ -1,10 +1,10 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import Link from 'next/link';
 
-import { ChevronDown } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, ChevronDown } from 'lucide-react';
 
 import {
   serviceGroups,
@@ -116,125 +116,176 @@ export const siteMenus: Menu[] = [
 
 export function SiteMegamenu() {
   const panelId = useId();
+  const navigation = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<{ menu: number; group: number }>();
-  const menu = selection ? siteMenus[selection.menu] : undefined;
-  const group = menu?.groups?.[selection?.group ?? 0];
+
+  const openMenu = (menu: number) => {
+    setSelection((current) =>
+      current?.menu === menu ? current : { menu, group: 0 },
+    );
+  };
+  const closeMenu = () => setSelection(undefined);
+
+  const isOpen = selection !== undefined;
+  // Escape must also dismiss a menu opened by the pointer while focus is elsewhere.
+  useEffect(() => {
+    if (!isOpen) return;
+    const dismiss = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      const nav = navigation.current;
+      if (nav?.contains(document.activeElement)) {
+        nav.querySelector<HTMLButtonElement>('[aria-expanded="true"]')?.focus();
+      }
+      setSelection(undefined);
+    };
+    document.addEventListener('keydown', dismiss);
+    return () => document.removeEventListener('keydown', dismiss);
+  }, [isOpen]);
 
   return (
     <div
-      className="flex items-center gap-4"
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget))
-          setSelection(undefined);
+      ref={navigation}
+      className="flex h-full items-stretch gap-2"
+      onPointerLeave={(event) => {
+        if (
+          event.pointerType === 'mouse' &&
+          !event.currentTarget.querySelector(':focus-visible')
+        )
+          closeMenu();
       }}
-      onKeyDown={(event) => {
-        if (event.key !== 'Escape' || !selection) return;
-        event.currentTarget
-          .querySelector<HTMLButtonElement>('[aria-expanded="true"]')
-          ?.focus();
-        setSelection(undefined);
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) closeMenu();
       }}
     >
-      {siteMenus.map((item, index) => (
-        <div key={item.label} className={item.groups ? undefined : 'relative'}>
-          <button
-            type="button"
-            aria-expanded={selection?.menu === index}
-            aria-controls={selection?.menu === index ? panelId : undefined}
-            className="inline-flex min-h-11 items-center gap-1 whitespace-nowrap text-sm font-medium hover:text-primary"
-            onClick={() =>
-              setSelection(
-                selection?.menu === index
-                  ? undefined
-                  : { menu: index, group: 0 },
-              )
-            }
+      {siteMenus.map((menu, index) => {
+        const expanded = selection?.menu === index;
+        const group = menu.groups?.[expanded ? (selection?.group ?? 0) : 0];
+
+        return (
+          <div
+            key={menu.label}
+            className={menu.groups ? undefined : 'relative'}
           >
-            {item.label}
-            <ChevronDown className="size-3.5" aria-hidden="true" />
-          </button>
-          {menu && selection?.menu === index && (
-            <div
-              id={panelId}
-              className={
-                menu.groups
-                  ? 'absolute inset-x-0 top-full max-h-[75dvh] overflow-y-auto border-b bg-background shadow-lg'
-                  : 'absolute top-full left-0 min-w-60 rounded-xl border bg-background p-2 shadow-lg'
-              }
+            <button
+              type="button"
+              aria-expanded={expanded}
+              aria-controls={expanded ? panelId : undefined}
+              className="flex h-full items-center gap-1.5 border-b-2 border-transparent px-2 text-sm font-medium whitespace-nowrap hover:text-[#004038] focus-visible:outline-[#00756a] aria-expanded:border-[#00756a] aria-expanded:text-[#004038]"
+              onPointerEnter={(event) => {
+                if (event.pointerType === 'mouse') openMenu(index);
+              }}
+              onClick={(event) => {
+                if (
+                  expanded &&
+                  (event.detail === 0 ||
+                    (event.nativeEvent instanceof PointerEvent &&
+                      event.nativeEvent.pointerType === 'touch'))
+                )
+                  closeMenu();
+                else openMenu(index);
+              }}
             >
+              {menu.label}
+              <ChevronDown
+                className={`size-3.5 ${expanded ? 'rotate-180' : ''}`}
+                aria-hidden="true"
+              />
+            </button>
+            {expanded && (
               <div
+                id={panelId}
                 className={
                   menu.groups
-                    ? 'mx-auto grid max-w-6xl grid-cols-[1fr_1fr_2fr] gap-6 px-6 py-5'
-                    : undefined
+                    ? 'absolute inset-x-0 top-full max-h-[75dvh] overflow-y-auto border-b border-[#dce5e1] bg-white shadow-[0_12px_24px_-16px_#01262040]'
+                    : 'absolute top-full left-0 w-max min-w-56 rounded-xl border border-[#dce5e1] bg-white p-2 shadow-[0_12px_24px_-16px_#01262050]'
                 }
               >
-                <ul className="divide-y">
-                  {menu.links.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        className="w-full px-2"
-                        href={link.href}
-                        onClick={() => setSelection(undefined)}
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-                {menu.groups && (
-                  <div className="grid content-start gap-1">
-                    {menu.groups.map((item, index) => (
-                      <button
-                        type="button"
-                        key={item.slug}
-                        aria-pressed={group?.slug === item.slug}
-                        onClick={() =>
-                          selection &&
-                          setSelection({ ...selection, group: index })
-                        }
-                        className="rounded-md px-3 py-2 text-left text-sm hover:bg-muted aria-pressed:bg-muted aria-pressed:font-semibold"
-                      >
-                        {item.label}
-                      </button>
+                <div
+                  className={
+                    menu.groups
+                      ? 'mx-auto grid max-w-[1200px] grid-cols-[1fr_1.15fr_2fr] items-start gap-5 px-6 py-5'
+                      : undefined
+                  }
+                >
+                  <ul className="space-y-1">
+                    {menu.links.map((link, linkIndex) => (
+                      <li key={link.href}>
+                        <Link
+                          className={`w-full justify-between gap-2 rounded-xl px-3 focus-visible:outline-[#00756a] ${menu.groups && linkIndex === 0 ? 'bg-[#004038] !text-white hover:bg-[#00544c]' : 'hover:bg-[#f6fefb]'}`}
+                          href={link.href}
+                          onClick={closeMenu}
+                        >
+                          {link.label}
+                          <ArrowUpRight
+                            className="size-4 shrink-0"
+                            aria-hidden="true"
+                          />
+                        </Link>
+                      </li>
                     ))}
-                  </div>
-                )}
-                {group && (
-                  <div className="rounded-xl bg-muted/50 px-4 py-2">
-                    <h2 className="px-1 text-lg font-semibold">
-                      {group.label}
-                    </h2>
-                    {
-                      <Link
-                        href={`/categories/${group.slug}`}
-                        onClick={() => setSelection(undefined)}
-                      >
-                        Ver todas as especialidades
-                      </Link>
-                    }
-                    <ul className="grid grid-cols-2 gap-x-3">
-                      {group.children
-                        .map((child) => categoryLink(child.slug, child.label))
-                        .map((link) => (
-                          <li key={link.href}>
+                  </ul>
+                  {menu.groups && (
+                    <div className="grid gap-0.5 border-l border-[#dce5e1] pl-4">
+                      {menu.groups.map((item, groupIndex) => (
+                        <button
+                          type="button"
+                          key={item.slug}
+                          aria-pressed={group?.slug === item.slug}
+                          onPointerEnter={(event) => {
+                            if (event.pointerType === 'mouse')
+                              setSelection({ menu: index, group: groupIndex });
+                          }}
+                          onClick={() =>
+                            setSelection({ menu: index, group: groupIndex })
+                          }
+                          className="flex min-h-8 items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-left text-sm leading-tight hover:bg-[#f6fefb] focus-visible:outline-[#00756a] aria-pressed:bg-[#eaf8f1] aria-pressed:font-semibold aria-pressed:text-[#004038]"
+                        >
+                          {item.label}
+                          {group?.slug === item.slug && (
+                            <ArrowRight
+                              className="size-3.5 shrink-0 text-[#00756a]"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {group && (
+                    <div className="rounded-2xl border border-[#dce5e1] bg-[#f6fefb] p-4">
+                      <h2 className="px-2 text-lg font-semibold text-[#004038]">
+                        {group.label}
+                      </h2>
+                      <ul className="mt-2 grid grid-cols-2 gap-x-3">
+                        {group.children.map((child) => (
+                          <li key={child.slug}>
                             <Link
-                              href={link.href}
+                              className="w-full rounded-lg px-2 hover:bg-[#eaf8f1] focus-visible:outline-[#00756a]"
+                              href={`/categories/${child.slug}`}
                               prefetch={false}
-                              onClick={() => setSelection(undefined)}
+                              onClick={closeMenu}
                             >
-                              {link.label}
+                              {child.label}
                             </Link>
                           </li>
                         ))}
-                    </ul>
-                  </div>
-                )}
+                      </ul>
+                      <Link
+                        className="mt-2 gap-2 rounded-lg px-2 !text-[#00665b] focus-visible:outline-[#00756a]"
+                        href={`/categories/${group.slug}`}
+                        onClick={closeMenu}
+                      >
+                        Ver todas as especialidades
+                        <ArrowRight className="size-4" aria-hidden="true" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      ))}
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
