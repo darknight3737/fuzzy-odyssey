@@ -47,14 +47,29 @@ const check = (result) => {
 async function signIn(page, email) {
   const emailField = page.locator('input[name="email"]');
   const passwordField = page.locator('input[name="password"]');
-  await emailField.pressSequentially(email);
-  await passwordField.pressSequentially(password);
-  const [login] = await Promise.all([
-    page.waitForResponse((response) =>
-      new URL(response.url()).pathname.endsWith('/auth/v1/token'),
-    ),
-    page.locator('[data-test="auth-submit-button"]').click(),
-  ]);
+  const submit = page.locator('[data-test="auth-submit-button"]');
+  await expect(submit).toBeEnabled();
+  let login;
+  for (let attempt = 0; attempt < 2 && !login; attempt++) {
+    await emailField.selectText();
+    await emailField.pressSequentially(email);
+    await passwordField.selectText();
+    await passwordField.pressSequentially(password);
+    await expect(emailField).toHaveValue(email);
+    await expect(passwordField).toHaveValue(password);
+    [login] = await Promise.all([
+      page
+        .waitForResponse(
+          (response) =>
+            new URL(response.url()).pathname.endsWith('/auth/v1/token'),
+          { timeout: 8000 },
+        )
+        .catch((error) => {
+          if (error.name !== 'TimeoutError' || attempt === 1) throw error;
+        }),
+      submit.click(),
+    ]);
+  }
   assert.equal(login.status(), 200, 'Password sign-in must succeed');
 }
 
