@@ -193,11 +193,21 @@ async function prepare() {
     assert(!value.includes('\n'));
     await appendFile(process.env.GITHUB_ENV, `${name}=${value}\n`);
   }
-  if (!applicationOnly) await request('supabase', `/projects/${project}/config/auth`, 'PATCH', {
-    site_url: site,
-    uri_allow_list: `${site}/**,https://www.selletive.com/**,https://selletive.frd-monteiro97.workers.dev/**`,
-    mailer_autoconfirm: false,
-  });
+  if (!applicationOnly) {
+    const authConfig = await request('supabase', `/projects/${project}/config/auth`);
+    const allowedUrls = new Set(
+      (authConfig.uri_allow_list ?? '').split(',').map((url) => url.trim()).filter(Boolean),
+    );
+    allowedUrls.add(`${site}/**`);
+    allowedUrls.add('https://www.selletive.com/**');
+    allowedUrls.add('https://selletive.frd-monteiro97.workers.dev/**');
+
+    await request('supabase', `/projects/${project}/config/auth`, 'PATCH', {
+      site_url: site,
+      uri_allow_list: [...allowedUrls].join(','),
+      mailer_autoconfirm: false,
+    });
+  }
   console.log(`Destination verified: Selletive ${project}; ${site}`);
 }
 
