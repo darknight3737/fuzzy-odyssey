@@ -187,6 +187,9 @@ try {
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto(`${site}/search?q=${token}&sort=name`);
   await expect(page.getByText('55 resultados encontrados')).toBeVisible();
+  await expect(page.locator('article')).toHaveCount(5);
+  await page.goto(`${site}/search?q=${token}&sort=name&kind=service`);
+  await expect(page.getByText('53 resultados encontrados')).toBeVisible();
   await expect(page.locator('article')).toHaveCount(24);
   await page.getByRole('link', { name: 'Próxima →' }).click();
   await expect(page).toHaveURL(/page=2$/);
@@ -195,7 +198,7 @@ try {
   await page.getByRole('link', { name: 'Próxima →' }).click();
   await expect(page).toHaveURL(/page=3$/);
   await expect(page.getByText('Página 3 de 3', { exact: true })).toBeVisible();
-  await expect(page.locator('article')).toHaveCount(7);
+  await expect(page.locator('article')).toHaveCount(5);
   await page.goto(`${site}/search?q=${token}&kind=software&sort=rating`);
   await expect(page.getByText('2 resultados encontrados')).toBeVisible();
   await expect(page.locator('article').first()).toContainText(second.name);
