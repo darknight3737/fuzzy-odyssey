@@ -316,12 +316,17 @@ try {
   await seller.locator('[data-test="offering-kind-service"]:visible').click();
   const website = seller.getByLabel('Site oficial', { exact: true });
   await expect(website).toHaveValue(`https://${ownerSite}`);
-  await website.clear();
+  await website.selectText();
+  await website.press('Backspace');
+  await expect(website).toHaveValue('');
+  await expect(
+    seller.getByText('Dados sugeridos a partir do site.', { exact: false }),
+  ).toBeHidden();
   await seller.getByRole('button', { name: 'Continuar', exact: true }).click();
   await expect(
     seller.getByText('Informe um domínio válido', { exact: false }),
   ).toBeVisible();
-  await website.fill(`https://${ownerSite}`);
+  await website.pressSequentially(`https://${ownerSite}`);
   await expect(
     seller.getByLabel('Nome da empresa', { exact: true }),
   ).toHaveValue(profileName);
