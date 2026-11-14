@@ -13,7 +13,10 @@ const health = await fetch(`${site}/api/healthcheck`, {
 assert(health.ok);
 assert.equal((await health.json()).services.database, true);
 const robots = await fetch(`${site}/robots.txt`);
-assert.match(await robots.text(), /Disallow: \//);
+assert(robots.ok);
+const robotsText = await robots.text();
+assert.doesNotMatch(robotsText, /^Disallow: \/$/m);
+assert.match(robotsText, /Sitemap: https:\/\/selletive\.com\/sitemap\.xml/);
 
 const browser = await chromium.launch({
   channel: process.env.SELLETIVE_BROWSER_CHANNEL || undefined,
@@ -46,10 +49,14 @@ try {
     );
     const response = await imageResponse;
     assert.equal(response.status(), 200, 'Optimized image response');
-    await expect(imagePage.getByRole('img', { name: 'Optimized image' })).toBeVisible();
+    await expect(
+      imagePage.getByRole('img', { name: 'Optimized image' }),
+    ).toBeVisible();
     await expect
       .poll(() =>
-        imagePage.getByRole('img', { name: 'Optimized image' }).evaluate((image) => image.naturalWidth),
+        imagePage
+          .getByRole('img', { name: 'Optimized image' })
+          .evaluate((image) => image.naturalWidth),
       )
       .toBe(64);
   } finally {
@@ -168,7 +175,7 @@ try {
   page.on('pageerror', (error) => errors.push(error.message));
   const response = await page.goto(site);
   assert.equal(response.status(), 200);
-  assert.match(response.headers()['x-robots-tag'], /noindex/);
+  assert.doesNotMatch(response.headers()['x-robots-tag'] ?? '', /noindex/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
     'Sua próxima grande parceria',
   );

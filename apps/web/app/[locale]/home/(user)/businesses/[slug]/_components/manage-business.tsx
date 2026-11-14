@@ -5,32 +5,33 @@ import { connection } from 'next/server';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import { AdminSection, LockedFeature } from '~/components/admin-ui';
+import appConfig from '~/config/app.config';
 import { taxonomyKind } from '~/lib/directory/taxonomy';
 import { canReceiveContacts, getPlanLimits, isPremium } from '~/lib/plans';
 
-import appConfig from '~/config/app.config';
-
 import { Inbox } from '../../../leads/_components/inbox';
-import { BusinessDashboard, type DashboardSection } from './business-dashboard';
-import { NextSteps } from './next-steps';
 import { BadgeVerification } from '../promote/_components/badge-verification';
 import { BusinessAnalytics } from './business-analytics';
+import { BusinessDashboard, type DashboardSection } from './business-dashboard';
 import { BusinessEditor } from './business-editor';
 import { ContentEditor } from './content-editor';
 import { DetailsEditor } from './details-editor';
 import { GalleryEditor } from './gallery-editor';
+import { NextSteps } from './next-steps';
 import { ResponseEditor } from './response-editor';
 import { TaxonomyEditor } from './taxonomy-editor';
 
 export async function ManageBusinessPage({
   params,
   section = 'overview',
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
   section?: DashboardSection;
+  searchParams?: Promise<{ onboarding?: string }>;
 }) {
   await connection();
-  const { slug } = await params;
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
   const client = getSupabaseServerClient();
   const {
     data: { user },
@@ -96,6 +97,17 @@ export async function ManageBusinessPage({
     <BusinessDashboard business={b} section={section}>
       {section === 'overview' && (
         <>
+          {query?.onboarding === 'published' && b.tier === 'claimed' && (
+            <section className="bg-muted/50 space-y-2 rounded-xl border p-5">
+              <h2 className="text-lg font-semibold">Seu perfil está no ar</h2>
+              <p>
+                Confira a página que os compradores veem e compartilhe o link.
+              </p>
+              <Link href={`/company/${slug}`} className="underline">
+                Abrir página publicada
+              </Link>
+            </section>
+          )}
           {pending?.data && (
             <section className="rounded-xl border border-[#dce5e1] bg-[#eaf8f1] p-4">
               <p className="font-medium">

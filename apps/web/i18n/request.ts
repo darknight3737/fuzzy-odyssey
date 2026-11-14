@@ -26,6 +26,7 @@ const namespaces = [
   'business',
   'location',
   'search',
+  'offering',
 ] as const;
 
 const isDevelopment = process.env.NODE_ENV === 'development';

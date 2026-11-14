@@ -37,6 +37,7 @@ await mkdir(output, { recursive: true });
 let userId;
 let buyerId;
 let categoryId;
+let childCategoryId;
 let locationId;
 let browser;
 const check = (result) => {
@@ -60,7 +61,7 @@ async function signIn(page, email) {
 try {
   const user = check(
     await admin.auth.admin.createUser({
-      email: `${token}@example.test`,
+      email: `owner@${token}.example.test`,
       password,
       email_confirm: true,
     }),
@@ -87,6 +88,27 @@ try {
       .single(),
   );
   categoryId = category.id;
+  const childCategoryName = `Especialidade ${token}`;
+  const childCategory = check(
+    await admin
+      .from('categories')
+      .insert({
+        name: childCategoryName,
+        slug: `${token}-child`,
+        level: 2,
+        parent_id: categoryId,
+      })
+      .select('id')
+      .single(),
+  );
+  childCategoryId = childCategory.id;
+  check(
+    await admin.from('category_aliases').insert({
+      category_id: childCategoryId,
+      alias_name: `Automação ${token}`,
+      alias_slug: `alias-${token}`,
+    }),
+  );
   const location = check(
     await admin
       .from('locations')
@@ -168,11 +190,11 @@ try {
   await expect(page.locator('article')).toHaveCount(24);
   await page.getByRole('link', { name: 'Próxima →' }).click();
   await expect(page).toHaveURL(/page=2$/);
-  await expect(page.getByText('Página 2 de 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('Página 2', { exact: true })).toBeVisible();
   await expect(page.locator('article')).toHaveCount(24);
   await page.getByRole('link', { name: 'Próxima →' }).click();
   await expect(page).toHaveURL(/page=3$/);
-  await expect(page.getByText('Página 3 de 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('Página 3', { exact: true })).toBeVisible();
   await expect(page.locator('article')).toHaveCount(7);
   await page.goto(`${site}/search?q=${token}&kind=software&sort=rating`);
   await expect(page.getByText('2 resultados encontrados')).toBeVisible();
@@ -188,12 +210,12 @@ try {
   await page
     .locator('article')
     .nth(0)
-    .getByRole('button', { name: /^Salvar .+ na lista$/ })
+    .getByRole('button', { name: 'Salvar ♡' })
     .click();
   await page
     .locator('article')
     .nth(1)
-    .getByRole('button', { name: /^Salvar .+ na lista$/ })
+    .getByRole('button', { name: 'Salvar ♡' })
     .click();
   await page.reload();
   await expect(page.getByLabel('Empresas salvas')).toContainText('2/5');
@@ -247,7 +269,7 @@ try {
       '/auth/sign-in?next=' +
       encodeURIComponent(new URL(conversation).pathname),
   );
-  await signIn(seller, `${token}@example.test`);
+  await signIn(seller, `owner@${token}.example.test`);
   await seller.waitForURL(conversation);
   await expect(
     seller.getByRole('heading', { name: 'Pedido de demonstração CI' }),
@@ -256,11 +278,16 @@ try {
     has: seller.getByRole('heading', { name: first.name, exact: true }),
   });
   const response = 'Posso apresentar o produto amanhã.';
-  await sellerThread.locator('textarea[name=content]').pressSequentially(response);
-  await expect(sellerThread.locator('textarea[name=content]')).toHaveValue(response);
+  await sellerThread
+    .locator('textarea[name=content]')
+    .pressSequentially(response);
+  await expect(sellerThread.locator('textarea[name=content]')).toHaveValue(
+    response,
+  );
   await sellerThread.getByRole('button', { name: 'Enviar mensagem' }).click();
-  await expect(sellerThread.locator('article').filter({ hasText: response }))
-    .toBeVisible({ timeout: 15000 });
+  await expect(
+    sellerThread.locator('article').filter({ hasText: response }),
+  ).toBeVisible({ timeout: 15000 });
   await page.reload();
   await expect(
     page.locator('article').filter({ hasText: response }),
@@ -269,20 +296,109 @@ try {
   await expect(
     page.getByText('Este pedido foi encerrado.').first(),
   ).toBeVisible();
+  seller.on('pageerror', (error) => errors.push(error.message));
+  const ownerSite = `${token}.example.test`;
+  await seller.goto(`${site}/home/offerings/new?site=${ownerSite}`);
+  const profileName = `Agência CI ${token}`;
+  await seller.route('**/api/offerings/website?*', (route) =>
+    route.fulfill({
+      json: {
+        name: profileName,
+        description: 'Ajudamos empresas B2B a revisar a estratégia comercial.',
+      },
+    }),
+  );
+  await seller.locator('[data-test="offering-kind-software"]:visible').click();
+  await expect(seller.getByLabel('Nome do software')).toBeVisible();
+  await seller.getByRole('button', { name: 'Voltar', exact: true }).click();
+  await seller.locator('[data-test="offering-kind-service"]:visible').click();
+  const website = seller.getByLabel('Site oficial', { exact: true });
+  await expect(website).toHaveValue(`https://${ownerSite}`);
+  await website.selectText();
+  await website.press('Backspace');
+  await expect(website).toHaveValue('');
+  await expect(
+    seller.getByText('Dados sugeridos a partir do site.', { exact: false }),
+  ).toBeHidden();
+  await seller.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await expect(
+    seller.getByText('Informe um domínio válido', { exact: false }),
+  ).toBeVisible();
+  await website.pressSequentially(`https://${ownerSite}`);
+  await expect(
+    seller.getByLabel('Nome da empresa', { exact: true }),
+  ).toHaveValue(profileName);
+  await expect(
+    seller.getByLabel('O que sua solução faz e para quais empresas?'),
+  ).toHaveValue('Ajudamos empresas B2B a revisar a estratégia comercial.');
+  await seller.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await seller.getByRole('button', { name: 'Revisar perfil' }).click();
+  await expect(
+    seller.getByText('Selecione pelo menos uma especialidade.'),
+  ).toBeVisible();
+  const childCheckbox = seller.locator(
+    `[data-test="offering-category-${childCategoryId}"]`,
+  );
+  await expect(childCheckbox).toBeHidden();
+  await seller.locator(`[data-test="offering-group-${categoryId}"]`).click();
+  await expect(childCheckbox).toBeVisible();
+  await seller.getByLabel('Buscar especialidades').fill(`automacao ${token}`);
+  await expect(
+    seller.getByRole('list', { name: 'Resultados da busca' }),
+  ).toContainText(childCategoryName);
+  await childCheckbox.check();
+  await expect(seller.getByText('1 de 10 selecionadas')).toBeVisible();
+  await seller.getByRole('button', { name: 'Revisar perfil' }).click();
+  await expect(
+    seller.getByRole('region', { name: 'Prévia do perfil' }),
+  ).toContainText(profileName);
+  await seller
+    .getByRole('button', { name: 'Publicar perfil gratuito' })
+    .click();
+  await expect(
+    seller.getByRole('heading', { name: 'Seu perfil está no ar' }),
+  ).toBeVisible({ timeout: 15000 });
+  await seller.getByRole('link', { name: 'Abrir página publicada' }).click();
+  await expect(
+    seller.getByRole('heading', { name: profileName, exact: true }),
+  ).toBeVisible();
   await seller.close();
 
   assert.deepEqual(errors, [], 'No browser errors');
+  console.log(
+    'Browser: offering registration, category alias search and publication passed',
+  );
 } finally {
   if (browser) await browser.close();
-  // Delete the owner first: cascading foreign keys remove businesses and their reviews.
-  const cleanup = await Promise.allSettled([
-    userId
-      ? admin.auth.admin.deleteUser(userId).then(check)
-      : Promise.resolve(),
-    buyerId
-      ? admin.auth.admin.deleteUser(buyerId).then(check)
-      : Promise.resolve(),
-  ]);
+  // Remove the conversations before deleting their participants. Running
+  // both user cascades concurrently can contend on the same lead threads.
+  const cleanup = [];
+  if (buyerId) {
+    cleanup.push(
+      ...(await Promise.allSettled([
+        admin
+          .from('lead_briefs')
+          .delete()
+          .eq('buyer_user_id', buyerId)
+          .then(check),
+      ])),
+    );
+  }
+  for (const id of [userId, buyerId]) {
+    if (id)
+      cleanup.push(
+        ...(await Promise.allSettled([
+          admin.auth.admin.deleteUser(id).then(check),
+        ])),
+      );
+  }
+  if (childCategoryId) {
+    cleanup.push(
+      ...(await Promise.allSettled([
+        admin.from('categories').delete().eq('id', childCategoryId).then(check),
+      ])),
+    );
+  }
   if (categoryId)
     cleanup.push(
       ...(await Promise.allSettled([

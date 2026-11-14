@@ -11,12 +11,14 @@ export const metadata = {
 
 export default function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ onboarding?: string }>;
 }) {
   return (
     <Suspense fallback={<CompassPageLoader />}>
-      <ManageBusinessPage params={params} />
+      <ManageBusinessPage params={params} searchParams={searchParams} />
     </Suspense>
   );
 }

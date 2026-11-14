@@ -48,7 +48,7 @@
     "KEYSTATIC_LOCAL_ROOT": "/bundle",
     "LOGGER": "console",
     "MAILER_PROVIDER": "resend",
-    "SELLETIVE_DEPLOYMENT_STAGE": "preview",
+    "SELLETIVE_DEPLOYMENT_STAGE": "production",
   },
   "observability": { "enabled": true },
 }

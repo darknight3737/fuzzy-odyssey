@@ -118,11 +118,18 @@ async function migrate() {
 async function prepare() {
   if (applicationOnly) {
     // This recovery path cannot silently skip a new schema or migration.
-    execFileSync('git', [
-      'diff', '--exit-code',
-      'selletive-marketplace-schema-verified-20261112', 'HEAD',
-      '--', 'apps/web/supabase',
-    ], { stdio: 'pipe' });
+    execFileSync(
+      'git',
+      [
+        'diff',
+        '--exit-code',
+        'selletive-marketplace-schema-verified-20261112',
+        'HEAD',
+        '--',
+        'apps/web/supabase',
+      ],
+      { stdio: 'pipe' },
+    );
     assert(process.env.SELLETIVE_PUBLIC_KEY?.startsWith('sb_publishable_'));
   } else {
     const destination = await request('supabase', `/projects/${project}`);
@@ -150,12 +157,14 @@ async function prepare() {
   }
   if (!applicationOnly) await migrate();
 
-  const keys = applicationOnly ? [{
-    type: 'publishable', api_key: process.env.SELLETIVE_PUBLIC_KEY,
-  }] : await request(
-    'supabase',
-    `/projects/${project}/api-keys?reveal=true`,
-  );
+  const keys = applicationOnly
+    ? [
+        {
+          type: 'publishable',
+          api_key: process.env.SELLETIVE_PUBLIC_KEY,
+        },
+      ]
+    : await request('supabase', `/projects/${project}/api-keys?reveal=true`);
   const publicKey = mask(
     keys.find((key) => key.type === 'publishable')?.api_key ??
       keys.find((key) => key.name === 'anon')?.api_key,
@@ -164,13 +173,17 @@ async function prepare() {
     keys.find((key) => key.type === 'secret')?.api_key ??
       keys.find((key) => key.name === 'service_role')?.api_key,
   );
-  assert(publicKey && (applicationOnly || secretKey), 'Selletive API keys unavailable');
+  assert(
+    publicKey && (applicationOnly || secretKey),
+    'Selletive API keys unavailable',
+  );
   const runtime = {
     NEXT_PUBLIC_SUPABASE_URL: `https://${project}.supabase.co`,
     NEXT_PUBLIC_SUPABASE_PUBLIC_KEY: publicKey,
     ...(!applicationOnly && { SUPABASE_SECRET_KEY: secretKey }),
     NEXT_PUBLIC_SITE_URL: site,
-    NEXT_PUBLIC_GOOGLE_SIGN_IN_CLIENT_ID: '690890497708-652nj8a4a9aes3cjuuq5209n38h8eo6b.apps.googleusercontent.com',
+    NEXT_PUBLIC_GOOGLE_SIGN_IN_CLIENT_ID:
+      '690890497708-652nj8a4a9aes3cjuuq5209n38h8eo6b.apps.googleusercontent.com',
     NEXT_PUBLIC_DEFAULT_LOCALE: 'pt',
     NEXT_PUBLIC_BILLING_PROVIDER: 'stripe',
     NEXT_PUBLIC_ENABLE_TEAM_ACCOUNTS_BILLING: 'false',
@@ -178,13 +191,15 @@ async function prepare() {
     CMS_CLIENT: 'keystatic',
     MAILER_PROVIDER: 'resend',
     LOGGER: 'console',
-    SELLETIVE_DEPLOYMENT_STAGE: 'preview',
+    SELLETIVE_DEPLOYMENT_STAGE: 'production',
     // Stable across redeploys; never use a short-lived deployment token here.
-    ...(!applicationOnly && { SUPABASE_DB_WEBHOOK_SECRET: mask(
-      createHmac('sha256', secretKey)
-        .update(`selletive:${project}:database-webhook:v1`)
-        .digest('hex'),
-    ) }),
+    ...(!applicationOnly && {
+      SUPABASE_DB_WEBHOOK_SECRET: mask(
+        createHmac('sha256', secretKey)
+          .update(`selletive:${project}:database-webhook:v1`)
+          .digest('hex'),
+      ),
+    }),
   };
   if (!applicationOnly) {
     await writeFile(secretFile, JSON.stringify(runtime), { mode: 0o600 });
@@ -194,9 +209,15 @@ async function prepare() {
     await appendFile(process.env.GITHUB_ENV, `${name}=${value}\n`);
   }
   if (!applicationOnly) {
-    const authConfig = await request('supabase', `/projects/${project}/config/auth`);
+    const authConfig = await request(
+      'supabase',
+      `/projects/${project}/config/auth`,
+    );
     const allowedUrls = new Set(
-      (authConfig.uri_allow_list ?? '').split(',').map((url) => url.trim()).filter(Boolean),
+      (authConfig.uri_allow_list ?? '')
+        .split(',')
+        .map((url) => url.trim())
+        .filter(Boolean),
     );
     allowedUrls.add(`${site}/**`);
     allowedUrls.add('https://www.selletive.com/**');
