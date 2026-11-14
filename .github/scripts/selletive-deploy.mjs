@@ -123,7 +123,7 @@ async function prepare() {
       [
         'diff',
         '--exit-code',
-        'selletive-marketplace-schema-verified-20261112',
+        'selletive-onboarding-schema-verified-20261114',
         'HEAD',
         '--',
         'apps/web/supabase',

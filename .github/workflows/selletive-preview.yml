@@ -28,7 +28,7 @@ jobs:
       SELLETIVE_DEPLOYMENT_STAGE: production
       NEXT_TELEMETRY_DISABLED: '1'
       WRANGLER_SEND_METRICS: 'false'
-      SELLETIVE_APPLICATION_ONLY: ${{ inputs.application_only && 'true' || 'false' }}
+      SELLETIVE_APPLICATION_ONLY: ${{ (github.event_name == 'push' || inputs.application_only) && 'true' || 'false' }}
       SELLETIVE_PUBLIC_KEY: ${{ vars.SELLETIVE_PUBLIC_KEY }}
       SELLETIVE_BROWSER_CHANNEL: chrome
     steps:
