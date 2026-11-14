@@ -43,7 +43,12 @@ class DirectoryOwnerPage {
   async claim(slug: string) {
     await expect(this.page).toHaveURL(new RegExp(`/claim/${slug}$`));
     await this.page.locator('[data-test="claim-business"]:visible').click();
-    await expect(this.page).toHaveURL(new RegExp(`/home/businesses/${slug}$`));
+    await expect(this.page).toHaveURL(/\/home\/verification\//);
+    await this.page.getByText('Outras opções para confirmar vínculo').click();
+    await this.page.locator('[data-test="verification-account-email"]').click();
+    await expect(this.page).toHaveURL(
+      new RegExp(`/home/businesses/${slug}(?:\\?|$)`),
+    );
   }
 
   async saveDescription(description: string) {

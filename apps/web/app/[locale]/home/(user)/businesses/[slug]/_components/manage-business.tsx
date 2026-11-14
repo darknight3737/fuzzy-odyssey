@@ -5,7 +5,6 @@ import { connection } from 'next/server';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import { AdminSection, LockedFeature } from '~/components/admin-ui';
-import appConfig from '~/config/app.config';
 import { taxonomyKind } from '~/lib/directory/taxonomy';
 import { canReceiveContacts, getPlanLimits, isPremium } from '~/lib/plans';
 
@@ -97,7 +96,7 @@ export async function ManageBusinessPage({
     <BusinessDashboard business={b} section={section}>
       {section === 'overview' && (
         <>
-          {query?.onboarding === 'published' && b.tier === 'claimed' && (
+          {query?.onboarding === 'published' && (
             <section className="bg-muted/50 space-y-2 rounded-xl border p-5">
               <h2 className="text-lg font-semibold">Seu perfil está no ar</h2>
               <p>
@@ -361,12 +360,7 @@ export async function ManageBusinessPage({
         </>
       )}
       {section === 'selos' && (
-        <BadgeVerification
-          business={b}
-          siteUrl={appConfig.url}
-          verified={verified}
-          premium={premium}
-        />
+        <BadgeVerification slug={b.slug} verified={verified} />
       )}
       {section === 'oportunidades' && <Inbox businessId={b.id} />}
       {section === 'avaliacoes' && (

@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { connection } from 'next/server';
 
+import { getSupabaseServerAdminClient } from '@kit/supabase/server-admin-client';
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
 import {
@@ -33,6 +34,17 @@ async function UserHomePage() {
         .order('name')
     : { data: [], error: null };
   if (error) throw error;
+  const { data: pending } = user
+    ? await getSupabaseServerAdminClient()
+        .from('business_verification_requests')
+        .select('id,domain,draft,support_status')
+        .eq('account_id', user.id)
+        .is('completed_at', null)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(20)
+    : { data: [] };
+
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 lg:py-10">
       <AdminHeader
@@ -53,6 +65,40 @@ async function UserHomePage() {
           </>
         }
       />
+      {!!pending?.length && (
+        <section className="mb-6 space-y-3 rounded-2xl border p-5">
+          <h2 className="font-semibold">Confirmações em andamento</h2>
+          <ul className="space-y-2">
+            {pending.map((request) => {
+              const draft = request.draft;
+              const name =
+                draft &&
+                typeof draft === 'object' &&
+                !Array.isArray(draft) &&
+                typeof draft.name === 'string'
+                  ? draft.name
+                  : request.domain || 'Perfil da empresa';
+              return (
+                <li key={request.id}>
+                  <Link
+                    className="underline"
+                    href={`/home/verification/${request.id}`}
+                  >
+                    {name}
+                  </Link>
+                  <span className="text-muted-foreground text-sm">
+                    {' '}
+                    ·{' '}
+                    {request.support_status === 'pending'
+                      ? 'Em análise'
+                      : 'Confirmar vínculo'}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
       {businesses?.length ? (
         <div className="grid gap-6 md:grid-cols-2">
           {businesses.map((b) => {

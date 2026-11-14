@@ -9,6 +9,66 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      business_verification_requests: {
+        Row: {
+          account_id: string
+          business_id: string | null
+          completed_at: string | null
+          created_at: string
+          domain: string
+          draft: Json | null
+          email_attempts: number
+          email_digest: string | null
+          email_expires_at: string | null
+          email_sent_at: string | null
+          expires_at: string
+          id: string
+          method: string | null
+          result_slug: string | null
+          support_message: string | null
+          support_status: string | null
+          token: string
+        }
+        Insert: {
+          account_id: string
+          business_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          domain: string
+          draft?: Json | null
+          email_attempts?: number
+          email_digest?: string | null
+          email_expires_at?: string | null
+          email_sent_at?: string | null
+          expires_at?: string
+          id?: string
+          method?: string | null
+          result_slug?: string | null
+          support_message?: string | null
+          support_status?: string | null
+          token?: string
+        }
+        Update: {
+          account_id?: string
+          business_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          domain?: string
+          draft?: Json | null
+          email_attempts?: number
+          email_digest?: string | null
+          email_expires_at?: string | null
+          email_sent_at?: string | null
+          expires_at?: string
+          id?: string
+          method?: string | null
+          result_slug?: string | null
+          support_message?: string | null
+          support_status?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
       accounts: {
         Row: {
           created_at: string | null
@@ -1836,6 +1896,14 @@ export type Database = {
       }
     }
     Functions: {
+      complete_business_verification: {
+        Args: { p_request: string; p_actor: string; p_method: string; p_digest?: string }
+        Returns: string
+      }
+      reserve_business_verification_email: {
+        Args: { p_request: string; p_actor: string; p_recipient: string; p_digest: string }
+        Returns: boolean
+      }
       accept_invitation: {
         Args: { token: string; user_id: string }
         Returns: string

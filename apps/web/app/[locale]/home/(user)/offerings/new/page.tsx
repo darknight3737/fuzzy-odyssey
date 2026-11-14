@@ -79,11 +79,6 @@ async function FormContent({ searchParams }: { searchParams: SearchParams }) {
     <OfferingForm
       initial={{ name, site }}
       categories={categories}
-      emailDomain={
-        user.email_confirmed_at
-          ? (user.email?.split('@')[1]?.toLowerCase() ?? '')
-          : ''
-      }
       vendors={vendors.data ?? []}
     />
   );

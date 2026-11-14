@@ -6,9 +6,8 @@ import { connection } from 'next/server';
 
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 
+import { BusinessVerificationButton } from '~/components/business-verification-button';
 import { CompassPageLoader } from '~/components/compass-loader';
-
-import { ClaimButton } from './_components/claim-button';
 
 export const metadata = {
   title: 'Reivindicar empresa | Selletive',
@@ -48,27 +47,10 @@ async function ClaimBusinessPage({
       <h1 className="mt-8 text-[30px] leading-[1.15] font-semibold tracking-[-0.5px] [overflow-wrap:anywhere] text-[#0f161e] md:text-[40px]">
         Reivindicar {business.name}
       </h1>
-      <ol className="my-8 grid gap-3 sm:grid-cols-3">
-        {[
-          'Entre com seu e-mail corporativo',
-          'Confirmamos o domínio do site',
-          'Você passa a gerenciar o perfil',
-        ].map((step, index) => (
-          <li
-            key={step}
-            className="rounded-xl border border-[#dce5e1] bg-white p-4 text-sm text-[#3d3e45]"
-          >
-            <span className="mb-2 flex size-7 items-center justify-center rounded-full bg-[#f6fefb] text-[13px] font-semibold text-[#004038]">
-              {index + 1}
-            </span>
-            {step}
-          </li>
-        ))}
-      </ol>
-      <p className="my-6 leading-relaxed text-[#3d3e45]">
-        Para proteger a empresa, verificamos o e-mail confirmado da sua conta. O
-        domínio precisa ser o mesmo do site cadastrado:{' '}
-        <strong>{business.website || 'Site ainda não cadastrado'}</strong>.
+      <p className="my-6 leading-relaxed">
+        Confirme seu vínculo para gerenciar este perfil. Se você pode editar o
+        site da empresa, instale o selo da Selletive para ativar também o
+        Verificado.
       </p>
       {business.tier !== 'unclaimed' ? (
         <p className="rounded-xl border border-[#dce5e1] bg-[#f7f9f8] p-6">
@@ -80,7 +62,7 @@ async function ClaimBusinessPage({
       ) : user ? (
         <div className="rounded-2xl border border-[#dce5e1] bg-white p-6 md:p-8">
           <p className="mb-5 text-sm">Conta atual: {user.email}</p>
-          <ClaimButton slug={slug} />
+          <BusinessVerificationButton slug={slug} />
           <p className="text-muted-foreground mt-5 text-xs leading-relaxed">
             Ao reivindicar, você declara ter autorização para representar esta
             empresa. Informações de verificação e planos são gerenciadas pela
@@ -93,7 +75,7 @@ async function ClaimBusinessPage({
             href={`/auth/sign-in?next=${encodeURIComponent(`/claim/${slug}`)}`}
             className="inline-flex min-h-12 items-center rounded-lg bg-[#004038] px-6 text-[15px] font-semibold text-white hover:bg-[#00544c]"
           >
-            Entrar com e-mail corporativo
+            Entrar na Selletive
           </Link>
           <Link
             href={`/auth/sign-up?next=${encodeURIComponent(`/claim/${slug}`)}`}

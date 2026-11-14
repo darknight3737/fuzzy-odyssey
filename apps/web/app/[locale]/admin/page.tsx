@@ -19,6 +19,12 @@ function AdminPage() {
         >
           Mensagens de contato
         </Link>
+        <Link
+          href="/admin/business-verification"
+          className="mb-6 ml-6 inline-block underline"
+        >
+          Solicitações de vínculo
+        </Link>
         <AdminDashboard />
       </PageBody>
     </>

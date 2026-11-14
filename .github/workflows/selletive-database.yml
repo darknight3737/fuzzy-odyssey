@@ -8,6 +8,7 @@ on:
         codex/selletive-onboarding,
         codex/selletive-onboarding-production,
         codex/selletive-onboarding-fix,
+        codex/selletive-business-verification,
       ]
     paths:
       - '.github/workflows/selletive-database.yml'
@@ -72,12 +73,12 @@ jobs:
         working-directory: apps/web
         run: supabase gen types typescript --local --schema public > /tmp/database.types.ts
       - uses: pnpm/action-setup@v6
-        if: inputs.application || startsWith(github.ref_name, 'codex/selletive-onboarding')
+        if: inputs.application || (startsWith(github.ref_name, 'codex/selletive-onboarding') || github.ref_name == 'codex/selletive-business-verification')
       - name: Install application dependencies
-        if: inputs.application || startsWith(github.ref_name, 'codex/selletive-onboarding')
+        if: inputs.application || (startsWith(github.ref_name, 'codex/selletive-onboarding') || github.ref_name == 'codex/selletive-business-verification')
         run: pnpm install --frozen-lockfile
       - name: Prepare isolated application environment
-        if: inputs.application || startsWith(github.ref_name, 'codex/selletive-onboarding')
+        if: inputs.application || (startsWith(github.ref_name, 'codex/selletive-onboarding') || github.ref_name == 'codex/selletive-business-verification')
         working-directory: apps/web
         run: |
           supabase status -o json > "$RUNNER_TEMP/analytics-supabase.json"
@@ -101,7 +102,7 @@ jobs:
           }
           JS
       - name: Typecheck, lint and format
-        if: inputs.application || startsWith(github.ref_name, 'codex/selletive-onboarding')
+        if: inputs.application || (startsWith(github.ref_name, 'codex/selletive-onboarding') || github.ref_name == 'codex/selletive-business-verification')
         run: |
           cp /tmp/database.types.ts apps/web/lib/database.types.ts
           cp /tmp/database.types.ts packages/supabase/src/database.types.ts
@@ -112,13 +113,13 @@ jobs:
           node .github/scripts/test-selletive-directory-seo.mjs
           node .github/scripts/test-selletive-business-analytics.mjs
       - name: Build application in CI
-        if: inputs.application || startsWith(github.ref_name, 'codex/selletive-onboarding')
+        if: inputs.application || (startsWith(github.ref_name, 'codex/selletive-onboarding') || github.ref_name == 'codex/selletive-business-verification')
         run: pnpm --filter web exec next build --webpack
       - name: Start application in CI only
-        if: inputs.application || startsWith(github.ref_name, 'codex/selletive-onboarding')
+        if: inputs.application || (startsWith(github.ref_name, 'codex/selletive-onboarding') || github.ref_name == 'codex/selletive-business-verification')
         run: pnpm --filter web exec next start --port 3000 > /tmp/analytics-next.log 2>&1 &
       - name: Verify browser flow against disposable database
-        if: inputs.application || startsWith(github.ref_name, 'codex/selletive-onboarding')
+        if: inputs.application || (startsWith(github.ref_name, 'codex/selletive-onboarding') || github.ref_name == 'codex/selletive-business-verification')
         run: |
           for attempt in $(seq 1 30); do
             if curl --silent --fail http://localhost:3000/api/healthcheck > /dev/null; then break; fi
@@ -127,7 +128,7 @@ jobs:
           node .github/scripts/verify-business-analytics-browser.mjs
           SELLETIVE_BROWSER_CHANNEL=chrome SELLETIVE_TEST_SITE=http://localhost:3000 SELLETIVE_DISPOSABLE_DB=true node .github/scripts/verify-marketplace-browser.mjs
       - name: Validate Cloudflare build without deployment
-        if: inputs.application || startsWith(github.ref_name, 'codex/selletive-onboarding')
+        if: inputs.application || (startsWith(github.ref_name, 'codex/selletive-onboarding') || github.ref_name == 'codex/selletive-business-verification')
         run: |
           mkdir -p apps/web/.wrangler
           pnpm --filter web cloudflare:typegen

@@ -381,8 +381,22 @@ try {
     seller.getByRole('region', { name: 'Prévia do perfil' }),
   ).toContainText(profileName);
   await seller
-    .getByRole('button', { name: 'Publicar perfil gratuito' })
+    .getByRole('button', { name: 'Escolher como confirmar vínculo' })
     .click();
+  await seller.waitForURL(/\/home\/verification\//);
+  await expect(
+    seller.getByRole('heading', {
+      name: 'Instale o selo e ganhe o Verificado',
+    }),
+  ).toBeVisible();
+  const { count: unpublished, error: draftError } = await admin
+    .from('businesses')
+    .select('id', { count: 'exact', head: true })
+    .eq('name', profileName);
+  assert.ifError(draftError);
+  assert.equal(unpublished, 0, 'Draft must not appear before confirmation');
+  await seller.getByText('Outras opções para confirmar vínculo').click();
+  await seller.locator('[data-test="verification-account-email"]').click();
   await expect(
     seller.getByRole('heading', { name: 'Seu perfil está no ar' }),
   ).toBeVisible({ timeout: 15000 });

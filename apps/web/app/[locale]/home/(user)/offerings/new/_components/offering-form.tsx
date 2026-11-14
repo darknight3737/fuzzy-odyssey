@@ -2,8 +2,6 @@
 
 import { useRef, useState } from 'react';
 
-import Link from 'next/link';
-
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   ArrowLeft,
@@ -30,11 +28,7 @@ import { Textarea } from '@kit/ui/textarea';
 import { cn } from '@kit/ui/utils';
 
 import { taxonomyKind } from '~/lib/directory/taxonomy';
-import {
-  type OfferingInput,
-  OfferingSchema,
-  OfferingWebsiteSchema,
-} from '~/lib/offerings/schema';
+import { type OfferingInput, OfferingSchema } from '~/lib/offerings/schema';
 
 import { createOfferingAction } from '../_lib/actions';
 import { type OfferingCategory, CategoryPicker } from './category-picker';
@@ -52,12 +46,10 @@ export function OfferingForm({
   initial,
   categories,
   vendors,
-  emailDomain,
 }: {
   initial: { name: string; site: string };
   categories: OfferingCategory[];
   vendors: { id: string; name: string }[];
-  emailDomain: string;
 }) {
   const t = useTranslations('offering');
   const form = useForm({
@@ -83,11 +75,6 @@ export function OfferingForm({
     name: ['offering_kind', 'website', 'description'] as const,
   });
   const websiteImport = useWebsiteImport(website, flow.step === 1, form);
-  const parsedWebsite = OfferingWebsiteSchema.safeParse(website);
-  const domain = parsedWebsite.success
-    ? new URL(parsedWebsite.data).hostname.replace(/^www\./, '')
-    : null;
-  const domainMismatch = domain !== null && emailDomain !== domain;
   const review = flow.review;
 
   function goTo(step: number, draft?: OfferingInput) {
@@ -178,39 +165,6 @@ export function OfferingForm({
               )}
             </div>
 
-            {(issue === 'domain' || domainMismatch) && (
-              <p
-                role={issue === 'domain' ? 'alert' : 'status'}
-                className="bg-muted rounded-lg p-3 text-sm"
-              >
-                {t('domainRequired', { domain: domain ?? '' })}{' '}
-                <Link
-                  className="font-medium underline"
-                  href={
-                    '/contact?' +
-                    new URLSearchParams({
-                      subject: t('domainSubject', { name: review.name }),
-                    })
-                  }
-                >
-                  {t('requestHelp')}
-                </Link>
-              </p>
-            )}
-            {issue === 'duplicate' && (
-              <p role="alert" className="bg-muted rounded-lg p-3 text-sm">
-                {t('duplicate')}{' '}
-                <Link
-                  className="font-medium underline"
-                  href={
-                    '/claim?' +
-                    new URLSearchParams({ q: new URL(review.website).hostname })
-                  }
-                >
-                  {t('findProfile')}
-                </Link>
-              </p>
-            )}
             {issue === 'invalid' && (
               <p role="alert" className="text-destructive text-sm">
                 {t('invalidPublication')}
@@ -344,10 +298,7 @@ export function OfferingForm({
                             />
                           }
                         />
-                        <FormDescription>
-                          {t('websiteHelp')}{' '}
-                          {domainMismatch && t('domainRequired', { domain })}
-                        </FormDescription>
+                        <FormDescription>{t('websiteHelp')}</FormDescription>
                         {websiteImport.status && (
                           <p
                             role="status"
