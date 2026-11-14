@@ -53,5 +53,5 @@ export function corporateEmail(email: string | undefined, domain: string) {
 }
 
 export function badgeLink(token: string) {
-  return `https://selletive.com/?selo=${token}`;
+  return `https://selletive.com/api/badge/${token}`;
 }

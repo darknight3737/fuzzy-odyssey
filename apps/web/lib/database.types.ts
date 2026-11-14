@@ -1896,8 +1896,10 @@ export type Database = {
       }
     }
     Functions: {
+      resolve_business_badge: { Args: { p_token: string }; Returns: string }
       complete_business_verification: {
-        Args: { p_request: string; p_actor: string; p_method: string; p_digest?: string }
+        Args: { p_request: string; p_actor: string; p_method: string; p_digest?: string
+          p_badge_page?: string }
         Returns: string
       }
       reserve_business_verification_email: {

@@ -109,7 +109,7 @@ $$;
 revoke all on function public.create_proven_marketplace_offering(jsonb, uuid) from public, anon, authenticated, service_role;
 
 create function public.complete_business_verification(
-  p_request uuid, p_actor uuid, p_method text, p_digest text default null
+  p_request uuid, p_actor uuid, p_method text, p_digest text default null, p_badge_page text default null
 ) returns text
 language plpgsql security definer set search_path = ''
 as $$
@@ -147,9 +147,7 @@ begin
     select * into target from public.businesses where id = req.business_id for update;
     if not found then return null; end if;
     current_domain := regexp_replace(lower(substring(target.website from '(?i)^https?://([a-z0-9.-]+)(?:[/?#]|$)')), '^www[.]', '');
-    if coalesce(current_domain, '') <> req.domain and
-      not (p_method = 'support' and req.domain = '' and current_domain is null)
-      then return null; end if;
+    if coalesce(current_domain, '') <> req.domain then return null; end if;
     if target.tier = 'unclaimed' and target.account_id is null then
       update public.businesses set account_id = p_actor, tier = 'claimed' where id = target.id returning * into target;
     elsif target.account_id is distinct from p_actor or p_method <> 'badge' then
@@ -158,10 +156,10 @@ begin
   end if;
 
   if p_method = 'badge' then
-    update public.businesses set
-      verification_status = 'verified',
-      tier = case when target.tier in ('highlight', 'spotlight') then target.tier else 'verified'::public.business_tier end
-    where id = target.id;
+    if p_badge_page is null then raise exception 'Badge page required'; end if;
+    insert into public.verification_badges(business_id, badge_code, verification_url)
+    values(target.id, req.token::text, p_badge_page) returning id into badge_id;
+    perform public.attest_business_badge(badge_id, true, target.website);
   end if;
   slug_result := target.slug;
 
@@ -172,8 +170,8 @@ begin
   return slug_result;
 end;
 $$;
-revoke all on function public.complete_business_verification(uuid, uuid, text, text) from public, anon, authenticated, service_role;
-grant execute on function public.complete_business_verification(uuid, uuid, text, text) to service_role;
+revoke all on function public.complete_business_verification(uuid, uuid, text, text, text) from public, anon, authenticated, service_role;
+grant execute on function public.complete_business_verification(uuid, uuid, text, text, text) to service_role;
 
 create table public.business_verification_email_log (
   account_id uuid not null references public.accounts(id) on delete cascade,
@@ -212,3 +210,15 @@ end;
 $$;
 revoke all on function public.reserve_business_verification_email(uuid, uuid, text, text) from public, anon, authenticated, service_role;
 grant execute on function public.reserve_business_verification_email(uuid, uuid, text, text) to service_role;
+
+create function public.resolve_business_badge(p_token uuid) returns text
+language sql stable security definer set search_path = ''
+as $$
+  select business.slug
+  from public.verification_badges badge
+  join public.businesses business on business.id = badge.business_id
+  where badge.badge_code = p_token::text and badge.is_verified
+    and business.verification_status = 'verified';
+$$;
+revoke all on function public.resolve_business_badge(uuid) from public, anon, authenticated, service_role;
+grant execute on function public.resolve_business_badge(uuid) to anon, authenticated;

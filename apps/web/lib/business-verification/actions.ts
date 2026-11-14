@@ -184,6 +184,12 @@ export const verifyBusiness = authActionClient
         p_request: id,
         p_actor: user.id,
         p_method: proof.method,
+        ...(proof.method === 'badge'
+          ? {
+              p_badge_page:
+                new URL(proof.page).origin + new URL(proof.page).pathname,
+            }
+          : {}),
         ...(proof.method === 'email'
           ? { p_digest: digest(id, proof.code) }
           : {}),
