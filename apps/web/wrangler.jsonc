@@ -6,6 +6,10 @@
   "compatibility_date": "2026-10-15",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  "routes": [
+    { "pattern": "selletive.com", "custom_domain": true },
+    { "pattern": "www.selletive.com", "custom_domain": true },
+  ],
   "preview_urls": true,
   "keep_vars": true,
   "keep_names": false,

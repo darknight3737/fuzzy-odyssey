@@ -6,7 +6,7 @@ const require = createRequire(
   new URL('../../apps/e2e/package.json', import.meta.url),
 );
 const { chromium, expect } = require('@playwright/test');
-const site = 'https://selletive.frd-monteiro97.workers.dev';
+const site = 'https://selletive.com';
 const health = await fetch(`${site}/api/healthcheck`, {
   signal: AbortSignal.timeout(15000),
 });

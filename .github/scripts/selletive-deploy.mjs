@@ -7,7 +7,7 @@ import { appendFile, readFile, readdir, writeFile } from 'node:fs/promises';
 const project = 'cnagsmkfjkxyxlefrkhu';
 const organization = 'kkqpanpyzsijqhbrlqnk';
 const account = '197b766a23439aced586d68ea5ec5463';
-const site = 'https://selletive.frd-monteiro97.workers.dev';
+const site = 'https://selletive.com';
 const cacheNamespace = 'ef2629839c3943ca9eee730a912c5d88';
 const migrationPath = 'apps/web/supabase/migrations';
 const fixtures = '20250927170839';
@@ -195,7 +195,7 @@ async function prepare() {
   }
   if (!applicationOnly) await request('supabase', `/projects/${project}/config/auth`, 'PATCH', {
     site_url: site,
-    uri_allow_list: `${site}/**`,
+    uri_allow_list: `${site}/**,https://www.selletive.com/**,https://selletive.frd-monteiro97.workers.dev/**`,
     mailer_autoconfirm: false,
   });
   console.log(`Destination verified: Selletive ${project}; ${site}`);
