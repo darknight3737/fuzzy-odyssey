@@ -119,6 +119,7 @@ declare
   slug_result text;
   new_id uuid;
   current_domain text;
+  badge_id uuid;
 begin
   select * into req from public.business_verification_requests where id = p_request for update;
   if not found or p_actor is null or req.account_id <> p_actor or req.expires_at <= now() then return null; end if;
