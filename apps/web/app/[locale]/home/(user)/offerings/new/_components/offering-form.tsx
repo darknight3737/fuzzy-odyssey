@@ -419,7 +419,12 @@ export function OfferingForm({
                                 websiteImport.markEdited('description');
                                 field.onChange(event);
                               }}
-                              rows={5}
+                              placeholder={t(
+                                kind === 'software'
+                                  ? 'softwareDescriptionExample'
+                                  : 'serviceDescriptionExample',
+                              )}
+                              rows={3}
                               maxLength={10000}
                               data-test="offering-description"
                             />

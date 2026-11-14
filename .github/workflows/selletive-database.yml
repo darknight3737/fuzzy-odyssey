@@ -7,6 +7,7 @@ on:
         codex/selletive-marketplace-complete,
         codex/selletive-onboarding,
         codex/selletive-onboarding-production,
+        codex/selletive-onboarding-fix,
       ]
     paths:
       - '.github/workflows/selletive-database.yml'

@@ -22,6 +22,10 @@ export const OfferingWebsiteSchema = z
     }
   }, 'offering.websiteInvalid');
 
+// PostgreSQL accepts legacy identifiers with the UUID shape even when
+// their version and variant bits do not satisfy RFC UUID validation.
+const DatabaseId = z.guid();
+
 export const OfferingSchema = z.object({
   name: z
     .string()
@@ -35,11 +39,15 @@ export const OfferingSchema = z.object({
     .min(30, 'offering.descriptionShort')
     .max(10000, 'offering.descriptionLong'),
   offering_kind: z.enum(['service', 'software']),
-  vendor_business_id: z.uuid().or(z.literal('')),
+  vendor_business_id: DatabaseId.or(z.literal('')),
   category_ids: z
-    .array(z.uuid())
+    .array(z.string())
     .min(1, 'offering.categoriesRequired')
-    .max(10, 'offering.categoriesLimit'),
+    .max(10, 'offering.categoriesLimit')
+    .refine(
+      (ids) => ids.every((id) => DatabaseId.safeParse(id).success),
+      'offering.categoriesInvalid',
+    ),
 });
 
 export type OfferingInput = z.output<typeof OfferingSchema>;

@@ -108,6 +108,8 @@ try {
     await admin
       .from('categories')
       .insert({
+        // Match the legacy PostgreSQL IDs seeded in the production catalog.
+        id: randomUUID().replace(/^(.{19})./, (_, prefix) => prefix + '2'),
         name: childCategoryName,
         slug: `${token}-child`,
         level: 2,
@@ -328,8 +330,16 @@ try {
   );
   await seller.locator('[data-test="offering-kind-software"]:visible').click();
   await expect(seller.getByLabel('Nome do software')).toBeVisible();
+  await expect(seller.getByLabel('Descrição breve da solução')).toHaveAttribute(
+    'placeholder',
+    /^Ex\.: Software que ajuda/,
+  );
   await seller.getByRole('button', { name: 'Voltar', exact: true }).click();
   await seller.locator('[data-test="offering-kind-service"]:visible').click();
+  await expect(seller.getByLabel('Descrição breve da solução')).toHaveAttribute(
+    'placeholder',
+    /^Ex\.: Ajudamos pequenas empresas/,
+  );
   const website = seller.getByLabel('Site oficial', { exact: true });
   await expect(website).toHaveValue(`https://${ownerSite}`);
   await website.selectText();
@@ -346,9 +356,9 @@ try {
   await expect(
     seller.getByLabel('Nome da empresa', { exact: true }),
   ).toHaveValue(profileName);
-  await expect(
-    seller.getByLabel('O que sua solução faz e para quais empresas?'),
-  ).toHaveValue('Ajudamos empresas B2B a revisar a estratégia comercial.');
+  await expect(seller.getByLabel('Descrição breve da solução')).toHaveValue(
+    'Ajudamos empresas B2B a revisar a estratégia comercial.',
+  );
   await seller.getByRole('button', { name: 'Continuar', exact: true }).click();
   await seller.getByRole('button', { name: 'Revisar perfil' }).click();
   await expect(

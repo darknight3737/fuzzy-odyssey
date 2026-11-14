@@ -29,8 +29,8 @@
   "softwareName": "Nome do software",
   "serviceName": "Nome da empresa",
   "nameInvalid": "Informe um nome de 2 a 160 caracteres.",
-  "description": "O que sua solução faz e para quais empresas?",
-  "descriptionHelp": "Mínimo de 30 caracteres · {count} digitados",
+  "description": "Descrição breve da solução",
+  "descriptionHelp": "Em uma ou duas frases, diga o que você oferece, para quais empresas e qual benefício entrega. Mínimo de 30 caracteres · {count} digitados.",
   "descriptionShort": "Descreva a solução com pelo menos 30 caracteres.",
   "descriptionLong": "Use até 10.000 caracteres na descrição.",
   "vendor": "Empresa fornecedora (opcional)",
@@ -61,5 +61,8 @@
   "publishError": "Não foi possível publicar agora. Seus dados continuam aqui; tente novamente.",
   "edit": "Voltar e editar",
   "publish": "Publicar perfil gratuito",
-  "publishing": "Publicando…"
+  "publishing": "Publicando…",
+  "softwareDescriptionExample": "Ex.: Software que ajuda pequenas empresas a organizar tarefas e acompanhar prazos.",
+  "serviceDescriptionExample": "Ex.: Ajudamos pequenas empresas a organizar processos e reduzir retrabalho.",
+  "categoriesInvalid": "Uma especialidade selecionada é inválida. Remova a seleção e escolha novamente."
 }
